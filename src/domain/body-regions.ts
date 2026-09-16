@@ -85,6 +85,30 @@ const COMPATIBLE_BODY_REGIONS: Readonly<Partial<Record<BodyRegion, readonly Body
   obliques: ["core"],
 };
 
+/**
+ * Typical training counterparts for antagonist-oriented programming.
+ * These are deliberately conservative body-region relationships, not a claim
+ * that every movement involving one region has exactly this antagonist.
+ */
+const ANTAGONIST_BODY_REGIONS: Readonly<Partial<Record<BodyRegion, readonly BodyRegion[]>>> = {
+  biceps: ["triceps"],
+  triceps: ["biceps"],
+  chest: ["upper-back", "lats"],
+  "upper-back": ["chest"],
+  lats: ["chest"],
+  shoulders: ["rear-delts"],
+  "rear-delts": ["shoulders"],
+  core: ["lower-back"],
+  abs: ["lower-back"],
+  "lower-back": ["abs", "core"],
+  hips: ["glutes"],
+  glutes: ["hips"],
+  quadriceps: ["hamstrings"],
+  hamstrings: ["quadriceps"],
+  calves: ["tibialis"],
+  tibialis: ["calves"],
+};
+
 export function isBodyRegion(value: string): value is BodyRegion {
   return BODY_REGION_SET.has(value);
 }
@@ -113,6 +137,12 @@ export function expandBodyRegionIds(values: readonly string[]): readonly BodyReg
   }
 
   return [...expanded];
+}
+
+export function getBodyRegionAntagonists(value: string): readonly BodyRegion[] {
+  const normalized = normalizeBodyRegionId(value);
+  if (!normalized) return [];
+  return ANTAGONIST_BODY_REGIONS[normalized] ?? [];
 }
 
 export function bodyRegionsOverlap(
