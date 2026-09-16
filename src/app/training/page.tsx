@@ -11,15 +11,26 @@ const STATUS_LABELS = {
   archived: "Archiviert",
 } as const;
 
-export default async function TrainingPage() {
-  const sessions = await listTrainingSessions(false, 100);
+interface PageProps {
+  readonly searchParams: Promise<{ status?: string }>;
+}
+
+export default async function TrainingPage({ searchParams }: PageProps) {
+  const { status } = await searchParams;
+  const archived = status === "archived";
+  const allSessions = await listTrainingSessions(archived, 200);
+  const sessions = archived
+    ? allSessions.filter((session) => session.status === "archived")
+    : allSessions;
   const totalMinutes = sessions.reduce((sum, session) => sum + session.totalDurationMinutes, 0);
   const draftCount = sessions.filter((session) => session.status === "draft").length;
 
   return (
     <AppShell
-      title="Training"
-      subtitle="Gespeicherte Einheiten aus Quick Create und später dem manuellen Training Editor."
+      title={archived ? "Training · Archiv" : "Training"}
+      subtitle={archived
+        ? "Archivierte Einheiten ansehen und bei Bedarf über die Detailseite wiederherstellen."
+        : "Gespeicherte Einheiten aus Quick Create und dem Training Editor."}
       actions={
         <Link
           className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
@@ -31,10 +42,22 @@ export default async function TrainingPage() {
     >
       <div className="space-y-6">
         <section className="grid gap-3 sm:grid-cols-3">
-          <Metric label="Gespeicherte Trainings" value={sessions.length} />
+          <Metric label={archived ? "Archivierte Trainings" : "Gespeicherte Trainings"} value={sessions.length} />
           <Metric label="Offene Entwürfe" value={draftCount} />
           <Metric label="Geplante Minuten" value={totalMinutes} />
         </section>
+
+        <div className="flex justify-end text-sm font-bold">
+          {archived ? (
+            <Link className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-subtle)]" href="/training">
+              Aktive Trainings anzeigen
+            </Link>
+          ) : (
+            <Link className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-subtle)]" href="/training?status=archived">
+              Archiv anzeigen
+            </Link>
+          )}
+        </div>
 
         {sessions.length > 0 ? (
           <section className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
@@ -74,7 +97,7 @@ export default async function TrainingPage() {
                     className="shrink-0 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-subtle)]"
                     href={`/training/${session.id}`}
                   >
-                    Details
+                    {archived ? "Ansehen / Wiederherstellen" : "Details"}
                   </Link>
                 </div>
               </article>
@@ -82,16 +105,20 @@ export default async function TrainingPage() {
           </section>
         ) : (
           <section className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-[var(--shadow-card)]">
-            <h2 className="text-lg font-black">Noch kein Training gespeichert</h2>
+            <h2 className="text-lg font-black">{archived ? "Archiv ist leer" : "Noch kein Training gespeichert"}</h2>
             <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--muted)]">
-              Erstelle mit Quick Create einen deterministischen Entwurf aus der realen Übungsdatenbank und speichere ihn anschließend hier als bearbeitbares Training.
+              {archived
+                ? "Archivierte Einheiten erscheinen hier und können über ihre Detailseite wieder aktiviert werden."
+                : "Erstelle mit Quick Create einen deterministischen Entwurf aus der realen Übungsdatenbank und speichere ihn anschließend hier als bearbeitbares Training."}
             </p>
-            <Link
-              className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
-              href="/quick-create"
-            >
-              Erstes Training erstellen
-            </Link>
+            {!archived ? (
+              <Link
+                className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
+                href="/quick-create"
+              >
+                Erstes Training erstellen
+              </Link>
+            ) : null}
           </section>
         )}
       </div>
