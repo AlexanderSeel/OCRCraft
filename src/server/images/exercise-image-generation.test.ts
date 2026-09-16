@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { ExerciseImageGenerationService } from "./exercise-image-generation-service";
 import { buildExerciseImagePrompt } from "./exercise-image-prompt-builder";
+import { chooseRandomExerciseFigurePresentation } from "./ocrcraft-exercise-illustration-v2";
 import type {
   ExerciseImageGenerationContext,
   ExerciseImageGenerationRepositoryPort,
@@ -67,12 +68,18 @@ function makeStoredImage(): StoredExerciseImage {
 }
 
 describe("exercise image prompt and generation service", () => {
-  it("builds a three-person prompt from bilingual structured exercise details", () => {
-    const prompt = buildExerciseImagePrompt(context);
-    expect(prompt).toContain("friendly flat vector editorial artwork");
-    expect(prompt).toContain("dark navy performance shirt");
-    expect(prompt).toContain("coral-red side/diagonal panels");
-    expect(prompt).toContain("child, an adult woman, and an adult man");
+  it("builds a step-by-step single-athlete storyboard from bilingual structured exercise details", () => {
+    const prompt = buildExerciseImagePrompt(context, "adult_woman");
+    expect(prompt).toContain("friendly flat editorial artwork");
+    expect(prompt).toContain("dark navy functional OCR sportswear");
+    expect(prompt).toContain("restrained coral-red panels");
+    expect(prompt).toContain("exactly one adult athlete identity: an adult woman");
+    expect(prompt).toContain("exactly 3 sequential frames");
+    expect(prompt).toContain("one frame for each numbered item in the structured execution steps");
+    expect(prompt).toContain("1. Walk to start.");
+    expect(prompt).toContain("2. Jog easily.");
+    expect(prompt).toContain("3. Walk to finish.");
+    expect(prompt).toContain("do not show a child or a second athlete");
     expect(prompt).toContain("Lockeres Einlaufen");
     expect(prompt).toContain("Easy Jog");
     expect(prompt).toContain("Walk to start.");
@@ -80,16 +87,25 @@ describe("exercise image prompt and generation service", () => {
     expect(prompt).toContain("Safety notes: Bei Beschwerden gehen.");
   });
 
+  it("randomly chooses one adult presentation", () => {
+    const random = vi.spyOn(Math, "random");
+    random.mockReturnValueOnce(0.2).mockReturnValueOnce(0.8);
+    expect(chooseRandomExerciseFigurePresentation()).toBe("adult_woman");
+    expect(chooseRandomExerciseFigurePresentation()).toBe("adult_man");
+    random.mockRestore();
+  });
+
   it("dry run returns only the prompt and never invokes generation, storage, or metadata writes", async () => {
     const repository = makeRepository();
     const imageGenerator: ExerciseImageGenerator = { generate: vi.fn(async () => makeImage()) };
     const storage: ExerciseImageStorage = { provider: "filesystem", save: vi.fn(async () => makeStoredImage()), delete: vi.fn(async () => undefined) };
-    const service = new ExerciseImageGenerationService(repository, imageGenerator, storage);
+    const service = new ExerciseImageGenerationService(repository, imageGenerator, storage, () => "adult_woman");
 
     const result = await service.generate({ exerciseIdentifier: "easy-jog", dryRun: true });
 
     if (result.mode !== "dry-run") throw new Error("Expected dry-run output.");
     expect(result.mode).toBe("dry-run");
+    expect(result).toMatchObject({ figurePresentation: "adult_woman", sequenceStepCount: 3 });
     expect(result.prompt).toContain("Easy Jog");
     expect(imageGenerator.generate).not.toHaveBeenCalled();
     expect(storage.save).not.toHaveBeenCalled();
@@ -100,14 +116,17 @@ describe("exercise image prompt and generation service", () => {
     const repository = makeRepository();
     const imageGenerator: ExerciseImageGenerator = { generate: vi.fn(async () => makeImage()) };
     const storage: ExerciseImageStorage = { provider: "filesystem", save: vi.fn(async () => makeStoredImage()), delete: vi.fn(async () => undefined) };
-    const service = new ExerciseImageGenerationService(repository, imageGenerator, storage);
+    const service = new ExerciseImageGenerationService(repository, imageGenerator, storage, () => "adult_man");
 
     const result = await service.generate({ exerciseIdentifier: "easy-jog" });
 
-    expect(result).toMatchObject({ mode: "generated", reviewStatus: "pending", storageUri: "/generated/exercises/sample.png" });
+    expect(result).toMatchObject({ mode: "generated", reviewStatus: "pending", storageUri: "/generated/exercises/sample.png", figurePresentation: "adult_man", sequenceStepCount: 3 });
     expect(repository.createGeneratingRecord).toHaveBeenCalledWith(expect.objectContaining({
       exerciseId: context.exerciseId,
-      styleProfile: "ocrcraft-exercise-illustration-v1",
+      styleProfile: "ocrcraft-exercise-illustration-v2",
+      illustrationFormat: "exercise_sequence",
+      figurePresentation: "adult_man",
+      sequenceStepCount: 3,
       storageProvider: "filesystem",
       generationPrompt: expect.stringContaining("Easy Jog"),
     }));
@@ -124,7 +143,7 @@ describe("exercise image prompt and generation service", () => {
     const repository = makeRepository();
     const imageGenerator: ExerciseImageGenerator = { generate: vi.fn(async () => { throw new Error("API unavailable"); }) };
     const storage: ExerciseImageStorage = { provider: "filesystem", save: vi.fn(async () => makeStoredImage()), delete: vi.fn(async () => undefined) };
-    const service = new ExerciseImageGenerationService(repository, imageGenerator, storage);
+    const service = new ExerciseImageGenerationService(repository, imageGenerator, storage, () => "adult_woman");
 
     await expect(service.generate({ exerciseIdentifier: "easy-jog" })).rejects.toThrow("API unavailable");
 

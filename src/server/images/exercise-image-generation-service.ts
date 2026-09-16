@@ -3,7 +3,11 @@ import type { ExerciseImageGenerator } from "./openai-image-generator";
 import { buildExerciseImagePrompt } from "./exercise-image-prompt-builder";
 import type { ExerciseImageStorage } from "./exercise-image-storage";
 import type { ExerciseImageGenerationRepositoryPort } from "./exercise-image-types";
-import { ocrcraftExerciseIllustrationV1 } from "./ocrcraft-exercise-illustration-v1";
+import {
+  chooseRandomExerciseFigurePresentation,
+  ocrcraftExerciseIllustrationV2,
+  type ExerciseFigurePresentation,
+} from "./ocrcraft-exercise-illustration-v2";
 
 export interface GenerateExerciseImageInput {
   readonly exerciseIdentifier: string;
@@ -15,6 +19,8 @@ export interface ExerciseImagePromptPreview {
   readonly exerciseId: string;
   readonly exerciseName: string;
   readonly styleProfile: string;
+  readonly figurePresentation: ExerciseFigurePresentation;
+  readonly sequenceStepCount: number;
   readonly prompt: string;
 }
 
@@ -27,6 +33,8 @@ export interface ExerciseImageGenerationResult {
   readonly reviewStatus: "pending";
   readonly width: number;
   readonly height: number;
+  readonly figurePresentation: ExerciseFigurePresentation;
+  readonly sequenceStepCount: number;
 }
 
 export class ExerciseImageGenerationService {
@@ -34,11 +42,17 @@ export class ExerciseImageGenerationService {
     private readonly repository: ExerciseImageGenerationRepositoryPort,
     private readonly imageGenerator: ExerciseImageGenerator,
     private readonly storage: ExerciseImageStorage,
+    private readonly chooseFigurePresentation: () => ExerciseFigurePresentation = chooseRandomExerciseFigurePresentation,
   ) {}
 
   async generate(input: GenerateExerciseImageInput): Promise<ExerciseImagePromptPreview | ExerciseImageGenerationResult> {
     const context = await this.repository.getContext(input.exerciseIdentifier);
-    const prompt = buildExerciseImagePrompt(context);
+    const figurePresentation = this.chooseFigurePresentation();
+    const sequenceStepCount = context.localized.de.executionSteps.length;
+    if (sequenceStepCount < 3 || sequenceStepCount > 7 || context.localized.en.executionSteps.length !== sequenceStepCount) {
+      throw new Error("Exercise sequence illustrations require three to seven matching German and English execution steps.");
+    }
+    const prompt = buildExerciseImagePrompt(context, figurePresentation);
     const exerciseName = context.localized.de.name;
 
     if (input.dryRun) {
@@ -46,14 +60,19 @@ export class ExerciseImageGenerationService {
         mode: "dry-run",
         exerciseId: context.exerciseId,
         exerciseName,
-        styleProfile: ocrcraftExerciseIllustrationV1.id,
+        styleProfile: ocrcraftExerciseIllustrationV2.id,
+        figurePresentation,
+        sequenceStepCount,
         prompt,
       };
     }
 
     const assetId = await this.repository.createGeneratingRecord({
       exerciseId: context.exerciseId,
-      styleProfile: ocrcraftExerciseIllustrationV1.id,
+      styleProfile: ocrcraftExerciseIllustrationV2.id,
+      illustrationFormat: "exercise_sequence",
+      figurePresentation,
+      sequenceStepCount,
       generationPrompt: prompt,
       storageProvider: this.storage.provider,
     });
@@ -87,6 +106,8 @@ export class ExerciseImageGenerationService {
         reviewStatus: "pending",
         width: generatedImage.width,
         height: generatedImage.height,
+        figurePresentation,
+        sequenceStepCount,
       };
     } catch (error) {
       const cleanupErrors: unknown[] = [];

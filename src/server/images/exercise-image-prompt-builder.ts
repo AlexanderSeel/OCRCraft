@@ -1,5 +1,6 @@
 import type { ExerciseImageGenerationContext, LocalizedExerciseImageGuidance } from "./exercise-image-types";
-import { ocrcraftExerciseIllustrationV1 } from "./ocrcraft-exercise-illustration-v1";
+import type { ExerciseFigurePresentation } from "./ocrcraft-exercise-illustration-v2";
+import { ocrcraftExerciseIllustrationV2 } from "./ocrcraft-exercise-illustration-v2";
 
 function section(label: string, content: string): string {
   return `${label}: ${content.trim() || "Not specified in the exercise catalog."}`;
@@ -28,14 +29,20 @@ function renderGuidance(locale: "de" | "en", guidance: LocalizedExerciseImageGui
   ].join("\n");
 }
 
-export function buildExerciseImagePrompt(context: ExerciseImageGenerationContext): string {
+export function buildExerciseImagePrompt(
+  context: ExerciseImageGenerationContext,
+  figurePresentation: ExerciseFigurePresentation,
+): string {
   const { localized } = context;
   const equipment = context.equipment.map((item) => `${item.nameDe} / ${item.nameEn} (quantity ${item.quantity})`).join(", ");
   const bodyRegions = context.bodyRegions.map((region) => `${region.emphasis}: ${region.labelDe} / ${region.labelEn}`).join(", ");
   const movementPatterns = context.movementPatterns.map((pattern) => `${pattern.labelDe} / ${pattern.labelEn}`).join(", ");
 
   return [
-    ocrcraftExerciseIllustrationV1.prompt,
+    ocrcraftExerciseIllustrationV2.prompt,
+    `Use exactly one adult athlete identity: ${figurePresentation === "adult_woman" ? "an adult woman" : "an adult man"}. Repeat that same person in the movement frames; do not show a child or a second athlete.`,
+    `Create exactly ${localized.de.executionSteps.length} sequential frames in reading order, one frame for each numbered item in the structured execution steps. Use a clear left-to-right storyboard with small unobtrusive step numbers and simple directional arrows where they clarify motion.`,
+    "Keep the same athlete, clothing, equipment, camera angle and scale in every frame. Make the change in body position between consecutive frames clear and biomechanically plausible.",
     "Illustrate the exact catalog exercise described below. This catalog content is the source of truth for movement mechanics; do not invent a different exercise or add unlisted equipment.",
     `Exercise ID: ${context.exerciseId}`,
     `Category and type: ${context.category}; ${context.exerciseType}`,
@@ -47,7 +54,7 @@ export function buildExerciseImagePrompt(context: ExerciseImageGenerationContext
     section("Movement patterns", movementPatterns),
     renderGuidance("de", localized.de),
     renderGuidance("en", localized.en),
-    "Depict one representative execution moment per person, unless the ordered instructions require a visible start-to-finish sequence to make the movement understandable. If a sequence is needed, show only two small sequential poses inside each person's panel without adding extra people.",
+    "The ordered execution steps are the source of truth for the sequence. Each frame must depict its corresponding step; do not collapse the exercise into one pose, add unlisted movements, or invent extra stages. The image is a sequence of one person, not a comparison of people.",
     "Safety is more important than dramatic action: show stable footing, controlled range, clear space and the stated supervision context. Do not depict pain, unsafe loading, a fall, collision, or an unlisted obstacle configuration.",
   ].join("\n\n");
 }

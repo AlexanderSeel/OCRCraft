@@ -32,13 +32,13 @@ const contextSchema = z.object({
     de: z.object({
       name: z.string().min(1), summary: z.string(), purpose: z.string(), setup: z.string(), startPosition: z.string(),
       finishReset: z.string(), breathingCue: z.string(), tempoCue: z.string(), safetyNotes: z.string(), qualityCriteria: z.string(),
-      prerequisites: z.string(), fallbackExercise: z.string(), executionSteps: z.array(z.string()), coachingCues: z.array(z.string()),
+      prerequisites: z.string(), fallbackExercise: z.string(), executionSteps: z.array(z.string().min(1)).min(3).max(7), coachingCues: z.array(z.string()),
       commonMistakes: z.array(z.object({ mistake: z.string(), correction: z.string() })), specializedGuidance: z.array(z.string()),
     }),
     en: z.object({
       name: z.string().min(1), summary: z.string(), purpose: z.string(), setup: z.string(), startPosition: z.string(),
       finishReset: z.string(), breathingCue: z.string(), tempoCue: z.string(), safetyNotes: z.string(), qualityCriteria: z.string(),
-      prerequisites: z.string(), fallbackExercise: z.string(), executionSteps: z.array(z.string()), coachingCues: z.array(z.string()),
+      prerequisites: z.string(), fallbackExercise: z.string(), executionSteps: z.array(z.string().min(1)).min(3).max(7), coachingCues: z.array(z.string()),
       commonMistakes: z.array(z.object({ mistake: z.string(), correction: z.string() })), specializedGuidance: z.array(z.string()),
     }),
   }),
@@ -192,13 +192,18 @@ export class ExerciseImageGenerationRepository implements ExerciseImageGeneratio
     return serializeExerciseImageWrite(() => withDuckDbConnection(async (connection) => {
       const reader = await connection.runAndReadAll(`
         INSERT INTO exercise_media_assets (
-          exercise_id,media_type,source_type,provider,model,style_profile,generation_prompt,
+          exercise_id,media_type,source_type,provider,model,style_profile,illustration_format,
+          figure_presentation,sequence_step_count,generation_prompt,
           review_status,generation_status,storage_provider
-        ) VALUES ($exerciseId,'illustration','ai_generated','openai','gpt-image-2',$styleProfile,$generationPrompt,'pending','generating',$storageProvider)
+        ) VALUES ($exerciseId,'illustration','ai_generated','openai','gpt-image-2',$styleProfile,
+          $illustrationFormat,$figurePresentation,$sequenceStepCount,$generationPrompt,'pending','generating',$storageProvider)
         RETURNING id::VARCHAR
       `, {
         exerciseId: input.exerciseId,
         styleProfile: input.styleProfile,
+        illustrationFormat: input.illustrationFormat,
+        figurePresentation: input.figurePresentation,
+        sequenceStepCount: input.sequenceStepCount,
         generationPrompt: input.generationPrompt,
         storageProvider: input.storageProvider,
       });

@@ -579,40 +579,34 @@ Import/export must be selective and trainer/admin friendly rather than an all-or
 
 ### OCRCraft illustration style
 
-- [ ] define reusable style profile `ocrcraft-exercise-illustration-v1`
-- [ ] clean flat/semi-flat instructional illustration
-- [ ] light neutral background, strong readable silhouette, minimal visual clutter
-- [ ] dark functional OCR sportswear with muted red accent details inspired by club/OCR clothing
-- [ ] avoid third-party event logos, trademarks or copied branding
-- [ ] equipment must be clearly recognizable
-- [ ] body position and movement direction must be the visual priority
-- [ ] consistent camera angle and proportions across the library where practical
+- [x] preserve legacy style profile `ocrcraft-exercise-illustration-v1` for existing triptych assets
+- [x] define reusable sequence style profile `ocrcraft-exercise-illustration-v2`
+- [x] clean flat instructional illustration with a neutral background, readable silhouette and minimal clutter
+- [x] dark functional OCR sportswear with muted red accent details inspired by club/OCR clothing
+- [x] avoid third-party event logos, trademarks or copied branding
+- [x] recognizable equipment, with body position and movement direction as visual priorities
+- [x] consistent camera angle and proportions across sequence frames
 
 ### Initial AI image generation
 
-For **every initial seed exercise**, generate one standardized example image containing three clearly separated demonstrations of the same exercise:
+Each sequence illustration uses one adult athlete, selected randomly as a woman or man, repeated across ordered frames that explain the exercise steps stored in the dataset.
 
-1. **Kind**
-2. **Frau**
-3. **Mann**
-
-All three figures must show the same exercise/phase and use the same OCRCraft illustration style. Age/gender representation changes; exercise mechanics must remain consistent.
-
-- [x] generate an AI illustration for every initial seed exercise
-- [x] one image contains child + woman + man versions
-- [x] use consistent OCRCraft clothing/style profile
-- [ ] show meaningful start/execution position rather than decorative poses
-- [ ] for movement-heavy exercises, use a small 2-step motion sequence within each person area where required to understand the movement
-- [ ] review every generated image for biomechanical plausibility and match to written instructions
-- [ ] regenerate images that conflict with the exercise description
-- [ ] create lower-complexity child presentation without changing the intended exercise unless the child variant differs explicitly
+- [x] legacy triptych illustrations were generated for each of the original 149 seed exercises
+- [x] sequence prompt uses the localized ordered execution steps in `exercise_execution_steps` as its frame-by-frame source
+- [x] use one randomly selected adult woman or man consistently across all frames
+- [x] create one frame per stored step, preserve the same athlete and equipment, and show direction of movement
+- [ ] generate and review sequence illustrations for the 8 exercises added in catalog expansion cohorts
+- [ ] migrate legacy triptych illustrations to sequence format after exercise steps are specific enough and reviewed
+- [ ] review every generated sequence image for biomechanical plausibility and match to written instructions
 
 ### Image/source metadata
 
 - [x] `media_type`: image / video / illustration
 - [x] `source_type`: `ai_generated` / `club_created` / `external_reference`
 - [x] `style_profile`
-- [ ] `audience_variant`: `kid-woman-man-triptych`
+- [x] `illustration_format`: `exercise_sequence` (legacy assets are retained as `legacy_triptych`)
+- [x] `figure_presentation`: randomly selected `adult_woman` or `adult_man`
+- [x] `sequence_step_count`: matches the bilingual ordered exercise steps
 - [x] `generation_provider`
 - [x] `generation_model`
 - [x] `generation_prompt`
@@ -628,6 +622,7 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 - [x] single-exercise prompt dry run, OpenAI generation with retry handling, and filesystem/S3-compatible storage adapters
 - [x] resumable seed-catalog generation with serialized database writes and concurrent API requests
 - [x] generate and inspect one real sample exercise image
+- [ ] generate and inspect one real sequence illustration sample before the expansion cohort batch
 - [x] generate and persist one image for each of the original 149 seed exercises (all remain pending trainer review)
 - [ ] generate matching illustrations for seed exercises added in catalog expansion cohorts
 - [x] load bilingual structured DuckDB details, movement/body metadata and available running/obstacle/carry guidance into the single-exercise prompt

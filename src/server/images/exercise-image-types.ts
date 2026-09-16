@@ -1,4 +1,6 @@
 export type ExerciseImageLocale = "de" | "en";
+import type { ExerciseFigurePresentation } from "./ocrcraft-exercise-illustration-v2";
+export type { ExerciseFigurePresentation };
 
 export interface LocalizedExerciseImageGuidance {
   readonly name: string;
@@ -63,6 +65,9 @@ export interface StoredExerciseImage {
 export interface CreateExerciseImageGenerationRecord {
   readonly exerciseId: string;
   readonly styleProfile: string;
+  readonly illustrationFormat: "exercise_sequence";
+  readonly figurePresentation: ExerciseFigurePresentation;
+  readonly sequenceStepCount: number;
   readonly generationPrompt: string;
   readonly storageProvider: StoredExerciseImage["storageProvider"];
 }

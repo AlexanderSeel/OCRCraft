@@ -21,6 +21,7 @@ const migrationFiles = [
   "013_foundational_strength_seed_cohort.sql",
   "014_seed_cross_locale_aliases.sql",
   "015_movement_teamwork_seed_cohort.sql",
+  "016_exercise_image_sequences.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -75,13 +76,15 @@ describe("initial exercise catalog", () => {
       const sampleExerciseId = String(sampleExerciseResult.getRows()[0]?.[0]);
       await connection.run(`
         INSERT INTO exercise_media_assets (
-          exercise_id,media_type,source_type,provider,model,style_profile,generation_prompt,
-          generation_status,storage_provider
+          exercise_id,media_type,source_type,provider,model,style_profile,illustration_format,
+          figure_presentation,sequence_step_count,generation_prompt,generation_status,storage_provider
         ) VALUES ($exerciseId,'illustration','ai_generated','openai','gpt-image-2',
-          'ocrcraft-exercise-illustration-v1','Three-panel test prompt','generating','filesystem')
+          'ocrcraft-exercise-illustration-v2','exercise_sequence','adult_woman',3,
+          'Three-step movement sequence test prompt','generating','filesystem')
       `, { exerciseId: sampleExerciseId });
       const persistedImageMetadata = await connection.runAndReadAll(`
-        SELECT source_type,provider,model,style_profile,generation_prompt,review_status,generation_status
+        SELECT source_type,provider,model,style_profile,illustration_format,figure_presentation,
+          sequence_step_count,generation_prompt,review_status,generation_status
         FROM exercise_media_assets WHERE exercise_id=$exerciseId
       `, { exerciseId: sampleExerciseId });
       const translations = await scalar(connection, "SELECT count(*) FROM exercise_translations");
@@ -324,7 +327,8 @@ describe("initial exercise catalog", () => {
       expect(incompleteWarmupDosage).toBe(0);
       expect(await scalar(connection, "SELECT count(*) FROM information_schema.tables WHERE table_name='exercise_media_assets'")).toBe(1);
       expect(persistedImageMetadata.getRows()[0]).toEqual([
-        "ai_generated", "openai", "gpt-image-2", "ocrcraft-exercise-illustration-v1", "Three-panel test prompt", "pending", "generating",
+        "ai_generated", "openai", "gpt-image-2", "ocrcraft-exercise-illustration-v2", "exercise_sequence",
+        "adult_woman", 3, "Three-step movement sequence test prompt", "pending", "generating",
       ]);
     } finally {
       connection.closeSync();
@@ -356,11 +360,12 @@ describe("initial exercise catalog", () => {
       const seedExerciseId = String(seedExercise.getRows()[0]?.[0]);
       await connection.run(`
         INSERT INTO exercise_media_assets (
-          exercise_id,media_type,source_type,provider,model,style_profile,generation_prompt,generated_at,
+          exercise_id,media_type,source_type,provider,model,style_profile,illustration_format,
+          figure_presentation,sequence_step_count,generation_prompt,generated_at,
           review_status,generation_status,storage_provider,storage_key,storage_uri,content_type,width,height,sha256
         ) VALUES (
-          $exerciseId,'illustration','ai_generated','openai','gpt-image-2',
-          'ocrcraft-exercise-illustration-v1','Seed image test prompt',current_timestamp,
+          $exerciseId,'illustration','ai_generated','openai','gpt-image-2','ocrcraft-exercise-illustration-v2',
+          'exercise_sequence','adult_man',3,'Seed sequence test prompt',current_timestamp,
           'pending','generated','filesystem','old-exercise-id/test-image.png',
           '/generated/exercises/old-exercise-id/test-image.png','image/png',1536,1024,repeat('a',64)
         )
@@ -375,11 +380,13 @@ describe("initial exercise catalog", () => {
       expect(await scalar(connection, "SELECT count(*) FROM exercises WHERE canonical_name='Eigene Übung'")).toBe(0);
       expect(await scalar(connection, "SELECT count(*) FROM exercise_media_assets")).toBe(1);
       const restoredMedia = await connection.runAndReadAll(`
-        SELECT e.seed_key,m.storage_uri,m.generation_status,m.review_status
+        SELECT e.seed_key,m.storage_uri,m.generation_status,m.review_status,
+          m.style_profile,m.illustration_format,m.figure_presentation,m.sequence_step_count
         FROM exercise_media_assets m JOIN exercises e ON e.id=m.exercise_id
       `);
       expect(restoredMedia.getRows()[0]).toEqual([
         "easy-jog", "/generated/exercises/old-exercise-id/test-image.png", "generated", "pending",
+        "ocrcraft-exercise-illustration-v2", "exercise_sequence", "adult_man", 3,
       ]);
       expect(await scalar(connection, "SELECT count(*) FROM schema_migrations")).toBe(migrationFiles.length);
 

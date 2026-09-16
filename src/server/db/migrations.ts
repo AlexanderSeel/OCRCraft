@@ -26,6 +26,7 @@ const migrations: readonly Migration[] = [
   { version: 13, fileName: "013_foundational_strength_seed_cohort.sql" },
   { version: 14, fileName: "014_seed_cross_locale_aliases.sql" },
   { version: 15, fileName: "015_movement_teamwork_seed_cohort.sql" },
+  { version: 16, fileName: "016_exercise_image_sequences.sql" },
 ];
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {

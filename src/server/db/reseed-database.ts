@@ -8,6 +8,9 @@ interface PreservedSeedMediaAsset {
   readonly provider: string | null;
   readonly model: string | null;
   readonly styleProfile: string | null;
+  readonly illustrationFormat: string;
+  readonly figurePresentation: string | null;
+  readonly sequenceStepCount: number | null;
   readonly generationPrompt: string | null;
   readonly generatedAt: string | null;
   readonly reviewStatus: string;
@@ -78,7 +81,8 @@ async function readSeedMediaAssets(connection: DuckDBConnection): Promise<readon
 
   const reader = await connection.runAndReadAll(`
     SELECT m.id::VARCHAR, e.seed_key, m.media_type, m.source_type, m.provider, m.model,
-      m.style_profile, m.generation_prompt, m.generated_at::VARCHAR, m.review_status,
+      m.style_profile, m.illustration_format, m.figure_presentation, m.sequence_step_count,
+      m.generation_prompt, m.generated_at::VARCHAR, m.review_status,
       m.generation_status, m.storage_provider, m.storage_key, m.storage_uri, m.content_type,
       m.width, m.height, m.sha256, m.error_message, m.created_at::VARCHAR, m.updated_at::VARCHAR
     FROM exercise_media_assets m
@@ -95,20 +99,23 @@ async function readSeedMediaAssets(connection: DuckDBConnection): Promise<readon
     provider: row[4] == null ? null : String(row[4]),
     model: row[5] == null ? null : String(row[5]),
     styleProfile: row[6] == null ? null : String(row[6]),
-    generationPrompt: row[7] == null ? null : String(row[7]),
-    generatedAt: row[8] == null ? null : String(row[8]),
-    reviewStatus: String(row[9]),
-    generationStatus: String(row[10]),
-    storageProvider: String(row[11]),
-    storageKey: row[12] == null ? null : String(row[12]),
-    storageUri: row[13] == null ? null : String(row[13]),
-    contentType: row[14] == null ? null : String(row[14]),
-    width: row[15] == null ? null : Number(row[15]),
-    height: row[16] == null ? null : Number(row[16]),
-    sha256: row[17] == null ? null : String(row[17]),
-    errorMessage: row[18] == null ? null : String(row[18]),
-    createdAt: String(row[19]),
-    updatedAt: String(row[20]),
+    illustrationFormat: String(row[7]),
+    figurePresentation: row[8] == null ? null : String(row[8]),
+    sequenceStepCount: row[9] == null ? null : Number(row[9]),
+    generationPrompt: row[10] == null ? null : String(row[10]),
+    generatedAt: row[11] == null ? null : String(row[11]),
+    reviewStatus: String(row[12]),
+    generationStatus: String(row[13]),
+    storageProvider: String(row[14]),
+    storageKey: row[15] == null ? null : String(row[15]),
+    storageUri: row[16] == null ? null : String(row[16]),
+    contentType: row[17] == null ? null : String(row[17]),
+    width: row[18] == null ? null : Number(row[18]),
+    height: row[19] == null ? null : Number(row[19]),
+    sha256: row[20] == null ? null : String(row[20]),
+    errorMessage: row[21] == null ? null : String(row[21]),
+    createdAt: String(row[22]),
+    updatedAt: String(row[23]),
   }));
 }
 
@@ -126,11 +133,13 @@ async function restoreSeedMediaAssets(
 
     await connection.run(`
       INSERT INTO exercise_media_assets (
-        id,exercise_id,media_type,source_type,provider,model,style_profile,generation_prompt,
+        id,exercise_id,media_type,source_type,provider,model,style_profile,illustration_format,
+        figure_presentation,sequence_step_count,generation_prompt,
         generated_at,review_status,generation_status,storage_provider,storage_key,storage_uri,
         content_type,width,height,sha256,error_message,created_at,updated_at
       ) VALUES (
-        $id,$exerciseId,$mediaType,$sourceType,$provider,$model,$styleProfile,$generationPrompt,
+        $id,$exerciseId,$mediaType,$sourceType,$provider,$model,$styleProfile,$illustrationFormat,
+        $figurePresentation,$sequenceStepCount,$generationPrompt,
         CAST($generatedAt AS TIMESTAMP),$reviewStatus,$generationStatus,$storageProvider,$storageKey,
         $storageUri,$contentType,$width,$height,$sha256,$errorMessage,
         CAST($createdAt AS TIMESTAMP),CAST($updatedAt AS TIMESTAMP)
@@ -143,6 +152,9 @@ async function restoreSeedMediaAssets(
       provider: asset.provider,
       model: asset.model,
       styleProfile: asset.styleProfile,
+      illustrationFormat: asset.illustrationFormat,
+      figurePresentation: asset.figurePresentation,
+      sequenceStepCount: asset.sequenceStepCount,
       generationPrompt: asset.generationPrompt,
       generatedAt: asset.generatedAt,
       reviewStatus: asset.reviewStatus,
