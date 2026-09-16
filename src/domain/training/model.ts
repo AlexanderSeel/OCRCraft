@@ -1,3 +1,5 @@
+import { BODY_REGION_IDS, type BodyRegion } from "../body-regions";
+
 export const TRAINING_PHASES = ["warmup", "main", "cooldown"] as const;
 export type TrainingPhaseKind = (typeof TRAINING_PHASES)[number];
 
@@ -20,23 +22,8 @@ export const TRAINING_FORMATS = [
 ] as const;
 export type TrainingFormat = (typeof TRAINING_FORMATS)[number];
 
-export const BODY_REGIONS = [
-  "shoulders",
-  "chest",
-  "upper-back",
-  "arms",
-  "forearms-grip",
-  "core",
-  "lower-back",
-  "hips",
-  "glutes",
-  "quadriceps",
-  "hamstrings",
-  "calves",
-  "ankles-feet",
-  "full-body",
-] as const;
-export type BodyRegion = (typeof BODY_REGIONS)[number];
+export const BODY_REGIONS = BODY_REGION_IDS;
+export type { BodyRegion } from "../body-regions";
 
 export interface TrainingGroup {
   readonly id: string;

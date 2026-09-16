@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
 import { MuscleMap } from "@/components/body/muscle-map";
+import { expandBodyRegionIds } from "@/domain/body-regions";
 import {
   exerciseCategoryLabels,
   type ExerciseCategory,
@@ -39,7 +40,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   ]);
 
   const matchingMuscleIds = selectedMuscles.length > 0
-    ? new Set(await listExerciseIdsForBodyRegions(selectedMuscles))
+    ? new Set(await listExerciseIdsForBodyRegions(expandBodyRegionIds(selectedMuscles)))
     : null;
   const exercises = matchingMuscleIds
     ? searchResult.filter((exercise) => matchingMuscleIds.has(exercise.id))
@@ -125,7 +126,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             <div className="mt-4 max-w-xl">
               <MuscleMap
                 key={selectedMuscles.join(",") || "none"}
-                description="Wähle eine oder mehrere Regionen. Die Bibliothek zeigt Übungen, die mindestens eine der gewählten Regionen betreffen."
+                description="Wähle eine oder mehrere Regionen. Feine Muskelangaben berücksichtigen kompatible ältere Grobzuordnungen, ohne bestehende Übungen umzuschreiben."
                 fieldName="muscle"
                 mode="select"
                 options={bodyRegionOptions}

@@ -1,6 +1,6 @@
 import type { ExerciseCategory } from "@/domain/exercise/model";
+import { bodyRegionsOverlap, isBodyRegion } from "../body-regions";
 import {
-  BODY_REGIONS,
   TRAINING_PHASE_LABELS,
   type Audience,
   type BodyRegion,
@@ -76,12 +76,6 @@ const FORMAT_CATEGORY_BONUS: Readonly<Partial<Record<TrainingFormat, readonly Ex
   emom: ["strength", "core", "carry-lift", "general"],
 };
 
-const BODY_REGION_SET = new Set<string>(BODY_REGIONS);
-
-function isBodyRegion(value: string): value is BodyRegion {
-  return BODY_REGION_SET.has(value);
-}
-
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -136,7 +130,7 @@ function scoreCandidate(
   if (normalizedGoals.some((goal) => goalTerms.some((term) => goal.includes(term)))) score += 35;
 
   for (const bodyRegion of input.bodyRegions) {
-    if (candidate.bodyRegions.includes(bodyRegion)) score += 10;
+    if (bodyRegionsOverlap([bodyRegion], candidate.bodyRegions)) score += 10;
   }
 
   for (const format of input.formats) {

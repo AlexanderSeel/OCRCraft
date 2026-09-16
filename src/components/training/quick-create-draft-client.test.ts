@@ -24,7 +24,7 @@ describe("parseAgeRange", () => {
 });
 
 describe("normalizeTrainingDraftRequest", () => {
-  it("keeps supported values and filters unknown client values", () => {
+  it("keeps supported granular muscle regions and filters unknown client values", () => {
     expect(
       normalizeTrainingDraftRequest({
         groupType: "kids",
@@ -32,7 +32,7 @@ describe("normalizeTrainingDraftRequest", () => {
         participantCount: 14,
         durationMinutes: 60,
         goals: ["OCR-Technik"],
-        bodyRegions: ["core", "not-a-region"],
+        bodyRegions: ["core", "biceps", "rear-delts", "abs", "not-a-region"],
         formats: ["rig-run", "not-a-format"],
         intensity: "technique",
         preferredExerciseIds: ["exercise-1"],
@@ -42,7 +42,7 @@ describe("normalizeTrainingDraftRequest", () => {
       participantCount: 14,
       durationMinutes: 60,
       goals: ["OCR-Technik"],
-      bodyRegions: ["core"],
+      bodyRegions: ["core", "biceps", "rear-delts", "abs"],
       formats: ["rig-run"],
       intensity: "technique",
       preferredExerciseIds: ["exercise-1"],

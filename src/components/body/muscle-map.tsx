@@ -35,109 +35,109 @@ type Shape =
 
 const SHAPES: Readonly<Record<string, readonly Shape[]>> = {
   "full-body": [
-    { kind: "rect", x: 13, y: 22, width: 165, height: 462, rx: 72 },
-    { kind: "rect", x: 199, y: 22, width: 164, height: 462, rx: 72 },
+    { kind: "rect", x: 16, y: 9, width: 160, height: 492, rx: 70 },
+    { kind: "rect", x: 200, y: 9, width: 160, height: 492, rx: 70 },
   ],
   neck: [
-    { kind: "rect", x: 82, y: 51, width: 28, height: 31, rx: 10 },
-    { kind: "rect", x: 270, y: 49, width: 29, height: 35, rx: 10 },
+    { kind: "rect", x: 82, y: 53, width: 28, height: 29, rx: 9 },
+    { kind: "rect", x: 271, y: 53, width: 28, height: 29, rx: 9 },
   ],
   traps: [
-    { kind: "polygon", points: "74,83 94,68 116,84 108,103 80,103" },
-    { kind: "polygon", points: "258,91 284,72 312,91 303,132 285,151 267,132" },
+    { kind: "polygon", points: "75,80 96,69 117,80 109,102 83,102" },
+    { kind: "polygon", points: "254,99 274,78 285,109 296,78 316,99 304,139 285,153 266,139" },
   ],
   shoulders: [
-    { kind: "ellipse", cx: 57, cy: 105, rx: 22, ry: 20 },
-    { kind: "ellipse", cx: 136, cy: 105, rx: 22, ry: 20 },
-    { kind: "ellipse", cx: 244, cy: 105, rx: 22, ry: 20 },
-    { kind: "ellipse", cx: 324, cy: 105, rx: 22, ry: 20 },
+    { kind: "ellipse", cx: 57, cy: 110, rx: 20, ry: 19 },
+    { kind: "ellipse", cx: 135, cy: 110, rx: 20, ry: 19 },
+    { kind: "ellipse", cx: 246, cy: 110, rx: 20, ry: 19 },
+    { kind: "ellipse", cx: 324, cy: 110, rx: 20, ry: 19 },
   ],
   "rear-delts": [
-    { kind: "ellipse", cx: 246, cy: 111, rx: 19, ry: 15 },
-    { kind: "ellipse", cx: 323, cy: 111, rx: 19, ry: 15 },
+    { kind: "ellipse", cx: 247, cy: 114, rx: 16, ry: 14 },
+    { kind: "ellipse", cx: 323, cy: 114, rx: 16, ry: 14 },
   ],
   chest: [
-    { kind: "ellipse", cx: 78, cy: 132, rx: 31, ry: 22 },
-    { kind: "ellipse", cx: 113, cy: 132, rx: 31, ry: 22 },
+    { kind: "ellipse", cx: 78, cy: 130, rx: 28, ry: 20 },
+    { kind: "ellipse", cx: 114, cy: 130, rx: 28, ry: 20 },
   ],
   "upper-back": [
-    { kind: "polygon", points: "244,116 274,91 285,158 263,183 238,151" },
-    { kind: "polygon", points: "324,116 296,91 287,158 307,183 333,151" },
+    { kind: "polygon", points: "247,117 274,102 284,153 267,183 243,152" },
+    { kind: "polygon", points: "323,117 296,102 286,153 303,183 327,152" },
   ],
   lats: [
-    { kind: "polygon", points: "247,155 271,151 278,219 258,236 241,193" },
-    { kind: "polygon", points: "322,155 298,151 290,219 310,236 329,193" },
+    { kind: "polygon", points: "246,151 269,157 278,219 258,239 242,190" },
+    { kind: "polygon", points: "324,151 301,157 292,219 312,239 328,190" },
   ],
   "upper-arms": [
-    { kind: "ellipse", cx: 46, cy: 176, rx: 15, ry: 38 },
-    { kind: "ellipse", cx: 146, cy: 176, rx: 15, ry: 38 },
-    { kind: "ellipse", cx: 231, cy: 176, rx: 15, ry: 38 },
-    { kind: "ellipse", cx: 338, cy: 176, rx: 15, ry: 38 },
+    { kind: "ellipse", cx: 44, cy: 177, rx: 14, ry: 38 },
+    { kind: "ellipse", cx: 148, cy: 177, rx: 14, ry: 38 },
+    { kind: "ellipse", cx: 230, cy: 177, rx: 14, ry: 38 },
+    { kind: "ellipse", cx: 340, cy: 177, rx: 14, ry: 38 },
   ],
   biceps: [
-    { kind: "ellipse", cx: 47, cy: 170, rx: 11, ry: 27 },
-    { kind: "ellipse", cx: 145, cy: 170, rx: 11, ry: 27 },
+    { kind: "ellipse", cx: 44, cy: 171, rx: 10, ry: 27 },
+    { kind: "ellipse", cx: 148, cy: 171, rx: 10, ry: 27 },
   ],
   triceps: [
-    { kind: "ellipse", cx: 231, cy: 173, rx: 11, ry: 29 },
-    { kind: "ellipse", cx: 338, cy: 173, rx: 11, ry: 29 },
+    { kind: "ellipse", cx: 230, cy: 174, rx: 10, ry: 29 },
+    { kind: "ellipse", cx: 340, cy: 174, rx: 10, ry: 29 },
   ],
   "forearms-grip": [
-    { kind: "ellipse", cx: 31, cy: 245, rx: 12, ry: 43 },
-    { kind: "ellipse", cx: 160, cy: 245, rx: 12, ry: 43 },
-    { kind: "ellipse", cx: 218, cy: 245, rx: 12, ry: 43 },
-    { kind: "ellipse", cx: 350, cy: 245, rx: 12, ry: 43 },
+    { kind: "ellipse", cx: 31, cy: 249, rx: 11, ry: 43 },
+    { kind: "ellipse", cx: 161, cy: 249, rx: 11, ry: 43 },
+    { kind: "ellipse", cx: 217, cy: 249, rx: 11, ry: 43 },
+    { kind: "ellipse", cx: 353, cy: 249, rx: 11, ry: 43 },
   ],
   core: [
-    { kind: "rect", x: 75, y: 159, width: 42, height: 104, rx: 18 },
+    { kind: "rect", x: 75, y: 157, width: 42, height: 108, rx: 17 },
   ],
   abs: [
-    { kind: "rect", x: 82, y: 166, width: 28, height: 88, rx: 12 },
+    { kind: "rect", x: 82, y: 165, width: 28, height: 91, rx: 10 },
   ],
   obliques: [
-    { kind: "polygon", points: "58,163 75,164 75,245 61,233 51,192" },
-    { kind: "polygon", points: "134,163 117,164 117,245 132,233 142,192" },
+    { kind: "polygon", points: "58,160 75,165 75,246 61,234 51,191" },
+    { kind: "polygon", points: "134,160 117,165 117,246 131,234 141,191" },
   ],
   "lower-back": [
-    { kind: "polygon", points: "271,190 298,190 304,254 285,278 265,254" },
+    { kind: "polygon", points: "264,194 285,207 306,194 304,254 285,278 266,254" },
   ],
   hips: [
-    { kind: "ellipse", cx: 70, cy: 282, rx: 25, ry: 25 },
-    { kind: "ellipse", cx: 122, cy: 282, rx: 25, ry: 25 },
-    { kind: "ellipse", cx: 258, cy: 282, rx: 25, ry: 25 },
-    { kind: "ellipse", cx: 311, cy: 282, rx: 25, ry: 25 },
+    { kind: "ellipse", cx: 71, cy: 282, rx: 24, ry: 24 },
+    { kind: "ellipse", cx: 121, cy: 282, rx: 24, ry: 24 },
+    { kind: "ellipse", cx: 260, cy: 282, rx: 24, ry: 24 },
+    { kind: "ellipse", cx: 310, cy: 282, rx: 24, ry: 24 },
   ],
   glutes: [
-    { kind: "ellipse", cx: 265, cy: 305, rx: 26, ry: 34 },
-    { kind: "ellipse", cx: 306, cy: 305, rx: 26, ry: 34 },
+    { kind: "ellipse", cx: 265, cy: 307, rx: 25, ry: 33 },
+    { kind: "ellipse", cx: 305, cy: 307, rx: 25, ry: 33 },
   ],
   quadriceps: [
-    { kind: "ellipse", cx: 67, cy: 350, rx: 23, ry: 60 },
-    { kind: "ellipse", cx: 124, cy: 350, rx: 23, ry: 60 },
+    { kind: "ellipse", cx: 69, cy: 352, rx: 22, ry: 59 },
+    { kind: "ellipse", cx: 123, cy: 352, rx: 22, ry: 59 },
   ],
   hamstrings: [
-    { kind: "ellipse", cx: 258, cy: 355, rx: 22, ry: 61 },
-    { kind: "ellipse", cx: 313, cy: 355, rx: 22, ry: 61 },
+    { kind: "ellipse", cx: 259, cy: 355, rx: 21, ry: 60 },
+    { kind: "ellipse", cx: 311, cy: 355, rx: 21, ry: 60 },
   ],
   adductors: [
-    { kind: "ellipse", cx: 86, cy: 351, rx: 13, ry: 55 },
-    { kind: "ellipse", cx: 106, cy: 351, rx: 13, ry: 55 },
+    { kind: "ellipse", cx: 87, cy: 351, rx: 12, ry: 54 },
+    { kind: "ellipse", cx: 105, cy: 351, rx: 12, ry: 54 },
   ],
   calves: [
-    { kind: "ellipse", cx: 66, cy: 431, rx: 18, ry: 48 },
-    { kind: "ellipse", cx: 126, cy: 431, rx: 18, ry: 48 },
-    { kind: "ellipse", cx: 258, cy: 431, rx: 18, ry: 48 },
-    { kind: "ellipse", cx: 315, cy: 431, rx: 18, ry: 48 },
+    { kind: "ellipse", cx: 69, cy: 435, rx: 17, ry: 47 },
+    { kind: "ellipse", cx: 123, cy: 435, rx: 17, ry: 47 },
+    { kind: "ellipse", cx: 259, cy: 435, rx: 17, ry: 47 },
+    { kind: "ellipse", cx: 311, cy: 435, rx: 17, ry: 47 },
   ],
   tibialis: [
-    { kind: "ellipse", cx: 72, cy: 429, rx: 9, ry: 43 },
-    { kind: "ellipse", cx: 120, cy: 429, rx: 9, ry: 43 },
+    { kind: "ellipse", cx: 74, cy: 435, rx: 8, ry: 41 },
+    { kind: "ellipse", cx: 118, cy: 435, rx: 8, ry: 41 },
   ],
   "ankles-feet": [
-    { kind: "ellipse", cx: 69, cy: 482, rx: 22, ry: 18 },
-    { kind: "ellipse", cx: 126, cy: 482, rx: 22, ry: 18 },
-    { kind: "ellipse", cx: 257, cy: 482, rx: 22, ry: 18 },
-    { kind: "ellipse", cx: 316, cy: 482, rx: 22, ry: 18 },
+    { kind: "ellipse", cx: 70, cy: 487, rx: 20, ry: 14 },
+    { kind: "ellipse", cx: 122, cy: 487, rx: 20, ry: 14 },
+    { kind: "ellipse", cx: 258, cy: 487, rx: 20, ry: 14 },
+    { kind: "ellipse", cx: 312, cy: 487, rx: 20, ry: 14 },
   ],
 };
 
@@ -192,63 +192,74 @@ export function MuscleMap({
         </div>
       ) : null}
 
-      <div className={compact ? "relative mx-auto w-full max-w-48" : "relative mx-auto w-full max-w-md"}>
-        {/* Generated specifically for OCRCraft as a neutral anatomical base; semantic highlights are rendered separately. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          alt="Anatomische Vorder- und Rückansicht zur Auswahl von Muskelgruppen"
-          className="block h-auto w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)]"
-          src="/assets/muscle-map-base.webp"
-        />
-        <svg
-          aria-label="Interaktive Muskelkarte"
-          className="absolute inset-0 h-full w-full"
-          role="group"
-          viewBox="0 0 376 504"
-        >
-          {visibleOptions.map((option) => {
-            const selected = selectedById.get(option.id);
-            const emphasis = selected?.emphasis ?? "primary";
-            const fill = selected
-              ? emphasis === "secondary" ? "var(--muscle-secondary, #3b82f6)" : "var(--muscle-primary, #ef4444)"
-              : "transparent";
-            const stroke = selected ? fill : interactive ? "rgba(15, 23, 42, 0.18)" : "transparent";
-            return (
-              <g
-                aria-label={option.labelDe}
-                aria-pressed={interactive ? Boolean(selected) : undefined}
-                className={interactive ? "cursor-pointer outline-none" : undefined}
-                key={option.id}
-                onClick={() => cycle(option.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    cycle(option.id);
-                  }
-                }}
-                role={interactive ? "button" : "img"}
-                tabIndex={interactive ? 0 : undefined}
-              >
-                <title>{option.labelDe}</title>
-                {SHAPES[option.id].map((shape, index) => (
-                  <ShapeElement
-                    fill={fill}
-                    key={`${option.id}-${index}`}
-                    selected={Boolean(selected)}
-                    shape={shape}
-                    stroke={stroke}
-                  />
-                ))}
-              </g>
-            );
-          })}
-        </svg>
+      <div className={compact ? "mx-auto w-full max-w-44" : "mx-auto w-full max-w-xl"}>
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--muscle-canvas)] shadow-[var(--shadow-card)]">
+          {/* OCRCraft-owned neutral anatomy illustration; semantic highlights stay separate and interactive. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            alt="Anatomische Vorder- und Rückansicht zur Auswahl von Muskelgruppen"
+            className="block h-auto w-full"
+            src="/assets/muscle-map-anatomy.svg"
+          />
+          <svg
+            aria-label="Interaktive Muskelkarte"
+            className="absolute inset-0 h-full w-full"
+            role="group"
+            viewBox="0 0 376 504"
+          >
+            {visibleOptions.map((option) => {
+              const selected = selectedById.get(option.id);
+              const emphasis = selected?.emphasis ?? "primary";
+              const fill = selected
+                ? emphasis === "secondary"
+                  ? "var(--muscle-secondary)"
+                  : "var(--muscle-primary)"
+                : "transparent";
+              const stroke = selected ? "var(--muscle-stroke)" : "transparent";
+              return (
+                <g
+                  aria-label={option.labelDe}
+                  aria-pressed={interactive ? Boolean(selected) : undefined}
+                  className={interactive ? "cursor-pointer outline-none" : undefined}
+                  key={option.id}
+                  onClick={() => cycle(option.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      cycle(option.id);
+                    }
+                  }}
+                  role={interactive ? "button" : "img"}
+                  tabIndex={interactive ? 0 : undefined}
+                >
+                  <title>{option.labelDe}</title>
+                  {SHAPES[option.id].map((shape, index) => (
+                    <ShapeElement
+                      fill={fill}
+                      fullBody={option.id === "full-body"}
+                      key={`${option.id}-${index}`}
+                      selected={Boolean(selected)}
+                      shape={shape}
+                      stroke={stroke}
+                    />
+                  ))}
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+        {!compact ? (
+          <div className="mt-2 grid grid-cols-2 text-center text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">
+            <span>Vorderseite</span>
+            <span>Rückseite</span>
+          </div>
+        ) : null}
       </div>
 
       {mode === "emphasis" ? (
         <div className="flex flex-wrap gap-3 text-xs font-bold text-[var(--muted)]">
-          <Legend color="var(--muscle-primary, #ef4444)" label="Primär" />
-          <Legend color="var(--muscle-secondary, #3b82f6)" label="Sekundär" />
+          <Legend color="var(--muscle-primary)" label="Primär" />
+          <Legend color="var(--muscle-secondary)" label="Sekundär" />
           {interactive ? <span>Klickfolge: Primär → Sekundär → Aus</span> : null}
         </div>
       ) : null}
@@ -261,12 +272,21 @@ export function MuscleMap({
             const secondary = item.emphasis === "secondary";
             return (
               <button
-                className={`rounded-full border px-3 py-1.5 text-xs font-bold ${secondary ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200" : "border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200"}`}
+                className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold text-[var(--foreground)]"
                 disabled={!interactive}
                 key={item.id}
                 onClick={() => cycle(item.id)}
+                style={{
+                  background: secondary ? "var(--muscle-secondary-soft)" : "var(--muscle-primary-soft)",
+                  borderColor: secondary ? "var(--muscle-secondary)" : "var(--muscle-primary)",
+                }}
                 type="button"
               >
+                <span
+                  aria-hidden="true"
+                  className="size-2 rounded-full"
+                  style={{ background: secondary ? "var(--muscle-secondary)" : "var(--muscle-primary)" }}
+                />
                 {option.labelDe}{interactive ? " ×" : ""}
               </button>
             );
@@ -283,9 +303,14 @@ export function MuscleMap({
               return (
                 <button
                   aria-pressed={Boolean(selected)}
-                  className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold ${selected ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--foreground)]" : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)]"}`}
+                  className="rounded-lg border px-2.5 py-1.5 text-xs font-bold text-[var(--foreground)]"
                   key={`list-${option.id}`}
                   onClick={() => cycle(option.id)}
+                  style={{
+                    background: selected ? "var(--muscle-primary-soft)" : "var(--surface)",
+                    borderColor: selected ? "var(--muscle-primary)" : "var(--border)",
+                    color: selected ? "var(--foreground)" : "var(--muted)",
+                  }}
                   type="button"
                 >
                   {option.labelDe}
@@ -317,18 +342,20 @@ function ShapeElement({
   fill,
   stroke,
   selected,
+  fullBody,
 }: {
   readonly shape: Shape;
   readonly fill: string;
   readonly stroke: string;
   readonly selected: boolean;
+  readonly fullBody: boolean;
 }) {
   const common = {
     fill,
     stroke,
-    strokeWidth: selected ? 2.2 : 1.1,
+    strokeWidth: selected ? 1.8 : 0,
     style: { transition: "fill 140ms ease, stroke 140ms ease, opacity 140ms ease" },
-    opacity: selected ? 0.64 : 0.08,
+    opacity: selected ? fullBody ? 0.22 : 0.82 : 0.01,
   };
   if (shape.kind === "ellipse") return <ellipse {...common} cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} />;
   if (shape.kind === "rect") return <rect {...common} height={shape.height} rx={shape.rx ?? 0} width={shape.width} x={shape.x} y={shape.y} />;

@@ -38,6 +38,7 @@
 - [x] deterministic non-AI `TrainingDraft` composer
 - [x] deterministic phase-duration budgeting and exact minute distribution
 - [x] deterministic selection uses audience/age, goals, body regions, format, intensity, tags and preferred exercises
+- [x] coarse/fine body-region compatibility for training composition
 - [ ] station-capacity validation
 - [ ] simultaneous equipment-conflict validation
 - [ ] transition/setup-time validation
@@ -58,6 +59,7 @@
 - [x] real In-Memory-DuckDB migration test
 - [x] expanded exercise-detail schema foundation from section 4
 - [x] media source/generation metadata schema and migration
+- [x] granular muscle-region extension migration; existing coarse mappings remain unchanged and valid
 - [ ] training version snapshots
 - [ ] favorites/recent use
 - [ ] templates
@@ -333,6 +335,13 @@ Reference entry points:
 - [x] server-side Zod validation
 - [x] mutations refresh DE/EN search documents
 - [x] mutations mark FTS `dirty`
+- [x] edit body regions with primary/secondary muscle emphasis
+- [x] edit movement patterns
+- [x] edit equipment requirements
+- [x] edit tags
+- [x] muscle-map filtering with safe coarse/fine compatibility
+- [x] read-only muscle preview/highlighting on exercise cards
+- [ ] edit explicit goals/additional categories
 - [ ] detail page that explains the exercise without assumed expert knowledge
 - [ ] structured execution-step editor
 - [ ] coaching-cue editor
@@ -342,10 +351,6 @@ Reference entry points:
 - [ ] safety/logistics editor
 - [ ] source/provenance display
 - [ ] protected hard delete
-- [ ] edit body regions
-- [ ] edit movement patterns
-- [ ] edit equipment requirements
-- [ ] edit tags/goals/categories
 - [ ] progressions/regressions
 - [ ] duplicate detection / bulk edit / import-export
 
@@ -382,6 +387,10 @@ Reference entry points:
 - [x] phase cards
 - [x] touch-friendly Quick Create
 - [x] visual front/back body selector
+- [x] reusable `MuscleMap` component with select/emphasis/display modes
+- [x] OCRCraft-owned anatomical front/back asset with semantic muscle overlays
+- [x] accessible list fallback for precise selection of overlapping regions
+- [x] muscle highlight design tokens for Light/Dark/System themes
 - [x] Exercise create/edit UI
 - [x] initial read-only Admin dashboard
 - [x] central semantic design-token foundation with core screens migrated
@@ -406,6 +415,7 @@ Reference entry points:
 - [x] kids/youth/adults/mixed
 - [x] age + participant count + duration
 - [x] goals + body regions + intensity
+- [x] granular body-region focus uses the same shared muscle-map taxonomy
 - [x] Circuit / Rig & Run / AMRAP / EMOM / Tabata
 - [x] Run + Exercise / Technique / Team-Relay
 - [x] connect UI to real exercise autocomplete/retrieval
@@ -635,6 +645,8 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 - [x] structured autocomplete integration tests for aliases/tags/equipment/body regions/categories/movement patterns
 - [x] deterministic TrainingDraft domain tests
 - [x] TrainingDraft candidate retrieval integration test
+- [x] granular/coarse body-region compatibility unit tests
+- [x] Quick Create request normalization tests include granular muscle regions
 - [x] persisted Training Session integration test
 - [x] persisted Training item mutation integration tests for add/edit/remove/reorder/replace
 - [ ] Quick Create E2E
@@ -676,6 +688,8 @@ No athlete surveillance or unnecessary personal data.
 - [x] BM25 live search + structured fallback
 - [x] enriched autocomplete API
 - [x] read-only Admin search status
+- [x] reusable anatomical MuscleMap across Quick Create, exercise editing, filtering and previews
+- [x] granular muscle taxonomy with safe compatibility for legacy coarse mappings
 - [x] Quick Create UI + body selector + live exercise retrieval
 - [x] deterministic real-exercise TrainingDraft preview
 - [x] Quick Create persistence to real training sessions
@@ -698,7 +712,8 @@ No athlete surveillance or unnecessary personal data.
 - [x] central UI tokens + Light/Dark/System theme
 - [x] BM25 exercise search over enriched content
 - [x] connect Quick Create to real autocomplete/retrieval
-- [ ] body-region/equipment/tag editing
+- [x] body-region/movement/equipment/tag facet editing
+- [x] reusable muscle map selection/filter/preview slice
 - [x] deterministic non-AI `TrainingDraft`
 - [x] persisted Training Session CRUD foundation
 - [ ] selectable JSON import/export with duplicate compare/resolution workflow
@@ -715,7 +730,7 @@ No athlete surveillance or unnecessary personal data.
 - [ ] full exercise + obstacle administration
 - [ ] fast FTS/autocomplete search with configurable sources
 - [ ] complete manual Warm-up/Main/Cooldown editor
-- [x] visual body selector
+- [x] visual body selector with reusable anatomical muscle highlighting
 - [x] Quick Create input flow
 - [x] Quick Create creates/persists a real session
 - [ ] group/level splitting
