@@ -37,8 +37,12 @@ interface MuscleMapProps {
   readonly debug?: boolean;
 }
 
-const UPPER_IDS = new Set(["neck", "traps", "shoulders", "rear-delts", "chest", "upper-back", "lats", "upper-arms", "biceps", "triceps", "forearms-grip"]);
+const UPPER_IDS = new Set([
+  "neck", "traps", "shoulders", "rear-delts", "chest", "upper-back", "lats",
+  "upper-arms", "biceps", "triceps", "forearms-grip",
+]);
 const CORE_IDS = new Set(["core", "abs", "obliques", "lower-back", "hips"]);
+const CATEGORY_ORDER = ["Gesamt", "Oberkörper", "Core", "Unterkörper"] as const;
 
 const FALLBACK_OPTION_PARTS: Readonly<Record<string, readonly string[]>> = {
   "upper-arms": ["biceps", "triceps"],
@@ -83,6 +87,8 @@ export function MuscleMap({
   const [internalSelection, setInternalSelection] = useState<MuscleMapValue[]>(() => [...value]);
   const [hoveredPart, setHoveredPart] = useState<MuscleMapPart | null>(null);
   const [debugPoints, setDebugPoints] = useState<readonly [number, number][]>([]);
+  const [listOpen, setListOpen] = useState(true);
+  const [openCategories, setOpenCategories] = useState<Set<string>>(() => new Set(CATEGORY_ORDER));
   const imageRef = useRef<HTMLImageElement>(null);
   const { scaleX, scaleY } = useResponsiveImageMap(imageRef);
 
@@ -92,7 +98,13 @@ export function MuscleMap({
   const selectedById = useMemo(() => new Map(selection.map((item) => [item.id, item])), [selection]);
   const optionIds = useMemo(() => new Set(options.map((option) => option.id)), [options]);
 
-  const visibleParts = useMemo(() => MUSCLE_MAP_PARTS.filter((part) => optionIds.has(part.optionId) || [...optionIds].some((optionId) => FALLBACK_OPTION_PARTS[optionId]?.includes(part.optionId))), [optionIds]);
+  const visibleParts = useMemo(
+    () => MUSCLE_MAP_PARTS.filter(
+      (part) => optionIds.has(part.optionId)
+        || [...optionIds].some((optionId) => FALLBACK_OPTION_PARTS[optionId]?.includes(part.optionId)),
+    ),
+    [optionIds],
+  );
 
   const groupedOptions = useMemo(() => {
     const result = new Map<string, MuscleMapOption[]>();
@@ -102,7 +114,10 @@ export function MuscleMap({
       bucket.push(option);
       result.set(category, bucket);
     }
-    return result;
+    return CATEGORY_ORDER.flatMap((category) => {
+      const entries = result.get(category);
+      return entries?.length ? [[category, entries] as const] : [];
+    });
   }, [options]);
 
   function setSelection(next: readonly MuscleMapValue[]) {
@@ -128,6 +143,38 @@ export function MuscleMap({
     setSelection(selection.filter((item) => item.id !== id));
   }
 
+  function setChecked(id: string, checked: boolean) {
+    if (!interactive) return;
+    const existing = selectedById.get(id);
+    if (!checked) {
+      if (existing) setSelection(selection.filter((item) => item.id !== id));
+      return;
+    }
+    if (existing) return;
+    setSelection(mode === "emphasis"
+      ? [...selection, { id, emphasis: "primary" }]
+      : [...selection, { id }]);
+  }
+
+  function setEmphasis(id: string, emphasis: MuscleEmphasis) {
+    if (!interactive || mode !== "emphasis") return;
+    const existing = selectedById.get(id);
+    if (!existing) {
+      setSelection([...selection, { id, emphasis }]);
+      return;
+    }
+    setSelection(selection.map((item) => item.id === id ? { ...item, emphasis } : item));
+  }
+
+  function setCategoryOpen(category: string, open: boolean) {
+    setOpenCategories((current) => {
+      const next = new Set(current);
+      if (open) next.add(category);
+      else next.delete(category);
+      return next;
+    });
+  }
+
   function optionForPart(part: MuscleMapPart): string | null {
     if (optionIds.has(part.optionId)) return part.optionId;
     for (const optionId of optionIds) {
@@ -151,7 +198,7 @@ export function MuscleMap({
   const debugCoordinates = debugPoints.flatMap(([x, y]) => [x, y]).join(", ");
 
   return (
-    <div className={compact ? "space-y-2" : "space-y-4"}>
+    <div className={compact ? "space-y-2" : "w-full space-y-4"}>
       {!compact ? (
         <div>
           <h3 className="font-black text-[var(--foreground)]">{title}</h3>
@@ -159,8 +206,8 @@ export function MuscleMap({
         </div>
       ) : null}
 
-      <div className={compact ? "mx-auto w-full max-w-56" : "grid gap-5 xl:grid-cols-[minmax(0,1fr)_270px]"}>
-        <div>
+      <div className={compact ? "mx-auto w-full max-w-56" : "w-full"}>
+        <div className={compact ? "w-full" : "mx-auto w-full max-w-3xl"}>
           <div
             className="relative mx-auto overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]"
             onClick={addDebugPoint}
@@ -200,7 +247,6 @@ export function MuscleMap({
             )))}
 
             {hoveredPart && !debug ? <RasterMuscleLayer part={hoveredPart} tone="hover" /> : null}
-
             {debug ? visibleParts.map((part) => <RasterMuscleLayer key={`debug-${part.id}`} part={part} subtle tone="selected" />) : null}
 
             {debugPoints.map(([x, y], index) => (
@@ -220,43 +266,144 @@ export function MuscleMap({
             </div>
           ) : null}
 
-          {hoveredPart && !compact ? <div className="mt-2 text-center text-xs font-bold text-[var(--muted)]">{hoveredPart.labelDe}</div> : null}
+          {hoveredPart && !compact ? (
+            <div className="mt-2 text-center text-xs font-bold text-[var(--muted)]">{hoveredPart.labelDe}</div>
+          ) : null}
         </div>
 
         {!compact ? (
-          <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-            <div>
-              <div className="font-black">Muskelgruppen</div>
-              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Klicke auf die Anatomie oder nutze die Liste. Beides steuert denselben Zustand.</p>
-            </div>
+          <details
+            className="mt-5 w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] shadow-[var(--shadow-card)]"
+            onToggle={(event) => setListOpen(event.currentTarget.open)}
+            open={listOpen}
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 marker:hidden sm:px-5">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-black text-[var(--foreground)]">Muskelgruppen</span>
+                  <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[11px] font-bold text-[var(--muted)]">
+                    {selection.length} ausgewählt
+                  </span>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                  Volle Breite, responsive Spalten und einzeln einklappbare Bereiche. Karte und Checkboxen teilen denselben Zustand.
+                </p>
+              </div>
+              <span aria-hidden="true" className="shrink-0 text-lg font-black text-[var(--muted)]">{listOpen ? "−" : "+"}</span>
+            </summary>
 
-            {[...groupedOptions.entries()].map(([category, entries]) => (
-              <fieldset className="space-y-2" key={category}>
-                <legend className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">{category}</legend>
-                {entries.map((option) => {
-                  const selected = selectedById.get(option.id);
-                  const secondary = selected?.emphasis === "secondary";
+            <div className="border-t border-[var(--border)] p-3 sm:p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--foreground)] hover:bg-[var(--accent-soft)]"
+                    onClick={() => setOpenCategories(new Set(groupedOptions.map(([category]) => category)))}
+                    type="button"
+                  >
+                    Alle öffnen
+                  </button>
+                  <button
+                    className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--foreground)] hover:bg-[var(--accent-soft)]"
+                    onClick={() => setOpenCategories(new Set())}
+                    type="button"
+                  >
+                    Alle schließen
+                  </button>
+                </div>
+                {interactive && selection.length > 0 ? (
+                  <button
+                    className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--muted)] hover:text-[var(--foreground)]"
+                    onClick={() => setSelection([])}
+                    type="button"
+                  >
+                    Auswahl löschen
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="grid w-full gap-3">
+                {groupedOptions.map(([category, entries]) => {
+                  const selectedCount = entries.filter((entry) => selectedById.has(entry.id)).length;
+                  const categoryOpen = openCategories.has(category);
                   return (
-                    <button
-                      aria-pressed={Boolean(selected)}
-                      className={`flex min-h-10 w-full items-center gap-2 rounded-lg border px-3 text-left text-sm font-bold transition ${selected ? "border-[var(--accent-strong)] bg-[var(--surface)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--accent-soft)]"}`}
-                      disabled={!interactive}
-                      key={option.id}
-                      onClick={() => cycle(option.id)}
-                      type="button"
+                    <details
+                      className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]"
+                      key={category}
+                      onToggle={(event) => setCategoryOpen(category, event.currentTarget.open)}
+                      open={categoryOpen}
                     >
-                      <span
-                        aria-hidden="true"
-                        className="size-3 shrink-0 rounded-full border border-[var(--border-strong)]"
-                        style={{ background: selected ? (mode === "select" ? "#f97316" : secondary ? "#3b82f6" : "#ef4444") : "transparent" }}
-                      />
-                      {option.labelDe}
-                    </button>
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 marker:hidden sm:px-4">
+                        <span className="font-black text-[var(--foreground)]">{category}</span>
+                        <span className="flex items-center gap-2">
+                          {selectedCount > 0 ? (
+                            <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[11px] font-black text-[var(--foreground)]">{selectedCount}</span>
+                          ) : null}
+                          <span aria-hidden="true" className="font-black text-[var(--muted)]">{categoryOpen ? "−" : "+"}</span>
+                        </span>
+                      </summary>
+
+                      <div className="border-t border-[var(--border)] p-3 sm:p-4">
+                        <div className="grid w-full grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-2">
+                          {entries.map((option) => {
+                            const selected = selectedById.get(option.id);
+                            const secondary = selected?.emphasis === "secondary";
+                            return (
+                              <div
+                                className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 transition ${selected ? "border-[var(--border-strong)] bg-[var(--accent-soft)]" : "border-[var(--border)] bg-[var(--surface-subtle)]"}`}
+                                key={option.id}
+                              >
+                                <label className={`flex min-w-0 flex-1 items-center gap-2 ${interactive ? "cursor-pointer" : "cursor-default"}`}>
+                                  <input
+                                    aria-label={option.labelDe}
+                                    checked={Boolean(selected)}
+                                    className="size-4 shrink-0 accent-[var(--accent-strong)]"
+                                    disabled={!interactive}
+                                    onChange={(event) => setChecked(option.id, event.currentTarget.checked)}
+                                    type="checkbox"
+                                  />
+                                  <span className="min-w-0">
+                                    <span className="block truncate text-sm font-bold text-[var(--foreground)]">{option.labelDe}</span>
+                                    {option.labelEn && option.labelEn !== option.labelDe ? (
+                                      <span className="block truncate text-[11px] text-[var(--muted)]">{option.labelEn}</span>
+                                    ) : null}
+                                  </span>
+                                </label>
+
+                                {mode === "emphasis" && selected ? (
+                                  <span className="grid shrink-0 grid-cols-2 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] p-0.5">
+                                    <button
+                                      aria-label={`${option.labelDe} als Primärmuskel markieren`}
+                                      aria-pressed={!secondary}
+                                      className={`rounded-md px-2 py-1 text-[10px] font-black ${!secondary ? "bg-red-500 text-white" : "text-[var(--muted)]"}`}
+                                      disabled={!interactive}
+                                      onClick={() => setEmphasis(option.id, "primary")}
+                                      type="button"
+                                    >
+                                      P
+                                    </button>
+                                    <button
+                                      aria-label={`${option.labelDe} als Sekundärmuskel markieren`}
+                                      aria-pressed={secondary}
+                                      className={`rounded-md px-2 py-1 text-[10px] font-black ${secondary ? "bg-blue-500 text-white" : "text-[var(--muted)]"}`}
+                                      disabled={!interactive}
+                                      onClick={() => setEmphasis(option.id, "secondary")}
+                                      type="button"
+                                    >
+                                      S
+                                    </button>
+                                  </span>
+                                ) : null}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </details>
                   );
                 })}
-              </fieldset>
-            ))}
-          </div>
+              </div>
+            </div>
+          </details>
         ) : null}
       </div>
 
@@ -290,7 +437,7 @@ export function MuscleMap({
         <div className="flex flex-wrap gap-3 text-xs font-bold text-[var(--muted)]">
           <Legend color="#ef4444" label="Primär" />
           <Legend color="#3b82f6" label="Sekundär" />
-          {interactive ? <span>Klickfolge: Primär → Sekundär → Aus</span> : null}
+          {interactive ? <span>Karte: Primär → Sekundär → Aus · Liste: Checkbox + P/S</span> : null}
         </div>
       ) : null}
 
@@ -309,8 +456,8 @@ export function MuscleMap({
                   key={item.id}
                   onClick={() => cycle(item.id)}
                   style={{
-                    background: mode === "select" ? "#fff7ed" : secondary ? "#eff6ff" : "#fef2f2",
-                    borderColor: mode === "select" ? "#fdba74" : secondary ? "#93c5fd" : "#fca5a5",
+                    background: mode === "select" ? "var(--accent-soft)" : secondary ? "#eff6ff" : "#fef2f2",
+                    borderColor: mode === "select" ? "var(--accent-strong)" : secondary ? "#93c5fd" : "#fca5a5",
                   }}
                   type="button"
                 >
