@@ -42,6 +42,7 @@ export interface ExerciseFacetEditorData {
   readonly selected: ExerciseFacetSelection;
 }
 
+export type ExerciseBodyRegionMap = Readonly<Record<string, readonly ExerciseBodyRegionSelection[]>>;
 export type UpdateExerciseFacetsInput = ExerciseFacetSelection;
 
 function rowsToOptions(rows: readonly (readonly unknown[])[]): readonly ExerciseFacetOption[] {
@@ -59,6 +60,57 @@ export async function listBodyRegionOptions(): Promise<readonly ExerciseFacetOpt
       "SELECT id,label_de,label_en FROM body_regions ORDER BY label_de",
     );
     return rowsToOptions(reader.getRows());
+  });
+}
+
+export async function listExerciseIdsForBodyRegions(
+  bodyRegionIds: readonly string[],
+): Promise<readonly string[]> {
+  const uniqueIds = [...new Set(bodyRegionIds.map((id) => id.trim()).filter(Boolean))];
+  if (uniqueIds.length === 0) return [];
+
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `
+      SELECT DISTINCT exercise_id::VARCHAR
+      FROM exercise_body_regions
+      WHERE list_contains(string_split($bodyRegions, ','), body_region_id)
+      ORDER BY exercise_id::VARCHAR
+      `,
+      { bodyRegions: uniqueIds.join(",") },
+    );
+    return reader.getRows().map((row) => String(row[0]));
+  });
+}
+
+export async function getExerciseBodyRegionMap(
+  exerciseIds: readonly string[],
+): Promise<ExerciseBodyRegionMap> {
+  const uniqueIds = [...new Set(exerciseIds.map((id) => id.trim()).filter(Boolean))];
+  if (uniqueIds.length === 0) return {};
+
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `
+      SELECT exercise_id::VARCHAR, body_region_id, emphasis
+      FROM exercise_body_regions
+      WHERE list_contains(string_split($exerciseIds, ','), exercise_id::VARCHAR)
+      ORDER BY exercise_id::VARCHAR, CASE emphasis WHEN 'primary' THEN 0 ELSE 1 END, body_region_id
+      `,
+      { exerciseIds: uniqueIds.join(",") },
+    );
+
+    const result: Record<string, ExerciseBodyRegionSelection[]> = {};
+    for (const row of reader.getRows()) {
+      const exerciseId = String(row[0]);
+      (result[exerciseId] ??= []).push({
+        id: String(row[1]),
+        emphasis: String(row[2]) as BodyRegionEmphasis,
+      });
+    }
+    return result;
   });
 }
 
