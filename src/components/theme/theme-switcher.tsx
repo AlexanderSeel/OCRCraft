@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export type ThemePreference = "light" | "dark" | "system";
 
@@ -28,14 +28,14 @@ function applyTheme(preference: ThemePreference, media: MediaQueryList) {
 }
 
 export function ThemeSwitcher() {
-  const [preference, setPreference] = useState<ThemePreference>("system");
+  const selectRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const stored = window.localStorage.getItem(STORAGE_KEY);
     const initial = isThemePreference(stored) ? stored : "system";
 
-    setPreference(initial);
+    if (selectRef.current) selectRef.current.value = initial;
     applyTheme(initial, media);
 
     const handleSystemChange = () => {
@@ -47,7 +47,7 @@ export function ThemeSwitcher() {
     const handleStorage = (event: StorageEvent) => {
       if (event.key !== STORAGE_KEY) return;
       const next = isThemePreference(event.newValue) ? event.newValue : "system";
-      setPreference(next);
+      if (selectRef.current) selectRef.current.value = next;
       applyTheme(next, media);
     };
 
@@ -61,7 +61,6 @@ export function ThemeSwitcher() {
 
   function changeTheme(next: ThemePreference) {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
-    setPreference(next);
     window.localStorage.setItem(STORAGE_KEY, next);
     applyTheme(next, media);
   }
@@ -70,10 +69,11 @@ export function ThemeSwitcher() {
     <label className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs font-bold text-[var(--muted)]">
       <span className="hidden xl:inline">Darstellung</span>
       <select
+        ref={selectRef}
         aria-label="Darstellung"
         className="min-h-8 rounded-lg border-0 bg-transparent px-1.5 text-sm font-bold text-[var(--foreground)] outline-none"
+        defaultValue="system"
         onChange={(event) => changeTheme(event.target.value as ThemePreference)}
-        value={preference}
       >
         {THEME_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
