@@ -9,6 +9,9 @@ async function initializeDatabase(): Promise<void> {
 }
 
 export function ensureDatabaseReady(): Promise<void> {
-  readyPromise ??= initializeDatabase();
+  readyPromise ??= initializeDatabase().catch((error: unknown) => {
+    readyPromise = undefined;
+    throw error;
+  });
   return readyPromise;
 }
