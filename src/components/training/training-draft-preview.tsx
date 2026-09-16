@@ -45,6 +45,21 @@ export function TrainingDraftPreview({ draft }: TrainingDraftPreviewProps) {
                     {item.format ?? "free"}
                     {item.exercise.equipment.length ? ` · ${item.exercise.equipment.join(", ")}` : ""}
                   </div>
+                  {phase.kind === "main" && item.exercise.stationCapacity != null && item.exercise.stationCapacity > 0 ? (
+                    <p
+                      className={`mt-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
+                        draft.session.group.participantCount > item.exercise.stationCapacity
+                          ? "bg-[var(--warning-bg)] text-[var(--warning)]"
+                          : "bg-[var(--surface-subtle)] text-[var(--muted)]"
+                      }`}
+                      role={draft.session.group.participantCount > item.exercise.stationCapacity ? "note" : undefined}
+                    >
+                      Max. {item.exercise.stationCapacity} gleichzeitig pro Station
+                      {draft.session.group.participantCount > item.exercise.stationCapacity
+                        ? " · Gruppenrotation oder parallele Stationen einplanen"
+                        : ""}
+                    </p>
+                  ) : null}
                   {item.levelLabel ? (
                     <p className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--muted)]">{item.levelLabel}</p>
                   ) : null}

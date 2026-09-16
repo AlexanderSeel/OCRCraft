@@ -39,7 +39,7 @@
 - [x] deterministic phase-duration budgeting and exact minute distribution
 - [x] deterministic selection uses audience/age, goals, body regions, format, intensity, tags and preferred exercises
 - [x] coarse/fine body-region compatibility for training composition
-- [ ] station-capacity validation
+- [x] station-capacity validation in the deterministic training draft, with calculated parallel-station guidance
 - [ ] simultaneous equipment-conflict validation
 - [ ] transition/setup-time validation
 - [ ] age-specific club-rule engine

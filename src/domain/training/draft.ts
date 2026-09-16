@@ -35,6 +35,7 @@ export interface TrainingDraftExerciseCandidate {
   readonly minAge: number | null;
   readonly bodyRegions: readonly string[];
   readonly equipment: readonly string[];
+  readonly stationCapacity: number;
   readonly tags: readonly string[];
   readonly defaultDurationSeconds: number | null;
   readonly instructions?: string;
@@ -209,6 +210,7 @@ export function composeTrainingDraft(
           riskLevel: candidate.riskLevel,
           bodyRegions: candidate.bodyRegions.filter(isBodyRegion),
           equipment: candidate.equipment,
+          stationCapacity: candidate.stationCapacity,
         },
         durationMinutes: durations[index] ?? 0,
         format: input.formats[0] ?? "free",

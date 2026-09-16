@@ -40,6 +40,8 @@ export interface ExerciseReference {
   readonly riskLevel: RiskLevel;
   readonly bodyRegions: readonly BodyRegion[];
   readonly equipment: readonly string[];
+  /** Maximum number of people who can use this exercise setup at once. */
+  readonly stationCapacity?: number;
 }
 
 export interface TrainingItem {

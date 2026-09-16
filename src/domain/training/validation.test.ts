@@ -85,6 +85,49 @@ describe("training validation", () => {
     expect(validateTrainingSession(createSession())).toEqual([]);
   });
 
+  it("warns how many parallel stations or rotations are needed for the group", () => {
+    const session = createSession();
+    const withLimitedStation: TrainingSession = {
+      ...session,
+      phases: session.phases.map((phase) => phase.kind !== "main" ? phase : {
+        ...phase,
+        items: phase.items.map((item) => ({
+          ...item,
+          exercise: { ...item.exercise, stationCapacity: 5 },
+        })),
+      }),
+    };
+
+    expect(validateTrainingSession(withLimitedStation)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "station-capacity",
+          severity: "warning",
+          participantCount: 12,
+          stationCapacity: 5,
+          recommendedStationCount: 3,
+        }),
+      ]),
+    );
+  });
+
+  it("does not warn when everyone fits within the station capacity", () => {
+    const session = createSession();
+    const withAvailableCapacity: TrainingSession = {
+      ...session,
+      group: { ...session.group, participantCount: 5 },
+      phases: session.phases.map((phase) => phase.kind !== "main" ? phase : {
+        ...phase,
+        items: phase.items.map((item) => ({
+          ...item,
+          exercise: { ...item.exercise, stationCapacity: 5 },
+        })),
+      }),
+    };
+
+    expect(validateTrainingSession(withAvailableCapacity)).toEqual([]);
+  });
+
   it("reports a missing required phase", () => {
     const session = createSession();
     const withoutCooldown: TrainingSession = {

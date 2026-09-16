@@ -53,7 +53,8 @@ export async function runTrainingDraftCandidateQuery(
       )),
       d.level_1,
       d.level_2,
-      d.level_3
+      d.level_3,
+      COALESCE(d.station_capacity, e.station_capacity, 1)
     FROM exercises e
     JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale=$locale
     LEFT JOIN exercise_details d ON d.exercise_id=e.id AND d.locale=$locale
@@ -89,5 +90,6 @@ export async function runTrainingDraftCandidateQuery(
     level1: row[11] == null ? undefined : String(row[11]),
     level2: row[12] == null ? undefined : String(row[12]),
     level3: row[13] == null ? undefined : String(row[13]),
+    stationCapacity: Number(row[14]),
   }));
 }

@@ -11,10 +11,14 @@ export interface TrainingValidationIssue {
     | "missing-phase"
     | "empty-main-part"
     | "duration-mismatch"
-    | "risk-restricted";
+    | "risk-restricted"
+    | "station-capacity";
   readonly severity: TrainingValidationSeverity;
   readonly message: string;
   readonly path?: string;
+  readonly participantCount?: number;
+  readonly stationCapacity?: number;
+  readonly recommendedStationCount?: number;
 }
 
 export interface ClubTrainingRules {
@@ -98,6 +102,33 @@ export function validateTrainingSession(
           });
         }
       }
+    }
+  }
+
+  for (const phase of session.phases) {
+    if (phase.kind !== "main") continue;
+
+    for (const item of phase.items) {
+      const stationCapacity = item.exercise.stationCapacity;
+      if (
+        stationCapacity == null ||
+        !Number.isInteger(stationCapacity) ||
+        stationCapacity < 1 ||
+        session.group.participantCount <= stationCapacity
+      ) {
+        continue;
+      }
+
+      const recommendedStationCount = Math.ceil(session.group.participantCount / stationCapacity);
+      issues.push({
+        code: "station-capacity",
+        severity: "warning",
+        message: `${item.exercise.name}: Eine Station fasst maximal ${stationCapacity} gleichzeitig Trainierende. Für ${session.group.participantCount} Teilnehmende brauchst du ${recommendedStationCount} parallele Stationen oder eine Gruppenrotation.`,
+        path: `phases.${phase.id}.items.${item.id}`,
+        participantCount: session.group.participantCount,
+        stationCapacity,
+        recommendedStationCount,
+      });
     }
   }
 
