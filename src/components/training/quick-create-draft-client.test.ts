@@ -7,6 +7,8 @@ import {
 describe("parseAgeRange", () => {
   it("parses open-ended ages", () => {
     expect(parseAgeRange("16+")).toEqual({ minAge: 16 });
+    expect(parseAgeRange("ab 18")).toEqual({ minAge: 18 });
+    expect(parseAgeRange("bis 12")).toEqual({ maxAge: 12 });
   });
 
   it("parses common age ranges regardless of separator", () => {
@@ -27,6 +29,7 @@ describe("normalizeTrainingDraftRequest", () => {
   it("keeps supported granular muscle regions and filters unknown client values", () => {
     expect(
       normalizeTrainingDraftRequest({
+        groupId: "11111111-1111-4111-8111-111111111111",
         groupType: "kids",
         ageRange: "8-12",
         participantCount: 14,
