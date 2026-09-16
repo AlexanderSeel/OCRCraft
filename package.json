@@ -11,13 +11,16 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@duckdb/node-api": "1.5.5-r.5",
     "next": "16.2.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "0.0.1",
     "zod": "4.6.5"
   },
   "devDependencies": {
@@ -28,6 +31,7 @@
     "eslint": "10.2.0",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "4.3.3",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vitest": "5.0.1"
   }
 }
