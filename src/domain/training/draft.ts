@@ -6,6 +6,8 @@ import {
   type BodyRegion,
   type RiskLevel,
   type TrainingFormat,
+  type TrainingEquipmentAvailability,
+  type ExerciseEquipmentRequirement,
   type TrainingPhaseKind,
   type TrainingSession,
 } from "./model";
@@ -22,6 +24,7 @@ export interface TrainingDraftInput {
   readonly formats: readonly TrainingFormat[];
   readonly intensity: DraftIntensity;
   readonly preferredExerciseIds: readonly string[];
+  readonly availableEquipment?: readonly TrainingEquipmentAvailability[];
   readonly minAge?: number;
   readonly maxAge?: number;
 }
@@ -35,6 +38,7 @@ export interface TrainingDraftExerciseCandidate {
   readonly minAge: number | null;
   readonly bodyRegions: readonly string[];
   readonly equipment: readonly string[];
+  readonly equipmentRequirements: readonly ExerciseEquipmentRequirement[];
   readonly stationCapacity: number;
   readonly tags: readonly string[];
   readonly defaultDurationSeconds: number | null;
@@ -190,6 +194,9 @@ export function composeTrainingDraft(
 ): TrainingDraft {
   const budgets = phaseBudgets(input.durationMinutes);
   const phaseKinds: readonly TrainingPhaseKind[] = ["warmup", "main", "cooldown"];
+  const selectedFormat = input.formats.includes("circuit")
+    ? "circuit"
+    : input.formats[0] ?? "free";
   const warnings: string[] = [];
 
   const phases = phaseKinds.map((kind) => {
@@ -210,10 +217,11 @@ export function composeTrainingDraft(
           riskLevel: candidate.riskLevel,
           bodyRegions: candidate.bodyRegions.filter(isBodyRegion),
           equipment: candidate.equipment,
+          equipmentRequirements: candidate.equipmentRequirements,
           stationCapacity: candidate.stationCapacity,
         },
         durationMinutes: durations[index] ?? 0,
-        format: input.formats[0] ?? "free",
+        format: selectedFormat,
         instructions: candidate.instructions,
         levelLabel: candidate.level2,
       })),
@@ -241,7 +249,7 @@ export function composeTrainingDraft(
     phases,
   };
 
-  const validationIssues = validateTrainingSession(session);
+  const validationIssues = validateTrainingSession(session, undefined, input.availableEquipment);
   return {
     source: "deterministic",
     session,

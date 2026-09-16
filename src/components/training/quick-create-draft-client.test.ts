@@ -36,6 +36,10 @@ describe("normalizeTrainingDraftRequest", () => {
         formats: ["rig-run", "not-a-format"],
         intensity: "technique",
         preferredExerciseIds: ["exercise-1"],
+        availableEquipment: [
+          { equipmentId: "sandbag", quantityAvailable: 6 },
+          { equipmentId: "cones", quantityAvailable: 0 },
+        ],
       }),
     ).toEqual({
       audience: "kids",
@@ -46,6 +50,10 @@ describe("normalizeTrainingDraftRequest", () => {
       formats: ["rig-run"],
       intensity: "technique",
       preferredExerciseIds: ["exercise-1"],
+      availableEquipment: [
+        { equipmentId: "sandbag", quantityAvailable: 6 },
+        { equipmentId: "cones", quantityAvailable: 0 },
+      ],
       minAge: 8,
       maxAge: 12,
       locale: "de",
@@ -69,5 +77,6 @@ describe("normalizeTrainingDraftRequest", () => {
     expect(request.intensity).toBe("balanced");
     expect(request.minAge).toBeUndefined();
     expect(request.maxAge).toBeUndefined();
+    expect(request.availableEquipment).toEqual([]);
   });
 });

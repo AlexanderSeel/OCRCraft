@@ -40,7 +40,7 @@
 - [x] deterministic selection uses audience/age, goals, body regions, format, intensity, tags and preferred exercises
 - [x] coarse/fine body-region compatibility for training composition
 - [x] station-capacity validation in the deterministic training draft, with calculated parallel-station guidance
-- [ ] simultaneous equipment-conflict validation
+- [x] simultaneous equipment-conflict validation for circuit stations using per-station equipment demand and declared stock
 - [ ] transition/setup-time validation
 - [ ] age-specific club-rule engine
 - [ ] progression/regression rules
@@ -427,7 +427,8 @@ Reference entry points:
 - [x] use goals/body regions/format/intensity/preferred exercises for deterministic ranking
 - [x] persist generated draft as a real training session
 - [ ] location
-- [ ] equipment/obstacle availability
+- [x] Quick Create equipment inventory input with inventory-aware circuit warnings
+- [ ] Quick Create obstacle availability
 - [ ] group split / station capacity
 - [ ] avoid-region selection
 - [ ] use full enriched exercise detail payload for ranking beyond current tags/body/category guidance

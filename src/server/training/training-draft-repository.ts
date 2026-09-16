@@ -4,12 +4,25 @@ import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import type { Audience } from "@/domain/training/model";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
+import {
+  runTrainingEquipmentOptionsQuery,
+  type TrainingEquipmentOption,
+} from "./training-draft-catalog-core";
 import { runTrainingDraftCandidateQuery } from "./training-draft-candidate-core";
+export type { TrainingEquipmentOption } from "./training-draft-catalog-core";
 
 interface ListTrainingDraftCandidatesOptions {
   readonly audience: Audience;
   readonly minAge?: number;
   readonly locale?: "de" | "en";
+}
+
+export async function listTrainingEquipmentOptions(
+  locale: "de" | "en" = "de",
+): Promise<readonly TrainingEquipmentOption[]> {
+  await ensureDatabaseReady();
+
+  return withDuckDbConnection((connection) => runTrainingEquipmentOptionsQuery(connection, locale));
 }
 
 export async function listTrainingDraftCandidates({

@@ -1,7 +1,12 @@
 import type { DuckDBConnection } from "@duckdb/node-api";
 import type { ExerciseCategory } from "@/domain/exercise/model";
 import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
-import type { Audience, RiskLevel, TrainingPhaseKind } from "@/domain/training/model";
+import type {
+  Audience,
+  ExerciseEquipmentRequirement,
+  RiskLevel,
+  TrainingPhaseKind,
+} from "@/domain/training/model";
 
 export interface TrainingDraftCandidateQueryOptions {
   readonly audience: Audience;
@@ -75,7 +80,34 @@ export async function runTrainingDraftCandidateQuery(
     },
   );
 
-  return reader.getRows().map((row) => ({
+  const rows = reader.getRows();
+  if (rows.length === 0) return [];
+
+  const equipmentReader = await connection.runAndReadAll(
+    `
+    SELECT ee.exercise_id::VARCHAR,eq.id::VARCHAR,
+      CASE WHEN $locale='de' THEN eq.name_de ELSE COALESCE(eq.name_en,eq.name_de) END,
+      ee.quantity_required
+    FROM exercise_equipment ee
+    JOIN equipment eq ON eq.id=ee.equipment_id
+    WHERE list_contains(string_split($exerciseIds, ','), ee.exercise_id::VARCHAR)
+    ORDER BY ee.exercise_id::VARCHAR,eq.id::VARCHAR
+    `,
+    { locale, exerciseIds: rows.map((row) => String(row[0])).join(",") },
+  );
+  const equipmentByExercise = new Map<string, ExerciseEquipmentRequirement[]>();
+  for (const row of equipmentReader.getRows()) {
+    const exerciseId = String(row[0]);
+    const requirements = equipmentByExercise.get(exerciseId) ?? [];
+    requirements.push({
+      equipmentId: String(row[1]),
+      name: String(row[2]),
+      quantityPerStation: Number(row[3]),
+    });
+    equipmentByExercise.set(exerciseId, requirements);
+  }
+
+  return rows.map((row) => ({
     id: String(row[0]),
     name: String(row[1]),
     category: String(row[2]) as ExerciseCategory,
@@ -84,6 +116,7 @@ export async function runTrainingDraftCandidateQuery(
     minAge: row[5] == null ? null : Number(row[5]),
     bodyRegions: String(row[6] ?? "").split(" | ").filter(Boolean),
     equipment: String(row[7] ?? "").split(" | ").filter(Boolean),
+    equipmentRequirements: equipmentByExercise.get(String(row[0])) ?? [],
     tags: String(row[8] ?? "").split(" | ").filter(Boolean),
     defaultDurationSeconds: row[9] == null ? null : Number(row[9]),
     instructions: row[10] == null ? undefined : String(row[10]),

@@ -4,6 +4,7 @@ import {
   TRAINING_FORMATS,
   type Audience,
   type BodyRegion,
+  type TrainingEquipmentAvailability,
   type TrainingFormat,
 } from "../../domain/training/model";
 import type { DraftIntensity, TrainingDraft } from "../../domain/training/draft";
@@ -18,6 +19,7 @@ export interface QuickCreateDraftClientInput {
   readonly formats: readonly string[];
   readonly intensity: string;
   readonly preferredExerciseIds: readonly string[];
+  readonly availableEquipment?: readonly TrainingEquipmentAvailability[];
 }
 
 export interface ParsedAgeRange {
@@ -34,6 +36,7 @@ export interface NormalizedTrainingDraftRequest {
   readonly formats: readonly TrainingFormat[];
   readonly intensity: DraftIntensity;
   readonly preferredExerciseIds: readonly string[];
+  readonly availableEquipment: readonly TrainingEquipmentAvailability[];
   readonly minAge?: number;
   readonly maxAge?: number;
   readonly locale: "de";
@@ -89,6 +92,11 @@ export function normalizeTrainingDraftRequest(
   const formats = input.formats.filter(isTrainingFormat);
   const intensity: DraftIntensity = isDraftIntensity(input.intensity) ? input.intensity : "balanced";
   const ages = parseAgeRange(input.ageRange);
+  const availableEquipment = new Map<string, number>();
+  for (const item of input.availableEquipment ?? []) {
+    if (!item.equipmentId.trim() || !Number.isInteger(item.quantityAvailable) || item.quantityAvailable < 0) continue;
+    availableEquipment.set(item.equipmentId.trim(), item.quantityAvailable);
+  }
 
   return {
     audience,
@@ -99,6 +107,10 @@ export function normalizeTrainingDraftRequest(
     formats,
     intensity,
     preferredExerciseIds: input.preferredExerciseIds,
+    availableEquipment: [...availableEquipment].map(([equipmentId, quantityAvailable]) => ({
+      equipmentId,
+      quantityAvailable,
+    })),
     ...ages,
     locale: "de",
   };

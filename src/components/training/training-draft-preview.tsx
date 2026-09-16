@@ -32,7 +32,15 @@ export function TrainingDraftPreview({ draft }: TrainingDraftPreviewProps) {
               </span>
             </div>
             <ol className="mt-3 space-y-2">
-              {phase.items.map((item) => (
+              {phase.items.map((item) => {
+                const circuitStationCount = phase.items.filter((phaseItem) => phaseItem.format === "circuit").length;
+                const participantsAtExercise = item.format === "circuit"
+                  ? Math.ceil(draft.session.group.participantCount / Math.max(1, circuitStationCount))
+                  : draft.session.group.participantCount;
+                const capacityExceeded = item.exercise.stationCapacity != null &&
+                  participantsAtExercise > item.exercise.stationCapacity;
+
+                return (
                 <li
                   className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3"
                   key={item.id}
@@ -47,15 +55,14 @@ export function TrainingDraftPreview({ draft }: TrainingDraftPreviewProps) {
                   </div>
                   {phase.kind === "main" && item.exercise.stationCapacity != null && item.exercise.stationCapacity > 0 ? (
                     <p
-                      className={`mt-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
-                        draft.session.group.participantCount > item.exercise.stationCapacity
-                          ? "bg-[var(--warning-bg)] text-[var(--warning)]"
-                          : "bg-[var(--surface-subtle)] text-[var(--muted)]"
+                      className={`mt-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${capacityExceeded
+                        ? "bg-[var(--warning-bg)] text-[var(--warning)]"
+                        : "bg-[var(--surface-subtle)] text-[var(--muted)]"
                       }`}
-                      role={draft.session.group.participantCount > item.exercise.stationCapacity ? "note" : undefined}
+                      role={capacityExceeded ? "note" : undefined}
                     >
                       Max. {item.exercise.stationCapacity} gleichzeitig pro Station
-                      {draft.session.group.participantCount > item.exercise.stationCapacity
+                      {capacityExceeded
                         ? " · Gruppenrotation oder parallele Stationen einplanen"
                         : ""}
                     </p>
@@ -64,7 +71,8 @@ export function TrainingDraftPreview({ draft }: TrainingDraftPreviewProps) {
                     <p className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--muted)]">{item.levelLabel}</p>
                   ) : null}
                 </li>
-              ))}
+                );
+              })}
             </ol>
           </section>
         ))}

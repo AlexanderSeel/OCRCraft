@@ -25,6 +25,7 @@ export async function createDeterministicTrainingDraft(
       formats: request.formats,
       intensity: request.intensity,
       preferredExerciseIds: request.preferredExerciseIds,
+      availableEquipment: request.availableEquipment,
       minAge: request.minAge,
       maxAge: request.maxAge,
     },

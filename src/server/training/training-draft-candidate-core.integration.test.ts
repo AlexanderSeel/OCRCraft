@@ -1,5 +1,6 @@
 import { DuckDBInstance } from "@duckdb/node-api";
 import { describe, expect, it } from "vitest";
+import { runTrainingEquipmentOptionsQuery } from "./training-draft-catalog-core";
 import { runTrainingDraftCandidateQuery } from "./training-draft-candidate-core";
 
 async function createFixture() {
@@ -22,8 +23,14 @@ async function createFixture() {
     );
     CREATE TABLE exercise_translations (exercise_id VARCHAR, locale VARCHAR, name VARCHAR);
     CREATE TABLE exercise_body_regions (exercise_id VARCHAR, body_region_id VARCHAR);
-    CREATE TABLE equipment (id VARCHAR PRIMARY KEY, name_de VARCHAR, name_en VARCHAR);
-    CREATE TABLE exercise_equipment (exercise_id VARCHAR, equipment_id VARCHAR);
+    CREATE TABLE equipment (
+      id VARCHAR PRIMARY KEY,
+      name_de VARCHAR,
+      name_en VARCHAR,
+      quantity_available INTEGER,
+      archived BOOLEAN DEFAULT false
+    );
+    CREATE TABLE exercise_equipment (exercise_id VARCHAR, equipment_id VARCHAR, quantity_required INTEGER);
     CREATE TABLE exercise_tags (exercise_id VARCHAR, tag_id VARCHAR);
     CREATE TABLE exercise_details (
       exercise_id VARCHAR,
@@ -51,8 +58,11 @@ async function createFixture() {
       ('adult-wall','de','Hohe Wand'),('adult-wall','en','High Wall'),
       ('archived','de','Archiviert'),('archived','en','Archived');
     INSERT INTO exercise_body_regions VALUES ('kids-carry','core'),('kids-carry','forearms-grip');
-    INSERT INTO equipment VALUES ('bag','Sandsack','Sandbag');
-    INSERT INTO exercise_equipment VALUES ('kids-carry','bag');
+    INSERT INTO equipment VALUES
+      ('bag','Sandsack','Sandbag',8,false),
+      ('unknown-stock','Hütchen','Cones',NULL,false),
+      ('archived-equipment','Altgerät','Old Equipment',12,true);
+    INSERT INTO exercise_equipment VALUES ('kids-carry','bag',2);
     INSERT INTO exercise_tags VALUES ('kids-carry','carry'),('kids-carry','teamwork');
     INSERT INTO exercise_details VALUES
       ('kids-carry','de','Sicheres Tragen lernen.','Aufrecht und kontrolliert.','Leicht tragen.','Standard tragen.','Weiter tragen.',4),
@@ -66,6 +76,22 @@ async function createFixture() {
 }
 
 describe("training draft candidate query", () => {
+  it("lists translated available equipment and keeps unknown stock distinct", async () => {
+    const connection = await createFixture();
+    try {
+      await expect(runTrainingEquipmentOptionsQuery(connection, "de")).resolves.toEqual([
+        { id: "unknown-stock", name: "Hütchen", quantityAvailable: null },
+        { id: "bag", name: "Sandsack", quantityAvailable: 8 },
+      ]);
+      await expect(runTrainingEquipmentOptionsQuery(connection, "en")).resolves.toEqual([
+        { id: "unknown-stock", name: "Cones", quantityAvailable: null },
+        { id: "bag", name: "Sandbag", quantityAvailable: 8 },
+      ]);
+    } finally {
+      connection.closeSync();
+    }
+  });
+
   it("filters by audience and youngest participant age", async () => {
     const connection = await createFixture();
     try {
@@ -95,6 +121,9 @@ describe("training draft candidate query", () => {
 
       expect(carry?.name).toBe("Kids Carry");
       expect(carry?.equipment).toEqual(["Sandbag"]);
+      expect(carry?.equipmentRequirements).toEqual([
+        { equipmentId: "bag", name: "Sandbag", quantityPerStation: 2 },
+      ]);
       expect(carry?.instructions).toContain("Learn safe carrying.");
       expect(carry?.instructions).toContain("Pick up the sandbag.");
       expect(carry?.level2).toBe("Standard carry.");

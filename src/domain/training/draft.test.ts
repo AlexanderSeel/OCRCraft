@@ -3,16 +3,16 @@ import { composeTrainingDraft, type TrainingDraftExerciseCandidate, type Trainin
 import { getPlannedDurationMinutes } from "./validation";
 
 const candidates: readonly TrainingDraftExerciseCandidate[] = [
-  { id: "jog", name: "Easy Jog", category: "warmup", defaultPhase: "warmup", riskLevel: "low", minAge: null, bodyRegions: ["full-body"], equipment: [], stationCapacity: 12, tags: ["running"], defaultDurationSeconds: 300 },
-  { id: "circles", name: "Arm Circles", category: "warmup", defaultPhase: "warmup", riskLevel: "low", minAge: null, bodyRegions: ["shoulders"], equipment: [], stationCapacity: 4, tags: ["mobility"], defaultDurationSeconds: 180 },
-  { id: "run", name: "Tempo Run", category: "running", defaultPhase: "main", riskLevel: "low", minAge: null, bodyRegions: ["full-body", "calves"], equipment: [], stationCapacity: 12, tags: ["running", "endurance"], defaultDurationSeconds: 600 },
-  { id: "hang", name: "Active Hang", category: "grip-rig", defaultPhase: "main", riskLevel: "medium", minAge: 10, bodyRegions: ["forearms-grip", "upper-back"], equipment: ["Rig"], stationCapacity: 1, tags: ["grip", "rig"], defaultDurationSeconds: 180, level2: "Aktiver Hang" },
-  { id: "carry", name: "Farmer Carry", category: "carry-lift", defaultPhase: "main", riskLevel: "low", minAge: null, bodyRegions: ["forearms-grip", "core"], equipment: ["Kettlebell"], stationCapacity: 4, tags: ["carry", "grip"], defaultDurationSeconds: 300 },
-  { id: "squat", name: "Bodyweight Squat", category: "strength", defaultPhase: "main", riskLevel: "low", minAge: null, bodyRegions: ["quadriceps", "glutes"], equipment: [], stationCapacity: 4, tags: ["strength"], defaultDurationSeconds: 240 },
-  { id: "plank", name: "Plank", category: "core", defaultPhase: "main", riskLevel: "low", minAge: null, bodyRegions: ["core"], equipment: [], stationCapacity: 4, tags: ["core"], defaultDurationSeconds: 180 },
-  { id: "restricted", name: "Advanced Obstacle", category: "ocr-skill", defaultPhase: "main", riskLevel: "high", minAge: 14, bodyRegions: ["full-body"], equipment: ["Rig"], stationCapacity: 1, tags: ["ocr"], defaultDurationSeconds: 240 },
-  { id: "walk", name: "Easy Walk", category: "cooldown", defaultPhase: "cooldown", riskLevel: "low", minAge: null, bodyRegions: ["full-body"], equipment: [], stationCapacity: 12, tags: ["recovery"], defaultDurationSeconds: 240 },
-  { id: "stretch", name: "Hip Mobility", category: "cooldown", defaultPhase: "cooldown", riskLevel: "low", minAge: null, bodyRegions: ["hips"], equipment: [], stationCapacity: 4, tags: ["mobility"], defaultDurationSeconds: 240 },
+  { id: "jog", name: "Easy Jog", category: "warmup", defaultPhase: "warmup", riskLevel: "low", minAge: null, bodyRegions: ["full-body"], equipment: [], equipmentRequirements: [], stationCapacity: 12, tags: ["running"], defaultDurationSeconds: 300 },
+  { id: "circles", name: "Arm Circles", category: "warmup", defaultPhase: "warmup", riskLevel: "low", minAge: null, bodyRegions: ["shoulders"], equipment: [], equipmentRequirements: [], stationCapacity: 4, tags: ["mobility"], defaultDurationSeconds: 180 },
+  { id: "run", name: "Tempo Run", category: "running", defaultPhase: "main", riskLevel: "low", minAge: null, bodyRegions: ["full-body", "calves"], equipment: [], equipmentRequirements: [], stationCapacity: 12, tags: ["running", "endurance"], defaultDurationSeconds: 600 },
+  { id: "hang", name: "Active Hang", category: "grip-rig", defaultPhase: "main", riskLevel: "medium", minAge: 10, bodyRegions: ["forearms-grip", "upper-back"], equipment: ["Rig"], equipmentRequirements: [{ equipmentId: "rig", name: "Rig", quantityPerStation: 1 }], stationCapacity: 1, tags: ["grip", "rig"], defaultDurationSeconds: 180, level2: "Aktiver Hang" },
+  { id: "carry", name: "Farmer Carry", category: "carry-lift", defaultPhase: "main", riskLevel: "low", minAge: null, bodyRegions: ["forearms-grip", "core"], equipment: ["Kettlebell"], equipmentRequirements: [{ equipmentId: "kettlebell", name: "Kettlebell", quantityPerStation: 1 }], stationCapacity: 4, tags: ["carry", "grip"], defaultDurationSeconds: 300 },
+  { id: "squat", name: "Bodyweight Squat", category: "strength", defaultPhase: "main", riskLevel: "low", minAge: null, bodyRegions: ["quadriceps", "glutes"], equipment: [], equipmentRequirements: [], stationCapacity: 4, tags: ["strength"], defaultDurationSeconds: 240 },
+  { id: "plank", name: "Plank", category: "core", defaultPhase: "main", riskLevel: "low", minAge: null, bodyRegions: ["core"], equipment: [], equipmentRequirements: [], stationCapacity: 4, tags: ["core"], defaultDurationSeconds: 180 },
+  { id: "restricted", name: "Advanced Obstacle", category: "ocr-skill", defaultPhase: "main", riskLevel: "high", minAge: 14, bodyRegions: ["full-body"], equipment: ["Rig"], equipmentRequirements: [{ equipmentId: "rig", name: "Rig", quantityPerStation: 1 }], stationCapacity: 1, tags: ["ocr"], defaultDurationSeconds: 240 },
+  { id: "walk", name: "Easy Walk", category: "cooldown", defaultPhase: "cooldown", riskLevel: "low", minAge: null, bodyRegions: ["full-body"], equipment: [], equipmentRequirements: [], stationCapacity: 12, tags: ["recovery"], defaultDurationSeconds: 240 },
+  { id: "stretch", name: "Hip Mobility", category: "cooldown", defaultPhase: "cooldown", riskLevel: "low", minAge: null, bodyRegions: ["hips"], equipment: [], equipmentRequirements: [], stationCapacity: 4, tags: ["mobility"], defaultDurationSeconds: 240 },
 ];
 
 const baseInput: TrainingDraftInput = {
@@ -58,6 +58,25 @@ describe("composeTrainingDraft", () => {
           participantCount: 16,
           stationCapacity: 1,
           recommendedStationCount: 16,
+        }),
+      ]),
+    );
+  });
+
+  it("checks declared equipment inventory while building simultaneous circuit stations", () => {
+    const draft = composeTrainingDraft({
+      ...baseInput,
+      formats: ["rig-run", "circuit"],
+      preferredExerciseIds: ["hang", "restricted"],
+      availableEquipment: [{ equipmentId: "rig", quantityAvailable: 3 }],
+    }, candidates);
+
+    expect(draft.validationIssues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "equipment-conflict",
+          equipmentId: "rig",
+          availableQuantity: 3,
         }),
       ]),
     );

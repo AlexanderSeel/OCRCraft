@@ -34,12 +34,24 @@ export interface TrainingGroup {
   readonly participantCount: number;
 }
 
+export interface TrainingEquipmentAvailability {
+  readonly equipmentId: string;
+  readonly quantityAvailable: number;
+}
+
+export interface ExerciseEquipmentRequirement {
+  readonly equipmentId: string;
+  readonly name: string;
+  readonly quantityPerStation: number;
+}
+
 export interface ExerciseReference {
   readonly id: string;
   readonly name: string;
   readonly riskLevel: RiskLevel;
   readonly bodyRegions: readonly BodyRegion[];
   readonly equipment: readonly string[];
+  readonly equipmentRequirements?: readonly ExerciseEquipmentRequirement[];
   /** Maximum number of people who can use this exercise setup at once. */
   readonly stationCapacity?: number;
 }

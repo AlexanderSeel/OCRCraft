@@ -5,6 +5,10 @@ import { useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
 import { BodyFocusSelector } from "./body-focus-selector";
 import {
+  EquipmentAvailabilityPicker,
+  type EquipmentAvailabilityOption,
+} from "./equipment-availability-picker";
+import {
   ExerciseAutocompletePicker,
   type SelectedExerciseReference,
 } from "./exercise-autocomplete-picker";
@@ -45,13 +49,17 @@ const formatOptions = [
   ["relay", "Team / Relay", "Gruppen- und Staffelvarianten"],
 ] as const;
 
+interface QuickCreateWizardProps {
+  readonly equipmentOptions: readonly EquipmentAvailabilityOption[];
+}
+
 function toggleValue(values: readonly string[], value: string): string[] {
   return values.includes(value)
     ? values.filter((entry) => entry !== value)
     : [...values, value];
 }
 
-export function QuickCreateWizard() {
+export function QuickCreateWizard({ equipmentOptions }: QuickCreateWizardProps) {
   const [step, setStep] = useState(1);
   const [groupType, setGroupType] = useState("mixed");
   const [ageRange, setAgeRange] = useState("16+");
@@ -61,6 +69,11 @@ export function QuickCreateWizard() {
   const [bodyRegions, setBodyRegions] = useState<readonly string[]>(["forearms-grip", "core"]);
   const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>([]);
   const [formats, setFormats] = useState<readonly string[]>(["rig-run"]);
+  const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
+    Object.fromEntries(equipmentOptions.flatMap((option) =>
+      option.quantityAvailable == null ? [] : [[option.id, String(option.quantityAvailable)]]
+    )),
+  );
   const [intensity, setIntensity] = useState("balanced");
   const [draft, setDraft] = useState<TrainingDraft | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -86,6 +99,9 @@ export function QuickCreateWizard() {
       goals,
       bodyRegions,
       formats,
+      availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
+        quantity.trim() === "" ? [] : [{ equipmentId, quantityAvailable: Number(quantity) }]
+      ),
       intensity,
       preferredExerciseIds: preferredExercises.map((item) => item.id),
     };
@@ -280,6 +296,25 @@ export function QuickCreateWizard() {
                   </button>
                 ))}
               </div>
+
+              <details className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+                <summary className="cursor-pointer text-sm font-black">
+                  Verfügbare Ausrüstung für Zirkel prüfen
+                </summary>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                  Leeres Feld bedeutet unbekannten Bestand; 0 bedeutet nicht vorhanden. Für Zirkel wird der Bedarf aller gleichzeitig belegten Stationen addiert.
+                </p>
+                <div className="mt-4">
+                  <EquipmentAvailabilityPicker
+                    onChange={(equipmentId, quantity) => setAvailableEquipment((current) => ({
+                      ...current,
+                      [equipmentId]: quantity,
+                    }))}
+                    options={equipmentOptions}
+                    value={availableEquipment}
+                  />
+                </div>
+              </details>
             </div>
           ) : null}
 

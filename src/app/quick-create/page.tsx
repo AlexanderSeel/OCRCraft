@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { QuickCreateWizard } from "@/components/training/quick-create-wizard";
+import { listTrainingEquipmentOptions } from "@/server/training/training-draft-repository";
 
-export default function QuickCreatePage() {
+export const dynamic = "force-dynamic";
+
+export default async function QuickCreatePage() {
+  const equipmentOptions = await listTrainingEquipmentOptions();
+
   return (
     <AppShell
       title="Quick Create"
@@ -16,7 +21,7 @@ export default function QuickCreatePage() {
         </Link>
       }
     >
-      <QuickCreateWizard />
+      <QuickCreateWizard equipmentOptions={equipmentOptions} />
     </AppShell>
   );
 }
