@@ -34,6 +34,12 @@ html[data-theme="light"] {
   --success-bg: #f0f7d7;
   --success-border: #b8d56c;
   --success-foreground: #53622b;
+  --muscle-canvas: #f8fafb;
+  --muscle-primary: #d92d20;
+  --muscle-primary-soft: #fff0ee;
+  --muscle-secondary: #f97066;
+  --muscle-secondary-soft: #fff4f2;
+  --muscle-stroke: #8f1d18;
   --shadow-card: 0 8px 30px rgba(20, 28, 35, 0.04);
   --shadow-raised: 0 14px 40px rgba(20, 28, 35, 0.18);
 }
@@ -71,6 +77,12 @@ html[data-theme="dark"] {
   --success-bg: #28321d;
   --success-border: #617a2f;
   --success-foreground: #dceca5;
+  --muscle-canvas: #11171b;
+  --muscle-primary: #ff5c52;
+  --muscle-primary-soft: #3a2020;
+  --muscle-secondary: #ff8a80;
+  --muscle-secondary-soft: #3b2525;
+  --muscle-stroke: #ffaaa3;
   --shadow-card: 0 10px 32px rgba(0, 0, 0, 0.22);
   --shadow-raised: 0 16px 44px rgba(0, 0, 0, 0.34);
 }
