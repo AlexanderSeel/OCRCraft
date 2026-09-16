@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { BodyFocusSelector } from "./body-focus-selector";
+import {
+  ExerciseAutocompletePicker,
+  type SelectedExerciseReference,
+} from "./exercise-autocomplete-picker";
 
 const groupOptions = [
   ["kids", "Kids", "Spielerisch, altersgerecht, klare Sicherheitsregeln"],
@@ -47,6 +51,7 @@ export function QuickCreateWizard() {
   const [duration, setDuration] = useState(75);
   const [goals, setGoals] = useState<readonly string[]>(["Ganzkörper", "OCR-Technik"]);
   const [bodyRegions, setBodyRegions] = useState<readonly string[]>(["forearms-grip", "core"]);
+  const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>([]);
   const [formats, setFormats] = useState<readonly string[]>(["rig-run"]);
   const [intensity, setIntensity] = useState("balanced");
   const [generated, setGenerated] = useState(false);
@@ -60,7 +65,7 @@ export function QuickCreateWizard() {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
-      <section className="rounded-2xl border border-[var(--border)] bg-white shadow-[0_10px_35px_rgba(20,28,35,0.04)]">
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
         <header className="border-b border-[var(--border)] p-5 sm:p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -71,7 +76,7 @@ export function QuickCreateWizard() {
               {[1, 2, 3, 4, 5].map((number) => (
                 <span
                   aria-hidden="true"
-                  className={`h-1.5 w-8 rounded-full ${number <= step ? "bg-[var(--dark)]" : "bg-[var(--border)]"}`}
+                  className={`h-1.5 w-8 rounded-full ${number <= step ? "bg-[var(--control-strong)]" : "bg-[var(--border)]"}`}
                   key={number}
                 />
               ))}
@@ -90,15 +95,15 @@ export function QuickCreateWizard() {
                   <button
                     className={`min-h-28 rounded-xl border p-4 text-left transition ${
                       groupType === id
-                        ? "border-[var(--dark)] bg-[var(--dark)] text-white"
-                        : "border-[var(--border)] hover:border-[#aeb7bf] hover:bg-[var(--surface-subtle)]"
+                        ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"
+                        : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-subtle)]"
                     }`}
                     key={id}
                     onClick={() => setGroupType(id)}
                     type="button"
                   >
                     <span className="block font-black">{label}</span>
-                    <span className={`mt-1 block text-sm leading-5 ${groupType === id ? "text-white/65" : "text-[var(--muted)]"}`}>
+                    <span className={`mt-1 block text-sm leading-5 ${groupType === id ? "opacity-70" : "text-[var(--muted)]"}`}>
                       {description}
                     </span>
                   </button>
@@ -109,7 +114,7 @@ export function QuickCreateWizard() {
                 <label className="grid gap-2 text-sm font-bold">
                   Alter / Bereich
                   <input
-                    className="h-11 rounded-xl border border-[var(--border)] bg-white px-3 font-normal outline-none focus:border-[#4d75ff]"
+                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
                     onChange={(event) => setAgeRange(event.target.value)}
                     value={ageRange}
                   />
@@ -117,7 +122,7 @@ export function QuickCreateWizard() {
                 <label className="grid gap-2 text-sm font-bold">
                   Teilnehmer
                   <input
-                    className="h-11 rounded-xl border border-[var(--border)] bg-white px-3 font-normal outline-none focus:border-[#4d75ff]"
+                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
                     min={1}
                     onChange={(event) => setParticipantCount(Number(event.target.value))}
                     type="number"
@@ -127,7 +132,7 @@ export function QuickCreateWizard() {
                 <label className="grid gap-2 text-sm font-bold">
                   Dauer
                   <select
-                    className="h-11 rounded-xl border border-[var(--border)] bg-white px-3 font-normal outline-none focus:border-[#4d75ff]"
+                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
                     onChange={(event) => setDuration(Number(event.target.value))}
                     value={duration}
                   >
@@ -150,8 +155,8 @@ export function QuickCreateWizard() {
                     aria-pressed={goals.includes(goal)}
                     className={`min-h-11 rounded-xl border px-4 py-2 text-sm font-bold ${
                       goals.includes(goal)
-                        ? "border-[var(--dark)] bg-[var(--dark)] text-white"
-                        : "border-[var(--border)] bg-white hover:bg-[var(--surface-subtle)]"
+                        ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"
+                        : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
                     }`}
                     key={goal}
                     onClick={() => setGoals(toggleValue(goals, goal))}
@@ -172,6 +177,15 @@ export function QuickCreateWizard() {
                   />
                 </div>
               </div>
+
+              <div className="mt-8 border-t border-[var(--border)] pt-6">
+                <ExerciseAutocompletePicker
+                  description="Optional: echte Übungen oder Hindernisse aus der Bibliothek vormerken. Namen, Aliase, Tags, Equipment und Körperregionen werden durchsucht."
+                  label="Wunschübungen / Hindernisse"
+                  onChange={setPreferredExercises}
+                  selected={preferredExercises}
+                />
+              </div>
             </div>
           ) : null}
 
@@ -185,8 +199,8 @@ export function QuickCreateWizard() {
                     aria-pressed={formats.includes(id)}
                     className={`rounded-xl border p-4 text-left ${
                       formats.includes(id)
-                        ? "border-[var(--dark)] bg-[#f0f4db]"
-                        : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                        ? "border-[var(--accent-strong)] bg-[var(--accent-soft)]"
+                        : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
                     }`}
                     key={id}
                     onClick={() => setFormats(toggleValue(formats, id))}
@@ -213,15 +227,15 @@ export function QuickCreateWizard() {
                   <button
                     className={`rounded-xl border p-4 text-left ${
                       intensity === id
-                        ? "border-[var(--dark)] bg-[var(--dark)] text-white"
-                        : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                        ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"
+                        : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
                     }`}
                     key={id}
                     onClick={() => setIntensity(id)}
                     type="button"
                   >
                     <span className="block font-black">{label}</span>
-                    <span className={`mt-1 block text-sm leading-5 ${intensity === id ? "text-white/65" : "text-[var(--muted)]"}`}>
+                    <span className={`mt-1 block text-sm leading-5 ${intensity === id ? "opacity-70" : "text-[var(--muted)]"}`}>
                       {description}
                     </span>
                   </button>
@@ -242,12 +256,13 @@ export function QuickCreateWizard() {
               <h3 className="text-lg font-black">Entwurf prüfen</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Diese Parameter gehen an Suche, Vereinsregeln und später den AI Composer.</p>
 
-              <dl className="mt-5 divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]">
+              <dl className="mt-5 divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
                 {[
                   ["Gruppe", `${selectedGroup?.[1] ?? groupType} · ${ageRange} · ${participantCount} Personen`],
                   ["Dauer", `${duration} Minuten`],
                   ["Ziele", goals.join(", ")],
                   ["Körperregionen", bodyRegions.length ? bodyRegions.join(", ") : "Keine Vorgabe"],
+                  ["Wunschübungen", preferredExercises.length ? preferredExercises.map((item) => item.label).join(", ") : "Keine Vorgabe"],
                   ["Formate", formats.join(", ")],
                   ["Ausrichtung", intensity],
                 ].map(([label, value]) => (
@@ -259,10 +274,10 @@ export function QuickCreateWizard() {
               </dl>
 
               {generated ? (
-                <div className="mt-5 rounded-xl border border-[#b8d56c] bg-[#f0f7d7] p-4">
+                <div className="mt-5 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4">
                   <div className="font-black">Wizard-Input steht.</div>
-                  <p className="mt-1 text-sm leading-6 text-[#53622b]">
-                    Die nächste Schicht verbindet diese Daten mit Übungssuche, Vereinsregeln und dem AI Training Composer.
+                  <p className="mt-1 text-sm leading-6 text-[var(--success-foreground)]">
+                    Die ausgewählten Bibliotheksübungen sind jetzt echte Referenzen. Der nächste Schritt ist der deterministische TrainingDraft-Composer.
                   </p>
                 </div>
               ) : null}
@@ -272,7 +287,7 @@ export function QuickCreateWizard() {
 
         <footer className="flex items-center justify-between gap-3 border-t border-[var(--border)] p-5 sm:p-6">
           <button
-            className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-bold hover:bg-[var(--surface-subtle)] disabled:cursor-not-allowed disabled:opacity-40"
             disabled={step === 1}
             onClick={() => setStep((current) => Math.max(1, current - 1))}
             type="button"
@@ -281,7 +296,7 @@ export function QuickCreateWizard() {
           </button>
           {step < 5 ? (
             <button
-              className="min-h-11 rounded-xl bg-[var(--dark)] px-5 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)] disabled:cursor-not-allowed disabled:opacity-40"
               disabled={!canContinue}
               onClick={() => setStep((current) => Math.min(5, current + 1))}
               type="button"
@@ -290,7 +305,7 @@ export function QuickCreateWizard() {
             </button>
           ) : (
             <button
-              className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--dark)] hover:bg-[var(--accent-strong)]"
+              className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
               onClick={() => setGenerated(true)}
               type="button"
             >
@@ -301,29 +316,35 @@ export function QuickCreateWizard() {
       </section>
 
       <aside className="space-y-4">
-        <section className="rounded-2xl bg-[var(--dark)] p-5 text-white">
-          <div className="text-xs font-bold uppercase tracking-[0.16em] text-white/55">Live-Zusammenfassung</div>
+        <section className="rounded-2xl bg-[var(--sidebar)] p-5 text-[var(--sidebar-foreground)]">
+          <div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--sidebar-muted)]">Live-Zusammenfassung</div>
           <div className="mt-4 space-y-4">
             <div>
-              <div className="text-xs text-white/45">Gruppe</div>
+              <div className="text-xs text-[var(--sidebar-muted)]">Gruppe</div>
               <div className="mt-1 font-black">{selectedGroup?.[1]} · {participantCount}</div>
             </div>
             <div>
-              <div className="text-xs text-white/45">Zeit</div>
+              <div className="text-xs text-[var(--sidebar-muted)]">Zeit</div>
               <div className="mt-1 font-black">{duration} Minuten</div>
             </div>
             <div>
-              <div className="text-xs text-white/45">Fokus</div>
+              <div className="text-xs text-[var(--sidebar-muted)]">Fokus</div>
               <div className="mt-1 text-sm font-bold leading-6">{goals.join(" · ") || "Noch auswählen"}</div>
             </div>
             <div>
-              <div className="text-xs text-white/45">Format</div>
+              <div className="text-xs text-[var(--sidebar-muted)]">Wunschübungen</div>
+              <div className="mt-1 text-sm font-bold leading-6">
+                {preferredExercises.length ? preferredExercises.map((item) => item.label).join(" · ") : "Keine Vorgabe"}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-[var(--sidebar-muted)]">Format</div>
               <div className="mt-1 text-sm font-bold leading-6">{formats.join(" · ") || "Noch auswählen"}</div>
             </div>
           </div>
         </section>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-white p-5">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="font-black">Planungsprinzip</div>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
             Der Wizard legt Ziele und Rahmenbedingungen fest. Die Session bleibt danach editierbar und wird in Aufwärmen, Hauptteil und Cooldown geprüft.
