@@ -53,9 +53,11 @@
 - [x] FTS state: `healthy/dirty/rebuilding/failed`
 - [x] DB bootstrap + multi-statement migrations
 - [x] real In-Memory-DuckDB migration test
+- [ ] expanded exercise-detail schema from section 4
 - [ ] training version snapshots
 - [ ] favorites/recent use
 - [ ] templates
+- [ ] external source/provenance records
 - [ ] users/roles
 - [ ] media metadata
 - [ ] audit log
@@ -63,9 +65,9 @@
 
 ## 4. Initial exercise database
 
-A fresh OCRCraft DB must be useful immediately.
+A fresh OCRCraft DB must be useful immediately. A trainer must be able to understand and teach a seeded exercise without already knowing the exercise name or relying on advanced training knowledge.
 
-### Validated coverage
+### 4.1 Current validated coverage
 
 - [x] **140+ initial exercises** enforced by CI
 - [x] **25+ running exercises** enforced by CI
@@ -77,7 +79,101 @@ A fresh OCRCraft DB must be useful immediately.
 - [x] DE/EN search documents
 - [x] duplicate protection
 
-### Areas
+### 4.2 Required exercise detail contract
+
+The current seed is too terse. Every initial exercise must be enriched so that the exercise is self-explanatory in the UI and can later be used reliably by search, Quick Create and AI composition.
+
+#### Identity & classification
+
+- [ ] canonical German name
+- [ ] canonical English name
+- [ ] German/English aliases and common trainer terminology
+- [ ] primary category
+- [ ] secondary categories
+- [ ] compatible training phases: warm-up / main / cooldown
+- [ ] exercise type: drill / strength / endurance / mobility / skill / obstacle / game / recovery
+- [ ] training goals: strength / strength endurance / endurance / speed / coordination / balance / mobility / grip / OCR technique / recovery / teamwork
+- [ ] movement patterns: squat / hinge / lunge / push / pull / carry / crawl / climb / hang / rotate / brace / jump / throw / run / balance / mobility
+- [ ] primary body regions
+- [ ] secondary body regions
+- [ ] unilateral / bilateral / alternating / locomotion classification
+- [ ] movement plane where useful: sagittal / frontal / transverse / multiplanar
+- [ ] impact level: low / moderate / high
+- [ ] coordination complexity: simple / moderate / complex
+- [ ] OCR transfer tags, e.g. grip, wall, carry, rig, rope, transition, trail, obstacle efficiency
+
+#### Trainer-readable explanation
+
+Every seed exercise must include meaningful text, not only a short label.
+
+- [ ] **short summary:** one sentence explaining what the exercise is
+- [ ] **purpose:** why this exercise is used and what it develops
+- [ ] **setup:** equipment, spacing and preparation before starting
+- [ ] **start position:** clear body/equipment starting position
+- [ ] **execution:** 3–7 ordered steps written so a non-expert can follow them
+- [ ] **finish/reset position** where relevant
+- [ ] **breathing cue** where useful
+- [ ] **tempo/rhythm cue** where useful
+- [ ] **2–5 coaching cues** that can be called out during training
+- [ ] **2–5 common mistakes** and how the trainer corrects them
+- [ ] **safety notes / stop conditions** written in practical trainer language
+- [ ] **quality criteria:** what a good repetition or successful obstacle attempt looks like
+
+#### Dosage & programming
+
+An exercise must be usable immediately in a training block.
+
+- [ ] supported prescription units: reps / seconds / minutes / metres / rounds / attempts
+- [ ] suggested beginner prescription
+- [ ] suggested standard prescription
+- [ ] suggested advanced prescription
+- [ ] typical work/rest ranges where appropriate
+- [ ] suitable training formats, e.g. circuit / AMRAP / EMOM / Tabata-style / interval / technique / relay / Rig & Run
+- [ ] reasonable station capacity
+- [ ] approximate setup time
+- [ ] approximate transition time
+- [ ] space requirement: small / medium / large / running route / rig area
+- [ ] indoor / outdoor suitability
+
+#### Progression, regression & mixed groups
+
+- [ ] Level 1 regression with explanation
+- [ ] Level 2 standard version
+- [ ] Level 3 progression with explanation
+- [ ] low-impact alternative where meaningful
+- [ ] no-equipment alternative where meaningful
+- [ ] child/youth variant where meaningful
+- [ ] partner/team variant where meaningful
+- [ ] prerequisite skills for advanced OCR exercises
+- [ ] fallback exercise if an obstacle/equipment item is unavailable
+
+#### Audience & safety metadata
+
+- [ ] audience suitability: kids / youth / adults / mixed
+- [ ] minimum recommended age where applicable
+- [ ] difficulty: beginner / intermediate / advanced
+- [ ] risk level: low / medium / high
+- [ ] supervision requirement: normal / increased / direct station supervision
+- [ ] contact/partner requirement
+- [ ] club-rule restriction hooks
+
+The database should describe training suitability, not provide medical diagnosis. Individual medical restrictions remain outside the normal exercise seed.
+
+#### Logistics & equipment
+
+- [ ] required equipment
+- [ ] optional equipment
+- [ ] equipment quantity per station
+- [ ] obstacle dimensions/configuration where relevant
+- [ ] maximum simultaneous participants
+- [ ] surface requirements where relevant
+- [ ] weather/terrain considerations for running/OCR where relevant
+
+### 4.3 Category model
+
+Avoid one flat category field for everything. Use a broad primary area plus searchable facets/subcategories.
+
+#### Broad areas already present
 
 - [x] Warm-up
 - [x] Mobility / Movement Preparation
@@ -91,7 +187,42 @@ A fresh OCRCraft DB must be useful immediately.
 - [x] Throwing
 - [x] Cooldown / Stretching
 
-### Running pool
+#### Additional target categories / facets
+
+- [ ] Games & Teamwork
+- [ ] Kids Adventure / Movement Landscape
+- [ ] Coordination
+- [ ] Speed & Reaction
+- [ ] Jumping / Landing / Plyometrics
+- [ ] Crawling / Ground Movement
+- [ ] Push Strength
+- [ ] Pull Strength
+- [ ] Squat / Knee Dominant
+- [ ] Hinge / Hip Dominant
+- [ ] Lunge / Single Leg
+- [ ] Rotation / Anti-Rotation
+- [ ] Shoulder Stability
+- [ ] Grip Endurance
+- [ ] Rig Technique
+- [ ] Rope Technique
+- [ ] Wall Technique
+- [ ] Carry Technique
+- [ ] Drag / Pull
+- [ ] Obstacle Transition
+- [ ] Running Technique / Lauf-ABC
+- [ ] Easy / Base Endurance Running
+- [ ] Tempo / Threshold-oriented Running
+- [ ] Intervals
+- [ ] Hills / Stairs
+- [ ] Trail / Terrain
+- [ ] Run + Exercise
+- [ ] Run + Obstacle
+- [ ] Balance / Proprioception
+- [ ] Mobility
+- [ ] Stretching
+- [ ] Breathing / Recovery
+
+### 4.4 Running pool
 
 - [x] easy/continuous run
 - [x] Run-Walk
@@ -111,10 +242,13 @@ A fresh OCRCraft DB must be useful immediately.
 - [x] trail + stair running
 - [x] `every 100 m -> exercise`
 - [x] run-to-obstacle transitions
+- [ ] enrich every running seed with technique description, intensity guidance and common mistakes
+- [ ] distinguish technique drill vs endurance unit vs interval prescription
+- [ ] add RPE/intensity guidance independent of athlete-specific medical data
 - [ ] pace/HR-zone prescription
 - [ ] GPS/route-aware sessions
 
-### OCR pool
+### 4.5 OCR pool
 
 - [x] hangs / rings / monkey bars
 - [x] rope + rig progressions
@@ -127,14 +261,69 @@ A fresh OCRCraft DB must be useful immediately.
 - [x] medicine-ball/sandbag/target/spear throws
 - [ ] richer obstacle prerequisites
 - [ ] obstacle dimensions/setup/capacity
+- [ ] detailed obstacle approach / execution / exit sequence
+- [ ] explicit failed-attempt fallback/regression
+- [ ] transition technique between running and obstacle work
 
-### Seed enrichment
+### 4.6 VIBSS / LSB NRW reference seed
 
-- [ ] detailed coaching cues + common mistakes
-- [ ] explicit Level 1/2/3 variants
-- [ ] finer per-exercise body regions/movement patterns
-- [ ] child-specific alternatives/restrictions
-- [ ] images/videos/media placeholders
+Use VIBSS as a curated **reference and inspiration source**, not as a blind copy source.
+
+Useful VIBSS structures to map into OCRCraft include:
+
+- adult session intentions such as endurance, coordination, strength and mobility;
+- circuit/station training and fitness categories;
+- material/equipment and location filters;
+- children/youth age filters;
+- children/youth goals such as endurance, coordination/balance, body awareness and teamwork;
+- movement landscapes, parcours and adventure/experience sport concepts;
+- the linked SPOK exercise/game collection as a discovery source for additional seed ideas.
+
+Implementation rules:
+
+- [ ] add `external_source_reference` / provenance model
+- [ ] source fields: provider, title, URL, retrieval date, source type, notes
+- [ ] tag records derived from VIBSS inspiration with `source_provider = VIBSS/LSB NRW`
+- [ ] do **not** copy VIBSS text or images verbatim into OCRCraft seed data unless licensing explicitly permits it
+- [ ] write independent OCRCraft descriptions based on the training concept
+- [ ] curate VIBSS-inspired ideas for OCR relevance instead of importing unrelated sport examples
+- [ ] seed 20–40 curated complete training-template ideas based on useful VIBSS structures
+- [ ] add adult templates: endurance / coordination / strength / mobility / circuit / outdoor fitness
+- [ ] add kids/youth templates: coordination / balance / teamwork / adventure / parcours / movement landscape
+- [ ] preserve source URL on every externally inspired template for traceability
+
+Reference entry points:
+
+- https://www.vibss.de/sportpraxis/stundenbeispiele-pfp/erwachsene
+- https://www.vibss.de/sportpraxis/stundenbeispiele-pfp/kinder-und-jugendliche
+- https://www.vibss.de/sportpraxis/spiele-uebungssammlung-spok
+
+### 4.7 Seed quality gates
+
+Seed completeness must be testable, not subjective.
+
+- [ ] CI requires all seed exercises to have DE/EN names
+- [ ] CI requires all seed exercises to have summary + purpose
+- [ ] CI requires setup + start position + execution steps
+- [ ] CI requires at least 2 coaching cues for normal movement exercises
+- [ ] CI requires at least 1 common mistake/correction
+- [ ] CI requires difficulty + risk + audience metadata
+- [ ] CI requires primary body region + movement pattern unless genuinely not applicable
+- [ ] CI requires at least one supported prescription method
+- [ ] CI requires Level 1/2/3 for exercises marked `progression_required`
+- [ ] CI requires source/provenance for externally inspired seed records
+- [ ] admin completeness score highlights exercises that need enrichment
+
+### 4.8 Seed enrichment migration
+
+- [ ] extend schema for structured detail fields
+- [ ] enrich all existing 140+ seed exercises
+- [ ] enrich all 25+ running exercises with running-specific programming details
+- [ ] add missing categories/facets
+- [ ] add richer equipment + station logistics
+- [ ] add progression/regression relations
+- [ ] update DE/EN search documents to include the new detail fields
+- [ ] update autocomplete to use aliases, categories, goals, equipment and OCR tags
 
 ## 5. Exercise library & CRUD
 
@@ -151,11 +340,19 @@ A fresh OCRCraft DB must be useful immediately.
 - [x] server-side Zod validation
 - [x] mutations refresh DE/EN search documents
 - [x] mutations mark FTS `dirty`
+- [ ] detail page that explains the exercise without assumed expert knowledge
+- [ ] structured execution-step editor
+- [ ] coaching-cue editor
+- [ ] common-mistake/correction editor
+- [ ] dosage/programming editor
+- [ ] Level 1/2/3 editor
+- [ ] safety/logistics editor
+- [ ] source/provenance display
 - [ ] protected hard delete
 - [ ] edit body regions
 - [ ] edit movement patterns
 - [ ] edit equipment requirements
-- [ ] edit tags
+- [ ] edit tags/goals/categories
 - [ ] progressions/regressions
 - [ ] duplicate detection / bulk edit / import-export
 
@@ -170,7 +367,9 @@ A fresh OCRCraft DB must be useful immediately.
 - [x] autocomplete from exercise names
 - [x] autocomplete from exercise aliases
 - [ ] BM25 FTS live search
+- [ ] index purpose/execution/coaching cues/common mistakes
 - [ ] autocomplete from tags/equipment/body regions
+- [ ] autocomplete from goals/categories/OCR transfer tags
 - [ ] autocomplete from obstacles
 - [ ] autocomplete from existing trainings/blocks
 - [ ] configurable search profiles + field weights
@@ -178,7 +377,7 @@ A fresh OCRCraft DB must be useful immediately.
 - [x] read-only Admin index-status UI
 - [ ] authenticated Admin DE/EN rebuild actions
 
-## 7. UI/UX
+## 7. UI/UX & theming
 
 - [x] reusable App Shell
 - [x] responsive dashboard
@@ -187,6 +386,14 @@ A fresh OCRCraft DB must be useful immediately.
 - [x] visual front/back body selector
 - [x] Exercise create/edit UI
 - [x] initial read-only Admin dashboard
+- [ ] central semantic design-token system instead of page-local colors
+- [ ] consistent Card / Form / Table / Filter / Empty-State components
+- [ ] **Light mode**
+- [ ] **Dark mode**
+- [ ] **System mode** following OS/browser preference
+- [ ] persistent theme selection
+- [ ] theme selector in header/user settings
+- [ ] verify contrast/readability in light and dark themes
 - [ ] active navigation state
 - [ ] mobile navigation
 - [ ] shared advanced form kit
@@ -208,6 +415,7 @@ A fresh OCRCraft DB must be useful immediately.
 - [ ] group split / station capacity
 - [ ] avoid-region selection
 - [ ] connect UI to autocomplete/retrieval
+- [ ] use enriched exercise details for ranking and selection
 - [ ] deterministic `TrainingDraft` composer
 - [ ] persist generated draft
 
@@ -231,6 +439,8 @@ A fresh OCRCraft DB must be useful immediately.
 - [ ] create/persist session
 - [ ] metadata editor
 - [ ] search/autocomplete and add exercise
+- [ ] show concise exercise instructions directly inside a training item
+- [ ] expand item to full execution/coaching/safety details
 - [ ] add/remove/reorder/drag-drop
 - [ ] replace/easier/harder/equipment alternative
 - [ ] Level 1/2/3 editor
@@ -247,6 +457,7 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] provider-neutral AI interface
 - [ ] structured Zod AI schema
 - [ ] retrieve approved exercise/training pool
+- [ ] use structured exercise purpose/execution/safety/variant data as AI context
 - [ ] complete session generation
 - [ ] phase-only regeneration
 - [ ] replace/easier/harder selected item
@@ -267,6 +478,7 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] trainer qualification rules
 - [ ] media consent
 - [ ] blocked-item explanations
+- [ ] child-specific exercise wording and teaching cues
 - [ ] club rules always override AI
 
 ## 13. Groups
@@ -287,6 +499,9 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] users/roles
 - [ ] groups
 - [ ] advanced exercise/obstacle/media administration
+- [ ] exercise completeness report
+- [ ] seed-source/provenance view
+- [ ] bulk enrichment workflow for seed exercises
 - [ ] templates + club rules
 - [ ] search profiles
 - [ ] AI settings
@@ -294,7 +509,7 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] DuckDB/schema/backup/restore/import/export
 - [ ] read-only diagnostic SQL console for Super Admin
 
-## 15. Media
+## 15. Media & AI-generated exercise illustrations
 
 - [ ] media schema
 - [ ] exercise images/gallery/videos
@@ -303,6 +518,54 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] orphan detection
 - [ ] S3-compatible storage abstraction
 
+### OCRCraft illustration style
+
+Create a consistent visual language for exercise cards and detail pages based on the supplied reference images:
+
+- [ ] define reusable style profile `ocrcraft-exercise-illustration-v1`
+- [ ] clean flat/semi-flat instructional illustration
+- [ ] light neutral background, strong readable silhouette, minimal visual clutter
+- [ ] dark functional OCR sportswear with muted red accent details inspired by club/OCR clothing
+- [ ] avoid third-party event logos, trademarks or copied branding
+- [ ] equipment must be clearly recognizable
+- [ ] body position and movement direction must be the visual priority
+- [ ] consistent camera angle and proportions across the library where practical
+
+### Initial AI image generation
+
+For **every initial seed exercise**, generate one standardized example image containing three clearly separated demonstrations of the same exercise:
+
+1. **Kind**
+2. **Frau**
+3. **Mann**
+
+All three figures must show the same exercise/phase and use the same OCRCraft illustration style. Age/gender representation changes; exercise mechanics must remain consistent.
+
+- [ ] generate an AI illustration for every initial seed exercise
+- [ ] one image contains child + woman + man versions
+- [ ] use consistent OCRCraft clothing/style profile
+- [ ] show meaningful start/execution position rather than decorative poses
+- [ ] for movement-heavy exercises, use a small 2-step motion sequence within each person area where required to understand the movement
+- [ ] review each generated image for biomechanical plausibility and match to written instructions
+- [ ] regenerate images that conflict with the exercise description
+- [ ] create lower-complexity child presentation without changing the intended exercise unless the child variant differs explicitly
+
+### Image/source metadata
+
+- [ ] `media_type`: image / video / illustration
+- [ ] `source_type`: `ai_generated` / `club_created` / `external_reference`
+- [ ] `style_profile`
+- [ ] `audience_variant`: `kid-woman-man-triptych`
+- [ ] `generation_provider`
+- [ ] `generation_model`
+- [ ] `generation_prompt`
+- [ ] `generated_at`
+- [ ] `review_status`: pending / approved / rejected
+- [ ] `reviewed_by`
+- [ ] `source_reference` / originating exercise id
+- [ ] visible AI-generated indicator where required
+- [ ] ability to regenerate while preserving style profile and source history
+
 ## 16. Internationalization
 
 - [x] DB + initial content supports DE/EN
@@ -310,6 +573,7 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] UI dictionaries + localized UI
 - [ ] language selector
 - [ ] translation completeness Admin view
+- [ ] detailed execution/coaching fields translated DE/EN
 
 ## 17. Tests & quality gates
 
@@ -319,11 +583,14 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [x] seed-size + running coverage assertions
 - [x] DE/EN translation/search-doc assertions
 - [x] duplicate seed-key assertion
+- [ ] seed detail completeness tests from section 4.7
 - [ ] CRUD integration tests
 - [ ] autocomplete/search ranking tests
 - [ ] Quick Create E2E
 - [ ] Training Editor E2E
 - [ ] Kids/Youth E2E
+- [ ] theme Light/Dark/System E2E
+- [ ] media source/provenance tests
 
 ## 18. Analytics
 
@@ -333,6 +600,7 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] running volume by group
 - [ ] repetition warnings
 - [ ] zero-result searches
+- [ ] exercise completeness / missing-detail analytics
 - [ ] AI suggestion replacement analysis
 
 No athlete surveillance or unnecessary personal data.
@@ -358,11 +626,18 @@ No athlete surveillance or unnecessary personal data.
 
 ## Next implementation slice
 
-- [ ] BM25 exercise search
+- [ ] **expand exercise schema with self-explanatory detail fields**
+- [ ] **enrich all 140+ seed exercises, especially all running and OCR exercises**
+- [ ] add seed completeness CI rules
+- [ ] add richer categories/goals/facets
+- [ ] add VIBSS-inspired training-template/source model
+- [ ] central UI tokens + Light/Dark/System theme
+- [ ] BM25 exercise search over enriched content
 - [ ] connect Quick Create to real autocomplete/retrieval
 - [ ] body-region/equipment/tag editing
 - [ ] deterministic non-AI `TrainingDraft`
 - [ ] persisted Training Session CRUD
+- [ ] media schema + AI exercise-image pipeline foundation
 - [ ] authentication/RBAC before global Admin mutations
 
 ---
@@ -370,6 +645,9 @@ No athlete surveillance or unnecessary personal data.
 # MVP acceptance
 
 - [ ] selectable German/English UI
+- [ ] Light/Dark/System theme
+- [ ] every initial exercise understandable without assumed advanced exercise knowledge
+- [ ] every initial exercise has structured setup/execution/coaching/common-mistake data
 - [ ] full exercise + obstacle administration
 - [ ] fast FTS/autocomplete search with configurable sources
 - [ ] complete manual Warm-up/Main/Cooldown editor
@@ -383,6 +661,9 @@ No athlete surveillance or unnecessary personal data.
 - [ ] duplicate/combine/recreate sessions
 - [ ] AI composition from approved pool
 - [ ] AI-created exercises require approval
+- [ ] AI example illustration for every initial seed exercise
+- [ ] each generated exercise illustration contains child + woman + man version
+- [ ] illustration source/generation metadata stored and reviewable
 - [ ] Admin users/groups/media/settings/DB
 - [ ] training version history
 - [ ] age/group/risk rules before save
@@ -391,3 +672,5 @@ No athlete surveillance or unnecessary personal data.
 ## Reference principle
 
 LSB Hessen / Sportjugend Hessen / DOSB themes such as structured session planning, target-group orientation, warm-up, endurance, strength, mobility, coordination, functional movement, relaxation and safeguarding are used as professional planning guidance. OCR-specific obstacle/race concepts remain separate configurable OCR/club-domain rules rather than being presented as universal LSB rules.
+
+VIBSS / Landessportbund NRW is used as a reference/inspiration source for session structures, goals, age-group ideas, materials, locations, games and exercise discovery. OCRCraft should keep source provenance and independently author its own seed descriptions rather than copying external text or imagery verbatim.
