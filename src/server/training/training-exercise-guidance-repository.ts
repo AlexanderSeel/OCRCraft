@@ -15,8 +15,26 @@ export interface TrainingExerciseGuidance {
   readonly setup: string | null;
   readonly startPosition: string | null;
   readonly finishReset: string | null;
+  readonly breathingCue: string | null;
+  readonly tempoCue: string | null;
   readonly safetyNotes: string | null;
   readonly qualityCriteria: string | null;
+  readonly beginnerPrescription: string | null;
+  readonly standardPrescription: string | null;
+  readonly advancedPrescription: string | null;
+  readonly workRestGuidance: string | null;
+  readonly level1: string | null;
+  readonly level2: string | null;
+  readonly level3: string | null;
+  readonly childYouthVariant: string | null;
+  readonly prerequisites: string | null;
+  readonly fallbackExercise: string | null;
+  readonly difficulty: string | null;
+  readonly supervision: string | null;
+  readonly spaceRequirement: string | null;
+  readonly setupSeconds: number | null;
+  readonly transitionSeconds: number | null;
+  readonly stationCapacity: number | null;
   readonly executionSteps: readonly string[];
   readonly coachingCues: readonly string[];
   readonly commonMistakes: readonly TrainingExerciseMistake[];
@@ -28,6 +46,12 @@ function textOrNull(value: unknown): string | null {
   if (value == null) return null;
   const text = String(value).trim();
   return text || null;
+}
+
+function numberOrNull(value: unknown): number | null {
+  if (value == null) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
 
 export async function getTrainingExerciseGuidanceMap(
@@ -49,8 +73,26 @@ export async function getTrainingExerciseGuidanceMap(
         d.setup,
         d.start_position,
         d.finish_reset,
+        d.breathing_cue,
+        d.tempo_cue,
         d.safety_notes,
-        d.quality_criteria
+        d.quality_criteria,
+        d.beginner_prescription,
+        d.standard_prescription,
+        d.advanced_prescription,
+        d.work_rest_guidance,
+        d.level_1,
+        d.level_2,
+        d.level_3,
+        d.child_youth_variant,
+        d.prerequisites,
+        d.fallback_exercise,
+        d.difficulty,
+        d.supervision,
+        d.space_requirement,
+        d.setup_seconds,
+        d.transition_seconds,
+        d.station_capacity
       FROM exercises e
       LEFT JOIN exercise_translations t
         ON t.exercise_id=e.id AND t.locale=$locale
@@ -61,15 +103,7 @@ export async function getTrainingExerciseGuidanceMap(
       { exerciseIds: idList, locale },
     );
 
-    const result: Record<string, {
-      exerciseId: string;
-      summary: string | null;
-      purpose: string | null;
-      setup: string | null;
-      startPosition: string | null;
-      finishReset: string | null;
-      safetyNotes: string | null;
-      qualityCriteria: string | null;
+    const result: Record<string, TrainingExerciseGuidance & {
       executionSteps: string[];
       coachingCues: string[];
       commonMistakes: TrainingExerciseMistake[];
@@ -84,8 +118,26 @@ export async function getTrainingExerciseGuidanceMap(
         setup: textOrNull(row[3]),
         startPosition: textOrNull(row[4]),
         finishReset: textOrNull(row[5]),
-        safetyNotes: textOrNull(row[6]),
-        qualityCriteria: textOrNull(row[7]),
+        breathingCue: textOrNull(row[6]),
+        tempoCue: textOrNull(row[7]),
+        safetyNotes: textOrNull(row[8]),
+        qualityCriteria: textOrNull(row[9]),
+        beginnerPrescription: textOrNull(row[10]),
+        standardPrescription: textOrNull(row[11]),
+        advancedPrescription: textOrNull(row[12]),
+        workRestGuidance: textOrNull(row[13]),
+        level1: textOrNull(row[14]),
+        level2: textOrNull(row[15]),
+        level3: textOrNull(row[16]),
+        childYouthVariant: textOrNull(row[17]),
+        prerequisites: textOrNull(row[18]),
+        fallbackExercise: textOrNull(row[19]),
+        difficulty: textOrNull(row[20]),
+        supervision: textOrNull(row[21]),
+        spaceRequirement: textOrNull(row[22]),
+        setupSeconds: numberOrNull(row[23]),
+        transitionSeconds: numberOrNull(row[24]),
+        stationCapacity: numberOrNull(row[25]),
         executionSteps: [],
         coachingCues: [],
         commonMistakes: [],
