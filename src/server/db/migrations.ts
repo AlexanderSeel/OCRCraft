@@ -2,6 +2,7 @@ import "server-only";
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import type { DuckDBConnection } from "@duckdb/node-api";
 import { withDuckDbConnection } from "./duckdb";
 
 interface Migration {
@@ -33,6 +34,18 @@ async function getAppliedVersions(): Promise<Set<number>> {
   });
 }
 
+export async function runSqlScript(
+  connection: DuckDBConnection,
+  sql: string,
+): Promise<void> {
+  const statements = await connection.extractStatements(sql);
+
+  for (let index = 0; index < statements.count; index += 1) {
+    const statement = await statements.prepare(index);
+    await statement.run();
+  }
+}
+
 export async function applyPendingMigrations(): Promise<readonly number[]> {
   const appliedVersions = await getAppliedVersions();
   const newlyApplied: number[] = [];
@@ -51,7 +64,7 @@ export async function applyPendingMigrations(): Promise<readonly number[]> {
     const sql = await readFile(migrationPath, "utf8");
 
     await withDuckDbConnection(async (connection) => {
-      await connection.run(sql);
+      await runSqlScript(connection, sql);
     });
 
     newlyApplied.push(migration.version);
