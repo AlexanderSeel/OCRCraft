@@ -4,7 +4,7 @@ import {
   MUSCLE_MAP_IMAGE_BASE64,
   MUSCLE_MAP_IMAGE_BYTE_LENGTH,
   MUSCLE_MAP_IMAGE_SHA256,
-} from "@/data/muscle-map-image";
+} from "../../data/muscle-map-image";
 
 describe("muscle map raster asset", () => {
   it("assembles the reviewed non-empty WebP exactly", () => {
