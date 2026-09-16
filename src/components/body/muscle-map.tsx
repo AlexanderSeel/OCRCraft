@@ -18,6 +18,7 @@ export interface MuscleMapValue {
 interface MuscleMapProps {
   readonly options: readonly MuscleMapOption[];
   readonly value?: readonly MuscleMapValue[];
+  readonly onChange?: (value: readonly MuscleMapValue[]) => void;
   readonly mode?: "select" | "emphasis" | "display";
   readonly fieldName?: string;
   readonly emphasisFieldPrefix?: string;
@@ -120,6 +121,7 @@ const SHAPES: Readonly<Record<string, readonly Shape[]>> = {
 export function MuscleMap({
   options,
   value = [],
+  onChange,
   mode = "select",
   fieldName = "muscle",
   emphasisFieldPrefix = "muscleEmphasis:",
@@ -128,25 +130,34 @@ export function MuscleMap({
   title = "Muskelgruppen",
   description,
 }: MuscleMapProps) {
-  const [selection, setSelection] = useState<MuscleMapValue[]>(() => [...value]);
+  const [internalSelection, setInternalSelection] = useState<MuscleMapValue[]>(() => [...value]);
+  const selection = onChange ? value : internalSelection;
   const optionById = useMemo(() => new Map(options.map((option) => [option.id, option])), [options]);
   const selectedById = useMemo(() => new Map(selection.map((item) => [item.id, item])), [selection]);
   const visibleOptions = options.filter((option) => SHAPES[option.id]);
   const interactive = mode !== "display" && !disabled;
 
+  function setSelection(next: readonly MuscleMapValue[]) {
+    if (onChange) onChange(next);
+    else setInternalSelection([...next]);
+  }
+
   function cycle(id: string) {
     if (!interactive) return;
-    setSelection((current) => {
-      const existing = current.find((item) => item.id === id);
-      if (mode === "select") {
-        return existing ? current.filter((item) => item.id !== id) : [...current, { id }];
-      }
-      if (!existing) return [...current, { id, emphasis: "primary" }];
-      if ((existing.emphasis ?? "primary") === "primary") {
-        return current.map((item) => item.id === id ? { ...item, emphasis: "secondary" } : item);
-      }
-      return current.filter((item) => item.id !== id);
-    });
+    const existing = selection.find((item) => item.id === id);
+    if (mode === "select") {
+      setSelection(existing ? selection.filter((item) => item.id !== id) : [...selection, { id }]);
+      return;
+    }
+    if (!existing) {
+      setSelection([...selection, { id, emphasis: "primary" }]);
+      return;
+    }
+    if ((existing.emphasis ?? "primary") === "primary") {
+      setSelection(selection.map((item) => item.id === id ? { ...item, emphasis: "secondary" } : item));
+      return;
+    }
+    setSelection(selection.filter((item) => item.id !== id));
   }
 
   return (
@@ -182,7 +193,7 @@ export function MuscleMap({
             return (
               <g
                 aria-label={option.labelDe}
-                aria-pressed={Boolean(selected)}
+                aria-pressed={interactive ? Boolean(selected) : undefined}
                 className={interactive ? "cursor-pointer outline-none" : undefined}
                 key={option.id}
                 onClick={() => cycle(option.id)}
