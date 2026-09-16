@@ -53,14 +53,15 @@ export async function createExerciseAction(
   const validation = validationState(formData);
   if (!validation.success) return validation.state;
 
+  let id: string;
   try {
-    const id = await createExercise(validation.draft);
-    revalidatePath("/exercises");
-    redirect(`/exercises/${id}/edit?saved=1`);
-  } catch (error) {
-    if (error instanceof Error && error.message === "NEXT_REDIRECT") throw error;
+    id = await createExercise(validation.draft);
+  } catch {
     return { message: "Die Übung konnte nicht gespeichert werden." };
   }
+
+  revalidatePath("/exercises");
+  redirect(`/exercises/${id}/edit?saved=1`);
 }
 
 export async function updateExerciseAction(
@@ -73,13 +74,13 @@ export async function updateExerciseAction(
 
   try {
     await updateExercise(id, validation.draft);
-    revalidatePath("/exercises");
-    revalidatePath(`/exercises/${id}/edit`);
-    redirect(`/exercises/${id}/edit?saved=1`);
-  } catch (error) {
-    if (error instanceof Error && error.message === "NEXT_REDIRECT") throw error;
+  } catch {
     return { message: "Die Änderungen konnten nicht gespeichert werden." };
   }
+
+  revalidatePath("/exercises");
+  revalidatePath(`/exercises/${id}/edit`);
+  redirect(`/exercises/${id}/edit?saved=1`);
 }
 
 export async function setExerciseArchivedAction(
