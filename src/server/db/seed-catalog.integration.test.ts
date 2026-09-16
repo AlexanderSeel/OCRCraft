@@ -20,6 +20,7 @@ const migrationFiles = [
   "012_seed_movement_patterns.sql",
   "013_foundational_strength_seed_cohort.sql",
   "014_seed_cross_locale_aliases.sql",
+  "015_movement_teamwork_seed_cohort.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -52,6 +53,23 @@ describe("initial exercise catalog", () => {
       const total = await scalar(connection, "SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL");
       const completenessRows = await runSeedCompletenessQuery(connection);
       const running = await scalar(connection, "SELECT count(*) FROM exercises WHERE category='running'");
+      const movementTeamworkCohort = await scalar(connection, `
+        SELECT count(*) FROM exercises WHERE seed_key IN (
+          'partner-mirror-movement','cooperative-cone-collect','quiet-landing-practice'
+        )
+      `);
+      const unsafeLandingDefaults = await scalar(connection, `
+        SELECT count(*) FROM exercises e JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de'
+        WHERE e.seed_key='quiet-landing-practice' AND (
+          e.risk_level<>'low' OR e.impact_level<>'moderate' OR e.min_age<>8 OR e.supervision<>'increased'
+          OR e.station_capacity<>1 OR d.setup NOT LIKE '%keine Boxen%' OR d.prerequisites=''
+        )
+      `);
+      const coneEquipmentQuantity = await scalar(connection, `
+        SELECT count(*) FROM exercises e JOIN exercise_equipment x ON x.exercise_id=e.id
+        JOIN equipment q ON q.id=x.equipment_id
+        WHERE e.seed_key='cooperative-cone-collect' AND q.seed_key='cones' AND x.quantity_required=6
+      `);
       const categories = await scalar(connection, "SELECT count(DISTINCT category) FROM exercises WHERE seed_key IS NOT NULL");
       const sampleExerciseResult = await connection.runAndReadAll("SELECT id::VARCHAR FROM exercises WHERE seed_key='easy-jog'");
       const sampleExerciseId = String(sampleExerciseResult.getRows()[0]?.[0]);
@@ -178,7 +196,10 @@ describe("initial exercise catalog", () => {
       const carryGuidanceGaps = await scalar(connection, "SELECT count(*) FROM exercise_carry_guidance WHERE load_guidance='' OR route_setup='' OR lifting_setup='' OR movement_cue='' OR turning_cue='' OR finish_reset='' OR fallback_exercise='' OR intensity_rpe_min < 1 OR intensity_rpe_max > 10 OR station_capacity < 1 OR route_length_metres < 1");
       const carrySteps = await scalar(connection, "SELECT count(*) FROM exercise_carry_guidance g WHERE (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=g.exercise_id AND s.locale=g.locale) <> 3");
 
-      expect(total).toBeGreaterThanOrEqual(154);
+      expect(total).toBeGreaterThanOrEqual(157);
+      expect(movementTeamworkCohort).toBe(3);
+      expect(unsafeLandingDefaults).toBe(0);
+      expect(coneEquipmentQuantity).toBe(1);
       expect(completenessRows).toHaveLength(total);
       expect(running).toBeGreaterThanOrEqual(25);
       expect(categories).toBeGreaterThanOrEqual(11);

@@ -74,9 +74,9 @@ A fresh OCRCraft DB must be useful immediately. A trainer must be able to unders
 
 ### 4.1 Current validated coverage
 
-- [x] **154 initial exercises** enforced by CI
+- [x] **157 initial exercises** enforced by CI
 - [x] **25+ running exercises** enforced by CI
-- [ ] grow the current 154-seed catalog with curated gaps in foundational strength, movement quality, teamwork and age-group coverage; require new cohorts to pass bilingual detail, mapping and safety gates
+- [ ] grow the current 157-seed catalog with curated gaps in foundational strength, movement quality, teamwork and age-group coverage; require new cohorts to pass bilingual detail, mapping and safety gates
 - [x] 11+ exercise areas
 - [x] German + English content
 - [x] stable unique seed keys
@@ -314,8 +314,9 @@ Reference entry points:
 ### 4.8 Seed enrichment migration
 
 - [x] extend schema for structured detail fields
-- [ ] expert-reviewed, exercise-specific enrichment for all existing 154 seed exercises
+- [ ] expert-reviewed, exercise-specific enrichment for all existing 157 seed exercises
 - [x] add first five foundational strength/core exercises as bilingual seeds with aliases, body/movement mappings, structured detail, equipment and safety checks
+- [x] add movement-quality and teamwork cohort: partner mirror movement, cooperative cone collection and low-height landing practice with bilingual details, safety gates, mappings and search data
 - [x] add both canonical names as cross-locale search aliases for all existing seeds and mark DE/EN FTS indexes dirty for rebuild
 - [ ] continue adding missing catalog cohorts as versioned, bilingual seed data with aliases, mappings, structured detail, equipment and safety checks
 - [x] replace generic summaries/instructions/cues/corrections for the complete 10-exercise warm-up cohort
@@ -712,7 +713,7 @@ No athlete surveillance or unnecessary personal data.
 ## Next implementation slice
 
 - [x] **expand exercise schema with self-explanatory detail fields**
-- [ ] **enrich all 154 seed exercises**
+- [ ] **enrich all 157 seed exercises**
 - [x] enrich and classify every running seed with RPE, bilingual technique cues, corrected steps and common-mistake guidance
 - [x] add bilingual, obstacle-specific setup/prerequisite/approach/execution/exit/fallback guidance to every `ocr-skill` and `grip-rig` seed
 - [x] enrich all carry/drag/flip seeds with load selection, RPE, safe lifting, route/turn, set-down and regression guidance
