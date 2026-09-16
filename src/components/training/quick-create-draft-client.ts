@@ -10,6 +10,7 @@ import {
 import type { DraftIntensity, TrainingDraft } from "../../domain/training/draft";
 
 export interface QuickCreateDraftClientInput {
+  readonly groupId?: string;
   readonly groupType: string;
   readonly ageRange: string;
   readonly participantCount: number;
@@ -81,7 +82,10 @@ export function parseAgeRange(value: string): ParsedAgeRange {
   }
 
   const age = numbers[0];
-  return value.includes("+") ? { minAge: age } : { minAge: age, maxAge: age };
+  const normalized = value.trim().toLocaleLowerCase("de-DE");
+  if (value.includes("+") || normalized.startsWith("ab ")) return { minAge: age };
+  if (normalized.startsWith("bis ") || normalized.startsWith("max ")) return { maxAge: age };
+  return { minAge: age, maxAge: age };
 }
 
 export function normalizeTrainingDraftRequest(
@@ -152,6 +156,7 @@ export async function persistTrainingDraft(
     body: JSON.stringify({
       request: normalizeTrainingDraftRequest(input),
       title: title?.trim() || undefined,
+      groupId: input.groupId?.trim() || undefined,
     }),
   });
 
