@@ -4,6 +4,7 @@ import {
   addTrainingItemCore,
   deleteTrainingItemCore,
   moveTrainingItemCore,
+  replaceTrainingItemExerciseCore,
   updateTrainingItemCore,
 } from "./training-session-mutation-core";
 
@@ -132,6 +133,43 @@ describe("persisted training item mutations", () => {
       expect(reader.getRows().map((row) => String(row[0]))).toEqual([ITEM_B, ITEM_A]);
       expect(await sessionState(connection)).toEqual(["draft", 12]);
       expect(await moveTrainingItemCore(connection, SESSION_ID, ITEM_B, "up")).toBe(false);
+    } finally {
+      connection.closeSync();
+    }
+  });
+
+  it("replaces an exercise without changing the programmed duration", async () => {
+    const connection = await createFixture();
+    try {
+      await addTrainingItemCore(connection, {
+        itemId: ITEM_A,
+        sessionId: SESSION_ID,
+        phaseId: PHASE_ID,
+        exerciseId: EXERCISE_A,
+        durationMinutes: 9,
+        format: "technique",
+        instructions: "Hinweis bleibt bestehen.",
+        levelLabel: "Level 1",
+      });
+
+      expect(await replaceTrainingItemExerciseCore(
+        connection,
+        SESSION_ID,
+        ITEM_A,
+        EXERCISE_B,
+      )).toBe(true);
+
+      const reader = await connection.runAndReadAll(
+        "SELECT exercise_id::VARCHAR,duration_minutes,instructions,level_label FROM training_items WHERE id=$id::UUID",
+        { id: ITEM_A },
+      );
+      expect(reader.getRows()[0]).toEqual([
+        EXERCISE_B,
+        9,
+        "Hinweis bleibt bestehen.",
+        "Level 1",
+      ]);
+      expect(await sessionState(connection)).toEqual(["draft", 9]);
     } finally {
       connection.closeSync();
     }
