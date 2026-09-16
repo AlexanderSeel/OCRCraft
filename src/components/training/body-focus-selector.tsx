@@ -5,13 +5,18 @@ import { MuscleMap, type MuscleMapOption } from "@/components/body/muscle-map";
 const bodyRegions: readonly MuscleMapOption[] = [
   { id: "full-body", labelDe: "Ganzkörper", labelEn: "Full Body" },
   { id: "neck", labelDe: "Nacken", labelEn: "Neck" },
+  { id: "traps", labelDe: "Trapezmuskel", labelEn: "Trapezius" },
   { id: "shoulders", labelDe: "Schultern", labelEn: "Shoulders" },
+  { id: "rear-delts", labelDe: "Hintere Schulter", labelEn: "Rear Deltoids" },
   { id: "chest", labelDe: "Brust", labelEn: "Chest" },
   { id: "upper-back", labelDe: "Oberer Rücken", labelEn: "Upper Back" },
   { id: "lats", labelDe: "Latissimus", labelEn: "Lats" },
   { id: "upper-arms", labelDe: "Oberarme", labelEn: "Upper Arms" },
+  { id: "biceps", labelDe: "Bizeps", labelEn: "Biceps" },
+  { id: "triceps", labelDe: "Trizeps", labelEn: "Triceps" },
   { id: "forearms-grip", labelDe: "Unterarme / Grip", labelEn: "Forearms / Grip" },
   { id: "core", labelDe: "Core", labelEn: "Core" },
+  { id: "abs", labelDe: "Bauchmuskulatur", labelEn: "Abdominals" },
   { id: "obliques", labelDe: "Seitlicher Core", labelEn: "Obliques" },
   { id: "lower-back", labelDe: "Unterer Rücken", labelEn: "Lower Back" },
   { id: "hips", labelDe: "Hüfte", labelEn: "Hips" },
@@ -20,6 +25,7 @@ const bodyRegions: readonly MuscleMapOption[] = [
   { id: "hamstrings", labelDe: "Oberschenkel hinten", labelEn: "Hamstrings" },
   { id: "adductors", labelDe: "Adduktoren", labelEn: "Adductors" },
   { id: "calves", labelDe: "Waden", labelEn: "Calves" },
+  { id: "tibialis", labelDe: "Schienbein / Tibialis", labelEn: "Tibialis Anterior" },
   { id: "ankles-feet", labelDe: "Sprunggelenke / Füße", labelEn: "Ankles / Feet" },
 ];
 
