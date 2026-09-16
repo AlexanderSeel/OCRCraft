@@ -40,6 +40,7 @@ export async function createAndPersistDeterministicTrainingDraft(
   const id = await persistTrainingDraft(draft, {
     title: input.title,
     locale: input.request.locale,
+    groupId: input.groupId,
   });
 
   return { id, draft };
