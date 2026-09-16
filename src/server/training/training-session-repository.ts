@@ -6,6 +6,8 @@ import type { TrainingPhaseKind } from "@/domain/training/model";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export interface PersistTrainingDraftOptions {
   readonly title?: string;
   readonly locale?: "de" | "en";
@@ -181,6 +183,7 @@ export async function listTrainingSessions(
 }
 
 export async function getTrainingSessionById(id: string): Promise<TrainingSessionDetail | null> {
+  if (!UUID_PATTERN.test(id)) return null;
   await ensureDatabaseReady();
 
   return withDuckDbConnection(async (connection) => {
