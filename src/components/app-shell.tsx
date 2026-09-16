@@ -12,8 +12,8 @@ interface AppShellProps {
 
 export function AppShell({ title, subtitle, actions, children }: AppShellProps) {
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
-      <aside className="hidden border-r border-[var(--sidebar-border)] bg-[var(--sidebar)] text-[var(--sidebar-foreground)] lg:flex lg:min-h-screen lg:flex-col">
+    <div className="min-h-screen lg:grid lg:h-dvh lg:min-h-0 lg:grid-cols-[240px_minmax(0,1fr)] lg:overflow-hidden">
+      <aside className="hidden border-r border-[var(--sidebar-border)] bg-[var(--sidebar)] text-[var(--sidebar-foreground)] lg:flex lg:h-dvh lg:min-h-0 lg:flex-col lg:overflow-y-auto lg:overscroll-contain">
         <div className="flex h-20 items-center gap-3 border-b border-[var(--sidebar-border)] px-6">
           <div className="grid size-10 place-items-center rounded-xl bg-[var(--accent)] text-lg font-black text-[var(--accent-foreground)]">O</div>
           <div>
@@ -31,7 +31,7 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
           </Link>
         </div>
       </aside>
-      <div className="min-w-0">
+      <div className="min-w-0 lg:h-dvh lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
         <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[var(--header)] backdrop-blur">
           <div className="mx-auto flex min-h-20 max-w-[1500px] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2 sm:px-6 lg:px-8">
             <div className="min-w-0">

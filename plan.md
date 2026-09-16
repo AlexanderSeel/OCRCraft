@@ -377,6 +377,7 @@ Reference entry points:
 ## 7. UI/UX & theming
 
 - [x] reusable App Shell
+- [x] independently scrollable desktop navigation and content panels
 - [x] responsive dashboard
 - [x] phase cards
 - [x] touch-friendly Quick Create
