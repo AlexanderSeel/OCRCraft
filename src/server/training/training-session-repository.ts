@@ -13,6 +13,7 @@ export type TrainingSessionStatus = "draft" | "ready" | "completed" | "archived"
 export interface PersistTrainingDraftOptions {
   readonly title?: string;
   readonly locale?: "de" | "en";
+  readonly groupId?: string | null;
 }
 
 export interface UpdateTrainingSessionMetadataInput {
@@ -58,13 +59,16 @@ export interface TrainingSessionDetail extends TrainingSessionListItem {
 
 export async function persistTrainingDraft(
   draft: TrainingDraft,
-  { title, locale = "de" }: PersistTrainingDraftOptions = {},
+  { title, locale = "de", groupId = null }: PersistTrainingDraftOptions = {},
 ): Promise<string> {
   await ensureDatabaseReady();
 
   const blockingIssues = draft.validationIssues.filter((issue) => issue.severity === "error");
   if (blockingIssues.length > 0) {
     throw new Error(`TrainingDraft ist nicht speicherbar: ${blockingIssues.map((issue) => issue.message).join(" ")}`);
+  }
+  if (groupId != null && !UUID_PATTERN.test(groupId)) {
+    throw new Error("Trainingsgruppe ist ungültig.");
   }
 
   const sessionId = randomUUID();
@@ -73,18 +77,29 @@ export async function persistTrainingDraft(
   await withDuckDbConnection(async (connection) => {
     await connection.run("BEGIN TRANSACTION");
     try {
+      if (groupId) {
+        const groupReader = await connection.runAndReadAll(
+          "SELECT id::VARCHAR FROM club_groups WHERE id=$groupId::UUID AND archived=false",
+          { groupId },
+        );
+        if (groupReader.getRows().length === 0) {
+          throw new Error("Die ausgewählte Trainingsgruppe ist nicht mehr aktiv.");
+        }
+      }
+
       await connection.run(
         `
         INSERT INTO training_sessions (
           id, title, group_id, status, source, total_duration_minutes, locale, notes
         ) VALUES (
-          $id::UUID, $title, NULL, 'draft', 'manual', $duration, $locale,
+          $id::UUID, $title, $groupId::UUID, 'draft', 'manual', $duration, $locale,
           'Quick Create · deterministic composer'
         )
         `,
         {
           id: sessionId,
           title: sessionTitle,
+          groupId,
           duration: draft.session.totalDurationMinutes,
           locale,
         },
@@ -295,28 +310,5 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
       updatedAt: String(sessionRow[9]),
       phases: [...phases.values()],
     };
-  });
-}
-
-export async function updateTrainingSessionMetadata(
-  id: string,
-  input: UpdateTrainingSessionMetadataInput,
-): Promise<boolean> {
-  if (!UUID_PATTERN.test(id)) return false;
-  const title = input.title.trim();
-  if (!title) throw new Error("Trainingstitel darf nicht leer sein.");
-
-  await ensureDatabaseReady();
-  return withDuckDbConnection(async (connection) => {
-    const reader = await connection.runAndReadAll(
-      `
-      UPDATE training_sessions
-      SET title=$title, status=$status, updated_at=current_timestamp
-      WHERE id=$id::UUID
-      RETURNING id::VARCHAR
-      `,
-      { id, title, status: input.status },
-    );
-    return reader.getRows().length > 0;
   });
 }
