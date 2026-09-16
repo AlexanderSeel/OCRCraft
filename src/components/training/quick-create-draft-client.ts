@@ -5,8 +5,8 @@ import {
   type Audience,
   type BodyRegion,
   type TrainingFormat,
-} from "@/domain/training/model";
-import type { DraftIntensity, TrainingDraft } from "@/domain/training/draft";
+} from "../../domain/training/model";
+import type { DraftIntensity, TrainingDraft } from "../../domain/training/draft";
 
 export interface QuickCreateDraftClientInput {
   readonly groupType: string;
