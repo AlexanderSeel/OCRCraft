@@ -1,15 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { PrimaryNavigation } from "@/components/navigation/primary-navigation";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
-
-const navigation = [
-  ["Übersicht", "/"],
-  ["Training", "/training"],
-  ["Übungen", "/exercises"],
-  ["Hindernisse", "/obstacles"],
-  ["Gruppen", "/groups"],
-  ["Medien", "/media"],
-] as const;
 
 interface AppShellProps {
   readonly title: string;
@@ -29,17 +21,7 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
             <div className="text-xs text-[var(--sidebar-muted)]">Club Training Studio</div>
           </div>
         </div>
-        <nav aria-label="Hauptnavigation" className="flex-1 space-y-1 p-4">
-          {navigation.map(([label, href]) => (
-            <Link
-              className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-[var(--sidebar-muted)] transition hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]"
-              href={href}
-              key={href}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
+        <PrimaryNavigation variant="sidebar" />
         <div className="border-t border-[var(--sidebar-border)] p-4">
           <Link className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" href="/admin#database-settings">
             Einstellungen
@@ -69,6 +51,7 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
               </nav>
             </div>
           </div>
+          <PrimaryNavigation variant="mobile" />
         </header>
         <main className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
