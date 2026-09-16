@@ -1,4 +1,5 @@
 import type { DuckDBConnection } from "@duckdb/node-api";
+import { safeExerciseImageUri } from "../exercises/exercise-image-uri";
 import type { SearchLocale } from "./exercise-search-documents";
 
 export interface ExerciseSearchHit {
@@ -12,6 +13,8 @@ export interface ExerciseSearchHit {
   readonly minAge: number | null;
   readonly archived: boolean;
   readonly equipment: readonly string[];
+  readonly imageUrl: string | null;
+  readonly imageReviewStatus: string | null;
 }
 
 export interface Bm25SearchOptions {
@@ -65,6 +68,16 @@ export async function runBm25ExerciseSearch(
         JOIN equipment eq ON eq.id=ee.equipment_id
         WHERE ee.exercise_id=e.id
       ), '') AS equipment_names,
+      (
+        SELECT m.storage_uri FROM exercise_media_assets m
+        WHERE m.exercise_id=e.id AND m.generation_status='generated'
+        ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+      ) AS image_uri,
+      (
+        SELECT m.review_status FROM exercise_media_assets m
+        WHERE m.exercise_id=e.id AND m.generation_status='generated'
+        ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+      ) AS image_review_status,
       ranked.bm25_score
     FROM ranked
     JOIN exercises e ON e.id::VARCHAR=ranked.entity_id
@@ -107,5 +120,7 @@ export async function runBm25ExerciseSearch(
     minAge: row[7] == null ? null : Number(row[7]),
     archived: Boolean(row[8]),
     equipment: String(row[9] ?? "").split(" | ").filter(Boolean),
+    imageUrl: safeExerciseImageUri(row[10]),
+    imageReviewStatus: row[11] == null ? null : String(row[11]),
   }));
 }

@@ -223,6 +223,19 @@ describe("initial exercise catalog", () => {
         ) VALUES ($exerciseId,'illustration','ai_generated','openai','gpt-image-2',
           'ocrcraft-exercise-illustration-v1','Test prompt','generating','filesystem')
       `, { exerciseId: customExerciseId });
+      const seedExercise = await connection.runAndReadAll("SELECT id::VARCHAR FROM exercises WHERE seed_key='easy-jog'");
+      const seedExerciseId = String(seedExercise.getRows()[0]?.[0]);
+      await connection.run(`
+        INSERT INTO exercise_media_assets (
+          exercise_id,media_type,source_type,provider,model,style_profile,generation_prompt,generated_at,
+          review_status,generation_status,storage_provider,storage_key,storage_uri,content_type,width,height,sha256
+        ) VALUES (
+          $exerciseId,'illustration','ai_generated','openai','gpt-image-2',
+          'ocrcraft-exercise-illustration-v1','Seed image test prompt',current_timestamp,
+          'pending','generated','filesystem','old-exercise-id/test-image.png',
+          '/generated/exercises/old-exercise-id/test-image.png','image/png',1536,1024,repeat('a',64)
+        )
+      `, { exerciseId: seedExerciseId });
 
       await reseedDatabase(connection, scripts);
 
@@ -231,12 +244,20 @@ describe("initial exercise catalog", () => {
       expect(await scalar(connection, "SELECT count(*) FROM club_groups")).toBe(0);
       expect(await scalar(connection, "SELECT count(*) FROM training_sessions")).toBe(0);
       expect(await scalar(connection, "SELECT count(*) FROM exercises WHERE canonical_name='Eigene Übung'")).toBe(0);
-      expect(await scalar(connection, "SELECT count(*) FROM exercise_media_assets")).toBe(0);
+      expect(await scalar(connection, "SELECT count(*) FROM exercise_media_assets")).toBe(1);
+      const restoredMedia = await connection.runAndReadAll(`
+        SELECT e.seed_key,m.storage_uri,m.generation_status,m.review_status
+        FROM exercise_media_assets m JOIN exercises e ON e.id=m.exercise_id
+      `);
+      expect(restoredMedia.getRows()[0]).toEqual([
+        "easy-jog", "/generated/exercises/old-exercise-id/test-image.png", "generated", "pending",
+      ]);
       expect(await scalar(connection, "SELECT count(*) FROM schema_migrations")).toBe(migrationFiles.length);
 
       await expect(reseedDatabase(connection, [...scripts.slice(0, -1), "INSERT INTO no_such_table VALUES (1)"]))
         .rejects.toThrow();
       expect(await scalar(connection, "SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL")).toBe(seedCount);
+      expect(await scalar(connection, "SELECT count(*) FROM exercise_media_assets")).toBe(1);
       expect(await scalar(connection, "SELECT count(*) FROM schema_migrations")).toBe(migrationFiles.length);
     } finally {
       connection.closeSync();

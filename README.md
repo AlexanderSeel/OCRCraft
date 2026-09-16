@@ -134,6 +134,8 @@ npm run exercise:images:seed -- --all-seeds
 
 This generates three exercise images concurrently while serializing DuckDB writes. It keeps already generated images and can be rerun to retry failures. The image rows are connected to their exercise IDs in DuckDB and remain pending trainer review.
 
+The exercise library displays stored illustrations and labels images that still need review. A full database reseed preserves media metadata for seeded exercises and reconnects each record by its stable seed key; it does not remove image files. Files are kept under `public/generated/exercises/`. The database and generated image directory are ignored by Git, so back up both together before deleting local data or moving to another machine. For shared or production use, configure S3-compatible storage.
+
 ## UI-Theming
 
 OCRCraft besitzt eine zentrale Theme-Grundlage mit semantischen CSS-Tokens. Im Header kann zwischen **System**, **Hell** und **Dunkel** gewechselt werden. Die Auswahl wird lokal gespeichert; bei `System` folgt OCRCraft automatisch der Betriebssystem-/Browser-Einstellung. Ein Bootstrap-Script setzt das Theme vor dem Rendern, um einen sichtbaren Theme-Flash weitgehend zu vermeiden.

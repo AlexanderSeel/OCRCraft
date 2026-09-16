@@ -36,6 +36,14 @@ async function createSearchFixture() {
       exercise_id VARCHAR,
       equipment_id VARCHAR
     );
+    CREATE TABLE exercise_media_assets (
+      id VARCHAR,
+      exercise_id VARCHAR,
+      generation_status VARCHAR,
+      storage_uri VARCHAR,
+      review_status VARCHAR,
+      created_at TIMESTAMP DEFAULT current_timestamp
+    );
     CREATE TABLE search_documents_de (
       document_id VARCHAR PRIMARY KEY,
       entity_type VARCHAR,
@@ -64,6 +72,8 @@ async function createSearchFixture() {
       ('run-1','de','Lockerer Lauf');
     INSERT INTO equipment VALUES ('kb','Kettlebell','Kettlebell');
     INSERT INTO exercise_equipment VALUES ('carry-1','kb');
+    INSERT INTO exercise_media_assets (id,exercise_id,generation_status,storage_uri,review_status)
+      VALUES ('media-1','run-1','generated','/generated/exercises/run-1.png','pending');
     INSERT INTO search_documents_de VALUES
       ('exercise:carry-1','exercise','carry-1','Farmer Carry','Farmer Walk','Kontrolliertes Tragen einer Last','carry grip','full body','Kettlebell','schwere Last aufnehmen stabil tragen kontrolliert absetzen'),
       ('exercise:run-1','exercise','run-1','Easy Jog','Lockerer Lauf','Lockerer Lauf im Sprechtempo','running endurance','legs','','ruhig laufen gleichmaessig atmen'),
@@ -140,6 +150,8 @@ describe("DuckDB BM25 exercise search", () => {
       });
 
       expect(results[0]?.seedKey).toBe("easy-jog");
+      expect(results[0]?.imageUrl).toBe("/generated/exercises/run-1.png");
+      expect(results[0]?.imageReviewStatus).toBe("pending");
     } finally {
       connection.closeSync();
     }

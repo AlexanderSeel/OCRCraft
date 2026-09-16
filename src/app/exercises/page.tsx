@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
 import {
   exerciseCategoryLabels,
@@ -111,54 +112,78 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         </div>
 
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {exercises.map((exercise) => (
+          {exercises.map((exercise, index) => (
             <article
-              className="flex min-h-64 flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
+              className="flex min-h-64 flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]"
               key={exercise.id}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-                    {categoryLabel(exercise.category)}
-                  </div>
-                  <h2 className="mt-1 text-lg font-black">{exercise.name}</h2>
+              {exercise.imageUrl ? (
+                <div className="relative aspect-[3/2] w-full overflow-hidden bg-[var(--surface-subtle)]">
+                  <Image
+                    alt={`Übungsillustration: ${exercise.name}`}
+                    className="object-cover"
+                    fill
+                    loading={index === 0 ? "eager" : "lazy"}
+                    sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+                    src={exercise.imageUrl}
+                    unoptimized
+                  />
+                  {exercise.imageReviewStatus === "pending" ? (
+                    <span className="absolute left-3 top-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]/95 px-2.5 py-1 text-xs font-bold text-[var(--foreground)] shadow-sm">
+                      KI-Bild · noch zu prüfen
+                    </span>
+                  ) : null}
                 </div>
-                <span className="rounded-full bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-bold">
-                  {exercise.riskLevel}
-                </span>
-              </div>
-              <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
-                {exercise.summary || "Noch keine Kurzbeschreibung hinterlegt."}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
-                {exercise.phase ? (
-                  <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
-                    {exercise.phase}
+              ) : (
+                <div className="flex aspect-[3/2] w-full items-center justify-center bg-[var(--surface-subtle)] text-sm font-semibold text-[var(--muted)]">
+                  Noch kein Bild verfügbar
+                </div>
+              )}
+              <div className="flex flex-1 flex-col p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+                      {categoryLabel(exercise.category)}
+                    </div>
+                    <h2 className="mt-1 text-lg font-black">{exercise.name}</h2>
+                  </div>
+                  <span className="rounded-full bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-bold">
+                    {exercise.riskLevel}
                   </span>
-                ) : null}
-                {exercise.minAge ? (
-                  <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
-                    ab {exercise.minAge}
-                  </span>
-                ) : null}
-                {exercise.seedKey ? (
-                  <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
-                    Initialkatalog
-                  </span>
-                ) : null}
-                {exercise.equipment.slice(0, 3).map((item) => (
-                  <span className="rounded-full border border-[var(--border)] px-2.5 py-1" key={item}>
-                    {item}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-auto pt-5">
-                <Link
-                  className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-black hover:bg-[var(--surface-subtle)]"
-                  href={`/exercises/${exercise.id}/edit`}
-                >
-                  {archived ? "Ansehen / Wiederherstellen" : "Bearbeiten"}
-                </Link>
+                </div>
+                <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
+                  {exercise.summary || "Noch keine Kurzbeschreibung hinterlegt."}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
+                  {exercise.phase ? (
+                    <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
+                      {exercise.phase}
+                    </span>
+                  ) : null}
+                  {exercise.minAge ? (
+                    <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
+                      ab {exercise.minAge}
+                    </span>
+                  ) : null}
+                  {exercise.seedKey ? (
+                    <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
+                      Initialkatalog
+                    </span>
+                  ) : null}
+                  {exercise.equipment.slice(0, 3).map((item) => (
+                    <span className="rounded-full border border-[var(--border)] px-2.5 py-1" key={item}>
+                      {item}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-auto pt-5">
+                  <Link
+                    className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-black hover:bg-[var(--surface-subtle)]"
+                    href={`/exercises/${exercise.id}/edit`}
+                  >
+                    {archived ? "Ansehen / Wiederherstellen" : "Bearbeiten"}
+                  </Link>
+                </div>
               </div>
             </article>
           ))}

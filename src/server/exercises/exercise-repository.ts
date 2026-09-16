@@ -9,6 +9,7 @@ import type {
 } from "@/domain/exercise/model";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
+import { safeExerciseImageUri } from "./exercise-image-uri";
 import type { DuckDBConnection } from "@duckdb/node-api";
 
 export interface ExerciseListItem {
@@ -22,6 +23,8 @@ export interface ExerciseListItem {
   readonly minAge: number | null;
   readonly archived: boolean;
   readonly equipment: readonly string[];
+  readonly imageUrl: string | null;
+  readonly imageReviewStatus: string | null;
 }
 
 export interface ExerciseEditorRecord {
@@ -312,7 +315,17 @@ export async function listExercises({
           FROM exercise_equipment ee
           JOIN equipment eq ON eq.id = ee.equipment_id
           WHERE ee.exercise_id = e.id
-        ), '') AS equipment_names
+        ), '') AS equipment_names,
+        (
+          SELECT m.storage_uri FROM exercise_media_assets m
+          WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+        ) AS image_uri,
+        (
+          SELECT m.review_status FROM exercise_media_assets m
+          WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+        ) AS image_review_status
       FROM exercises e
       JOIN exercise_translations t ON t.exercise_id = e.id AND t.locale = $locale
       WHERE e.archived = $archived
@@ -346,6 +359,8 @@ export async function listExercises({
       minAge: row[7] == null ? null : Number(row[7]),
       archived: Boolean(row[8]),
       equipment: String(row[9] ?? "").split(" | ").filter(Boolean),
+      imageUrl: safeExerciseImageUri(row[10]),
+      imageReviewStatus: row[11] == null ? null : String(row[11]),
     }));
   });
 }

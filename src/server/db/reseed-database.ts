@@ -1,5 +1,29 @@
 import type { DuckDBConnection } from "@duckdb/node-api";
 
+interface PreservedSeedMediaAsset {
+  readonly id: string;
+  readonly seedKey: string;
+  readonly mediaType: string;
+  readonly sourceType: string;
+  readonly provider: string | null;
+  readonly model: string | null;
+  readonly styleProfile: string | null;
+  readonly generationPrompt: string | null;
+  readonly generatedAt: string | null;
+  readonly reviewStatus: string;
+  readonly generationStatus: string;
+  readonly storageProvider: string;
+  readonly storageKey: string | null;
+  readonly storageUri: string | null;
+  readonly contentType: string | null;
+  readonly width: number | null;
+  readonly height: number | null;
+  readonly sha256: string | null;
+  readonly errorMessage: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 const tablesToClear = [
   "exercise_media_assets",
   "training_items",
@@ -46,11 +70,103 @@ async function executeScript(connection: DuckDBConnection, sql: string): Promise
   }
 }
 
+async function readSeedMediaAssets(connection: DuckDBConnection): Promise<readonly PreservedSeedMediaAsset[]> {
+  const table = await connection.runAndReadAll(`
+    SELECT count(*) FROM information_schema.tables WHERE table_name='exercise_media_assets'
+  `);
+  if (Number(table.getRows()[0]?.[0] ?? 0) === 0) return [];
+
+  const reader = await connection.runAndReadAll(`
+    SELECT m.id::VARCHAR, e.seed_key, m.media_type, m.source_type, m.provider, m.model,
+      m.style_profile, m.generation_prompt, m.generated_at::VARCHAR, m.review_status,
+      m.generation_status, m.storage_provider, m.storage_key, m.storage_uri, m.content_type,
+      m.width, m.height, m.sha256, m.error_message, m.created_at::VARCHAR, m.updated_at::VARCHAR
+    FROM exercise_media_assets m
+    JOIN exercises e ON e.id=m.exercise_id
+    WHERE e.seed_key IS NOT NULL
+    ORDER BY e.seed_key, m.created_at, m.id
+  `);
+
+  return reader.getRows().map((row) => ({
+    id: String(row[0]),
+    seedKey: String(row[1]),
+    mediaType: String(row[2]),
+    sourceType: String(row[3]),
+    provider: row[4] == null ? null : String(row[4]),
+    model: row[5] == null ? null : String(row[5]),
+    styleProfile: row[6] == null ? null : String(row[6]),
+    generationPrompt: row[7] == null ? null : String(row[7]),
+    generatedAt: row[8] == null ? null : String(row[8]),
+    reviewStatus: String(row[9]),
+    generationStatus: String(row[10]),
+    storageProvider: String(row[11]),
+    storageKey: row[12] == null ? null : String(row[12]),
+    storageUri: row[13] == null ? null : String(row[13]),
+    contentType: row[14] == null ? null : String(row[14]),
+    width: row[15] == null ? null : Number(row[15]),
+    height: row[16] == null ? null : Number(row[16]),
+    sha256: row[17] == null ? null : String(row[17]),
+    errorMessage: row[18] == null ? null : String(row[18]),
+    createdAt: String(row[19]),
+    updatedAt: String(row[20]),
+  }));
+}
+
+async function restoreSeedMediaAssets(
+  connection: DuckDBConnection,
+  assets: readonly PreservedSeedMediaAsset[],
+): Promise<void> {
+  for (const asset of assets) {
+    const exercise = await connection.runAndReadAll(
+      "SELECT id::VARCHAR FROM exercises WHERE seed_key=$seedKey LIMIT 1",
+      { seedKey: asset.seedKey },
+    );
+    const exerciseId = exercise.getRows()[0]?.[0];
+    if (exerciseId == null) throw new Error(`Cannot restore media for missing seed exercise "${asset.seedKey}".`);
+
+    await connection.run(`
+      INSERT INTO exercise_media_assets (
+        id,exercise_id,media_type,source_type,provider,model,style_profile,generation_prompt,
+        generated_at,review_status,generation_status,storage_provider,storage_key,storage_uri,
+        content_type,width,height,sha256,error_message,created_at,updated_at
+      ) VALUES (
+        $id,$exerciseId,$mediaType,$sourceType,$provider,$model,$styleProfile,$generationPrompt,
+        CAST($generatedAt AS TIMESTAMP),$reviewStatus,$generationStatus,$storageProvider,$storageKey,
+        $storageUri,$contentType,$width,$height,$sha256,$errorMessage,
+        CAST($createdAt AS TIMESTAMP),CAST($updatedAt AS TIMESTAMP)
+      )
+    `, {
+      id: asset.id,
+      exerciseId: String(exerciseId),
+      mediaType: asset.mediaType,
+      sourceType: asset.sourceType,
+      provider: asset.provider,
+      model: asset.model,
+      styleProfile: asset.styleProfile,
+      generationPrompt: asset.generationPrompt,
+      generatedAt: asset.generatedAt,
+      reviewStatus: asset.reviewStatus,
+      generationStatus: asset.generationStatus,
+      storageProvider: asset.storageProvider,
+      storageKey: asset.storageKey,
+      storageUri: asset.storageUri,
+      contentType: asset.contentType,
+      width: asset.width,
+      height: asset.height,
+      sha256: asset.sha256,
+      errorMessage: asset.errorMessage,
+      createdAt: asset.createdAt,
+      updatedAt: asset.updatedAt,
+    });
+  }
+}
+
 /** Clears all stored app data and restores the database from the checked-in migrations. */
 export async function reseedDatabase(
   connection: DuckDBConnection,
   migrationScripts: readonly string[],
 ): Promise<void> {
+  const preservedSeedMediaAssets = await readSeedMediaAssets(connection);
   await connection.run("BEGIN TRANSACTION");
 
   try {
@@ -67,6 +183,8 @@ export async function reseedDatabase(
     for (const script of migrationScripts) {
       await executeScript(connection, withoutTransactionWrappers(script));
     }
+
+    await restoreSeedMediaAssets(connection, preservedSeedMediaAssets);
 
     await connection.run("COMMIT");
   } catch (error) {

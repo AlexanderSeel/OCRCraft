@@ -610,7 +610,10 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 - [x] `review_status`: pending / approved / rejected
 - [ ] `reviewed_by`
 - [ ] `source_reference` / originating exercise id
-- [ ] visible AI-generated indicator where required
+- [x] visible AI-generated indicator where required
+- [x] show linked generated exercise images in the exercise library and search results
+- [x] preserve seed image metadata and associations through full database reseed
+- [ ] off-machine backup strategy for generated image files
 - [x] ability to regenerate while preserving style profile and source history
 - [x] single-exercise prompt dry run, OpenAI generation with retry handling, and filesystem/S3-compatible storage adapters
 - [x] resumable seed-catalog generation with serialized database writes and concurrent API requests
