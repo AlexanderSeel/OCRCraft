@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { AddTrainingItemForm } from "@/components/training/add-training-item-form";
 import { ReplaceTrainingItemForm } from "@/components/training/replace-training-item-form";
 import { TrainingItemGuidance } from "@/components/training/training-item-guidance";
+import { TrainingItemReorderZone } from "@/components/training/training-item-reorder-zone";
 import { TRAINING_PHASE_LABELS } from "@/domain/training/model";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 import { getTrainingSessionById } from "@/server/training/training-session-repository";
@@ -14,6 +15,7 @@ import {
   updateTrainingSessionMetadataAction,
 } from "./actions";
 import { duplicateTrainingSessionAction } from "./duplicate-action";
+import { reorderTrainingItemsAction } from "./reorder-action";
 
 export const dynamic = "force-dynamic";
 
@@ -138,153 +140,175 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-3">
-                {phase.items.map((item, index) => (
-                  <div
-                    className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4"
-                    key={item.id}
+              <div className="mt-4">
+                {phase.items.length > 0 ? (
+                  <TrainingItemReorderZone
+                    action={reorderTrainingItemsAction}
+                    itemIds={phase.items.map((item) => item.id)}
+                    phaseId={phase.id}
+                    sessionId={session.id}
                   >
-                    <div className="grid gap-3 sm:grid-cols-[42px_minmax(0,1fr)_auto]">
-                      <div className="grid size-9 place-items-center rounded-full bg-[var(--surface)] text-sm font-black ring-1 ring-[var(--border)]">
-                        {index + 1}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="font-black">{item.exerciseName}</div>
-                        <div className="mt-1 flex flex-wrap gap-2 text-xs font-bold text-[var(--muted)]">
-                          {item.format ? <span>{item.format}</span> : null}
-                          {item.levelLabel ? <span>· {item.levelLabel}</span> : null}
-                        </div>
-                        <TrainingItemGuidance
-                          guidance={item.exerciseId ? guidanceByExerciseId[item.exerciseId] : undefined}
-                          trainerInstructions={item.instructions}
-                        />
-                      </div>
-                      <div className="font-black">{item.durationMinutes} Min.</div>
-                    </div>
-
-                    {editable ? (
-                      <div className="mt-4 border-t border-[var(--border)] pt-3">
-                        <div className="flex flex-wrap items-start gap-2">
-                          <form action={moveTrainingItemAction}>
-                            <input name="sessionId" type="hidden" value={session.id} />
-                            <input name="itemId" type="hidden" value={item.id} />
-                            <input name="direction" type="hidden" value="up" />
-                            <button
-                              aria-label={`${item.exerciseName} nach oben verschieben`}
-                              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-elevated)] disabled:opacity-35"
-                              disabled={index === 0}
-                              type="submit"
-                            >
-                              ↑
-                            </button>
-                          </form>
-                          <form action={moveTrainingItemAction}>
-                            <input name="sessionId" type="hidden" value={session.id} />
-                            <input name="itemId" type="hidden" value={item.id} />
-                            <input name="direction" type="hidden" value="down" />
-                            <button
-                              aria-label={`${item.exerciseName} nach unten verschieben`}
-                              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-elevated)] disabled:opacity-35"
-                              disabled={index === phase.items.length - 1}
-                              type="submit"
-                            >
-                              ↓
-                            </button>
-                          </form>
-                          <div className="min-w-[240px] flex-1 space-y-2">
-                            <details className="rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                              <summary className="cursor-pointer px-3 py-2 text-xs font-black">Eintrag bearbeiten</summary>
-                              <form action={updateTrainingItemAction} className="grid gap-3 border-t border-[var(--border)] p-3">
-                                <input name="sessionId" type="hidden" value={session.id} />
-                                <input name="itemId" type="hidden" value={item.id} />
-                                <div className="grid gap-3 md:grid-cols-3">
-                                  <label className="grid gap-1 text-xs font-bold">
-                                    Dauer (Min.)
-                                    <input
-                                      className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-                                      defaultValue={item.durationMinutes}
-                                      min={1}
-                                      name="durationMinutes"
-                                      required
-                                      type="number"
-                                    />
-                                  </label>
-                                  <label className="grid gap-1 text-xs font-bold">
-                                    Format
-                                    <select
-                                      className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-                                      defaultValue={item.format ?? ""}
-                                      name="format"
-                                    >
-                                      <option value="">Kein spezielles Format</option>
-                                      <option value="free">Frei</option>
-                                      <option value="circuit">Zirkel</option>
-                                      <option value="tabata">Tabata</option>
-                                      <option value="amrap">AMRAP</option>
-                                      <option value="emom">EMOM</option>
-                                      <option value="rig-run">Rig & Run</option>
-                                      <option value="run-exercise">Run + Exercise</option>
-                                      <option value="technique">Technik</option>
-                                      <option value="relay">Team / Relay</option>
-                                    </select>
-                                  </label>
-                                  <label className="grid gap-1 text-xs font-bold">
-                                    Level / Variante
-                                    <input
-                                      className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-                                      defaultValue={item.levelLabel ?? ""}
-                                      maxLength={120}
-                                      name="levelLabel"
-                                    />
-                                  </label>
-                                </div>
-                                <label className="grid gap-1 text-xs font-bold">
-                                  Trainingshinweis
-                                  <textarea
-                                    className="min-h-24 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 font-normal leading-6"
-                                    defaultValue={item.instructions ?? ""}
-                                    maxLength={4000}
-                                    name="instructions"
-                                  />
-                                </label>
-                                <div className="flex justify-end">
-                                  <button
-                                    className="rounded-lg bg-[var(--control-strong)] px-4 py-2 text-xs font-black text-[var(--control-strong-foreground)]"
-                                    type="submit"
-                                  >
-                                    Eintrag speichern
-                                  </button>
-                                </div>
-                              </form>
-                            </details>
-                            <ReplaceTrainingItemForm
-                              currentExerciseName={item.exerciseName}
-                              itemId={item.id}
-                              sessionId={session.id}
+                    {phase.items.map((item, index) => (
+                      <div
+                        className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4"
+                        data-training-drop-id={item.id}
+                        key={item.id}
+                      >
+                        <div className="grid gap-3 sm:grid-cols-[42px_minmax(0,1fr)_auto]">
+                          <div className="flex flex-col items-center gap-1.5">
+                            <div className="grid size-9 place-items-center rounded-full bg-[var(--surface)] text-sm font-black ring-1 ring-[var(--border)]">
+                              {index + 1}
+                            </div>
+                            {editable && phase.items.length > 1 ? (
+                              <button
+                                aria-label={`${item.exerciseName} per Drag-and-Drop verschieben`}
+                                className="cursor-grab rounded-md px-2 py-1 text-sm font-black text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)] active:cursor-grabbing"
+                                data-training-drag-id={item.id}
+                                draggable
+                                title="Ziehen, um die Reihenfolge zu ändern"
+                                type="button"
+                              >
+                                ↕
+                              </button>
+                            ) : null}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-black">{item.exerciseName}</div>
+                            <div className="mt-1 flex flex-wrap gap-2 text-xs font-bold text-[var(--muted)]">
+                              {item.format ? <span>{item.format}</span> : null}
+                              {item.levelLabel ? <span>· {item.levelLabel}</span> : null}
+                            </div>
+                            <TrainingItemGuidance
+                              guidance={item.exerciseId ? guidanceByExerciseId[item.exerciseId] : undefined}
+                              trainerInstructions={item.instructions}
                             />
                           </div>
-                          <form action={deleteTrainingItemAction}>
-                            <input name="sessionId" type="hidden" value={session.id} />
-                            <input name="itemId" type="hidden" value={item.id} />
-                            <button
-                              aria-label={`${item.exerciseName} aus Training entfernen`}
-                              className="rounded-lg border border-[var(--danger)] px-3 py-2 text-xs font-black text-[var(--danger)] hover:bg-[var(--danger-bg)]"
-                              type="submit"
-                            >
-                              Entfernen
-                            </button>
-                          </form>
+                          <div className="font-black">{item.durationMinutes} Min.</div>
                         </div>
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
 
-                {phase.items.length === 0 ? (
+                        {editable ? (
+                          <div className="mt-4 border-t border-[var(--border)] pt-3">
+                            <div className="flex flex-wrap items-start gap-2">
+                              <form action={moveTrainingItemAction}>
+                                <input name="sessionId" type="hidden" value={session.id} />
+                                <input name="itemId" type="hidden" value={item.id} />
+                                <input name="direction" type="hidden" value="up" />
+                                <button
+                                  aria-label={`${item.exerciseName} nach oben verschieben`}
+                                  className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-elevated)] disabled:opacity-35"
+                                  disabled={index === 0}
+                                  type="submit"
+                                >
+                                  ↑
+                                </button>
+                              </form>
+                              <form action={moveTrainingItemAction}>
+                                <input name="sessionId" type="hidden" value={session.id} />
+                                <input name="itemId" type="hidden" value={item.id} />
+                                <input name="direction" type="hidden" value="down" />
+                                <button
+                                  aria-label={`${item.exerciseName} nach unten verschieben`}
+                                  className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-elevated)] disabled:opacity-35"
+                                  disabled={index === phase.items.length - 1}
+                                  type="submit"
+                                >
+                                  ↓
+                                </button>
+                              </form>
+                              <div className="min-w-[240px] flex-1 space-y-2">
+                                <details className="rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                                  <summary className="cursor-pointer px-3 py-2 text-xs font-black">Eintrag bearbeiten</summary>
+                                  <form action={updateTrainingItemAction} className="grid gap-3 border-t border-[var(--border)] p-3">
+                                    <input name="sessionId" type="hidden" value={session.id} />
+                                    <input name="itemId" type="hidden" value={item.id} />
+                                    <div className="grid gap-3 md:grid-cols-3">
+                                      <label className="grid gap-1 text-xs font-bold">
+                                        Dauer (Min.)
+                                        <input
+                                          className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                          defaultValue={item.durationMinutes}
+                                          min={1}
+                                          name="durationMinutes"
+                                          required
+                                          type="number"
+                                        />
+                                      </label>
+                                      <label className="grid gap-1 text-xs font-bold">
+                                        Format
+                                        <select
+                                          className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                          defaultValue={item.format ?? ""}
+                                          name="format"
+                                        >
+                                          <option value="">Kein spezielles Format</option>
+                                          <option value="free">Frei</option>
+                                          <option value="circuit">Zirkel</option>
+                                          <option value="tabata">Tabata</option>
+                                          <option value="amrap">AMRAP</option>
+                                          <option value="emom">EMOM</option>
+                                          <option value="rig-run">Rig & Run</option>
+                                          <option value="run-exercise">Run + Exercise</option>
+                                          <option value="technique">Technik</option>
+                                          <option value="relay">Team / Relay</option>
+                                        </select>
+                                      </label>
+                                      <label className="grid gap-1 text-xs font-bold">
+                                        Level / Variante
+                                        <input
+                                          className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                          defaultValue={item.levelLabel ?? ""}
+                                          maxLength={120}
+                                          name="levelLabel"
+                                        />
+                                      </label>
+                                    </div>
+                                    <label className="grid gap-1 text-xs font-bold">
+                                      Trainingshinweis
+                                      <textarea
+                                        className="min-h-24 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 font-normal leading-6"
+                                        defaultValue={item.instructions ?? ""}
+                                        maxLength={4000}
+                                        name="instructions"
+                                      />
+                                    </label>
+                                    <div className="flex justify-end">
+                                      <button
+                                        className="rounded-lg bg-[var(--control-strong)] px-4 py-2 text-xs font-black text-[var(--control-strong-foreground)]"
+                                        type="submit"
+                                      >
+                                        Eintrag speichern
+                                      </button>
+                                    </div>
+                                  </form>
+                                </details>
+                                <ReplaceTrainingItemForm
+                                  currentExerciseName={item.exerciseName}
+                                  itemId={item.id}
+                                  sessionId={session.id}
+                                />
+                              </div>
+                              <form action={deleteTrainingItemAction}>
+                                <input name="sessionId" type="hidden" value={session.id} />
+                                <input name="itemId" type="hidden" value={item.id} />
+                                <button
+                                  aria-label={`${item.exerciseName} aus Training entfernen`}
+                                  className="rounded-lg border border-[var(--danger)] px-3 py-2 text-xs font-black text-[var(--danger)] hover:bg-[var(--danger-bg)]"
+                                  type="submit"
+                                >
+                                  Entfernen
+                                </button>
+                              </form>
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </TrainingItemReorderZone>
+                ) : (
                   <div className="rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">
                     Diese Phase enthält noch keine Übung.
                   </div>
-                ) : null}
+                )}
               </div>
 
               {editable ? <AddTrainingItemForm phaseId={phase.id} sessionId={session.id} /> : null}
