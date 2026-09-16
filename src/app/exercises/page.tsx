@@ -239,7 +239,13 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                     </span>
                   ))}
                 </div>
-                <div className="mt-auto pt-5">
+                <div className="mt-auto flex flex-wrap gap-2 pt-5">
+                  <Link
+                    className="inline-flex min-h-10 items-center rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
+                    href={`/exercises/${exercise.id}`}
+                  >
+                    Details
+                  </Link>
                   <Link
                     className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-black hover:bg-[var(--surface-subtle)]"
                     href={`/exercises/${exercise.id}/edit`}
