@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   bodyRegionsOverlap,
   expandBodyRegionIds,
+  getBodyRegionAntagonists,
   normalizeBodyRegionId,
 } from "./body-regions";
 
@@ -26,5 +27,13 @@ describe("body region compatibility", () => {
   it("normalizes the legacy arms identifier without exposing it as a new canonical option", () => {
     expect(normalizeBodyRegionId("arms")).toBe("upper-arms");
     expect(normalizeBodyRegionId("not-a-region")).toBeNull();
+  });
+
+  it("provides typical antagonist regions without changing filter compatibility", () => {
+    expect(getBodyRegionAntagonists("biceps")).toEqual(["triceps"]);
+    expect(getBodyRegionAntagonists("quadriceps")).toEqual(["hamstrings"]);
+    expect(getBodyRegionAntagonists("calves")).toEqual(["tibialis"]);
+    expect(getBodyRegionAntagonists("chest")).toEqual(["upper-back", "lats"]);
+    expect(getBodyRegionAntagonists("not-a-region")).toEqual([]);
   });
 });
