@@ -52,6 +52,16 @@ function rowsToOptions(rows: readonly (readonly unknown[])[]): readonly Exercise
   }));
 }
 
+export async function listBodyRegionOptions(): Promise<readonly ExerciseFacetOption[]> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      "SELECT id,label_de,label_en FROM body_regions ORDER BY label_de",
+    );
+    return rowsToOptions(reader.getRows());
+  });
+}
+
 export async function getExerciseFacetEditorData(
   exerciseId: string,
 ): Promise<ExerciseFacetEditorData> {
