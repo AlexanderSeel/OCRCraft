@@ -399,8 +399,8 @@ Seed completeness must be testable, not subjective.
 - [x] persistent theme selection
 - [x] theme selector in header/user settings
 - [ ] verify contrast/readability in light and dark themes on all pages
-- [ ] active navigation state
-- [ ] mobile navigation
+- [x] active navigation state
+- [x] mobile navigation
 - [x] persistent header shortcuts to Administration and database settings
 - [ ] shared advanced form kit
 - [ ] toast/feedback
@@ -515,6 +515,32 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] DuckDB/schema/backup/restore/import/export
 - [x] confirmed full database reseed from versioned migrations with transactional rollback
 - [ ] read-only diagnostic SQL console for Super Admin
+
+### Import / Export JSON packages
+
+Import/export must be selective and trainer/admin friendly rather than an all-or-nothing database dump.
+
+- [ ] add **Import** and **Export** actions that open a popover/dialog with selectable content areas
+- [ ] export selection supports exercises, exercise details, aliases, categories/tags, body regions, movement patterns, equipment mappings, obstacles, training templates, training sessions, groups, source/provenance metadata and media metadata
+- [ ] optional **include images/media binaries** switch; included images are embedded in the portable JSON package (for example base64/data payloads) together with MIME type, checksum and source metadata
+- [ ] generate a versioned `.json` file with package schema version, OCRCraft version, export timestamp and selected sections
+- [ ] allow presets such as `Exercises only`, `Exercises + images`, `Trainings/Templates`, and `Complete portable package`
+- [ ] validate JSON/package schema before import and show a readable preflight summary before any write
+- [ ] import popover allows selecting which sections from the file should actually be imported
+- [ ] duplicate detection uses stable IDs/seed keys first and then normalized names, aliases, metadata and image checksums as similarity signals
+- [ ] clearly classify matches as `same`, `new`, `probable duplicate`, or `conflict`
+- [ ] auto-resolve only high-confidence identical records; never silently overwrite uncertain matches
+- [ ] for uncertain duplicates/conflicts open a **compare screen** with existing record on the left and imported record on the right
+- [ ] compare screen shows text/details, categories, mappings and images/media side-by-side
+- [ ] per conflicting record allow **Use left (existing)**, **Use right (imported)**, or **Keep both**
+- [ ] `Keep both` creates a distinct record with new internal identity while preserving import provenance
+- [ ] allow field-level comparison/highlighting so changed descriptions, metadata and mappings are easy to spot
+- [ ] image comparison includes preview, dimensions, MIME type, checksum/source and AI-generation metadata where available
+- [ ] provide bulk decisions for exact duplicates while retaining per-record override
+- [ ] show final import plan/counts before commit: create / replace / keep existing / keep both / skip
+- [ ] execute import transactionally where practical and provide a clear failure report without partial silent corruption
+- [ ] imported records preserve source/provenance and package origin for later audit
+- [ ] add import/export round-trip tests including packages with images and duplicate/conflict resolution tests
 
 ## 15. Media & AI-generated exercise illustrations
 
@@ -658,6 +684,7 @@ No athlete surveillance or unnecessary personal data.
 - [ ] deterministic non-AI `TrainingDraft`
 - [ ] persisted Training Session CRUD
 - [x] media schema + AI exercise-image pipeline foundation
+- [ ] selectable JSON import/export with duplicate compare/resolution workflow
 - [ ] authentication/RBAC before global Admin mutations
 
 ---
@@ -679,6 +706,8 @@ No athlete surveillance or unnecessary personal data.
 - [ ] persisted running rules such as every 100 m
 - [ ] Level 1/2/3 variants
 - [ ] duplicate/combine/recreate sessions
+- [ ] portable selectable JSON import/export including optional images
+- [ ] duplicate/conflict compare screen with left/right/both resolution
 - [ ] AI composition from approved pool
 - [ ] AI-created exercises require approval
 - [ ] AI example illustration for every initial seed exercise
