@@ -108,6 +108,24 @@ Die Persistenz wird über eine serverseitige DuckDB-Abstraktion gekapselt. Das i
 
 DuckDB FTS wird bewusst nicht direkt in React-Komponenten eingebaut. Index-Rebuilds werden später über einen `SearchIndexService` und die Admin-Oberfläche gesteuert.
 
+## Exercise illustrations
+
+The single-exercise image pipeline uses the OpenAI Images API with `gpt-image-2`. Set `OPENAI_API_KEY` in the process environment before generating an image. Never put a real key in source control.
+
+Preview the prompt without making an API request or writing an image:
+
+```bash
+npm run exercise:image -- --exercise easy-jog --dry-run
+```
+
+Generate one exercise illustration and save it as pending trainer review:
+
+```bash
+npm run exercise:image -- --exercise easy-jog
+```
+
+The default filesystem output goes to `public/generated/exercises/`. To use an S3-compatible bucket, set `OCRCRAFT_IMAGE_STORAGE=s3`, `OCRCRAFT_IMAGE_BUCKET`, and `OCRCRAFT_S3_ENDPOINT` when required by the provider. Configure credentials through the standard AWS credential environment or profile chain; configure `OCRCRAFT_IMAGE_PUBLIC_BASE_URL` if the bucket has a public/CDN URL. Images are never automatically approved. Batch generation is not enabled.
+
 ## UI-Theming
 
 OCRCraft besitzt eine zentrale Theme-Grundlage mit semantischen CSS-Tokens. Im Header kann zwischen **System**, **Hell** und **Dunkel** gewechselt werden. Die Auswahl wird lokal gespeichert; bei `System` folgt OCRCraft automatisch der Betriebssystem-/Browser-Einstellung. Ein Bootstrap-Script setzt das Theme vor dem Rendern, um einen sichtbaren Theme-Flash weitgehend zu vermeiden.

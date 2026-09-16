@@ -1,6 +1,7 @@
 import type { DuckDBConnection } from "@duckdb/node-api";
 
 const tablesToClear = [
+  "exercise_media_assets",
   "training_items",
   "training_phases",
   "training_sessions",

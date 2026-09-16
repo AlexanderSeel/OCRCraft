@@ -10,5 +10,6 @@ coverage/
 data/*.duckdb
 data/*.wal
 data/*.tmp
+/public/generated/exercises/
 .DS_Store
 Thumbs.db

@@ -59,7 +59,7 @@
 - [ ] templates
 - [ ] external source/provenance records
 - [ ] users/roles
-- [ ] media metadata
+- [x] media source/generation metadata schema and migration
 - [ ] audit log
 - [ ] AI generation/source history
 
@@ -518,7 +518,7 @@ Principle: **retrieve approved data → compose → deterministic validation →
 
 ## 15. Media & AI-generated exercise illustrations
 
-- [ ] media schema
+- [x] media schema
 - [ ] exercise images/gallery/videos
 - [ ] external video + thumbnail
 - [ ] copyright/source/consent
@@ -559,19 +559,22 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 
 ### Image/source metadata
 
-- [ ] `media_type`: image / video / illustration
-- [ ] `source_type`: `ai_generated` / `club_created` / `external_reference`
-- [ ] `style_profile`
+- [x] `media_type`: image / video / illustration
+- [x] `source_type`: `ai_generated` / `club_created` / `external_reference`
+- [x] `style_profile`
 - [ ] `audience_variant`: `kid-woman-man-triptych`
-- [ ] `generation_provider`
-- [ ] `generation_model`
-- [ ] `generation_prompt`
-- [ ] `generated_at`
-- [ ] `review_status`: pending / approved / rejected
+- [x] `generation_provider`
+- [x] `generation_model`
+- [x] `generation_prompt`
+- [x] `generated_at`
+- [x] `review_status`: pending / approved / rejected
 - [ ] `reviewed_by`
 - [ ] `source_reference` / originating exercise id
 - [ ] visible AI-generated indicator where required
-- [ ] ability to regenerate while preserving style profile and source history
+- [x] ability to regenerate while preserving style profile and source history
+- [x] single-exercise prompt dry run, OpenAI generation with retry handling, and filesystem/S3-compatible storage adapters
+- [ ] generate and inspect one real sample exercise image (requires `OPENAI_API_KEY` in the environment)
+- [x] load bilingual structured DuckDB details, movement/body metadata and available running/obstacle/carry guidance into the single-exercise prompt
 
 ## 16. Internationalization
 
@@ -599,7 +602,9 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 - [ ] Training Editor E2E
 - [ ] Kids/Youth E2E
 - [ ] theme Light/Dark/System E2E
-- [ ] media source/provenance tests
+- [x] media source/provenance tests
+- [x] image prompt, dry-run, OpenAI retry, filesystem/S3 adapter and DB metadata migration tests
+- [x] exercise-image prompt, dry-run, metadata, failure and OpenAI retry tests
 
 ## 18. Analytics
 
@@ -651,7 +656,7 @@ No athlete surveillance or unnecessary personal data.
 - [ ] body-region/equipment/tag editing
 - [ ] deterministic non-AI `TrainingDraft`
 - [ ] persisted Training Session CRUD
-- [ ] media schema + AI exercise-image pipeline foundation
+- [x] media schema + AI exercise-image pipeline foundation
 - [ ] authentication/RBAC before global Admin mutations
 
 ---
