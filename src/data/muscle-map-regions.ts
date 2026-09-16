@@ -1,4 +1,5 @@
 export const MUSCLE_MAP_REFERENCE_SIZE = { width: 376, height: 504 } as const;
+export const MUSCLE_MAP_VIEW_WIDTH = MUSCLE_MAP_REFERENCE_SIZE.width / 2;
 
 export type MuscleMapView = "front" | "back";
 export type MuscleMapSide = "left" | "right" | "center";
@@ -9,56 +10,96 @@ export interface MuscleMapPart {
   readonly labelDe: string;
   readonly view: MuscleMapView;
   readonly side: MuscleMapSide;
-  /** Polygon points in the original raster coordinate system. */
+  /** Polygon points in the combined 376x504 raster coordinate system. */
   readonly coordinates: readonly number[];
 }
 
-export const MUSCLE_MAP_PARTS: readonly MuscleMapPart[] = [
-  { id: "neck-front", optionId: "neck", labelDe: "Nacken", view: "front", side: "center", coordinates: [84, 54, 108, 54, 112, 69, 109, 81, 103, 92, 96, 100, 89, 92, 82, 81, 79, 69] },
-  { id: "traps-front", optionId: "traps", labelDe: "Trapezmuskel", view: "front", side: "center", coordinates: [76, 83, 85, 76, 96, 70, 107, 76, 117, 84, 111, 96, 101, 102, 91, 102, 81, 95] },
-  { id: "deltoid-front-left", optionId: "shoulders", labelDe: "Schulter links", view: "front", side: "left", coordinates: [118, 88, 133, 91, 145, 99, 153, 110, 157, 124, 153, 139, 145, 151, 136, 154, 131, 144, 133, 126, 129, 109] },
-  { id: "deltoid-front-right", optionId: "shoulders", labelDe: "Schulter rechts", view: "front", side: "right", coordinates: [74, 88, 59, 91, 47, 99, 39, 110, 35, 124, 39, 139, 47, 151, 56, 154, 61, 144, 59, 126, 63, 109] },
-  { id: "pectoralis-left", optionId: "chest", labelDe: "Brust links", view: "front", side: "left", coordinates: [97, 105, 112, 98, 128, 98, 140, 103, 146, 112, 144, 123, 137, 132, 124, 137, 110, 135, 97, 126] },
-  { id: "pectoralis-right", optionId: "chest", labelDe: "Brust rechts", view: "front", side: "right", coordinates: [95, 105, 80, 98, 64, 98, 52, 103, 46, 112, 48, 123, 55, 132, 68, 137, 82, 135, 95, 126] },
-  { id: "biceps-left", optionId: "biceps", labelDe: "Bizeps links", view: "front", side: "left", coordinates: [143, 145, 153, 149, 159, 161, 160, 177, 157, 194, 151, 207, 143, 202, 139, 187, 139, 167] },
-  { id: "biceps-right", optionId: "biceps", labelDe: "Bizeps rechts", view: "front", side: "right", coordinates: [49, 145, 39, 149, 33, 161, 32, 177, 35, 194, 41, 207, 49, 202, 53, 187, 53, 167] },
-  { id: "forearm-front-left", optionId: "forearms-grip", labelDe: "Unterarm links", view: "front", side: "left", coordinates: [154, 202, 163, 211, 168, 229, 169, 249, 165, 268, 157, 282, 149, 280, 145, 264, 146, 240, 149, 218] },
-  { id: "forearm-front-right", optionId: "forearms-grip", labelDe: "Unterarm rechts", view: "front", side: "right", coordinates: [38, 202, 29, 211, 24, 229, 23, 249, 27, 268, 35, 282, 43, 280, 47, 264, 46, 240, 43, 218] },
-  { id: "abdominals", optionId: "abs", labelDe: "Bauchmuskulatur", view: "front", side: "center", coordinates: [79, 151, 113, 151, 118, 171, 117, 197, 115, 225, 111, 252, 103, 268, 96, 276, 89, 268, 81, 252, 77, 225, 75, 197, 74, 171] },
-  { id: "obliques-left", optionId: "obliques", labelDe: "Seitlicher Core links", view: "front", side: "left", coordinates: [115, 155, 127, 162, 134, 177, 137, 198, 136, 221, 130, 242, 120, 257, 112, 246, 116, 219, 118, 192] },
-  { id: "obliques-right", optionId: "obliques", labelDe: "Seitlicher Core rechts", view: "front", side: "right", coordinates: [77, 155, 65, 162, 58, 177, 55, 198, 56, 221, 62, 242, 72, 257, 80, 246, 76, 219, 74, 192] },
-  { id: "hips-left", optionId: "hips", labelDe: "Hüfte links", view: "front", side: "left", coordinates: [103, 263, 119, 264, 130, 274, 132, 287, 125, 298, 110, 299, 101, 288, 99, 274] },
-  { id: "hips-right", optionId: "hips", labelDe: "Hüfte rechts", view: "front", side: "right", coordinates: [89, 263, 73, 264, 62, 274, 60, 287, 67, 298, 82, 299, 91, 288, 93, 274] },
-  { id: "quadriceps-left", optionId: "quadriceps", labelDe: "Quadrizeps links", view: "front", side: "left", coordinates: [102, 293, 118, 291, 128, 300, 133, 318, 134, 341, 130, 367, 124, 389, 115, 407, 106, 408, 101, 394, 101, 368, 102, 341, 100, 317] },
-  { id: "quadriceps-right", optionId: "quadriceps", labelDe: "Quadrizeps rechts", view: "front", side: "right", coordinates: [90, 293, 74, 291, 64, 300, 59, 318, 58, 341, 62, 367, 68, 389, 77, 407, 86, 408, 91, 394, 91, 368, 90, 341, 92, 317] },
-  { id: "adductors-left", optionId: "adductors", labelDe: "Adduktoren links", view: "front", side: "left", coordinates: [97, 294, 106, 296, 114, 309, 116, 329, 113, 351, 108, 373, 102, 389, 96, 375, 94, 350, 94, 324] },
-  { id: "adductors-right", optionId: "adductors", labelDe: "Adduktoren rechts", view: "front", side: "right", coordinates: [95, 294, 86, 296, 78, 309, 76, 329, 79, 351, 84, 373, 90, 389, 96, 375, 98, 350, 98, 324] },
-  { id: "tibialis-left", optionId: "tibialis", labelDe: "Tibialis links", view: "front", side: "left", coordinates: [111, 407, 123, 410, 129, 425, 130, 445, 126, 468, 119, 485, 112, 478, 108, 459, 108, 435] },
-  { id: "tibialis-right", optionId: "tibialis", labelDe: "Tibialis rechts", view: "front", side: "right", coordinates: [81, 407, 69, 410, 63, 425, 62, 445, 66, 468, 73, 485, 80, 478, 84, 459, 84, 435] },
-  { id: "feet-front-left", optionId: "ankles-feet", labelDe: "Fuß links", view: "front", side: "left", coordinates: [111, 468, 125, 468, 134, 479, 137, 490, 132, 499, 117, 502, 105, 498, 102, 490] },
-  { id: "feet-front-right", optionId: "ankles-feet", labelDe: "Fuß rechts", view: "front", side: "right", coordinates: [81, 468, 67, 468, 58, 479, 55, 490, 60, 499, 75, 502, 87, 498, 90, 490] },
+const VIEW_X_OFFSET: Readonly<Record<MuscleMapView, number>> = {
+  front: 0,
+  back: MUSCLE_MAP_VIEW_WIDTH,
+};
 
-  { id: "neck-back", optionId: "neck", labelDe: "Nacken", view: "back", side: "center", coordinates: [273, 54, 297, 54, 301, 69, 297, 82, 292, 94, 285, 103, 278, 94, 273, 82, 269, 69] },
-  { id: "trapezius", optionId: "traps", labelDe: "Trapezmuskel", view: "back", side: "center", coordinates: [264, 83, 273, 76, 285, 69, 297, 76, 307, 84, 315, 99, 310, 116, 301, 132, 292, 146, 285, 157, 278, 146, 269, 132, 260, 116, 255, 99] },
-  { id: "rear-deltoid-left", optionId: "rear-delts", labelDe: "Hintere Schulter links", view: "back", side: "left", coordinates: [307, 91, 322, 94, 335, 102, 344, 114, 347, 128, 343, 142, 334, 153, 324, 154, 318, 145, 320, 127, 316, 109] },
-  { id: "rear-deltoid-right", optionId: "rear-delts", labelDe: "Hintere Schulter rechts", view: "back", side: "right", coordinates: [263, 91, 248, 94, 235, 102, 226, 114, 223, 128, 227, 142, 236, 153, 246, 154, 252, 145, 250, 127, 254, 109] },
-  { id: "rhomboids", optionId: "upper-back", labelDe: "Oberer Rücken", view: "back", side: "center", coordinates: [267, 116, 277, 108, 285, 112, 293, 108, 303, 116, 300, 137, 294, 156, 285, 171, 276, 156, 270, 137] },
-  { id: "latissimus-left", optionId: "lats", labelDe: "Latissimus links", view: "back", side: "left", coordinates: [290, 150, 306, 145, 321, 152, 329, 166, 330, 185, 326, 205, 318, 224, 307, 239, 296, 245, 288, 230, 291, 206, 295, 181] },
-  { id: "latissimus-right", optionId: "lats", labelDe: "Latissimus rechts", view: "back", side: "right", coordinates: [280, 150, 264, 145, 249, 152, 241, 166, 240, 185, 244, 205, 252, 224, 263, 239, 274, 245, 282, 230, 279, 206, 275, 181] },
-  { id: "triceps-left", optionId: "triceps", labelDe: "Trizeps links", view: "back", side: "left", coordinates: [333, 151, 343, 156, 349, 169, 350, 186, 347, 204, 341, 219, 333, 216, 329, 202, 329, 181] },
-  { id: "triceps-right", optionId: "triceps", labelDe: "Trizeps rechts", view: "back", side: "right", coordinates: [237, 151, 227, 156, 221, 169, 220, 186, 223, 204, 229, 219, 237, 216, 241, 202, 241, 181] },
-  { id: "forearm-back-left", optionId: "forearms-grip", labelDe: "Unterarm links", view: "back", side: "left", coordinates: [346, 204, 355, 213, 360, 231, 361, 251, 357, 270, 349, 284, 341, 281, 337, 264, 338, 241, 341, 219] },
-  { id: "forearm-back-right", optionId: "forearms-grip", labelDe: "Unterarm rechts", view: "back", side: "right", coordinates: [224, 204, 215, 213, 210, 231, 209, 251, 213, 270, 221, 284, 229, 281, 233, 264, 232, 241, 229, 219] },
-  { id: "erector-spinae", optionId: "lower-back", labelDe: "Rückenstrecker", view: "back", side: "center", coordinates: [276, 205, 294, 205, 299, 225, 299, 247, 296, 266, 291, 279, 285, 286, 279, 279, 274, 266, 271, 247, 271, 225] },
-  { id: "glute-left", optionId: "glutes", labelDe: "Gesäß links", view: "back", side: "left", coordinates: [287, 286, 300, 279, 314, 281, 325, 289, 330, 302, 328, 318, 319, 331, 305, 336, 291, 330, 284, 318] },
-  { id: "glute-right", optionId: "glutes", labelDe: "Gesäß rechts", view: "back", side: "right", coordinates: [283, 286, 270, 279, 256, 281, 245, 289, 240, 302, 242, 318, 251, 331, 265, 336, 279, 330, 286, 318] },
-  { id: "hamstrings-left", optionId: "hamstrings", labelDe: "Hamstrings links", view: "back", side: "left", coordinates: [292, 327, 307, 325, 318, 334, 324, 352, 325, 375, 321, 399, 313, 417, 303, 420, 296, 407, 294, 385, 295, 359] },
-  { id: "hamstrings-right", optionId: "hamstrings", labelDe: "Hamstrings rechts", view: "back", side: "right", coordinates: [278, 327, 263, 325, 252, 334, 246, 352, 245, 375, 249, 399, 257, 417, 267, 420, 274, 407, 276, 385, 275, 359] },
-  { id: "calf-left", optionId: "calves", labelDe: "Wade links", view: "back", side: "left", coordinates: [299, 414, 312, 414, 321, 425, 325, 443, 324, 461, 319, 478, 311, 489, 303, 483, 298, 468, 296, 448] },
-  { id: "calf-right", optionId: "calves", labelDe: "Wade rechts", view: "back", side: "right", coordinates: [271, 414, 258, 414, 249, 425, 245, 443, 246, 461, 251, 478, 259, 489, 267, 483, 272, 468, 274, 448] },
-  { id: "feet-back-left", optionId: "ankles-feet", labelDe: "Fuß links", view: "back", side: "left", coordinates: [302, 469, 317, 469, 326, 479, 330, 490, 325, 499, 310, 502, 297, 498, 294, 490] },
-  { id: "feet-back-right", optionId: "ankles-feet", labelDe: "Fuß rechts", view: "back", side: "right", coordinates: [268, 469, 253, 469, 244, 479, 240, 490, 245, 499, 260, 502, 273, 498, 276, 490] },
-] as const;
+function toReferenceCoordinates(
+  view: MuscleMapView,
+  localCoordinates: readonly number[],
+): readonly number[] {
+  const offsetX = VIEW_X_OFFSET[view];
+  return localCoordinates.map((value, index) => (
+    index % 2 === 0 ? value + offsetX : value
+  ));
+}
+
+function region(
+  id: string,
+  optionId: string,
+  labelDe: string,
+  view: MuscleMapView,
+  side: MuscleMapSide,
+  localCoordinates: readonly number[],
+): MuscleMapPart {
+  return {
+    id,
+    optionId,
+    labelDe,
+    view,
+    side,
+    coordinates: toReferenceCoordinates(view, localCoordinates),
+  };
+}
+
+/**
+ * Click/highlight polygons calibrated against the checked-in 376x504 raster.
+ *
+ * Coordinates below are intentionally local to each 188px-wide body view.
+ * Keeping front/back coordinates local makes the map maintainable and prevents
+ * a hotspot from drifting into the other half when the raster is replaced.
+ */
+export const MUSCLE_MAP_PARTS: readonly MuscleMapPart[] = [
+  region("neck-front", "neck", "Nacken", "front", "center", [84, 61, 108, 61, 113, 80, 109, 99, 96, 105, 83, 99, 79, 80]),
+  region("traps-front", "traps", "Trapezmuskel", "front", "center", [58, 88, 79, 83, 88, 95, 96, 102, 104, 95, 113, 83, 136, 88, 128, 102, 110, 111, 96, 108, 82, 111, 64, 102]),
+  region("deltoid-front-right", "shoulders", "Schulter rechts", "front", "right", [32, 108, 39, 99, 50, 95, 60, 101, 64, 112, 62, 128, 55, 139, 45, 141, 37, 132]),
+  region("deltoid-front-left", "shoulders", "Schulter links", "front", "left", [128, 112, 132, 101, 142, 95, 153, 99, 160, 108, 155, 132, 147, 141, 137, 139, 130, 128]),
+  region("pectoralis-right", "chest", "Brust rechts", "front", "right", [55, 110, 73, 105, 95, 107, 95, 143, 80, 147, 64, 143, 54, 133]),
+  region("pectoralis-left", "chest", "Brust links", "front", "left", [97, 107, 119, 105, 137, 110, 138, 133, 128, 143, 112, 147, 97, 143]),
+  region("biceps-right", "biceps", "Bizeps rechts", "front", "right", [36, 139, 47, 136, 55, 145, 56, 162, 52, 181, 44, 190, 36, 181, 33, 161]),
+  region("biceps-left", "biceps", "Bizeps links", "front", "left", [136, 145, 144, 136, 155, 139, 159, 161, 156, 181, 148, 190, 140, 181, 136, 162]),
+  region("forearm-front-right", "forearms-grip", "Unterarm rechts", "front", "right", [31, 179, 42, 181, 47, 201, 44, 224, 38, 247, 29, 257, 21, 246, 18, 225, 23, 201]),
+  region("forearm-front-left", "forearms-grip", "Unterarm links", "front", "left", [150, 181, 161, 179, 169, 201, 174, 225, 171, 246, 163, 257, 154, 247, 148, 224, 145, 201]),
+  region("abdominals", "abs", "Bauchmuskulatur", "front", "center", [78, 145, 114, 145, 117, 166, 116, 191, 115, 214, 107, 229, 96, 237, 85, 229, 77, 214, 76, 191, 75, 166]),
+  region("obliques-right", "obliques", "Seitlicher Core rechts", "front", "right", [57, 148, 77, 145, 79, 170, 77, 195, 81, 218, 72, 236, 62, 224, 56, 205, 54, 181]),
+  region("obliques-left", "obliques", "Seitlicher Core links", "front", "left", [115, 145, 135, 148, 138, 181, 136, 205, 130, 224, 120, 236, 111, 218, 115, 195, 113, 170]),
+  region("hips-right", "hips", "Hüfte rechts", "front", "right", [58, 216, 78, 218, 92, 235, 92, 258, 82, 269, 67, 263, 58, 248]),
+  region("hips-left", "hips", "Hüfte links", "front", "left", [100, 235, 114, 218, 134, 216, 134, 248, 125, 263, 110, 269, 100, 258]),
+  region("quadriceps-right", "quadriceps", "Quadrizeps rechts", "front", "right", [54, 260, 74, 256, 89, 262, 94, 285, 93, 311, 87, 335, 77, 347, 65, 340, 58, 323, 54, 297]),
+  region("quadriceps-left", "quadriceps", "Quadrizeps links", "front", "left", [98, 285, 103, 262, 118, 256, 138, 260, 138, 297, 134, 323, 127, 340, 115, 347, 105, 335, 99, 311]),
+  region("adductors-right", "adductors", "Adduktoren rechts", "front", "right", [79, 262, 91, 263, 96, 282, 95, 307, 91, 331, 84, 341, 78, 322, 75, 296]),
+  region("adductors-left", "adductors", "Adduktoren links", "front", "left", [97, 282, 101, 263, 113, 262, 117, 296, 114, 322, 108, 341, 101, 331, 97, 307]),
+  region("tibialis-right", "tibialis", "Tibialis rechts", "front", "right", [58, 345, 72, 343, 83, 354, 85, 377, 82, 406, 78, 435, 73, 456, 66, 457, 61, 438, 57, 409]),
+  region("tibialis-left", "tibialis", "Tibialis links", "front", "left", [109, 354, 120, 343, 134, 345, 135, 409, 131, 438, 126, 457, 119, 456, 114, 435, 110, 406, 107, 377]),
+  region("feet-front-right", "ankles-feet", "Fuß rechts", "front", "right", [57, 455, 73, 453, 84, 461, 91, 476, 87, 489, 72, 495, 58, 490, 52, 480]),
+  region("feet-front-left", "ankles-feet", "Fuß links", "front", "left", [108, 461, 119, 453, 135, 455, 140, 480, 134, 490, 120, 495, 105, 489, 101, 476]),
+
+  region("neck-back", "neck", "Nacken", "back", "center", [78, 55, 110, 55, 113, 76, 108, 96, 94, 106, 80, 96, 75, 76]),
+  region("trapezius", "traps", "Trapezmuskel", "back", "center", [50, 88, 72, 83, 94, 96, 116, 83, 138, 88, 132, 107, 119, 124, 108, 145, 94, 160, 80, 145, 69, 124, 56, 107]),
+  region("rear-deltoid-right", "rear-delts", "Hintere Schulter rechts", "back", "right", [34, 108, 42, 99, 54, 96, 65, 103, 68, 115, 64, 130, 56, 140, 45, 141, 37, 132]),
+  region("rear-deltoid-left", "rear-delts", "Hintere Schulter links", "back", "left", [123, 103, 134, 96, 146, 99, 154, 108, 151, 132, 143, 141, 132, 140, 124, 130, 120, 115]),
+  region("rhomboids", "upper-back", "Oberer Rücken", "back", "center", [65, 108, 82, 102, 94, 108, 106, 102, 123, 108, 118, 132, 108, 151, 94, 165, 80, 151, 70, 132]),
+  region("latissimus-right", "lats", "Latissimus rechts", "back", "right", [50, 137, 66, 133, 82, 143, 88, 166, 85, 191, 78, 213, 67, 225, 57, 215, 52, 195, 48, 167]),
+  region("latissimus-left", "lats", "Latissimus links", "back", "left", [100, 143, 116, 133, 132, 137, 140, 167, 136, 195, 131, 215, 121, 225, 110, 213, 103, 191, 100, 166]),
+  region("triceps-right", "triceps", "Trizeps rechts", "back", "right", [34, 142, 44, 139, 53, 149, 55, 166, 51, 184, 44, 193, 37, 184, 33, 165]),
+  region("triceps-left", "triceps", "Trizeps links", "back", "left", [135, 149, 144, 139, 154, 142, 155, 165, 151, 184, 144, 193, 137, 184, 133, 166]),
+  region("forearm-back-right", "forearms-grip", "Unterarm rechts", "back", "right", [23, 181, 34, 180, 42, 198, 44, 219, 40, 242, 33, 257, 25, 253, 19, 235, 18, 211]),
+  region("forearm-back-left", "forearms-grip", "Unterarm links", "back", "left", [146, 198, 154, 180, 165, 181, 170, 211, 169, 235, 163, 253, 155, 257, 148, 242, 144, 219]),
+  region("erector-spinae", "lower-back", "Rückenstrecker", "back", "center", [76, 154, 87, 146, 94, 154, 101, 146, 112, 154, 113, 184, 108, 211, 101, 226, 94, 233, 87, 226, 80, 211, 75, 184]),
+  region("glute-right", "glutes", "Gesäß rechts", "back", "right", [52, 216, 73, 211, 94, 219, 94, 261, 82, 273, 65, 271, 53, 260, 48, 239]),
+  region("glute-left", "glutes", "Gesäß links", "back", "left", [94, 219, 115, 211, 136, 216, 140, 239, 135, 260, 123, 271, 106, 273, 94, 261]),
+  region("hamstrings-right", "hamstrings", "Hamstrings rechts", "back", "right", [55, 268, 72, 266, 88, 273, 92, 296, 89, 322, 83, 345, 73, 354, 62, 346, 56, 324, 53, 296]),
+  region("hamstrings-left", "hamstrings", "Hamstrings links", "back", "left", [100, 273, 116, 266, 133, 268, 135, 296, 132, 324, 126, 346, 115, 354, 105, 345, 99, 322, 96, 296]),
+  region("calf-right", "calves", "Wade rechts", "back", "right", [56, 348, 69, 343, 83, 350, 88, 368, 86, 392, 79, 414, 70, 423, 61, 416, 55, 395, 52, 372]),
+  region("calf-left", "calves", "Wade links", "back", "left", [105, 350, 119, 343, 132, 348, 136, 372, 133, 395, 127, 416, 118, 423, 109, 414, 102, 392, 100, 368]),
+  region("feet-back-right", "ankles-feet", "Fuß rechts", "back", "right", [52, 448, 67, 447, 78, 457, 88, 474, 84, 487, 70, 493, 56, 489, 48, 477]),
+  region("feet-back-left", "ankles-feet", "Fuß links", "back", "left", [110, 457, 121, 447, 136, 448, 140, 477, 132, 489, 118, 493, 104, 487, 100, 474]),
+];
 
 export const MUSCLE_MAP_PARTS_BY_OPTION = new Map<string, readonly MuscleMapPart[]>(
   [...new Set(MUSCLE_MAP_PARTS.map((part) => part.optionId))].map((optionId) => [
