@@ -2,15 +2,13 @@ import "server-only";
 
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
+import {
+  runExerciseAutocomplete,
+  type ExerciseAutocompleteItem,
+} from "./autocomplete-core";
 import type { SearchLocale } from "./search-index-service";
 
-export interface ExerciseAutocompleteItem {
-  readonly id: string;
-  readonly label: string;
-  readonly category: string;
-  readonly matchedAlias: string | null;
-  readonly matchedContext: string | null;
-}
+export type { ExerciseAutocompleteItem } from "./autocomplete-core";
 
 export async function autocompleteExercises(
   rawQuery: string,
@@ -21,144 +19,12 @@ export async function autocompleteExercises(
   if (query.length < 2) return [];
 
   await ensureDatabaseReady();
-  return withDuckDbConnection(async (connection) => {
-    const reader = await connection.runAndReadAll(
-      `
-      SELECT
-        e.id::VARCHAR,
-        t.name,
-        COALESCE(e.category, 'general'),
-        (
-          SELECT a.alias
-          FROM exercise_aliases a
-          WHERE a.exercise_id=e.id
-            AND a.locale=$locale
-            AND a.alias ILIKE '%' || $query || '%'
-          ORDER BY CASE WHEN a.alias ILIKE $query || '%' THEN 0 ELSE 1 END, length(a.alias)
-          LIMIT 1
-        ) AS matched_alias,
-        COALESCE(
-          CASE WHEN COALESCE(e.category, 'general') ILIKE '%' || $query || '%' THEN COALESCE(e.category, 'general') END,
-          (
-            SELECT CASE WHEN $locale='de' THEN tag.label_de ELSE tag.label_en END
-            FROM exercise_tags et
-            JOIN tags tag ON tag.id=et.tag_id
-            WHERE et.exercise_id=e.id
-              AND (
-                et.tag_id ILIKE '%' || $query || '%'
-                OR CASE WHEN $locale='de' THEN tag.label_de ELSE tag.label_en END ILIKE '%' || $query || '%'
-              )
-            ORDER BY length(CASE WHEN $locale='de' THEN tag.label_de ELSE tag.label_en END)
-            LIMIT 1
-          ),
-          (
-            SELECT CASE WHEN $locale='de' THEN mp.label_de ELSE mp.label_en END
-            FROM exercise_movement_patterns emp
-            JOIN movement_patterns mp ON mp.id=emp.movement_pattern_id
-            WHERE emp.exercise_id=e.id
-              AND (
-                emp.movement_pattern_id ILIKE '%' || $query || '%'
-                OR CASE WHEN $locale='de' THEN mp.label_de ELSE mp.label_en END ILIKE '%' || $query || '%'
-              )
-            ORDER BY length(CASE WHEN $locale='de' THEN mp.label_de ELSE mp.label_en END)
-            LIMIT 1
-          ),
-          (
-            SELECT CASE WHEN $locale='de' THEN eq.name_de ELSE COALESCE(eq.name_en, eq.name_de) END
-            FROM exercise_equipment ee
-            JOIN equipment eq ON eq.id=ee.equipment_id
-            WHERE ee.exercise_id=e.id
-              AND CASE WHEN $locale='de' THEN eq.name_de ELSE COALESCE(eq.name_en, eq.name_de) END ILIKE '%' || $query || '%'
-            ORDER BY length(CASE WHEN $locale='de' THEN eq.name_de ELSE COALESCE(eq.name_en, eq.name_de) END)
-            LIMIT 1
-          ),
-          (
-            SELECT CASE WHEN $locale='de' THEN br.label_de ELSE br.label_en END
-            FROM exercise_body_regions ebr
-            JOIN body_regions br ON br.id=ebr.body_region_id
-            WHERE ebr.exercise_id=e.id
-              AND (
-                ebr.body_region_id ILIKE '%' || $query || '%'
-                OR CASE WHEN $locale='de' THEN br.label_de ELSE br.label_en END ILIKE '%' || $query || '%'
-              )
-            ORDER BY length(CASE WHEN $locale='de' THEN br.label_de ELSE br.label_en END)
-            LIMIT 1
-          )
-        ) AS matched_context
-      FROM exercises e
-      JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale=$locale
-      WHERE e.archived=false
-        AND (
-          t.name ILIKE '%' || $query || '%'
-          OR COALESCE(e.category, 'general') ILIKE '%' || $query || '%'
-          OR EXISTS (
-            SELECT 1 FROM exercise_aliases a
-            WHERE a.exercise_id=e.id
-              AND a.locale=$locale
-              AND a.alias ILIKE '%' || $query || '%'
-          )
-          OR EXISTS (
-            SELECT 1 FROM exercise_tags et
-            JOIN tags tag ON tag.id=et.tag_id
-            WHERE et.exercise_id=e.id
-              AND (
-                et.tag_id ILIKE '%' || $query || '%'
-                OR CASE WHEN $locale='de' THEN tag.label_de ELSE tag.label_en END ILIKE '%' || $query || '%'
-              )
-          )
-          OR EXISTS (
-            SELECT 1 FROM exercise_movement_patterns emp
-            JOIN movement_patterns mp ON mp.id=emp.movement_pattern_id
-            WHERE emp.exercise_id=e.id
-              AND (
-                emp.movement_pattern_id ILIKE '%' || $query || '%'
-                OR CASE WHEN $locale='de' THEN mp.label_de ELSE mp.label_en END ILIKE '%' || $query || '%'
-              )
-          )
-          OR EXISTS (
-            SELECT 1 FROM exercise_equipment ee
-            JOIN equipment eq ON eq.id=ee.equipment_id
-            WHERE ee.exercise_id=e.id
-              AND CASE WHEN $locale='de' THEN eq.name_de ELSE COALESCE(eq.name_en, eq.name_de) END ILIKE '%' || $query || '%'
-          )
-          OR EXISTS (
-            SELECT 1 FROM exercise_body_regions ebr
-            JOIN body_regions br ON br.id=ebr.body_region_id
-            WHERE ebr.exercise_id=e.id
-              AND (
-                ebr.body_region_id ILIKE '%' || $query || '%'
-                OR CASE WHEN $locale='de' THEN br.label_de ELSE br.label_en END ILIKE '%' || $query || '%'
-              )
-          )
-        )
-      ORDER BY
-        CASE
-          WHEN lower(t.name)=lower($query) THEN 0
-          WHEN t.name ILIKE $query || '%' THEN 1
-          WHEN EXISTS (
-            SELECT 1 FROM exercise_aliases a
-            WHERE a.exercise_id=e.id AND a.locale=$locale AND a.alias ILIKE $query || '%'
-          ) THEN 2
-          WHEN EXISTS (
-            SELECT 1 FROM exercise_aliases a
-            WHERE a.exercise_id=e.id AND a.locale=$locale AND a.alias ILIKE '%' || $query || '%'
-          ) THEN 3
-          WHEN COALESCE(e.category, 'general') ILIKE '%' || $query || '%' THEN 4
-          ELSE 5
-        END,
-        length(t.name),
-        t.name
-      LIMIT $limit
-      `,
-      { locale, query, limit: Math.max(1, Math.min(limit, 20)) },
-    );
-
-    return reader.getRows().map((row) => ({
-      id: String(row[0]),
-      label: String(row[1]),
-      category: String(row[2]),
-      matchedAlias: row[3] == null ? null : String(row[3]),
-      matchedContext: row[4] == null ? null : String(row[4]),
-    }));
-  });
+  return withDuckDbConnection((connection) =>
+    runExerciseAutocomplete(
+      connection,
+      query,
+      locale,
+      Math.max(1, Math.min(limit, 20)),
+    ),
+  );
 }
