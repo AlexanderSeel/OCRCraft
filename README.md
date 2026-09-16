@@ -28,7 +28,7 @@ Der vollständige Produkt- und Architekturplan steht in [`plan.md`](./plan.md).
 
 - Next.js 16
 - React 19
-- TypeScript 7
+- TypeScript 6 (aktuell für die Next.js-/typescript-eslint-Toolchain gepinnt)
 - Tailwind CSS 4
 - DuckDB + `@duckdb/node-api`
 - Zod
