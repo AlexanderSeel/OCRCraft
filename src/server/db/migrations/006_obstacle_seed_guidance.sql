@@ -1,6 +1,6 @@
 BEGIN TRANSACTION;
 
-CREATE TABLE exercise_obstacle_guidance (
+CREATE TABLE IF NOT EXISTS exercise_obstacle_guidance (
   exercise_id UUID NOT NULL REFERENCES exercises(id),
   locale VARCHAR NOT NULL CHECK (locale IN ('de','en')),
   equipment_configuration VARCHAR NOT NULL,

@@ -33,18 +33,28 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
           ))}
         </nav>
         <div className="border-t border-white/10 p-4">
-          <Link className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-white/65 hover:bg-white/8 hover:text-white" href="/settings">Einstellungen</Link>
+          <Link className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-white/65 hover:bg-white/8 hover:text-white" href="/admin#database-settings">Einstellungen</Link>
           <Link className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-white/65 hover:bg-white/8 hover:text-white" href="/admin">Administration</Link>
         </div>
       </aside>
       <div className="min-w-0">
         <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-white/92 backdrop-blur">
-          <div className="mx-auto flex min-h-20 max-w-[1500px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto flex min-h-20 max-w-[1500px] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2 sm:px-6 lg:px-8">
             <div className="min-w-0">
               <h1 className="truncate text-xl font-black tracking-tight sm:text-2xl">{title}</h1>
               {subtitle ? <p className="mt-1 hidden text-sm text-[var(--muted)] sm:block">{subtitle}</p> : null}
             </div>
-            {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+              <nav aria-label="Schnellzugriff" className="flex items-center gap-1">
+                <Link className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-xs font-bold text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)] sm:px-3 sm:text-sm" href="/admin#database-settings">
+                  <span className="sm:hidden">Setup</span><span className="hidden sm:inline">Einstellungen</span>
+                </Link>
+                <Link className="inline-flex min-h-11 items-center rounded-lg border border-[var(--border)] px-2.5 text-xs font-black hover:bg-[var(--surface-subtle)] sm:px-3 sm:text-sm" href="/admin">
+                  <span className="sm:hidden">Admin</span><span className="hidden sm:inline">Administration</span>
+                </Link>
+              </nav>
+            </div>
           </div>
         </header>
         <main className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8">{children}</main>

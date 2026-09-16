@@ -21,6 +21,17 @@ const migrations: readonly Migration[] = [
   { version: 8, fileName: "008_carry_lift_seed_guidance.sql" },
 ];
 
+export async function readAllMigrationScripts(): Promise<readonly string[]> {
+  return Promise.all(
+    migrations.map(({ fileName }) =>
+      readFile(
+        path.join(process.cwd(), "src", "server", "db", "migrations", fileName),
+        "utf8",
+      ),
+    ),
+  );
+}
+
 async function getAppliedVersions(): Promise<Set<number>> {
   return withDuckDbConnection(async (connection) => {
     await connection.run(`

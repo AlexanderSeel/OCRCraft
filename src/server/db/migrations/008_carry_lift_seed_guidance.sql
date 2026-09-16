@@ -1,6 +1,6 @@
 BEGIN TRANSACTION;
 
-CREATE TABLE exercise_carry_guidance (
+CREATE TABLE IF NOT EXISTS exercise_carry_guidance (
   exercise_id UUID NOT NULL REFERENCES exercises(id),
   locale VARCHAR NOT NULL CHECK (locale IN ('de','en')),
   task_kind VARCHAR NOT NULL CHECK (task_kind IN ('carry','drag','flip','team-carry')),

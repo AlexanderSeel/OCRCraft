@@ -398,6 +398,7 @@ Seed completeness must be testable, not subjective.
 - [ ] verify contrast/readability in light and dark themes
 - [ ] active navigation state
 - [ ] mobile navigation
+- [x] persistent header shortcuts to Administration and database settings
 - [ ] shared advanced form kit
 - [ ] toast/feedback
 - [ ] undo/redo
@@ -509,6 +510,7 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] AI settings
 - [ ] authenticated FTS rebuild
 - [ ] DuckDB/schema/backup/restore/import/export
+- [x] confirmed full database reseed from versioned migrations with transactional rollback
 - [ ] read-only diagnostic SQL console for Super Admin
 
 ## 15. Media & AI-generated exercise illustrations
@@ -582,6 +584,7 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 - [x] CI / lint / typecheck / build
 - [x] domain tests
 - [x] real DuckDB migration test
+- [x] full reseed integration test covers removal of user data and rollback on migration failure
 - [x] seed-size + running coverage assertions
 - [x] DE/EN translation/search-doc assertions
 - [x] duplicate seed-key assertion
@@ -634,6 +637,7 @@ No athlete surveillance or unnecessary personal data.
 - [x] add bilingual, obstacle-specific setup/prerequisite/approach/execution/exit/fallback guidance to every `ocr-skill` and `grip-rig` seed
 - [x] enrich all carry/drag/flip seeds with load selection, RPE, safe lifting, route/turn, set-down and regression guidance
 - [x] add seed completeness CI rules for bilingual detail fields, execution steps, running and OCR safety fields
+- [x] make Settings/Administration reachable from persistent header shortcuts and add a destructive reseed confirmation flow with transactional recovery
 - [ ] add richer categories/goals/facets
 - [ ] add VIBSS-inspired training-template/source model
 - [ ] central UI tokens + Light/Dark/System theme

@@ -1,6 +1,6 @@
 BEGIN TRANSACTION;
 
-CREATE TABLE exercise_running_guidance (
+CREATE TABLE IF NOT EXISTS exercise_running_guidance (
   exercise_id UUID PRIMARY KEY REFERENCES exercises(id),
   running_kind VARCHAR NOT NULL CHECK (running_kind IN ('technique','endurance','interval','transition','team')),
   intensity_rpe_min SMALLINT NOT NULL CHECK (intensity_rpe_min BETWEEN 1 AND 10),

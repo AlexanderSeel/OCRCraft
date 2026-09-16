@@ -2,7 +2,7 @@ BEGIN TRANSACTION;
 
 -- Searchable exercise instructions are localized; logistics/classification stay
 -- structured on the exercise record. Ordered coaching text lives in child rows.
-CREATE TABLE exercise_details (
+CREATE TABLE IF NOT EXISTS exercise_details (
   exercise_id UUID NOT NULL REFERENCES exercises(id),
   locale VARCHAR NOT NULL CHECK (locale IN ('de','en')),
   purpose VARCHAR NOT NULL,
@@ -32,21 +32,21 @@ CREATE TABLE exercise_details (
   PRIMARY KEY (exercise_id, locale)
 );
 
-CREATE TABLE exercise_execution_steps (
+CREATE TABLE IF NOT EXISTS exercise_execution_steps (
   exercise_id UUID NOT NULL REFERENCES exercises(id),
   locale VARCHAR NOT NULL CHECK (locale IN ('de','en')),
   step_order SMALLINT NOT NULL,
   instruction VARCHAR NOT NULL,
   PRIMARY KEY (exercise_id, locale, step_order)
 );
-CREATE TABLE exercise_coaching_cues (
+CREATE TABLE IF NOT EXISTS exercise_coaching_cues (
   exercise_id UUID NOT NULL REFERENCES exercises(id),
   locale VARCHAR NOT NULL CHECK (locale IN ('de','en')),
   cue_order SMALLINT NOT NULL,
   cue VARCHAR NOT NULL,
   PRIMARY KEY (exercise_id, locale, cue_order)
 );
-CREATE TABLE exercise_common_mistakes (
+CREATE TABLE IF NOT EXISTS exercise_common_mistakes (
   exercise_id UUID NOT NULL REFERENCES exercises(id),
   locale VARCHAR NOT NULL CHECK (locale IN ('de','en')),
   mistake_order SMALLINT NOT NULL,

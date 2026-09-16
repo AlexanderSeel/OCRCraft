@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { DuckDBInstance } from "@duckdb/node-api";
 import { describe, expect, it } from "vitest";
+import { reseedDatabase } from "./reseed-database";
 
 const migrationFiles = [
   "001_initial.sql",
@@ -90,6 +91,38 @@ describe("initial exercise catalog", () => {
       expect(carryGuidance).toBe(carryExercises * 2);
       expect(carryGuidanceGaps).toBe(0);
       expect(carrySteps).toBe(0);
+    } finally {
+      connection.closeSync();
+    }
+  });
+
+  it("re-seeds the entire database and rolls back if rebuilding fails", async () => {
+    const instance = await DuckDBInstance.create(":memory:");
+    const connection = await instance.connect();
+
+    try {
+      const scripts = await Promise.all(migrationFiles.map((fileName) =>
+        readFile(path.join(process.cwd(), "src", "server", "db", "migrations", fileName), "utf8"),
+      ));
+      for (const script of scripts) await runSqlScript(connection, script);
+
+      await connection.run("INSERT INTO club_groups (name, audience) VALUES ('Eigene Gruppe', 'adults')");
+      await connection.run("INSERT INTO training_sessions (title, total_duration_minutes) VALUES ('Eigene Einheit', 60)");
+      await connection.run("INSERT INTO exercises (canonical_name, category) VALUES ('Eigene Übung', 'general')");
+
+      await reseedDatabase(connection, scripts);
+
+      const seedCount = await scalar(connection, "SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL");
+      expect(seedCount).toBeGreaterThanOrEqual(140);
+      expect(await scalar(connection, "SELECT count(*) FROM club_groups")).toBe(0);
+      expect(await scalar(connection, "SELECT count(*) FROM training_sessions")).toBe(0);
+      expect(await scalar(connection, "SELECT count(*) FROM exercises WHERE canonical_name='Eigene Übung'")).toBe(0);
+      expect(await scalar(connection, "SELECT count(*) FROM schema_migrations")).toBe(migrationFiles.length);
+
+      await expect(reseedDatabase(connection, [...scripts.slice(0, -1), "INSERT INTO no_such_table VALUES (1)"]))
+        .rejects.toThrow();
+      expect(await scalar(connection, "SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL")).toBe(seedCount);
+      expect(await scalar(connection, "SELECT count(*) FROM schema_migrations")).toBe(migrationFiles.length);
     } finally {
       connection.closeSync();
     }
