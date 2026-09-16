@@ -9,6 +9,7 @@ const migrationFiles = [
   "003_seed_exercise_catalog.sql",
   "004_exercise_details.sql",
   "005_running_seed_guidance.sql",
+  "006_obstacle_seed_guidance.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -55,6 +56,10 @@ describe("initial exercise catalog", () => {
       const runningStepGaps = await scalar(connection, "SELECT count(*) FROM exercises e WHERE e.category='running' AND e.seed_key IS NOT NULL AND (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=e.id AND s.locale='de') <> 3");
       const unclassifiedRunning = await scalar(connection, "SELECT count(*) FROM exercises e LEFT JOIN exercise_running_guidance g ON g.exercise_id=e.id WHERE e.category='running' AND e.seed_key IS NOT NULL AND g.exercise_id IS NULL");
       const runningKinds = await scalar(connection, "SELECT count(DISTINCT g.running_kind) FROM exercise_running_guidance g");
+      const obstacles = await scalar(connection, "SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL AND category='ocr-skill'");
+      const obstacleGuidance = await scalar(connection, "SELECT count(*) FROM exercise_obstacle_guidance g JOIN exercises e ON e.id=g.exercise_id WHERE e.seed_key IS NOT NULL");
+      const obstacleGuidanceGaps = await scalar(connection, "SELECT count(*) FROM exercise_obstacle_guidance WHERE equipment_configuration='' OR prerequisites='' OR approach='' OR execution='' OR exit_reset='' OR fallback_exercise='' OR station_capacity <> 1 OR clear_zone_metres <= 0");
+      const obstacleSteps = await scalar(connection, "SELECT count(*) FROM exercise_obstacle_guidance g WHERE (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=g.exercise_id AND s.locale=g.locale) <> 3");
 
       expect(total).toBeGreaterThanOrEqual(140);
       expect(running).toBeGreaterThanOrEqual(25);
@@ -73,6 +78,9 @@ describe("initial exercise catalog", () => {
       expect(runningStepGaps).toBe(0);
       expect(unclassifiedRunning).toBe(0);
       expect(runningKinds).toBeGreaterThanOrEqual(5);
+      expect(obstacleGuidance).toBe(obstacles * 2);
+      expect(obstacleGuidanceGaps).toBe(0);
+      expect(obstacleSteps).toBe(0);
     } finally {
       connection.closeSync();
     }
