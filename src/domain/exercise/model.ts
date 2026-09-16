@@ -21,6 +21,18 @@ export type ExercisePhase = (typeof exercisePhases)[number];
 export const exerciseRiskLevels = ["low", "medium", "high"] as const;
 export type ExerciseRiskLevel = (typeof exerciseRiskLevels)[number];
 
+export type ExerciseBodyRegionEmphasis = "primary" | "secondary";
+
+export interface ExerciseBodyRegionDraft {
+  readonly id: string;
+  readonly emphasis: ExerciseBodyRegionEmphasis;
+}
+
+export interface ExerciseEquipmentDraft {
+  readonly id: string;
+  readonly quantityRequired: number;
+}
+
 export const exerciseCategoryLabels: Record<ExerciseCategory, string> = {
   warmup: "Aufwärmen",
   mobility: "Mobilität",
@@ -47,4 +59,8 @@ export interface ExerciseDraft {
   readonly phase: ExercisePhase;
   readonly riskLevel: ExerciseRiskLevel;
   readonly minAge: number | null;
+  readonly bodyRegions: readonly ExerciseBodyRegionDraft[];
+  readonly movementPatternIds: readonly string[];
+  readonly tagIds: readonly string[];
+  readonly equipment: readonly ExerciseEquipmentDraft[];
 }
