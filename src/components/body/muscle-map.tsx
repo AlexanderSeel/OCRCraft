@@ -37,6 +37,8 @@ interface MuscleMapProps {
   readonly emphasisFieldPrefix?: string;
   readonly disabled?: boolean;
   readonly compact?: boolean;
+  /** Limits only the raster view; the accessible selection list remains visible. */
+  readonly visualCompact?: boolean;
   readonly title?: string;
   readonly description?: string;
   readonly debug?: boolean;
@@ -99,6 +101,7 @@ export function MuscleMap({
   emphasisFieldPrefix = "muscleEmphasis:",
   disabled = false,
   compact = false,
+  visualCompact = false,
   title = "Muskelgruppen",
   description,
   debug = false,
@@ -258,10 +261,10 @@ export function MuscleMap({
         </div>
       ) : null}
 
-      <div className={compact ? "mx-auto w-full max-w-56" : "w-full"}>
-        <div className={compact ? "w-full" : "mx-auto w-full max-w-3xl"}>
+      <div className={compact || visualCompact ? "mx-auto w-full max-w-56" : "w-full"}>
+        <div className={compact ? "w-full" : visualCompact ? "w-full" : "mx-auto w-full max-w-3xl"}>
           <div
-            className={`relative mx-auto overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)] ${interactive && !debug ? "cursor-pointer" : ""}`}
+            className={`relative mx-auto aspect-[376/504] w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)] ${interactive && !debug ? "cursor-pointer" : ""}`}
             onClick={handleMapClick}
             onMouseLeave={() => setHoveredPart(null)}
             onMouseMove={handleMapMouseMove}
@@ -270,7 +273,7 @@ export function MuscleMap({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               alt="Detaillierte anatomische Vorder- und Rückansicht zur Auswahl von Muskelgruppen"
-              className="block h-auto w-full select-none"
+              className="absolute inset-0 block h-full w-full select-none object-fill"
               draggable={false}
               height={MUSCLE_MAP_REFERENCE_SIZE.height}
               ref={imageRef}

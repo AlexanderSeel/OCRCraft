@@ -22,6 +22,7 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
           fieldName="bodyRegionIds"
           mode="emphasis"
           options={data.bodyRegions}
+          visualCompact
           title="Muskel- & Körperregionen"
           value={data.selected.bodyRegions}
         />
