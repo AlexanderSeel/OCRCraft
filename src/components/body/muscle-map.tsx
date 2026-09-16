@@ -42,11 +42,19 @@ const SHAPES: Readonly<Record<string, readonly Shape[]>> = {
     { kind: "rect", x: 82, y: 51, width: 28, height: 31, rx: 10 },
     { kind: "rect", x: 270, y: 49, width: 29, height: 35, rx: 10 },
   ],
+  traps: [
+    { kind: "polygon", points: "74,83 94,68 116,84 108,103 80,103" },
+    { kind: "polygon", points: "258,91 284,72 312,91 303,132 285,151 267,132" },
+  ],
   shoulders: [
     { kind: "ellipse", cx: 57, cy: 105, rx: 22, ry: 20 },
     { kind: "ellipse", cx: 136, cy: 105, rx: 22, ry: 20 },
     { kind: "ellipse", cx: 244, cy: 105, rx: 22, ry: 20 },
     { kind: "ellipse", cx: 324, cy: 105, rx: 22, ry: 20 },
+  ],
+  "rear-delts": [
+    { kind: "ellipse", cx: 246, cy: 111, rx: 19, ry: 15 },
+    { kind: "ellipse", cx: 323, cy: 111, rx: 19, ry: 15 },
   ],
   chest: [
     { kind: "ellipse", cx: 78, cy: 132, rx: 31, ry: 22 },
@@ -66,6 +74,14 @@ const SHAPES: Readonly<Record<string, readonly Shape[]>> = {
     { kind: "ellipse", cx: 231, cy: 176, rx: 15, ry: 38 },
     { kind: "ellipse", cx: 338, cy: 176, rx: 15, ry: 38 },
   ],
+  biceps: [
+    { kind: "ellipse", cx: 47, cy: 170, rx: 11, ry: 27 },
+    { kind: "ellipse", cx: 145, cy: 170, rx: 11, ry: 27 },
+  ],
+  triceps: [
+    { kind: "ellipse", cx: 231, cy: 173, rx: 11, ry: 29 },
+    { kind: "ellipse", cx: 338, cy: 173, rx: 11, ry: 29 },
+  ],
   "forearms-grip": [
     { kind: "ellipse", cx: 31, cy: 245, rx: 12, ry: 43 },
     { kind: "ellipse", cx: 160, cy: 245, rx: 12, ry: 43 },
@@ -74,6 +90,9 @@ const SHAPES: Readonly<Record<string, readonly Shape[]>> = {
   ],
   core: [
     { kind: "rect", x: 75, y: 159, width: 42, height: 104, rx: 18 },
+  ],
+  abs: [
+    { kind: "rect", x: 82, y: 166, width: 28, height: 88, rx: 12 },
   ],
   obliques: [
     { kind: "polygon", points: "58,163 75,164 75,245 61,233 51,192" },
@@ -109,6 +128,10 @@ const SHAPES: Readonly<Record<string, readonly Shape[]>> = {
     { kind: "ellipse", cx: 126, cy: 431, rx: 18, ry: 48 },
     { kind: "ellipse", cx: 258, cy: 431, rx: 18, ry: 48 },
     { kind: "ellipse", cx: 315, cy: 431, rx: 18, ry: 48 },
+  ],
+  tibialis: [
+    { kind: "ellipse", cx: 72, cy: 429, rx: 9, ry: 43 },
+    { kind: "ellipse", cx: 120, cy: 429, rx: 9, ry: 43 },
   ],
   "ankles-feet": [
     { kind: "ellipse", cx: 69, cy: 482, rx: 22, ry: 18 },
@@ -249,6 +272,28 @@ export function MuscleMap({
             );
           })}
         </div>
+      ) : null}
+
+      {interactive && !compact ? (
+        <details className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+          <summary className="cursor-pointer text-xs font-black text-[var(--muted)]">Muskelgruppen als Liste</summary>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {visibleOptions.map((option) => {
+              const selected = selectedById.get(option.id);
+              return (
+                <button
+                  aria-pressed={Boolean(selected)}
+                  className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold ${selected ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--foreground)]" : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)]"}`}
+                  key={`list-${option.id}`}
+                  onClick={() => cycle(option.id)}
+                  type="button"
+                >
+                  {option.labelDe}
+                </button>
+              );
+            })}
+          </div>
+        </details>
       ) : null}
 
       {mode !== "display" ? selection.map((item) => (
