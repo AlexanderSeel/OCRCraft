@@ -123,6 +123,33 @@ export async function updateTrainingItemCore(
   return updated;
 }
 
+export async function replaceTrainingItemExerciseCore(
+  connection: DuckDBConnection,
+  sessionId: string,
+  itemId: string,
+  exerciseId: string,
+): Promise<boolean> {
+  const reader = await connection.runAndReadAll(
+    `
+    UPDATE training_items
+    SET exercise_id=$exerciseId::UUID, title_override=NULL
+    WHERE id=$itemId::UUID
+      AND training_phase_id IN (
+        SELECT id FROM training_phases WHERE training_session_id=$sessionId::UUID
+      )
+      AND EXISTS (
+        SELECT 1 FROM exercises WHERE id=$exerciseId::UUID AND archived=false
+      )
+    RETURNING id::VARCHAR
+    `,
+    { sessionId, itemId, exerciseId },
+  );
+
+  const updated = reader.getRows().length > 0;
+  if (updated) await refreshSessionAfterContentChange(connection, sessionId);
+  return updated;
+}
+
 export async function deleteTrainingItemCore(
   connection: DuckDBConnection,
   sessionId: string,
