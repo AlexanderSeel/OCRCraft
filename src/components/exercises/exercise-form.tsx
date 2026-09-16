@@ -6,7 +6,6 @@ import {
   exerciseCategoryLabels,
   exercisePhases,
   exerciseRiskLevels,
-  type ExerciseCategory,
 } from "@/domain/exercise/model";
 import type { ExerciseEditorRecord } from "@/server/exercises/exercise-repository";
 import type { ExerciseFormState } from "@/app/exercises/actions";

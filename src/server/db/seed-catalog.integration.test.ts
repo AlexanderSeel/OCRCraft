@@ -8,6 +8,7 @@ const migrationFiles = [
   "002_exercise_catalog.sql",
   "003_seed_exercise_catalog.sql",
   "004_exercise_details.sql",
+  "005_running_seed_guidance.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -47,8 +48,13 @@ describe("initial exercise catalog", () => {
       const detailRows = await scalar(connection, "SELECT count(*) FROM exercise_details d JOIN exercises e ON e.id=d.exercise_id WHERE e.seed_key IS NOT NULL");
       const detailGaps = await scalar(connection, "SELECT count(*) FROM exercise_details WHERE purpose='' OR setup='' OR start_position='' OR finish_reset='' OR breathing_cue='' OR tempo_cue='' OR safety_notes='' OR quality_criteria='' OR level_1='' OR level_2='' OR level_3='' OR child_youth_variant='' OR prerequisites='' OR fallback_exercise=''");
       const shortExecution = await scalar(connection, "SELECT count(*) FROM exercises e WHERE e.seed_key IS NOT NULL AND (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=e.id AND s.locale='de') < 3");
-      const runningGaps = await scalar(connection, "SELECT count(*) FROM exercises e JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de' WHERE e.seed_key IS NOT NULL AND e.category='running' AND (d.work_rest_guidance='' OR d.purpose NOT LIKE '%Ausdauer%' AND d.purpose NOT LIKE '%Lauftechnik%')");
+      const runningGaps = await scalar(connection, "SELECT count(*) FROM exercises e JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de' WHERE e.seed_key IS NOT NULL AND e.category='running' AND (d.work_rest_guidance='' OR d.purpose='' OR d.tempo_cue='')");
       const obstacleGaps = await scalar(connection, "SELECT count(*) FROM exercises e JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de' WHERE e.seed_key IS NOT NULL AND e.category IN ('ocr-skill','grip-rig') AND (d.prerequisites='' OR d.fallback_exercise='' OR d.supervision='normal')");
+      const runningGuidance = await scalar(connection, "SELECT count(*) FROM exercise_running_guidance");
+      const runningGuidanceGaps = await scalar(connection, "SELECT count(*) FROM exercises e JOIN exercise_running_guidance g ON g.exercise_id=e.id WHERE e.category='running' AND e.seed_key IS NOT NULL AND (g.intensity_rpe_min < 1 OR g.intensity_rpe_max > 10 OR g.intensity_de='' OR g.intensity_en='' OR g.technique_focus_de='' OR g.technique_focus_en='')");
+      const runningStepGaps = await scalar(connection, "SELECT count(*) FROM exercises e WHERE e.category='running' AND e.seed_key IS NOT NULL AND (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=e.id AND s.locale='de') <> 3");
+      const unclassifiedRunning = await scalar(connection, "SELECT count(*) FROM exercises e LEFT JOIN exercise_running_guidance g ON g.exercise_id=e.id WHERE e.category='running' AND e.seed_key IS NOT NULL AND g.exercise_id IS NULL");
+      const runningKinds = await scalar(connection, "SELECT count(DISTINCT g.running_kind) FROM exercise_running_guidance g");
 
       expect(total).toBeGreaterThanOrEqual(140);
       expect(running).toBeGreaterThanOrEqual(25);
@@ -62,6 +68,11 @@ describe("initial exercise catalog", () => {
       expect(shortExecution).toBe(0);
       expect(runningGaps).toBe(0);
       expect(obstacleGaps).toBe(0);
+      expect(runningGuidance).toBe(running);
+      expect(runningGuidanceGaps).toBe(0);
+      expect(runningStepGaps).toBe(0);
+      expect(unclassifiedRunning).toBe(0);
+      expect(runningKinds).toBeGreaterThanOrEqual(5);
     } finally {
       connection.closeSync();
     }

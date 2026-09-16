@@ -242,9 +242,9 @@ Avoid one flat category field for everything. Use a broad primary area plus sear
 - [x] trail + stair running
 - [x] `every 100 m -> exercise`
 - [x] run-to-obstacle transitions
-- [ ] enrich every running seed with technique description, intensity guidance and common mistakes
-- [ ] distinguish technique drill vs endurance unit vs interval prescription
-- [ ] add RPE/intensity guidance independent of athlete-specific medical data
+- [x] enrich every running seed with exercise-specific technique description, intensity guidance and common mistakes
+- [x] distinguish technique drill vs endurance unit vs interval prescription (also transition and team)
+- [x] add RPE/intensity guidance independent of athlete-specific medical data
 - [ ] pace/HR-zone prescription
 - [ ] GPS/route-aware sessions
 
@@ -316,9 +316,9 @@ Seed completeness must be testable, not subjective.
 
 ### 4.8 Seed enrichment migration
 
-- [ ] extend schema for structured detail fields
+- [x] extend schema for structured detail fields
 - [ ] expert-reviewed, exercise-specific enrichment for all existing 140+ seed exercises (all receive bilingual detail scaffolding; bespoke biomechanical instructions remain open)
-- [ ] enrich all 25+ running exercises with running-specific programming details
+- [x] enrich all 25+ running exercises with bilingual, exercise-specific technique, dosage, correction and RPE details
 - [ ] add missing categories/facets
 - [ ] add richer equipment + station logistics
 - [ ] add progression/regression relations
@@ -628,6 +628,7 @@ No athlete surveillance or unnecessary personal data.
 
 - [x] **expand exercise schema with self-explanatory detail fields** (detail data foundation; further categories and relations remain open)
 - [ ] **enrich all 140+ seed exercises, especially all running and OCR exercises**
+- [x] enrich and classify every running seed with RPE, bilingual technique cues, corrected steps and common-mistake guidance
 - [x] add seed completeness CI rules for bilingual detail fields, execution steps, running and OCR safety fields
 - [ ] add richer categories/goals/facets
 - [ ] add VIBSS-inspired training-template/source model
