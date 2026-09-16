@@ -17,7 +17,7 @@ export function TrainingPhaseCard({ phase }: TrainingPhaseCardProps) {
   const duration = phase.items.reduce((total, item) => total + item.durationMinutes, 0);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[0_8px_30px_rgba(20,28,35,0.04)]">
+    <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-5 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <span aria-hidden="true" className={`h-9 w-1.5 rounded-full ${phaseAccent[phase.kind]}`} />
