@@ -1,10 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
+import { MuscleMap } from "@/components/body/muscle-map";
 import {
   exerciseCategoryLabels,
   type ExerciseCategory,
 } from "@/domain/exercise/model";
+import {
+  getExerciseBodyRegionMap,
+  listBodyRegionOptions,
+  listExerciseIdsForBodyRegions,
+} from "@/server/exercises/exercise-facet-repository";
 import { getExerciseCategoryCounts } from "@/server/exercises/exercise-repository";
 import { searchExercises } from "@/server/search/exercise-search-service";
 
@@ -15,6 +21,7 @@ interface PageProps {
     q?: string;
     category?: string;
     status?: string;
+    muscle?: string | string[];
   }>;
 }
 
@@ -23,11 +30,22 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   const query = params.q?.trim() ?? "";
   const category = params.category?.trim() || undefined;
   const archived = params.status === "archived";
+  const selectedMuscles = parameterList(params.muscle);
 
-  const [exercises, categoryCounts] = await Promise.all([
-    searchExercises({ query, category, archived }),
+  const [searchResult, categoryCounts, bodyRegionOptions] = await Promise.all([
+    searchExercises({ query, category, archived, limit: selectedMuscles.length > 0 ? 200 : 80 }),
     getExerciseCategoryCounts(),
+    listBodyRegionOptions(),
   ]);
+
+  const matchingMuscleIds = selectedMuscles.length > 0
+    ? new Set(await listExerciseIdsForBodyRegions(selectedMuscles))
+    : null;
+  const exercises = matchingMuscleIds
+    ? searchResult.filter((exercise) => matchingMuscleIds.has(exercise.id))
+    : searchResult;
+  const bodyRegionMap = await getExerciseBodyRegionMap(exercises.map((exercise) => exercise.id));
+
   const total = categoryCounts.reduce((sum, item) => sum + item.count, 0);
   const runningCount = categoryCounts.find((item) => item.category === "running")?.count ?? 0;
 
@@ -96,6 +114,26 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           >
             Filtern
           </button>
+
+          <details
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 lg:col-span-4"
+            open={selectedMuscles.length > 0}
+          >
+            <summary className="cursor-pointer text-sm font-black">
+              Nach Muskelgruppen filtern{selectedMuscles.length > 0 ? ` · ${selectedMuscles.length} gewählt` : ""}
+            </summary>
+            <div className="mt-4 max-w-xl">
+              <MuscleMap
+                key={selectedMuscles.join(",") || "none"}
+                description="Wähle eine oder mehrere Regionen. Die Bibliothek zeigt Übungen, die mindestens eine der gewählten Regionen betreffen."
+                fieldName="muscle"
+                mode="select"
+                options={bodyRegionOptions}
+                title="Muskel- & Körperregionen"
+                value={selectedMuscles.map((id) => ({ id }))}
+              />
+            </div>
+          </details>
         </form>
 
         <div className="flex items-center justify-between gap-3 text-sm text-[var(--muted)]">
@@ -112,7 +150,9 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         </div>
 
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {exercises.map((exercise, index) => (
+          {exercises.map((exercise, index) => {
+            const affectedMuscles = bodyRegionMap[exercise.id] ?? [];
+            return (
             <article
               className="flex min-h-64 flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]"
               key={exercise.id}
@@ -154,6 +194,23 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                 <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
                   {exercise.summary || "Noch keine Kurzbeschreibung hinterlegt."}
                 </p>
+                {affectedMuscles.length > 0 ? (
+                  <div className="mt-3 flex items-center gap-3 rounded-xl bg-[var(--surface-subtle)] p-2">
+                    <div className="w-20 shrink-0" title="Beanspruchte Muskel- und Körperregionen">
+                      <MuscleMap
+                        compact
+                        mode="display"
+                        options={bodyRegionOptions}
+                        value={affectedMuscles}
+                      />
+                    </div>
+                    <p className="text-xs font-semibold leading-5 text-[var(--muted)]">
+                      {affectedMuscles.map((region) =>
+                        bodyRegionOptions.find((option) => option.id === region.id)?.labelDe ?? region.id
+                      ).join(" · ")}
+                    </p>
+                  </div>
+                ) : null}
                 <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
                   {exercise.phase ? (
                     <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
@@ -186,7 +243,8 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                 </div>
               </div>
             </article>
-          ))}
+            );
+          })}
         </section>
 
         {exercises.length === 0 ? (
@@ -197,6 +255,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       </div>
     </AppShell>
   );
+}
+
+function parameterList(value: string | string[] | undefined): readonly string[] {
+  const values = Array.isArray(value) ? value : value ? [value] : [];
+  return [...new Set(values.map((item) => item.trim()).filter(Boolean))];
 }
 
 function categoryLabel(category: string): string {
