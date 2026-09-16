@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { AddTrainingItemForm } from "@/components/training/add-training-item-form";
 import { ReplaceTrainingItemForm } from "@/components/training/replace-training-item-form";
+import { TrainingItemGuidance } from "@/components/training/training-item-guidance";
 import { TRAINING_PHASE_LABELS } from "@/domain/training/model";
+import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 import { getTrainingSessionById } from "@/server/training/training-session-repository";
 import {
   deleteTrainingItemAction,
@@ -11,6 +13,7 @@ import {
   updateTrainingItemAction,
   updateTrainingSessionMetadataAction,
 } from "./actions";
+import { duplicateTrainingSessionAction } from "./duplicate-action";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +27,12 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
   const session = await getTrainingSessionById(id);
   if (!session) notFound();
 
+  const exerciseIds = session.phases.flatMap((phase) =>
+    phase.items.flatMap((item) => item.exerciseId ? [item.exerciseId] : []),
+  );
+  const guidanceByExerciseId = await getTrainingExerciseGuidanceMap(exerciseIds, session.locale);
   const updateMetadataAction = updateTrainingSessionMetadataAction.bind(null, session.id);
+  const duplicateAction = duplicateTrainingSessionAction.bind(null, session.id);
   const editable = session.status !== "archived";
 
   return (
@@ -32,29 +40,41 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
       title={session.title}
       subtitle={`${session.totalDurationMinutes} Minuten · ${session.itemCount} Übungen · ${session.locale.toUpperCase()}`}
       actions={
-        <Link
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
-          href="/training"
-        >
-          ← Trainings
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <form action={duplicateAction}>
+            <button
+              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+              type="submit"
+            >
+              Training duplizieren
+            </button>
+          </form>
+          <Link
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            href="/training"
+          >
+            ← Trainings
+          </Link>
+        </div>
       }
     >
       <div className="space-y-6">
         {query.saved ? (
           <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">
-            {query.saved === "item" ? "Trainingsinhalt wurde aktualisiert." : "Training wurde aktualisiert."}
+            {savedMessage(query.saved)}
           </div>
         ) : null}
         {query.error ? (
           <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">
-            Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen.
+            {query.error === "duplicate"
+              ? "Training konnte nicht dupliziert werden. Bitte erneut versuchen."
+              : "Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen."}
           </div>
         ) : null}
 
         <section className="grid gap-3 sm:grid-cols-3">
           <InfoCard label="Status" value={statusLabel(session.status)} />
-          <InfoCard label="Quelle" value={session.source === "manual" ? "Quick Create" : session.source} />
+          <InfoCard label="Quelle" value={sourceLabel(session.source)} />
           <InfoCard label="Dauer" value={`${session.totalDurationMinutes} Min.`} />
         </section>
 
@@ -134,11 +154,10 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                           {item.format ? <span>{item.format}</span> : null}
                           {item.levelLabel ? <span>· {item.levelLabel}</span> : null}
                         </div>
-                        {item.instructions ? (
-                          <p className="mt-2 whitespace-pre-line text-sm leading-6 text-[var(--muted)]">
-                            {item.instructions}
-                          </p>
-                        ) : null}
+                        <TrainingItemGuidance
+                          guidance={item.exerciseId ? guidanceByExerciseId[item.exerciseId] : undefined}
+                          trainerInstructions={item.instructions}
+                        />
                       </div>
                       <div className="font-black">{item.durationMinutes} Min.</div>
                     </div>
@@ -282,6 +301,18 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
       </div>
     </AppShell>
   );
+}
+
+function savedMessage(saved: string): string {
+  if (saved === "item") return "Trainingsinhalt wurde aktualisiert.";
+  if (saved === "duplicated") return "Training wurde als neue Kopie angelegt.";
+  return "Training wurde aktualisiert.";
+}
+
+function sourceLabel(source: string): string {
+  if (source === "manual") return "Quick Create";
+  if (source === "copied") return "Kopie";
+  return source;
 }
 
 function statusLabel(status: string): string {
