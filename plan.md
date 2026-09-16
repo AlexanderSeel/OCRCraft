@@ -53,7 +53,7 @@
 - [x] FTS state: `healthy/dirty/rebuilding/failed`
 - [x] DB bootstrap + multi-statement migrations
 - [x] real In-Memory-DuckDB migration test
-- [ ] expanded exercise-detail schema from section 4
+- [x] expanded exercise-detail schema foundation from section 4 (localized instructions, ordered steps/cues/mistakes and structured logistics/programming)
 - [ ] training version snapshots
 - [ ] favorites/recent use
 - [ ] templates
@@ -317,7 +317,7 @@ Seed completeness must be testable, not subjective.
 ### 4.8 Seed enrichment migration
 
 - [ ] extend schema for structured detail fields
-- [ ] enrich all existing 140+ seed exercises
+- [ ] expert-reviewed, exercise-specific enrichment for all existing 140+ seed exercises (all receive bilingual detail scaffolding; bespoke biomechanical instructions remain open)
 - [ ] enrich all 25+ running exercises with running-specific programming details
 - [ ] add missing categories/facets
 - [ ] add richer equipment + station logistics
@@ -583,7 +583,7 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 - [x] seed-size + running coverage assertions
 - [x] DE/EN translation/search-doc assertions
 - [x] duplicate seed-key assertion
-- [ ] seed detail completeness tests from section 4.7
+- [x] seed detail completeness tests for required populated DE/EN detail fields, ordered steps, running guidance, OCR prerequisites/fallback/supervision
 - [ ] CRUD integration tests
 - [ ] autocomplete/search ranking tests
 - [ ] Quick Create E2E
@@ -626,9 +626,9 @@ No athlete surveillance or unnecessary personal data.
 
 ## Next implementation slice
 
-- [ ] **expand exercise schema with self-explanatory detail fields**
+- [x] **expand exercise schema with self-explanatory detail fields** (detail data foundation; further categories and relations remain open)
 - [ ] **enrich all 140+ seed exercises, especially all running and OCR exercises**
-- [ ] add seed completeness CI rules
+- [x] add seed completeness CI rules for bilingual detail fields, execution steps, running and OCR safety fields
 - [ ] add richer categories/goals/facets
 - [ ] add VIBSS-inspired training-template/source model
 - [ ] central UI tokens + Light/Dark/System theme
