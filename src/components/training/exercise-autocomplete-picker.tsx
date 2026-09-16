@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 export interface SelectedExerciseReference {
   readonly id: string;
@@ -35,6 +35,7 @@ export function ExerciseAutocompletePicker({
   const [loading, setLoading] = useState(false);
   const requestIdRef = useRef(0);
   const timerRef = useRef<number | null>(null);
+  const listboxId = useId();
 
   useEffect(() => {
     return () => {
@@ -94,6 +95,7 @@ export function ExerciseAutocompletePicker({
         <div className="relative">
           <input
             aria-autocomplete="list"
+            aria-controls={listboxId}
             aria-expanded={isOpen}
             autoComplete="off"
             className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 pr-20 font-normal outline-none focus:border-[var(--focus)]"
@@ -112,6 +114,7 @@ export function ExerciseAutocompletePicker({
           {isOpen ? (
             <div
               className="absolute z-30 mt-2 max-h-72 w-full overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1 shadow-[var(--shadow-card)]"
+              id={listboxId}
               role="listbox"
             >
               {items.map((item) => {
@@ -119,6 +122,7 @@ export function ExerciseAutocompletePicker({
                 const hint = item.matchedAlias ?? item.matchedContext;
                 return (
                   <button
+                    aria-selected={alreadySelected}
                     className="flex w-full items-start justify-between gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[var(--surface-subtle)] disabled:cursor-not-allowed disabled:opacity-45"
                     disabled={alreadySelected}
                     key={item.id}
