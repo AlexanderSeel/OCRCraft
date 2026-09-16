@@ -391,14 +391,14 @@ Seed completeness must be testable, not subjective.
 - [x] visual front/back body selector
 - [x] Exercise create/edit UI
 - [x] initial read-only Admin dashboard
-- [ ] central semantic design-token system instead of page-local colors
+- [x] central semantic design-token foundation with core screens migrated; remaining page-local styling can be normalized incrementally
 - [ ] consistent Card / Form / Table / Filter / Empty-State components
-- [ ] **Light mode**
-- [ ] **Dark mode**
-- [ ] **System mode** following OS/browser preference
-- [ ] persistent theme selection
-- [ ] theme selector in header/user settings
-- [ ] verify contrast/readability in light and dark themes
+- [x] **Light mode**
+- [x] **Dark mode**
+- [x] **System mode** following OS/browser preference
+- [x] persistent theme selection
+- [x] theme selector in header/user settings
+- [ ] verify contrast/readability in light and dark themes on all pages
 - [ ] active navigation state
 - [ ] mobile navigation
 - [x] persistent header shortcuts to Administration and database settings
@@ -632,6 +632,7 @@ No athlete surveillance or unnecessary personal data.
 - [x] name/alias autocomplete API
 - [x] read-only Admin search status
 - [x] Quick Create UI + body selector
+- [x] semantic UI tokens + Light/Dark/System theme foundation
 
 ## Next implementation slice
 
@@ -645,7 +646,7 @@ No athlete surveillance or unnecessary personal data.
 - [x] make Settings/Administration reachable from persistent header shortcuts and add a destructive reseed confirmation flow with transactional recovery
 - [ ] add richer categories/goals/facets
 - [ ] add VIBSS-inspired training-template/source model
-- [ ] central UI tokens + Light/Dark/System theme
+- [x] central UI tokens + Light/Dark/System theme
 - [ ] BM25 exercise search over enriched content
 - [ ] connect Quick Create to real autocomplete/retrieval
 - [ ] body-region/equipment/tag editing
@@ -659,7 +660,7 @@ No athlete surveillance or unnecessary personal data.
 # MVP acceptance
 
 - [ ] selectable German/English UI
-- [ ] Light/Dark/System theme
+- [x] Light/Dark/System theme
 - [ ] every initial exercise understandable without assumed advanced exercise knowledge
 - [ ] every initial exercise has structured setup/execution/coaching/common-mistake data
 - [ ] full exercise + obstacle administration
