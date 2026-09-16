@@ -35,6 +35,9 @@
 - [x] duration validation
 - [x] audience/risk validation foundation
 - [x] domain tests
+- [x] deterministic non-AI `TrainingDraft` composer
+- [x] deterministic phase-duration budgeting and exact minute distribution
+- [x] deterministic selection uses audience/age, goals, body regions, format, intensity, tags and preferred exercises
 - [ ] station-capacity validation
 - [ ] simultaneous equipment-conflict validation
 - [ ] transition/setup-time validation
@@ -53,13 +56,13 @@
 - [x] FTS state: `healthy/dirty/rebuilding/failed`
 - [x] DB bootstrap + multi-statement migrations
 - [x] real In-Memory-DuckDB migration test
-- [x] expanded exercise-detail schema foundation from section 4 (localized instructions, ordered steps/cues/mistakes and structured logistics/programming)
+- [x] expanded exercise-detail schema foundation from section 4
+- [x] media source/generation metadata schema and migration
 - [ ] training version snapshots
 - [ ] favorites/recent use
 - [ ] templates
 - [ ] external source/provenance records
 - [ ] users/roles
-- [x] media source/generation metadata schema and migration
 - [ ] audit log
 - [ ] AI generation/source history
 
@@ -81,15 +84,15 @@ A fresh OCRCraft DB must be useful immediately. A trainer must be able to unders
 
 ### 4.2 Required exercise detail contract
 
-The current seed is too terse. Every initial exercise must be enriched so that the exercise is self-explanatory in the UI and can later be used reliably by search, Quick Create and AI composition.
+The remaining generic seed records must be enriched so that every exercise is self-explanatory in the UI and can be used reliably by search, Quick Create and AI composition.
 
 #### Identity & classification
 
-- [ ] canonical German name
-- [ ] canonical English name
-- [ ] German/English aliases and common trainer terminology
-- [ ] primary category
-- [ ] secondary categories
+- [ ] canonical German name for every seed
+- [ ] canonical English name for every seed
+- [ ] German/English aliases and common trainer terminology for every seed
+- [ ] primary category for every seed
+- [ ] secondary categories/facets
 - [ ] compatible training phases: warm-up / main / cooldown
 - [ ] exercise type: drill / strength / endurance / mobility / skill / obstacle / game / recovery
 - [ ] training goals: strength / strength endurance / endurance / speed / coordination / balance / mobility / grip / OCR technique / recovery / teamwork
@@ -104,8 +107,6 @@ The current seed is too terse. Every initial exercise must be enriched so that t
 
 #### Trainer-readable explanation
 
-Every seed exercise must include meaningful text, not only a short label.
-
 - [ ] **short summary:** one sentence explaining what the exercise is
 - [ ] **purpose:** why this exercise is used and what it develops
 - [ ] **setup:** equipment, spacing and preparation before starting
@@ -118,11 +119,9 @@ Every seed exercise must include meaningful text, not only a short label.
 - [ ] **2–5 common mistakes** and how the trainer corrects them
 - [ ] **safety notes / stop conditions** written in practical trainer language
 - [ ] **quality criteria:** what a good repetition or successful obstacle attempt looks like
-- [x] hand-authored bilingual, exercise-specific detail for all 10 warm-up seeds (remaining categories stay open)
+- [x] hand-authored bilingual, exercise-specific detail for all 10 warm-up seeds
 
 #### Dosage & programming
-
-An exercise must be usable immediately in a training block.
 
 - [ ] supported prescription units: reps / seconds / minutes / metres / rounds / attempts
 - [ ] suggested beginner prescription
@@ -171,8 +170,6 @@ The database should describe training suitability, not provide medical diagnosis
 - [ ] weather/terrain considerations for running/OCR where relevant
 
 ### 4.3 Category model
-
-Avoid one flat category field for everything. Use a broad primary area plus searchable facets/subcategories.
 
 #### Broad areas already present
 
@@ -272,22 +269,14 @@ Avoid one flat category field for everything. Use a broad primary area plus sear
 
 Use VIBSS as a curated **reference and inspiration source**, not as a blind copy source.
 
-Useful VIBSS structures to map into OCRCraft include:
-
-- adult session intentions such as endurance, coordination, strength and mobility;
-- circuit/station training and fitness categories;
-- material/equipment and location filters;
-- children/youth age filters;
-- children/youth goals such as endurance, coordination/balance, body awareness and teamwork;
-- movement landscapes, parcours and adventure/experience sport concepts;
-- the linked SPOK exercise/game collection as a discovery source for additional seed ideas.
+Useful VIBSS structures to map into OCRCraft include adult endurance/coordination/strength/mobility sessions, circuit/station training, material/location filters, age filters, children/youth coordination/balance/body-awareness/teamwork goals, movement landscapes, parcours, adventure/experience sport and the linked SPOK collection.
 
 Implementation rules:
 
 - [ ] add `external_source_reference` / provenance model
 - [ ] source fields: provider, title, URL, retrieval date, source type, notes
 - [ ] tag records derived from VIBSS inspiration with `source_provider = VIBSS/LSB NRW`
-- [ ] do **not** copy VIBSS text or images verbatim into OCRCraft seed data unless licensing explicitly permits it
+- [ ] do **not** copy VIBSS text or images verbatim unless licensing explicitly permits it
 - [ ] write independent OCRCraft descriptions based on the training concept
 - [ ] curate VIBSS-inspired ideas for OCR relevance instead of importing unrelated sport examples
 - [ ] seed 20–40 curated complete training-template ideas based on useful VIBSS structures
@@ -302,8 +291,6 @@ Reference entry points:
 - https://www.vibss.de/sportpraxis/spiele-uebungssammlung-spok
 
 ### 4.7 Seed quality gates
-
-Seed completeness must be testable, not subjective.
 
 - [x] warm-up cohort gate: bilingual summaries/details, three ordered steps, specific cues/corrections, dosage and movement/body mappings
 - [ ] CI requires all seed exercises to have DE/EN names
@@ -321,14 +308,15 @@ Seed completeness must be testable, not subjective.
 ### 4.8 Seed enrichment migration
 
 - [x] extend schema for structured detail fields
-- [ ] expert-reviewed, exercise-specific enrichment for all existing 140+ seed exercises (all receive bilingual detail scaffolding; bespoke biomechanical instructions remain open)
-- [x] replace generic summaries, instructions, cues and corrections for the complete 10-exercise warm-up cohort; seed CI checks the cohort's DE/EN coverage and movement metadata
-- [x] enrich all 25+ running exercises with bilingual, exercise-specific technique, dosage, correction and RPE details
+- [ ] expert-reviewed, exercise-specific enrichment for all existing 140+ seed exercises
+- [x] replace generic summaries/instructions/cues/corrections for the complete 10-exercise warm-up cohort
+- [x] enrich all 25+ running exercises with bilingual technique, dosage, correction and RPE details
 - [ ] add missing categories/facets
 - [ ] add richer equipment + station logistics
 - [ ] add progression/regression relations
-- [ ] update DE/EN search documents to include the new detail fields
-- [ ] update autocomplete to use aliases, categories, goals, equipment and OCR tags
+- [ ] update DE/EN search documents to include every newly structured detail field
+- [x] autocomplete uses aliases, categories, tags, equipment, movement patterns and body regions
+- [ ] extend autocomplete with explicit training goals and OCR transfer-tag taxonomy
 
 ## 5. Exercise library & CRUD
 
@@ -367,15 +355,19 @@ Seed completeness must be testable, not subjective.
 - [x] DuckDB FTS rebuild service
 - [x] German/English stemmer config
 - [x] dirty/rebuild lifecycle
-- [x] fallback structured exercise search
+- [x] structured fallback search when FTS is dirty/failed/unavailable
+- [x] **BM25 FTS live exercise search** when index is healthy
+- [x] exact/prefix name and alias boosts ahead of generic BM25 matches
 - [x] autocomplete service/API
 - [x] autocomplete from exercise names
 - [x] autocomplete from exercise aliases
-- [ ] BM25 FTS live search
-- [ ] index purpose/execution/coaching cues/common mistakes
-- [ ] autocomplete from tags/equipment/body regions
-- [ ] autocomplete from goals/categories/OCR transfer tags
-- [ ] autocomplete from obstacles
+- [x] autocomplete from categories
+- [x] autocomplete from tags
+- [x] autocomplete from equipment
+- [x] autocomplete from body regions
+- [x] autocomplete from movement patterns
+- [ ] explicitly index every purpose/execution/coaching-cue/common-mistake field separately
+- [ ] autocomplete from explicit goals/OCR transfer tags
 - [ ] autocomplete from existing trainings/blocks
 - [ ] configurable search profiles + field weights
 - [ ] favorite/recent boosts
@@ -391,17 +383,17 @@ Seed completeness must be testable, not subjective.
 - [x] visual front/back body selector
 - [x] Exercise create/edit UI
 - [x] initial read-only Admin dashboard
-- [x] central semantic design-token foundation with core screens migrated; remaining page-local styling can be normalized incrementally
-- [ ] consistent Card / Form / Table / Filter / Empty-State components
+- [x] central semantic design-token foundation with core screens migrated
 - [x] **Light mode**
 - [x] **Dark mode**
 - [x] **System mode** following OS/browser preference
 - [x] persistent theme selection
 - [x] theme selector in header/user settings
-- [ ] verify contrast/readability in light and dark themes on all pages
 - [x] active navigation state
 - [x] mobile navigation
 - [x] persistent header shortcuts to Administration and database settings
+- [ ] normalize remaining page-local styling into shared Card/Form/Table/Filter/Empty-State components
+- [ ] verify contrast/readability in light and dark themes on all pages
 - [ ] shared advanced form kit
 - [ ] toast/feedback
 - [ ] undo/redo
@@ -416,14 +408,19 @@ Seed completeness must be testable, not subjective.
 - [x] goals + body regions + intensity
 - [x] Circuit / Rig & Run / AMRAP / EMOM / Tabata
 - [x] Run + Exercise / Technique / Team-Relay
+- [x] real exercise autocomplete/retrieval from the DuckDB library
+- [x] preferred exercise/obstacle references in the wizard
+- [x] deterministic `TrainingDraft` composer
+- [x] use structured category/body/tag metadata plus enriched instructions in the deterministic candidate pool
+- [x] real Warm-up/Main/Cooldown preview generated through server API
+- [x] persist generated draft to DuckDB
+- [x] server regenerates and validates the draft from the current DB before persistence instead of trusting client JSON
+- [x] optional custom training title before persistence
+- [ ] richer semantic ranking from full purpose/cues/mistakes
 - [ ] location
-- [ ] equipment/obstacle availability
+- [ ] equipment/obstacle availability filters
 - [ ] group split / station capacity
 - [ ] avoid-region selection
-- [ ] connect UI to autocomplete/retrieval
-- [ ] use enriched exercise details for ranking and selection
-- [ ] deterministic `TrainingDraft` composer
-- [ ] persist generated draft
 
 ## 9. Training formats
 
@@ -432,6 +429,8 @@ Seed completeness must be testable, not subjective.
 - [x] Tabata/AMRAP/EMOM concepts
 - [x] Rig & Run / Run + Exercise
 - [x] Technique / Team-Relay
+- [x] persisted per-item format selection in Training Editor
+- [ ] specialized format editors/settings for work/rest/rounds
 - [ ] generic interval block
 - [ ] rounds for time/quality
 - [ ] ladder/reverse ladder/pyramid/chipper
@@ -442,17 +441,32 @@ Seed completeness must be testable, not subjective.
 ## 10. Training editor
 
 - [x] typed session example + phase visualization
-- [ ] create/persist session
-- [ ] metadata editor
-- [ ] search/autocomplete and add exercise
-- [ ] show concise exercise instructions directly inside a training item
-- [ ] expand item to full execution/coaching/safety details
-- [ ] add/remove/reorder/drag-drop
-- [ ] replace/easier/harder/equipment alternative
-- [ ] Level 1/2/3 editor
-- [ ] duration calculations
-- [ ] duplicate/archive/restore
-- [ ] combine/recreate
+- [x] create/persist session from Quick Create
+- [x] DB-backed `/training` overview
+- [x] persisted training detail page
+- [x] title + lifecycle status metadata editor
+- [x] archive view + restore through lifecycle status
+- [x] archived sessions are content-read-only until restored
+- [x] search/autocomplete and add exercise to a phase
+- [x] show concise persisted exercise instructions directly inside a training item
+- [x] edit item duration
+- [x] edit item format
+- [x] edit free Level/variant label
+- [x] edit per-session training hint/instructions
+- [x] add/remove/reorder items via deterministic controls
+- [x] replace exercise through structured autocomplete while preserving item programming
+- [x] total session duration recalculates from persisted items after content mutations
+- [x] content changes automatically return lifecycle status to `draft`
+- [x] DuckDB mutation core is transaction-wrapped at repository layer
+- [ ] group/focus/notes metadata editor
+- [ ] drag & drop ordering
+- [ ] structured easier/harder/equipment-alternative suggestions
+- [ ] expand an item to full execution/coaching/safety/detail data
+- [ ] structured Level 1/2/3 variant editor
+- [ ] phase title/editor controls
+- [ ] add/remove/reorder phases beyond fixed Warm-up/Main/Cooldown model
+- [ ] duplicate session
+- [ ] combine/recreate sessions
 - [ ] version history/restore
 - [ ] templates
 
@@ -522,25 +536,25 @@ Import/export must be selective and trainer/admin friendly rather than an all-or
 
 - [ ] add **Import** and **Export** actions that open a popover/dialog with selectable content areas
 - [ ] export selection supports exercises, exercise details, aliases, categories/tags, body regions, movement patterns, equipment mappings, obstacles, training templates, training sessions, groups, source/provenance metadata and media metadata
-- [ ] optional **include images/media binaries** switch; included images are embedded in the portable JSON package (for example base64/data payloads) together with MIME type, checksum and source metadata
+- [ ] optional **include images/media binaries** switch; included images are embedded in the portable JSON package together with MIME type, checksum and source metadata
 - [ ] generate a versioned `.json` file with package schema version, OCRCraft version, export timestamp and selected sections
-- [ ] allow presets such as `Exercises only`, `Exercises + images`, `Trainings/Templates`, and `Complete portable package`
+- [ ] presets: `Exercises only`, `Exercises + images`, `Trainings/Templates`, `Complete portable package`
 - [ ] validate JSON/package schema before import and show a readable preflight summary before any write
 - [ ] import popover allows selecting which sections from the file should actually be imported
-- [ ] duplicate detection uses stable IDs/seed keys first and then normalized names, aliases, metadata and image checksums as similarity signals
-- [ ] clearly classify matches as `same`, `new`, `probable duplicate`, or `conflict`
+- [ ] duplicate detection uses stable IDs/seed keys first and normalized names, aliases, metadata and image checksums as similarity signals
+- [ ] classify matches as `same`, `new`, `probable duplicate`, or `conflict`
 - [ ] auto-resolve only high-confidence identical records; never silently overwrite uncertain matches
-- [ ] for uncertain duplicates/conflicts open a **compare screen** with existing record on the left and imported record on the right
+- [ ] uncertain duplicates/conflicts open a **compare screen** with existing record left and imported record right
 - [ ] compare screen shows text/details, categories, mappings and images/media side-by-side
 - [ ] per conflicting record allow **Use left (existing)**, **Use right (imported)**, or **Keep both**
 - [ ] `Keep both` creates a distinct record with new internal identity while preserving import provenance
-- [ ] allow field-level comparison/highlighting so changed descriptions, metadata and mappings are easy to spot
+- [ ] field-level comparison/highlighting for changed descriptions, metadata and mappings
 - [ ] image comparison includes preview, dimensions, MIME type, checksum/source and AI-generation metadata where available
-- [ ] provide bulk decisions for exact duplicates while retaining per-record override
-- [ ] show final import plan/counts before commit: create / replace / keep existing / keep both / skip
+- [ ] bulk decisions for exact duplicates with per-record override
+- [ ] final import plan/counts before commit: create / replace / keep existing / keep both / skip
 - [ ] execute import transactionally where practical and provide a clear failure report without partial silent corruption
 - [ ] imported records preserve source/provenance and package origin for later audit
-- [ ] add import/export round-trip tests including packages with images and duplicate/conflict resolution tests
+- [ ] round-trip tests including images and duplicate/conflict-resolution tests
 
 ## 15. Media & AI-generated exercise illustrations
 
@@ -579,7 +593,7 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 - [ ] use consistent OCRCraft clothing/style profile
 - [ ] show meaningful start/execution position rather than decorative poses
 - [ ] for movement-heavy exercises, use a small 2-step motion sequence within each person area where required to understand the movement
-- [ ] review each generated image for biomechanical plausibility and match to written instructions
+- [ ] review every generated image for biomechanical plausibility and match to written instructions
 - [ ] regenerate images that conflict with the exercise description
 - [ ] create lower-complexity child presentation without changing the intended exercise unless the child variant differs explicitly
 
@@ -621,11 +635,16 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 - [x] DE/EN translation/search-doc assertions
 - [x] duplicate seed-key assertion
 - [x] seed detail completeness tests for required populated DE/EN detail fields, ordered steps, running guidance, OCR prerequisites/fallback/supervision
-- [x] warm-up seed quality integration gate rejects the original generic scaffolding and checks DE/EN search documents
-- [ ] CRUD integration tests
-- [ ] autocomplete/search ranking tests
-- [ ] Quick Create E2E
-- [ ] Training Editor E2E
+- [x] warm-up seed quality integration gate rejects original generic scaffolding and checks DE/EN search documents
+- [x] DuckDB BM25 ranking/search integration tests
+- [x] structured autocomplete DuckDB integration tests
+- [x] deterministic `TrainingDraft` unit tests
+- [x] TrainingDraft candidate/audience/age/enriched-data DuckDB integration tests
+- [x] Quick Create age-range + normalized payload tests
+- [x] persisted training item Add/Edit/Delete/Reorder/Replace DuckDB integration tests
+- [ ] Exercise CRUD integration tests
+- [ ] Quick Create browser E2E
+- [ ] Training Editor browser E2E
 - [ ] Kids/Youth E2E
 - [ ] theme Light/Dark/System E2E
 - [x] media source/provenance tests
@@ -660,31 +679,30 @@ No athlete surveillance or unnecessary personal data.
 - [x] DE/EN exercise/search content
 - [x] Exercise Library + Create/Edit/Archive/Restore
 - [x] search documents + FTS dirty-state handling
-- [x] name/alias autocomplete API
+- [x] BM25 exercise search with structured fallback
+- [x] structured autocomplete over names/aliases/categories/tags/equipment/body regions/movement patterns
 - [x] read-only Admin search status
-- [x] Quick Create UI + body selector
+- [x] Quick Create UI + body selector + real library references
+- [x] deterministic non-AI `TrainingDraft`
+- [x] Quick Create preview + server-regenerated persistence
+- [x] persisted Training Session create/list/read + title/status/archive lifecycle
+- [x] persisted Training item add/edit/remove/reorder/replace
+- [x] automatic persisted duration recalculation after item mutation
 - [x] semantic UI tokens + Light/Dark/System theme foundation
+- [x] media schema + AI exercise-image pipeline foundation
 
 ## Next implementation slice
 
-- [x] **expand exercise schema with self-explanatory detail fields** (detail data foundation; further categories and relations remain open)
-- [ ] **enrich all 140+ seed exercises, especially all running and OCR exercises**
-- [x] enrich and classify every running seed with RPE, bilingual technique cues, corrected steps and common-mistake guidance
-- [x] add bilingual, obstacle-specific setup/prerequisite/approach/execution/exit/fallback guidance to every `ocr-skill` and `grip-rig` seed
-- [x] enrich all carry/drag/flip seeds with load selection, RPE, safe lifting, route/turn, set-down and regression guidance
-- [x] add seed completeness CI rules for bilingual detail fields, execution steps, running and OCR safety fields
-- [x] author and validate a complete exercise-specific bilingual warm-up cohort
-- [x] make Settings/Administration reachable from persistent header shortcuts and add a destructive reseed confirmation flow with transactional recovery
+- [ ] **enrich all remaining generic seed exercises with expert-authored, exercise-specific content**
 - [ ] add richer categories/goals/facets
+- [ ] add body-region/equipment/tag editing to Exercise Admin
 - [ ] add VIBSS-inspired training-template/source model
-- [x] central UI tokens + Light/Dark/System theme
-- [ ] BM25 exercise search over enriched content
-- [ ] connect Quick Create to real autocomplete/retrieval
-- [ ] body-region/equipment/tag editing
-- [ ] deterministic non-AI `TrainingDraft`
-- [ ] persisted Training Session CRUD
-- [x] media schema + AI exercise-image pipeline foundation
+- [ ] add richer Quick Create equipment/location/station-capacity constraints
+- [ ] add structured easier/harder/equipment alternatives in Training Editor
+- [ ] add phase-level editing + session duplicate/combine/versioning
+- [ ] add complete exercise detail/editor UI using the enriched data model
 - [ ] selectable JSON import/export with duplicate compare/resolution workflow
+- [ ] generate/review real AI exercise-image samples, then bulk-generate initial seed images
 - [ ] authentication/RBAC before global Admin mutations
 
 ---
@@ -696,15 +714,17 @@ No athlete surveillance or unnecessary personal data.
 - [ ] every initial exercise understandable without assumed advanced exercise knowledge
 - [ ] every initial exercise has structured setup/execution/coaching/common-mistake data
 - [ ] full exercise + obstacle administration
-- [ ] fast FTS/autocomplete search with configurable sources
-- [ ] complete manual Warm-up/Main/Cooldown editor
+- [ ] fast FTS/autocomplete search with configurable search profiles/sources
+- [ ] complete manual Warm-up/Main/Cooldown editor including phase controls
 - [x] visual body selector
 - [x] Quick Create input flow
-- [ ] Quick Create creates/persists a real session
+- [x] **Quick Create creates and persists a real DB-backed session**
+- [x] persisted training list/detail + basic lifecycle management
+- [x] persisted training items can be added/edited/removed/reordered/replaced
 - [ ] group/level splitting
-- [ ] editable Circuit/Tabata/AMRAP/EMOM/Rig & Run
+- [ ] specialized editable Circuit/Tabata/AMRAP/EMOM/Rig & Run settings
 - [ ] persisted running rules such as every 100 m
-- [ ] Level 1/2/3 variants
+- [ ] structured Level 1/2/3 variants
 - [ ] duplicate/combine/recreate sessions
 - [ ] portable selectable JSON import/export including optional images
 - [ ] duplicate/conflict compare screen with left/right/both resolution
@@ -722,4 +742,4 @@ No athlete surveillance or unnecessary personal data.
 
 LSB Hessen / Sportjugend Hessen / DOSB themes such as structured session planning, target-group orientation, warm-up, endurance, strength, mobility, coordination, functional movement, relaxation and safeguarding are used as professional planning guidance. OCR-specific obstacle/race concepts remain separate configurable OCR/club-domain rules rather than being presented as universal LSB rules.
 
-VIBSS / Landessportbund NRW is used as a reference/inspiration source for session structures, goals, age-group ideas, materials, locations, games and exercise discovery. OCRCraft should keep source provenance and independently author its own seed descriptions rather than copying external text or imagery verbatim.
+VIBSS / Landessportbund NRW is used as a reference/inspiration source for session structures, goals, age-group ideas, materials, locations, games and exercise discovery. OCRCraft keeps source provenance and independently authors its own seed descriptions rather than copying external text or imagery verbatim.
