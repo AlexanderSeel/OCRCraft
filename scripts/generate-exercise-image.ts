@@ -1,3 +1,4 @@
+import { loadEnvConfig } from "@next/env";
 import { ensureDatabaseReady } from "../src/server/db/database-ready";
 import { ExerciseImageGenerationRepository } from "../src/server/images/exercise-image-generation-repository";
 import { ExerciseImageGenerationService } from "../src/server/images/exercise-image-generation-service";
@@ -68,6 +69,7 @@ const dryRunStorage: ExerciseImageStorage = {
 };
 
 async function main(): Promise<void> {
+  loadEnvConfig(process.cwd());
   const options = parseArguments(process.argv.slice(2));
   if (options === "help") {
     printHelp();

@@ -110,7 +110,7 @@ DuckDB FTS wird bewusst nicht direkt in React-Komponenten eingebaut. Index-Rebui
 
 ## Exercise illustrations
 
-The single-exercise image pipeline uses the OpenAI Images API with `gpt-image-2`. Set `OPENAI_API_KEY` in the process environment before generating an image. Never put a real key in source control.
+The exercise-image pipeline uses the OpenAI Images API with `gpt-image-2`. Set `OPENAI_API_KEY` in the process environment or `.env` file before generating images. Never put a real key in source control.
 
 Preview the prompt without making an API request or writing an image:
 
@@ -124,7 +124,15 @@ Generate one exercise illustration and save it as pending trainer review:
 npm run exercise:image -- --exercise easy-jog
 ```
 
-The default filesystem output goes to `public/generated/exercises/`. To use an S3-compatible bucket, set `OCRCRAFT_IMAGE_STORAGE=s3`, `OCRCRAFT_IMAGE_BUCKET`, and `OCRCRAFT_S3_ENDPOINT` when required by the provider. Configure credentials through the standard AWS credential environment or profile chain; configure `OCRCRAFT_IMAGE_PUBLIC_BASE_URL` if the bucket has a public/CDN URL. Images are never automatically approved. Batch generation is not enabled.
+The default filesystem output goes to `public/generated/exercises/`. To use an S3-compatible bucket, set `OCRCRAFT_IMAGE_STORAGE=s3`, `OCRCRAFT_IMAGE_BUCKET`, and `OCRCRAFT_S3_ENDPOINT` when required by the provider. Configure credentials through the standard AWS credential environment or profile chain; configure `OCRCRAFT_IMAGE_PUBLIC_BASE_URL` if the bucket has a public/CDN URL. Images are never automatically approved.
+
+After the initial exercise catalog has been migrated, generate the remaining seed illustrations with:
+
+```bash
+npm run exercise:images:seed -- --all-seeds
+```
+
+This generates three exercise images concurrently while serializing DuckDB writes. It keeps already generated images and can be rerun to retry failures. The image rows are connected to their exercise IDs in DuckDB and remain pending trainer review.
 
 ## UI-Theming
 

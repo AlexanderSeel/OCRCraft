@@ -588,9 +588,9 @@ For **every initial seed exercise**, generate one standardized example image con
 
 All three figures must show the same exercise/phase and use the same OCRCraft illustration style. Age/gender representation changes; exercise mechanics must remain consistent.
 
-- [ ] generate an AI illustration for every initial seed exercise
-- [ ] one image contains child + woman + man versions
-- [ ] use consistent OCRCraft clothing/style profile
+- [x] generate an AI illustration for every initial seed exercise
+- [x] one image contains child + woman + man versions
+- [x] use consistent OCRCraft clothing/style profile
 - [ ] show meaningful start/execution position rather than decorative poses
 - [ ] for movement-heavy exercises, use a small 2-step motion sequence within each person area where required to understand the movement
 - [ ] review every generated image for biomechanical plausibility and match to written instructions
@@ -613,7 +613,9 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 - [ ] visible AI-generated indicator where required
 - [x] ability to regenerate while preserving style profile and source history
 - [x] single-exercise prompt dry run, OpenAI generation with retry handling, and filesystem/S3-compatible storage adapters
-- [ ] generate and inspect one real sample exercise image (requires `OPENAI_API_KEY` in the environment)
+- [x] resumable seed-catalog generation with serialized database writes and concurrent API requests
+- [x] generate and inspect one real sample exercise image
+- [x] generate and persist one image for each of the 149 initial seed exercises (all remain pending trainer review)
 - [x] load bilingual structured DuckDB details, movement/body metadata and available running/obstacle/carry guidance into the single-exercise prompt
 
 ## 16. Internationalization

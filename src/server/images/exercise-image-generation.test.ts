@@ -69,7 +69,9 @@ function makeStoredImage(): StoredExerciseImage {
 describe("exercise image prompt and generation service", () => {
   it("builds a three-person prompt from bilingual structured exercise details", () => {
     const prompt = buildExerciseImagePrompt(context);
-    expect(prompt).toContain("clean flat/semi-flat editorial illustration");
+    expect(prompt).toContain("friendly flat vector editorial artwork");
+    expect(prompt).toContain("dark navy performance shirt");
+    expect(prompt).toContain("coral-red side/diagonal panels");
     expect(prompt).toContain("child, an adult woman, and an adult man");
     expect(prompt).toContain("Lockeres Einlaufen");
     expect(prompt).toContain("Easy Jog");

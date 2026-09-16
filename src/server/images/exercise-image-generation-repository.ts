@@ -44,7 +44,47 @@ const contextSchema = z.object({
   }),
 });
 
+let exerciseImageWriteQueue: Promise<void> = Promise.resolve();
+
+function serializeExerciseImageWrite<T>(operation: () => Promise<T>): Promise<T> {
+  const result = exerciseImageWriteQueue.then(operation);
+  exerciseImageWriteQueue = result.then(() => undefined, () => undefined);
+  return result;
+}
+
 export class ExerciseImageGenerationRepository implements ExerciseImageGenerationRepositoryPort {
+  async markAbandonedGenerationsFailed(): Promise<number> {
+    await ensureDatabaseReady();
+    return serializeExerciseImageWrite(() => withDuckDbConnection(async (connection) => {
+      const reader = await connection.runAndReadAll(`
+        UPDATE exercise_media_assets
+        SET generation_status='failed', error_message='Generation process ended before the image was completed; safe to retry.',
+          updated_at=current_timestamp
+        WHERE generation_status='generating'
+        RETURNING id
+      `);
+      return reader.getRows().length;
+    }));
+  }
+
+  async listSeedExercisesMissingImage(): Promise<readonly { readonly exerciseId: string; readonly seedKey: string }[]> {
+    await ensureDatabaseReady();
+
+    return withDuckDbConnection(async (connection) => {
+      const reader = await connection.runAndReadAll(`
+        SELECT e.id::VARCHAR, e.seed_key
+        FROM exercises e
+        WHERE e.archived=false AND e.seed_key IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM exercise_media_assets m
+            WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          )
+        ORDER BY e.seed_key
+      `);
+      return reader.getRows().map((row) => ({ exerciseId: String(row[0]), seedKey: String(row[1]) }));
+    });
+  }
+
   async getContext(identifier: string): Promise<ExerciseImageGenerationContext> {
     await ensureDatabaseReady();
 
@@ -149,7 +189,7 @@ export class ExerciseImageGenerationRepository implements ExerciseImageGeneratio
 
   async createGeneratingRecord(input: CreateExerciseImageGenerationRecord): Promise<string> {
     await ensureDatabaseReady();
-    return withDuckDbConnection(async (connection) => {
+    return serializeExerciseImageWrite(() => withDuckDbConnection(async (connection) => {
       const reader = await connection.runAndReadAll(`
         INSERT INTO exercise_media_assets (
           exercise_id,media_type,source_type,provider,model,style_profile,generation_prompt,
@@ -165,12 +205,12 @@ export class ExerciseImageGenerationRepository implements ExerciseImageGeneratio
       const assetId = reader.getRows()[0]?.[0];
       if (assetId == null) throw new Error("Could not create the exercise image generation record.");
       return String(assetId);
-    });
+    }));
   }
 
   async markGenerated(input: CompleteExerciseImageGenerationRecord): Promise<void> {
     await ensureDatabaseReady();
-    await withDuckDbConnection(async (connection) => {
+    await serializeExerciseImageWrite(() => withDuckDbConnection(async (connection) => {
       const reader = await connection.runAndReadAll(`
         UPDATE exercise_media_assets SET generation_status='generated', generated_at=current_timestamp,
           storage_provider=$storageProvider, storage_key=$storageKey, storage_uri=$storageUri,
@@ -188,16 +228,16 @@ export class ExerciseImageGenerationRepository implements ExerciseImageGeneratio
         sha256: input.sha256,
       });
       if (reader.getRows().length !== 1) throw new Error("Exercise image generation record was not found while completing the generation.");
-    });
+    }));
   }
 
   async markFailed(assetId: string, errorMessage: string): Promise<void> {
     await ensureDatabaseReady();
-    await withDuckDbConnection(async (connection) => {
+    await serializeExerciseImageWrite(() => withDuckDbConnection(async (connection) => {
       await connection.run(`
         UPDATE exercise_media_assets SET generation_status='failed', error_message=$errorMessage,
           updated_at=current_timestamp WHERE id=$assetId
       `, { assetId, errorMessage: errorMessage.slice(0, 1000) });
-    });
+    }));
   }
 }
