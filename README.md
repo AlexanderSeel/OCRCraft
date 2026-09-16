@@ -1,137 +1,152 @@
 # OCRCraft
 
-OCRCraft ist ein Trainingsplaner für OCR-Clubs und funktionelles Training. Ziel ist, komplette Trainingseinheiten schnell zu erstellen, bestehende Einheiten wiederzuverwenden oder zu kombinieren und neue Sessions mit Hilfe einer strukturierten Übungsbibliothek und optionaler KI-Unterstützung zu erzeugen.
+OCRCraft ist ein Trainingsplaner für OCR-Clubs, funktionelles Training und Breitensport. Ziel ist, komplette Trainingseinheiten schnell zu erstellen, bestehende Einheiten wiederzuverwenden oder zu kombinieren und neue Sessions aus einem strukturierten Übungspool sowie optional mit KI-Unterstützung zu erzeugen.
 
-Die Anwendung ist primär auf Deutsch ausgelegt und soll zusätzlich Englisch unterstützen.
+Die Anwendung ist primär auf Deutsch ausgelegt und wird zusätzlich Englisch unterstützen.
 
-## Zielbild
+## Aktueller Stand
 
-OCRCraft soll Trainer dabei unterstützen, Trainingseinheiten nach einer klaren Struktur aus **Aufwärmen**, **Hauptteil** und **Cooldown/Stretching** zu planen. Der fachliche Rahmen orientiert sich an Trainings- und Ausbildungsprinzipien des Landessportbund Hessen / Sportjugend Hessen sowie an konfigurierbaren Vereinsregeln.
+Die Implementierung hat begonnen. Auf `main` stehen bereits:
 
-Der Fokus liegt auf einem schnellen Trainer-Workflow statt auf komplizierter Dateneingabe.
+- Next.js / React / TypeScript / Tailwind-Grundgerüst
+- professionelles Trainer-Dashboard
+- typisiertes Trainings-Domainmodell
+- deterministische Validierung für Pflichtphasen, Dauer und Vereins-Risikoregeln
+- Quick-Create-Wizard mit fünf Schritten
+- visueller Front-/Rückseiten-Body-Selector
+- Trainingsformate wie Zirkel, Rig & Run, AMRAP, EMOM, Tabata, Run + Exercise und Technik
+- zentraler DuckDB-Lifecycle mit `@duckdb/node-api`
+- versioniertes initiales DuckDB-Schema
+- vorbereitete deutsche/englische Suchdokumente und Search-Index-Status
+- Domain-Tests mit Vitest
+- GitHub Actions CI für Lint, Typecheck, Tests und Production Build
+- projektinterne Skills für TypeScript/Clean Architecture, UI/UX und LSB-/OCR-Trainingsfachlichkeit
 
-## Geplante Kernfunktionen
+Der vollständige Produkt- und Architekturplan steht in [`plan.md`](./plan.md).
 
-- Trainingseinheiten erstellen, bearbeiten, kopieren, versionieren, archivieren und wiederherstellen
-- bestehende Trainings kombinieren oder mit geänderten Rahmenbedingungen neu erzeugen
-- Quick-Create-Wizard für Gruppe, Alter, Dauer, Trainingsziel, Intensität, Equipment und Trainingsformat
-- interaktive Körperkarte zur Auswahl von Zielregionen
-- Übungs- und Hindernisbibliothek mit Progressionen, Regressionen und Alternativen
-- OCR-spezifische Inhalte wie Rig & Run, Monkey Bars, Rings, Walls, Rope Climb, Carries, Balance, Crawls und Throwing
-- Trainingsformate wie Zirkel, Stationstraining, Tabata, AMRAP, EMOM, Intervalle, Partner-/Teamtraining und Running + Exercise
-- Running-Workouts mit Regeln wie „alle 100 m eine Übung“
-- Level-1/2/3-Varianten für gemischte Leistungsgruppen
-- DuckDB Full-Text Search für Übungen, Hindernisse, Trainings und Templates
-- konfigurierbare Suchprofile und Autocomplete-Quellen
-- KI-gestützte Erstellung und Anpassung von Trainings auf Basis des vorhandenen Übungspools
-- Kids-/Youth-Regeln für Alter, Risiko, Aufsicht und eingeschränkte Übungen
-- Benutzer-, Rollen-, Gruppen-, Medien-, Exercise- und Datenbank-Administration
-- Deutsch/Englisch-Lokalisierung
+## Stack
 
-## Geplanter Stack
+- Next.js 16
+- React 19
+- TypeScript 7
+- Tailwind CSS 4
+- DuckDB + `@duckdb/node-api`
+- Zod
+- Vitest
 
-- TypeScript
-- Next.js / React
-- Tailwind CSS
-- DuckDB
-- DuckDB Full-Text Search
-- `@duckdb/node-api`
-- Zod für strukturierte Validierung
-- provider-neutrale AI-Schnittstelle
+## Lokaler Start
+
+```bash
+npm install
+npm run dev
+```
+
+Danach läuft die Anwendung standardmäßig unter `http://localhost:3000`.
+
+Qualitätschecks:
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+## Architektur
+
+Die zentralen Verantwortlichkeiten werden getrennt gehalten:
+
+```text
+src/
+├─ app/                 Next.js routes / composition
+├─ components/          reusable UI and feature components
+├─ domain/              framework-free training model and rules
+└─ server/
+   └─ db/               DuckDB lifecycle and migrations
+```
+
+Wichtige Regeln stehen zusätzlich in [`AGENTS.md`](./AGENTS.md).
 
 ## Trainingsstruktur
 
-Jede Session basiert mindestens auf:
+Jede reguläre Session wird mindestens gegen diese Struktur geprüft:
 
-1. **Warm-up / Aufwärmen**
-2. **Main Part / Hauptteil**
-3. **Cooldown & Stretching / Cooldown & Dehnen**
+1. **Aufwärmen / Warm-up**
+2. **Hauptteil / Main part**
+3. **Cooldown & Stretching**
 
-Optionale Blöcke können z. B. Briefing, Movement Preparation, Technik, Obstacle Skills, Finisher oder Reflexion enthalten.
+Zusätzliche Blöcke wie Briefing, Movement Preparation, Technik, Obstacle Skills, Finisher oder Reflexion können später flexibel ergänzt werden.
 
-## Suche & Autocomplete
+Die fachliche Orientierung folgt zielgruppenorientierter Breitensport-Planung des Landessportbund Hessen / DOSB-Kontexts. Für Kinder und Jugendliche werden Schutzkonzept und Vereinsregeln separat als harte Systemregeln modelliert. OCR-spezifische Anforderungen wie Grip, Carry, Running, Rig, Walls, Balance und Hindernisprogression werden darauf aufgebaut.
 
-Die Suche soll strukturierte Filter und Volltextsuche kombinieren. Relevante Bereiche sind unter anderem:
+## Quick Create
 
-- Übungen
-- Hindernisse
-- bestehende Trainings
-- Trainingsblöcke
-- Templates
+Der aktuelle Wizard erfasst bereits:
+
+1. Zielgruppe, Alter, Teilnehmerzahl und Dauer
+2. Trainingsziele und Körperregionen
+3. Trainingsformat bzw. Formatkombination
+4. Technik-/Conditioning-Ausrichtung
+5. Zusammenfassung für den späteren Training Composer
+
+Die BodyMap ist als eigener wiederverwendbarer, tastaturbedienbarer Baustein umgesetzt.
+
+## DuckDB
+
+Die Persistenz wird über eine serverseitige DuckDB-Abstraktion gekapselt. Das initiale Schema enthält bereits:
+
+- Exercises und Übersetzungen
+- Body Regions
 - Equipment
-- Körperregionen
-- Bewegungsmuster
-- Tags
+- Club Groups
+- Training Sessions
+- Training Phases und Items
+- deutsche und englische Search Documents
+- Search-Index-Zustand (`healthy`, `dirty`, `rebuilding`, `failed`)
+- Schema-Migrations
 
-DuckDB FTS wird über einen eigenen SearchIndexService gekapselt. Da DuckDB-FTS-Indizes nach Änderungen explizit aktualisiert werden müssen, sieht die Architektur einen Dirty/Rebuild-Workflow mit Admin-Status und manueller Reindex-Funktion vor.
+DuckDB FTS wird bewusst nicht direkt in React-Komponenten eingebaut. Index-Rebuilds werden später über einen `SearchIndexService` und die Admin-Oberfläche gesteuert.
 
-## KI-Prinzip
+## AI-Prinzip
 
-Die KI ist ein **Composer**, nicht die Datenbank.
-
-Ablauf:
+Die KI soll ein **Composer**, nicht die Datenbank sein:
 
 ```text
 Wizard/Input
   -> Anforderungen normalisieren
-  -> passenden Exercise-/Training-Pool durchsuchen
-  -> relevante Inhalte abrufen
-  -> strukturierten AI-Kontext erzeugen
-  -> TrainingDraft generieren
-  -> deterministisch validieren
+  -> zugelassene Übungen/Trainings suchen
+  -> relevanten Kontext abrufen
+  -> strukturierten TrainingDraft erzeugen
+  -> Zod + Domainregeln validieren
   -> Trainer prüft und speichert
 ```
 
-Neue KI-generierte Übungen landen zunächst nur als Draft im System und müssen vor der Wiederverwendung freigegeben werden.
+Neue KI-generierte Übungen werden nicht automatisch in den Master-Pool übernommen.
 
-## Projektstatus
+## Projekt-Skills
 
-Das Repository befindet sich aktuell in der Planungs-/Bootstrap-Phase.
+Die Repository-Arbeitsweise ist in drei Skills festgehalten:
 
-Der ausführliche Produkt-, UX- und Implementierungsplan befindet sich in:
+- [`skills/typescript-app-engineer/SKILL.md`](./skills/typescript-app-engineer/SKILL.md)
+- [`skills/ui-ux-designer/SKILL.md`](./skills/ui-ux-designer/SKILL.md)
+- [`skills/ocr-training-expert/SKILL.md`](./skills/ocr-training-expert/SKILL.md)
 
-- [`plan.md`](./plan.md)
+## Nächste Implementierungsschritte
 
-Dort sind unter anderem enthalten:
-
-- Domain Model
-- OCR-Hinderniskatalog
-- Trainingsformate
-- Quick Create Wizard
-- Body Map
-- DuckDB-Datenmodell
-- Full-Text-Search-Architektur
-- AI Training Builder
-- Kids/Youth Mode
-- Admin-Interface
-- Rollenmodell
-- Testing-Strategie
-- Implementierungs-Roadmap
-- MVP Acceptance Criteria
-
-## Empfohlener erster Vertical Slice
+Der nächste Vertical Slice baut auf dem vorhandenen Fundament auf:
 
 ```text
-1. DuckDB + migrations
-2. Exercise CRUD
-3. Body region mapping
-4. German FTS
-5. Training CRUD with 3 phases
-6. Search-and-add exercise
-7. Circuit block
-8. One saved club group
-9. Quick Create basic wizard
-10. AI generate from approved exercises
+1. Migration/DB-Initialisierung aus der Anwendung
+2. Exercise Repository + Exercise CRUD
+3. Seed-Pool für OCR-/Functional-/Running-Übungen
+4. German DuckDB FTS + Autocomplete
+5. gespeicherte Club Groups und Vereinsregeln
+6. Training Editor mit Search-and-add
+7. Quick Create -> echter TrainingDraft
+8. AI Composer auf Basis des freigegebenen Pools
+9. Admin für Übungen, Medien, Benutzer und Search Index
 ```
 
-## Referenzen
+## Fachliche und technische Referenzen
 
-Die fachliche Planung verweist unter anderem auf:
-
-- Landessportbund Hessen
-- Sportjugend Hessen
-- DOSB Schutzkonzepte im Sport
-- DuckDB Full-Text Search
-- DuckDB Node.js Client
-
-Die konkreten Links und Architekturhinweise stehen im [`plan.md`](./plan.md).
+Die Detailquellen und weiterführenden Links befinden sich in [`plan.md`](./plan.md). Dazu gehören insbesondere Landessportbund Hessen, Sportjugend Hessen, DOSB sowie DuckDB-Dokumentation.
