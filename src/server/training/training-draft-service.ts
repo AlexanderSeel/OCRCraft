@@ -2,7 +2,9 @@ import "server-only";
 
 import { composeTrainingDraft, type TrainingDraft } from "@/domain/training/draft";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
+import type { TrainingDraftPersistenceRequest } from "./training-draft-persistence-schema";
 import type { TrainingDraftRequest } from "./training-draft-schema";
+import { persistTrainingDraft } from "./training-session-repository";
 
 export async function createDeterministicTrainingDraft(
   request: TrainingDraftRequest,
@@ -28,4 +30,16 @@ export async function createDeterministicTrainingDraft(
     },
     candidates,
   );
+}
+
+export async function createAndPersistDeterministicTrainingDraft(
+  input: TrainingDraftPersistenceRequest,
+): Promise<{ readonly id: string; readonly draft: TrainingDraft }> {
+  const draft = await createDeterministicTrainingDraft(input.request);
+  const id = await persistTrainingDraft(draft, {
+    title: input.title,
+    locale: input.request.locale,
+  });
+
+  return { id, draft };
 }
