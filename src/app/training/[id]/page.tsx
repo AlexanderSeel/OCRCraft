@@ -3,17 +3,21 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { TRAINING_PHASE_LABELS } from "@/domain/training/model";
 import { getTrainingSessionById } from "@/server/training/training-session-repository";
+import { updateTrainingSessionMetadataAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 interface PageProps {
   readonly params: Promise<{ id: string }>;
+  readonly searchParams: Promise<{ saved?: string; error?: string }>;
 }
 
-export default async function TrainingDetailPage({ params }: PageProps) {
-  const { id } = await params;
+export default async function TrainingDetailPage({ params, searchParams }: PageProps) {
+  const [{ id }, query] = await Promise.all([params, searchParams]);
   const session = await getTrainingSessionById(id);
   if (!session) notFound();
+
+  const updateAction = updateTrainingSessionMetadataAction.bind(null, session.id);
 
   return (
     <AppShell
@@ -29,11 +33,57 @@ export default async function TrainingDetailPage({ params }: PageProps) {
       }
     >
       <div className="space-y-6">
+        {query.saved === "1" ? (
+          <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">
+            Training wurde aktualisiert.
+          </div>
+        ) : null}
+        {query.error ? (
+          <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">
+            Titel oder Status konnten nicht gespeichert werden. Bitte Eingaben prüfen.
+          </div>
+        ) : null}
+
         <section className="grid gap-3 sm:grid-cols-3">
           <InfoCard label="Status" value={statusLabel(session.status)} />
           <InfoCard label="Quelle" value={session.source === "manual" ? "Quick Create" : session.source} />
           <InfoCard label="Dauer" value={`${session.totalDurationMinutes} Min.`} />
         </section>
+
+        <form
+          action={updateAction}
+          className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] md:grid-cols-[minmax(0,1fr)_220px_auto]"
+        >
+          <label className="grid gap-2 text-sm font-bold">
+            Trainingstitel
+            <input
+              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+              defaultValue={session.title}
+              maxLength={120}
+              name="title"
+              required
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-bold">
+            Status
+            <select
+              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+              defaultValue={session.status}
+              name="status"
+            >
+              <option value="draft">Entwurf</option>
+              <option value="ready">Bereit</option>
+              <option value="completed">Abgeschlossen</option>
+              <option value="archived">Archiviert</option>
+            </select>
+          </label>
+          <button
+            className="min-h-11 self-end rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
+            type="submit"
+          >
+            Metadaten speichern
+          </button>
+        </form>
 
         <section className="space-y-4">
           {session.phases.map((phase) => (
