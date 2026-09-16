@@ -1,1748 +1,588 @@
-# OCR Club Training Planner — `plan.md`
+# OCRCraft — Product & Implementation Plan
 
-> **Status:** Product & implementation plan  
+> **Status:** Active implementation plan  
 > **Primary language:** German (`de-DE`)  
 > **Secondary language:** English (`en`)  
-> **Reference framework:** Landessportbund Hessen / Sportjugend Hessen principles + configurable club rules  
-> **Core stack:** TypeScript, Next.js/React, Tailwind CSS, DuckDB, DuckDB FTS, Node.js, AI provider abstraction
+> **Core stack:** TypeScript, Next.js/React, Tailwind CSS, DuckDB, DuckDB FTS  
+> **Training framework:** LSB/DOSB-oriented recreational sport principles + OCR-specific and configurable club rules
+
+## Status legend
+
+- [x] implemented and present on `main`
+- [ ] not implemented yet
+- A partially implemented area is split into completed and remaining subtasks instead of using an ambiguous third state.
 
 ---
 
 ## 1. Product vision
 
-Build a fast, trainer-friendly system for an OCR club to:
-
-- create, edit, copy, version, delete and restore exercises and complete training sessions;
-- search a large exercise/training pool with DuckDB Full-Text Search;
-- combine existing sessions or individual blocks into new sessions;
-- recreate an old session with changed duration, group, focus or equipment;
-- generate complete training sessions with AI;
-- regenerate only a phase, block or exercise while preserving the rest;
-- create sessions for adults, children, youth and mixed-ability groups;
-- support OCR, functional training and running-focused sessions;
-- support stations, circuits, Tabata, AMRAP, EMOM, intervals, Rig & Run and mixed formats;
-- visually select target body regions;
-- manage exercises, obstacles, images, videos, users, groups and search settings;
-- work primarily in German while allowing an English UI and English exercise/session content.
-
-The product should optimize for **“complete a good training in a few minutes”** rather than maximum form complexity.
-
----
-
-## 2. Guiding principles
-
-### 2.1 Training structure
-
-Every generated or manually created training is based on three required phases:
+OCRCraft is a fast training-planning system for OCR clubs and recreational/functional sport. Trainers should be able to create, edit, search, combine, recreate and AI-compose complete training sessions with a clear structure:
 
 1. **Warm-up / Aufwärmen**
-2. **Main part / Hauptteil**
+2. **Main Part / Hauptteil**
 3. **Cooldown & Stretching / Cooldown & Dehnen**
 
-Optional sections:
-
-- briefing / objective;
-- movement preparation;
-- technique / obstacle skill block;
-- transition / hydration break;
-- finisher;
-- reflection / feedback.
-
-Duration ratios must be configurable by club, group, age and session type.
-
-### 2.2 LSB-oriented design
-
-The planner should reflect training themes emphasized by Landessportbund Hessen education:
-
-- structured lesson/training planning;
-- appropriate warm-up;
-- movement teaching and technique;
-- functional movement;
-- endurance;
-- strength;
-- coordination;
-- circuit training;
-- relaxation/cooldown;
-- body awareness;
-- age- and target-group-aware instruction.
-
-For children and youth, configurable club rules must also cover:
-
-- age-appropriate exercises;
-- trainer qualification requirements;
-- supervision requirements;
-- media/privacy consent;
-- child safeguarding rules;
-- prohibited or restricted exercises/obstacles;
-- maximum risk level.
-
-The application supports trainers but does not replace trainer qualification, first aid readiness, risk assessment or the club safeguarding concept.
+The system must support adults, children/youth, mixed ability groups, OCR technique, functional strength, circuits and running-focused sessions.
 
 ---
 
-## 3. Recommended technical architecture
+## 2. Engineering foundation
 
-### Frontend
+- [x] Next.js App Router project
+- [x] TypeScript strict project configuration
+- [x] Tailwind CSS design foundation
+- [x] React component architecture
+- [x] clean separation between UI, domain, server services and persistence
+- [x] DuckDB Node integration
+- [x] migration runner
+- [x] CI on `main`
+- [x] ESLint
+- [x] TypeScript typecheck
+- [x] Vitest
+- [x] production build validation
+- [x] project engineering skill for Clean Code / modular TypeScript
+- [x] project UI/UX design skill
+- [x] project OCR + Breitensport training skill
+- [x] `AGENTS.md` tying the project rules together
+- [ ] authentication
+- [ ] authorization / RBAC enforcement
+- [ ] production deployment configuration
 
-- TypeScript
-- React + Next.js
-- Tailwind CSS
-- accessible component primitives
-- responsive desktop/tablet design
-- drag & drop for blocks/stations
-- keyboard-first quick-add and command palette
-- optional PWA/read-only offline trainer mode later
+### Engineering rules
 
-### Backend
-
-Use Next.js Node runtime or a small dedicated TypeScript application service.
-
-```text
-UI
-  -> Server Actions / API
-    -> Application Services
-      -> Validation & Training Rules
-      -> Search Service
-      -> AI Generation Service
-      -> Repository Layer
-        -> DuckDB
-```
-
-DuckDB must never be accessed directly from React components.
-
-### DuckDB
-
-Use:
-
-```text
-@duckdb/node-api
-```
-
-DuckDB is the MVP application/search store.
-
-Because DuckDB is not a classic high-concurrency OLTP server:
-
-- keep one application writer;
-- serialize writes through a queue/mutex;
-- use transactions for related mutations;
-- abstract persistence through repositories;
-- keep a migration path to PostgreSQL if concurrent editing grows significantly.
-
-### Media storage
-
-Do not store large videos as DuckDB BLOBs by default.
-
-Store metadata in DuckDB and media in:
-
-- local `/data/media`, or
-- S3-compatible object storage.
-
-Support:
-
-- images;
-- galleries;
-- exercise demo videos;
-- external video URLs;
-- thumbnails/posters;
-- optional QR targets for hall use.
-
-### AI integration
-
-Use a provider-neutral interface:
-
-```ts
-interface TrainingAiProvider {
-  generateTraining(input: TrainingGenerationRequest): Promise<TrainingDraft>;
-  regenerateBlock(input: RegenerateBlockRequest): Promise<TrainingBlock>;
-  createExercise(input: ExerciseGenerationRequest): Promise<ExerciseDraft>;
-}
-```
-
-AI output must be structured JSON and validated with Zod before display/save.
+- Domain logic must not depend on React or DuckDB.
+- UI components must not contain SQL or persistence rules.
+- Database access stays behind repositories/services.
+- AI output is never authoritative; deterministic validation is applied before save/use.
+- Prefer small reusable components and composable services over page-local implementations.
 
 ---
 
-## 4. Main navigation
+## 3. Training domain
 
-```text
-Dashboard
-Training
-Exercises
-Obstacles
-Quick Create
-AI Create
-Groups
-Media
-Templates
-Admin
-Settings
-```
-
-Dashboard should show:
-
-- recent/upcoming sessions;
-- quick Create Training;
-- recreate last training;
-- favorite templates;
-- recently used exercises;
-- incomplete drafts;
-- focus history;
-- recent body-region coverage.
+- [x] typed training-session model
+- [x] typed phases: warm-up, main, cooldown
+- [x] typed exercise/session risk levels
+- [x] session-duration validation
+- [x] required-phase validation
+- [x] group/risk validation foundation
+- [x] domain unit tests
+- [ ] station-capacity validation
+- [ ] simultaneous equipment-conflict validation
+- [ ] transition/setup-time validation
+- [ ] age-specific club-rule engine
+- [ ] progression/regression rule engine
+- [ ] training-load / recent-use rule engine
 
 ---
 
-## 5. Training session domain model
+## 4. DuckDB schema & persistence
 
-```text
-Training Session
-├─ Metadata
-├─ Group / audience
-├─ Objectives
-├─ Equipment / location
-├─ Warm-up
-│  └─ blocks/items
-├─ Main part
-│  └─ blocks/items
-├─ Cooldown / stretching
-│  └─ blocks/items
-├─ Alternatives / progressions
-├─ Safety notes
-└─ Trainer notes
-```
-
-Session metadata:
-
-- title;
-- date/time;
-- trainers;
-- group;
-- age range;
-- participant count;
-- total duration;
-- language;
-- location;
-- indoor/outdoor;
-- difficulty;
-- target intensity;
-- session type;
-- focus;
-- body regions;
-- movement patterns;
-- required equipment;
-- OCR obstacles;
-- tags;
-- notes;
-- source: manual/template/copied/combined/AI/imported;
-- version;
-- status: draft/ready/completed/archived.
+- [x] schema migration table
+- [x] exercise base table
+- [x] DE/EN exercise translations
+- [x] exercise aliases
+- [x] body regions
+- [x] movement patterns
+- [x] tags
+- [x] equipment and exercise-equipment mappings
+- [x] club groups foundation
+- [x] training sessions
+- [x] training phases
+- [x] training items
+- [x] German search-document table
+- [x] English search-document table
+- [x] search-index state table
+- [x] idempotent database-ready bootstrap
+- [x] multi-statement migration execution
+- [x] in-memory DuckDB integration test for migrations + initial seed
+- [ ] training version snapshots
+- [ ] favorites/recent-use tables
+- [ ] media tables
+- [ ] user/role tables
+- [ ] audit-log table
+- [ ] templates table
+- [ ] AI generation audit/source tables
 
 ---
 
-## 6. Exercise model
+## 5. Initial exercise database
 
-Each exercise should contain enough structured information for search, AI composition, progressions and substitutions.
+A new OCRCraft database must be immediately useful and must not start empty.
 
-Core fields:
+### Coverage
 
-- German name;
-- English name;
-- aliases/synonyms;
-- short description;
-- coaching instructions;
-- common mistakes;
-- technique cues;
-- duration/repetition/distance options;
-- intensity;
-- difficulty;
-- risk level;
-- minimum recommended age;
-- maximum participant count per station;
-- supervision level;
-- indoor/outdoor;
-- space requirement;
-- tags;
-- active/archive state.
+- [x] **140+ seed exercises validated by CI**
+- [x] **25+ running exercises validated by CI**
+- [x] German names/content
+- [x] English names/content
+- [x] common aliases for search/autocomplete
+- [x] equipment catalogue
+- [x] body-region catalogue
+- [x] movement-pattern catalogue
+- [x] tags
+- [x] generated DE/EN search documents
+- [x] unique stable `seed_key` values
+- [x] duplicate seed-key protection
 
-Movement patterns:
+### Seed categories
 
-- run, walk, crawl;
-- squat, lunge, hinge;
-- push, pull;
-- carry, drag;
-- climb, hang, swing;
-- rotate, brace;
-- balance;
-- jump, land;
-- throw, catch;
-- mobility, stretch;
-- breathing/recovery.
+- [x] warm-up
+- [x] mobility / movement preparation
+- [x] functional strength
+- [x] core
+- [x] running
+- [x] grip & rig
+- [x] carries & lifts
+- [x] OCR skills / obstacle technique
+- [x] balance & agility
+- [x] throwing
+- [x] cooldown / stretching
 
-Body regions:
+### Running pool
 
-- neck;
-- shoulders;
-- chest;
-- upper back/lats;
-- upper arms;
-- forearms/grip;
-- core/anterior;
-- obliques;
-- lower back;
-- hips/glutes;
-- quadriceps;
-- hamstrings;
-- adductors/abductors;
-- calves;
-- ankles/feet;
-- full body.
+- [x] easy continuous running
+- [x] run/walk intervals
+- [x] tempo run
+- [x] fartlek / Fahrtspiel
+- [x] short intervals
+- [x] long intervals
+- [x] hill repeats
+- [x] shuttle runs
+- [x] strides / Steigerungsläufe
+- [x] acceleration and deceleration drills
+- [x] A-Skip
+- [x] B-Skip
+- [x] Ankling / footwork
+- [x] running ABC high knees
+- [x] running ABC butt kicks
+- [x] bounding / Sprunglauf
+- [x] cadence running
+- [x] cone slalom
+- [x] lateral running/shuffle
+- [x] relay running
+- [x] trail running
+- [x] stair running
+- [x] run + exercise every 100 m
+- [x] run-to-obstacle transitions
+- [ ] route/GPS-aware running sessions
+- [ ] pace/zone based running prescription
 
-Each body-region relation can include primary/secondary, load score and mobility/stability/strength/endurance emphasis.
+### OCR pool
 
-Every exercise can define:
+- [x] dead/active hangs
+- [x] towel/ring grip variants
+- [x] monkey bars
+- [x] ring traverse
+- [x] rope grip / rope climb progression
+- [x] rig transitions
+- [x] farmer/suitcase carry
+- [x] sandbag carries
+- [x] bucket carry
+- [x] atlas carry
+- [x] sled/tire drag
+- [x] tire flip
+- [x] crawls
+- [x] low/high-wall skill foundation
+- [x] cargo net
+- [x] rope traverse
+- [x] Rig & Run interval
+- [x] balance obstacles
+- [x] medicine-ball / sandbag / target throws
+- [x] spear-target drill
+- [ ] richer obstacle prerequisites/progressions per obstacle
+- [ ] detailed setup dimensions/capacity per obstacle
 
-- easier regression;
-- standard variation;
-- harder progression;
-- child variation;
-- low-impact alternative;
-- no-equipment alternative;
-- partner alternative.
+### Seed enrichment still needed
 
----
-
-## 7. OCR obstacle catalogue
-
-Seed a broad OCR-specific catalogue.
-
-### Carries
-
-- kettlebell farmer carry;
-- suitcase carry;
-- sandbag bear-hug carry;
-- sandbag shoulder/front carry;
-- bucket carry;
-- atlas stone/ball carry;
-- weighted object carry;
-- team carry;
-- uneven carry.
-
-### Walls & climbing
-
-- low/high wall;
-- sloped wall;
-- inverted wall;
-- over-under wall;
-- cargo net;
-- rope climb;
-- rope traverse;
-- ladder climb;
-- wall traverse.
-
-### Rig / hanging
-
-- dead hang;
-- pull-up bar;
-- monkey bars;
-- offset monkey bars;
-- multi-rig;
-- rings/ring traverse;
-- rope-to-ring transitions;
-- nunchuck-style holds;
-- ball/grip holds;
-- peg-style traverse;
-- lateral bar traverse.
-
-### Balance
-
-- balance beam;
-- narrow beam;
-- stepping blocks;
-- wobble board;
-- slackline-style trainer;
-- balance traverse;
-- unstable carries.
-
-### Ground movement
-
-- bear crawl;
-- crab walk;
-- low crawl;
-- army crawl;
-- tunnel crawl;
-- obstacle crawl;
-- tire steps.
-
-### Pull / drag / lift
-
-- sled drag;
-- rope pull;
-- object/tire drag;
-- tire flip;
-- sandbag ground-to-shoulder;
-- atlas stone/ball load;
-- hoist/pulley simulation.
-
-### Throwing
-
-- spear-style target throw;
-- medicine ball target throw;
-- sandbag target throw;
-- ball throw;
-- overhead throw;
-- rotational throw.
-
-### Jumps / agility
-
-- box step-up;
-- box jump;
-- broad jump;
-- hurdle/lateral hurdle;
-- precision jump;
-- agility ladder;
-- cone change-of-direction.
-
-Each obstacle stores dimensions/configuration, equipment, target skills, body regions, grip type, difficulty, risk, age rules, prerequisites, setup time, capacity and fallback exercise.
+- [ ] detailed coaching cues for every seed exercise
+- [ ] common mistakes for every seed exercise
+- [ ] explicit Level 1/2/3 variants for all relevant exercises
+- [ ] finer body-region mapping per exercise instead of category baseline only
+- [ ] richer movement-pattern mapping per exercise
+- [ ] child-specific alternatives and restrictions for all relevant exercises
+- [ ] demo images/videos or media placeholders
 
 ---
 
-## 8. Training formats
+## 6. Exercise library
 
-### Core formats
+- [x] `/exercises` page
+- [x] database-backed list
+- [x] text search
+- [x] category filter
+- [x] aliases included in search
+- [x] visible total/category/running counts
+- [x] equipment shown on exercise cards
+- [x] risk/min-age shown
+- [ ] create exercise UI
+- [ ] edit exercise UI
+- [ ] archive exercise
+- [ ] restore exercise
+- [ ] hard delete restricted to safe/admin scenarios
+- [ ] edit translations
+- [ ] edit aliases
+- [ ] edit body regions
+- [ ] edit movement patterns
+- [ ] edit equipment requirements
+- [ ] edit tags
+- [ ] progression/regression relationships
+- [ ] duplicate detection
+- [ ] bulk administration
+- [ ] CSV/JSON import/export
 
-- free structured session;
-- classic circuit / Zirkel;
-- station training;
-- Tabata-style intervals;
-- AMRAP;
-- EMOM;
-- E2MOM/configurable interval clock;
-- rounds for quality;
-- rounds for time;
-- ladder/reverse ladder;
-- pyramid;
-- chipper;
-- work/rest intervals;
-- partner/team workout;
-- relay;
-- technique/skill block;
-- obstacle workshop;
-- strength-endurance;
-- mobility/recovery;
-- benchmark/retest;
-- game-based kids session.
+---
 
-### Running formats
+## 7. Search & autocomplete
 
-- easy continuous run;
-- technique running;
-- interval running;
-- tempo segments;
-- fartlek;
-- hill intervals;
-- relay running;
-- running drills / Lauf-ABC;
-- shuttle runs;
-- trail/OCR running;
-- run + obstacle;
-- run + exercise.
+- [x] denormalized German search documents
+- [x] denormalized English search documents
+- [x] search-index health state
+- [x] DuckDB FTS rebuild service foundation
+- [x] German stemming configuration
+- [x] English stemming configuration
+- [x] dirty/rebuild model because DuckDB FTS does not auto-update after writes
+- [x] current exercise-library fallback search via structured SQL/aliases
+- [ ] use BM25 FTS for live exercise search
+- [ ] autocomplete term table/service
+- [ ] autocomplete from names
+- [ ] autocomplete from aliases
+- [ ] autocomplete from tags
+- [ ] autocomplete from equipment
+- [ ] autocomplete from obstacles
+- [ ] autocomplete from existing trainings/blocks
+- [ ] configurable search profiles
+- [ ] configurable field weights
+- [ ] favorites/recent-use boosting
+- [ ] admin reindex/status UI
 
-### Run + exercise builder
+---
 
-Support patterns like:
+## 8. UI/UX foundation
 
-```text
-Repeat until 4 km complete:
-  Run 400 m
-  10 Sandbag Squats
-  Run 400 m
-  20 m Bear Crawl
-```
-
-or:
-
-```text
-Every 100 m:
-  choose 1 exercise from pool
-  Level 1 = 5 reps
-  Level 2 = 10 reps
-  Level 3 = harder variation
-```
-
-Triggers:
-
-- every X metres;
-- every X minutes;
-- checkpoint;
-- random station;
-- trainer-selected station.
-
-### OCR-specific formats
-
-- Rig & Run;
-- Obstacle + Run circuit;
-- Grip & Carry;
-- Wall technique;
-- Monkeybar/Rig progression;
-- OCR race simulation;
-- OCR team relay;
-- obstacle skill + conditioning;
-- obstacle efficiency;
-- obstacle transition practice.
+- [x] reusable application shell
+- [x] responsive trainer dashboard
+- [x] reusable training phase card
+- [x] Quick Create route
+- [x] accessible visual body-region selector
+- [x] front/back body selection
+- [x] tablet/desktop-oriented UI foundation
+- [x] touch-friendly controls
+- [ ] active navigation state derived from route
+- [ ] mobile navigation
+- [ ] reusable form field system
+- [ ] toast/feedback system
+- [ ] undo/redo system
+- [ ] trainer presentation/full-screen mode
+- [ ] print view
+- [ ] accessibility audit
 
 ---
 
 ## 9. Quick Create Wizard
 
-The wizard should generate a usable complete draft with minimal typing.
-
-### Step 1 — Group
-
-- saved group or ad-hoc;
-- adults/kids/youth/mixed;
-- age/range;
-- participant count;
-- skill level;
-- OCR experience;
-- mixed-level yes/no.
-
-Kids/youth groups automatically activate additional safeguarding and age-rule validation.
-
-### Step 2 — Duration & location
-
-- total duration;
-- indoor/outdoor;
-- hall/field/forest/track/rig;
-- available space;
-- equipment;
-- obstacles.
-
-### Step 3 — Goal
-
-Multi-select:
-
-- full body;
-- endurance;
-- strength endurance;
-- strength;
-- grip;
-- core;
-- upper/lower body;
-- push/pull/carry;
-- running/speed;
-- agility;
-- balance;
-- coordination;
-- mobility;
-- OCR technique;
-- race preparation;
-- fun/team building.
-
-### Step 4 — Body map
-
-Interactive front/back body diagram:
-
-- click/tap body regions;
-- multi-select;
-- primary/secondary target;
-- avoid region;
-- show recent load;
-- reset/full body.
-
-Selections feed search and AI.
-
-### Step 5 — Format
-
-Allow mixed phase formats, for example:
-
-```text
-Warm-up: Game + Mobility
-Main 1: Technique Stations
-Main 2: Rig & Run
-Finisher: Tabata
-Cooldown: Mobility
-```
-
-Start from recommended, favorite template, recent training or blank.
-
-### Step 6 — Group split
-
-- no split;
-- 2/3/4+ groups;
-- ability groups;
-- same stations with different levels;
-- rotating stations;
-- separate skill/conditioning groups;
-- partner pairs;
-- teams.
-
-System checks station capacity against participant count.
-
-### Step 7 — Intensity & difficulty
-
-- easy/moderate/hard;
-- technique-first/balanced/conditioning-first;
-- low-impact;
-- competition preparation;
-- beginner-safe;
-- child-friendly.
-
-### Step 8 — Generate
-
-Options:
-
-- existing exercises only;
-- allow AI-created draft exercises;
-- prefer favorites;
-- avoid recently used;
-- reuse successful exercises;
-- allow repeated obstacles;
-- create Level 1/2/3 variants.
-
-Generated result opens in the standard editor.
+- [x] target group: kids/youth/adults/mixed
+- [x] age input
+- [x] participant count
+- [x] duration
+- [x] training goals
+- [x] body-region selection
+- [x] format selection
+- [x] intensity orientation
+- [x] mixed-level concept
+- [x] formats: circuit
+- [x] formats: Rig & Run
+- [x] formats: AMRAP
+- [x] formats: EMOM
+- [x] formats: Tabata style
+- [x] formats: Run + Exercise
+- [x] formats: technique
+- [x] formats: relay/team
+- [ ] location selection
+- [ ] available-equipment selection
+- [ ] available-obstacle selection
+- [ ] group split configuration
+- [ ] station capacity planning
+- [ ] “avoid body region” selection
+- [ ] connect wizard to real exercise retrieval
+- [ ] create real `TrainingDraft`
+- [ ] save generated draft
 
 ---
 
-## 10. Fast Training Editor UX
+## 10. Training formats
 
-Desktop/tablet layout:
-
-```text
-┌───────────────────────────────────────────────────────────┐
-│ Session header: group | duration | focus | save | AI      │
-├───────────────┬─────────────────────────┬─────────────────┤
-│ Search/       │ Training timeline       │ Item inspector  │
-│ library       │                         │                 │
-│               │ Warm-up                 │ reps/time       │
-│ Exercises     │ ├─ item                 │ level           │
-│ Templates     │ ├─ item                 │ progression     │
-│ Recent        │                         │ equipment       │
-│ Favorites     │ Main                    │ notes           │
-│               │ ├─ block               │ body regions    │
-│               │ └─ block               │                 │
-│               │ Cooldown                │                 │
-└───────────────┴─────────────────────────┴─────────────────┘
-```
-
-Fast actions:
-
-- drag exercise into phase;
-- quick-add with keyboard;
-- duplicate;
-- replace with similar;
-- easier/harder;
-- alternate equipment;
-- swap obstacle;
-- change reps/time/distance;
-- convert to station;
-- convert block to AMRAP/Tabata/EMOM;
-- split into Level 1/2/3;
-- ask AI to modify selection only.
-
-Session operations:
-
-- duplicate;
-- recreate;
-- combine;
-- save as template;
-- archive/restore;
-- version compare;
-- export/print;
-- shared/QR view later.
-
-Combine workflow can select warm-up from A, main from B, cooldown from C and optionally let AI harmonize duration/duplicates/transitions.
+- [x] format taxonomy defined in product model/plan
+- [x] circuit concept
+- [x] station training concept
+- [x] Tabata-style concept
+- [x] AMRAP concept
+- [x] EMOM concept
+- [x] running + exercise concept
+- [x] Rig & Run concept
+- [x] technique block concept
+- [x] relay/team concept
+- [ ] generic interval-block model
+- [ ] rounds-for-time
+- [ ] rounds-for-quality
+- [ ] ladder/reverse ladder
+- [ ] pyramid
+- [ ] chipper
+- [ ] partner workout
+- [ ] configurable “every X metres/minutes/checkpoint” trigger model
+- [ ] format-specific duration/work-rest validation
 
 ---
 
-## 11. DuckDB data model
+## 11. Training editor
 
-Suggested tables:
+Target: a trainer can build a complete session quickly from the pool and modify only what is necessary.
 
-```text
-users
-roles
-user_roles
-
-club_groups
-group_rules
-
-exercises
-exercise_translations
-exercise_aliases
-exercise_progressions
-exercise_regressions
-exercise_tags
-exercise_body_regions
-exercise_equipment
-exercise_obstacles
-exercise_media
-
-equipment
-obstacles
-body_regions
-movement_patterns
-tags
-
-training_sessions
-training_session_versions
-training_phases
-training_blocks
-training_items
-training_item_levels
-training_item_alternatives
-training_tags
-training_body_regions
-training_equipment
-
-templates
-favorite_items
-recent_usage
-
-media_assets
-media_consents
-
-search_documents_de
-search_documents_en
-search_profiles
-search_profile_weights
-autocomplete_terms
-
-ai_generation_runs
-ai_generation_sources
-
-app_settings
-club_rules
-audit_log
-schema_migrations
-```
-
-Use UUIDs and explicit `created_at`, `updated_at`, `created_by`, `updated_by` fields.
-
-Prefer soft delete/archive for sessions and exercises so historic versions remain reproducible.
+- [x] dashboard example renders typed training data
+- [x] reusable phase visualization
+- [ ] create session
+- [ ] edit session metadata
+- [ ] add/remove phase items
+- [ ] search-and-add exercise
+- [ ] drag/drop reorder
+- [ ] replace with similar exercise
+- [ ] easier/harder action
+- [ ] alternate equipment action
+- [ ] Level 1/2/3 editor
+- [ ] circuit/station editor
+- [ ] duration arithmetic in editor
+- [ ] duplicate session
+- [ ] archive/restore session
+- [ ] combine sessions
+- [ ] recreate session with changed constraints
+- [ ] version history
+- [ ] compare/restore version
+- [ ] save as template
 
 ---
 
-## 12. Search architecture
+## 12. AI Training Builder
 
-Search across:
+Architecture principle: **retrieve first, compose second, validate deterministically, trainer approves**.
 
-- exercises;
-- obstacles;
-- complete trainings;
-- training blocks;
-- templates;
-- tags;
-- equipment;
-- trainer notes when enabled.
-
-### DuckDB FTS
-
-Create language-specific denormalized search-document tables.
-
-German example:
-
-```sql
-PRAGMA create_fts_index(
-  'search_documents_de',
-  'document_id',
-  'title',
-  'aliases',
-  'summary',
-  'tags',
-  'body_regions',
-  'movement_patterns',
-  'equipment',
-  'obstacles',
-  'instructions',
-  stemmer = 'german',
-  stopwords = 'german_stopwords',
-  strip_accents = 1,
-  lower = 1,
-  overwrite = 1
-);
-```
-
-English uses an English stemmer/stopword configuration.
-
-### FTS refresh strategy
-
-DuckDB FTS indexes do not automatically reflect changes to source data. Therefore all mutations go through a managed pipeline:
-
-```text
-CRUD mutation
-  -> transaction commit
-  -> mark search index dirty
-  -> rebuild denormalized search docs if required
-  -> debounce/rebuild FTS
-  -> expose status
-```
-
-Admin states:
-
-- healthy;
-- dirty;
-- rebuilding;
-- failed;
-- last rebuilt at;
-- indexed document count.
-
-Provide a manual **Rebuild Search Index** action.
-
-### Search profiles
-
-Profiles:
-
-- Default;
-- OCR Focus;
-- Kids;
-- Running;
-- Warm-up;
-- Rig;
-- Admin/Everything.
-
-Each profile controls:
-
-- entity types;
-- enabled fields;
-- title/alias/tag/body-region/equipment/obstacle/instruction weights;
-- favorite/recent boosts;
-- exact-match boost;
-- default filters;
-- DE/EN/both;
-- max results;
-- autocomplete sources.
-
-Blend BM25 field scores in the application layer to implement configurable weighting.
-
-### Autocomplete
-
-Combine:
-
-1. exact/prefix names;
-2. aliases;
-3. tags;
-4. obstacles;
-5. equipment;
-6. body regions;
-7. recent exercises;
-8. favorites;
-9. frequent combinations;
-10. existing training blocks.
-
-Maintain `autocomplete_terms` for fast prefix lookup.
+- [ ] provider-neutral AI interface
+- [ ] structured Zod AI schemas
+- [ ] retrieve approved exercises from DuckDB
+- [ ] create complete training
+- [ ] regenerate warm-up only
+- [ ] regenerate main part only
+- [ ] regenerate cooldown only
+- [ ] replace selected exercise only
+- [ ] make easier/harder
+- [ ] adapt duration
+- [ ] adapt participant count
+- [ ] adapt adults ↔ kids/youth
+- [ ] adapt available equipment
+- [ ] increase/decrease running focus
+- [ ] combine selected prior sessions
+- [ ] avoid recently used exercises
+- [ ] create Level 1/2/3
+- [ ] AI-created exercise draft workflow
+- [ ] explicit trainer approval before AI draft enters master pool
+- [ ] store generation source/context for traceability
 
 ---
 
-## 13. Search filters
+## 13. Children & youth / safeguarding
 
-Structured filters alongside FTS:
+- [x] audience and age exist in domain/wizard
+- [x] risk validation foundation
+- [x] project training skill documents safeguarding principles
+- [ ] saved Kids/Youth club profiles
+- [ ] allowed/restricted obstacle rules
+- [ ] supervision rules
+- [ ] age-specific maximum risk rules
+- [ ] media-consent metadata
+- [ ] trainer qualification rules
+- [ ] explicit explanation in UI when an exercise is blocked
+- [ ] AI must be unable to override club restrictions
 
-- phase;
-- age range;
-- group;
-- difficulty;
-- intensity;
-- risk;
-- body region;
-- movement pattern;
-- duration;
-- reps/distance;
-- equipment;
-- obstacle;
-- location;
-- indoor/outdoor;
-- station capacity;
-- training format;
-- child-friendly;
-- low-impact;
-- favorite;
-- recently used/never used;
-- language.
-
-Example query:
-
-```text
-"grip beginner"
-+ Main Part
-+ 12–16 years
-+ Rig
-+ no rope
-+ low/medium risk
-```
+No child names or medical profiles are required for normal group training planning.
 
 ---
 
-## 14. AI Training Builder
+## 14. Groups
 
-### Retrieval-first generation
+- [x] `club_groups` DB foundation
+- [ ] group management UI
+- [ ] saved age ranges
+- [ ] normal participant count
+- [ ] default session duration
+- [ ] available equipment/location defaults
+- [ ] preferred formats
+- [ ] club rules profile
+- [ ] group skill distribution
 
-Do not generate blindly.
+Suggested presets:
 
-```text
-Wizard/Input
-  -> normalize requirements
-  -> search exercise/training pool
-  -> retrieve best exercises/templates
-  -> build AI context
-  -> AI returns TrainingDraft
-  -> deterministic validation
-  -> trainer preview
-  -> save after approval
-```
-
-AI actions:
-
-- create complete training;
-- create only warm-up/main/cooldown;
-- fill missing duration;
-- replace exercise;
-- make easier/harder;
-- more OCR-specific;
-- more running-heavy;
-- lower impact;
-- adults -> kids / kids -> adults;
-- 60 -> 90 minutes;
-- adapt participant count;
-- adapt available equipment;
-- split groups;
-- create Level 1/2/3;
-- combine selected trainings;
-- recreate previous training without repetition;
-- translate DE/EN;
-- draft a new exercise.
-
-### AI-created exercises
-
-AI may only create a draft exercise containing:
-
-- generated badge;
-- description;
-- target body regions;
-- movement pattern;
-- equipment;
-- risk level;
-- regression;
-- progression;
-- safety notes;
-- reason why it fits.
-
-Trainer/admin approval is required before the new exercise becomes reusable master data.
-
-### Deterministic validation
-
-Validate independently of AI:
-
-- total time;
-- phase presence;
-- work/rest arithmetic;
-- rounds;
-- station capacity;
-- participant count;
-- equipment conflicts;
-- body-region targets;
-- age restrictions;
-- risk restrictions;
-- prerequisites;
-- duplicates;
-- missing alternatives;
-- transition/setup time;
-- run-distance totals.
-
-Show warnings instead of silently correcting the plan.
+- [ ] OCR Kids 8–11
+- [ ] OCR Youth 12–15
+- [ ] OCR Beginners
+- [ ] OCR Advanced
+- [ ] OCR Competition
+- [ ] Running Group
+- [ ] Open Club Training
 
 ---
 
-## 15. Body map / muscle visual
+## 15. Admin
 
-Reusable component:
-
-```ts
-type BodyRegionSelection = {
-  regionId: string;
-  side: "front" | "back" | "both";
-  priority: "primary" | "secondary" | "avoid";
-};
-```
-
-Features:
-
-- front/back toggle;
-- touch-friendly anatomical zones;
-- selected-region summary;
-- primary/secondary/avoid state;
-- optional recent-load overlay.
-
-Use in exercise editor, wizard, phase editor, individual items, search and analytics.
-
-The body graphic represents broad training areas, not medical anatomy.
-
----
-
-## 16. Children & youth mode
-
-A group can activate Kids/Youth Mode.
-
-Configuration:
-
-- age range;
-- session length defaults;
-- permitted difficulty;
-- allowed risk levels;
-- restricted obstacles;
-- trainer/supervision rules;
-- game-based warm-up preference;
-- station complexity;
-- contact/partner exercise policy;
-- image/video consent policy.
-
-Rules:
-
-- restricted exercises visibly blocked;
-- AI cannot override group restrictions;
-- trainer sees why an item is restricted;
-- group rules outrank search relevance and AI suggestions.
-
-Do not require personal child profiles for basic planning. Group planning should work without storing children’s names.
+- [ ] admin dashboard
+- [ ] user management
+- [ ] role management
+- [ ] group management
+- [ ] exercise management
+- [ ] obstacle management
+- [ ] media management
+- [ ] training-template management
+- [ ] club-rule management
+- [ ] search-profile management
+- [ ] AI settings
+- [ ] DuckDB status
+- [ ] schema version display
+- [ ] FTS status
+- [ ] rebuild German FTS
+- [ ] rebuild English FTS
+- [ ] backup
+- [ ] restore
+- [ ] import/export
+- [ ] read-only SQL diagnostics for Super Admin
 
 ---
 
-## 17. Group management
+## 16. Media
 
-`club_groups` supports:
+- [ ] media metadata schema
+- [ ] exercise images
+- [ ] exercise galleries
+- [ ] exercise videos
+- [ ] external video links
+- [ ] thumbnails/posters
+- [ ] copyright/source metadata
+- [ ] consent metadata
+- [ ] orphaned-media detection
+- [ ] S3-compatible storage abstraction
 
-- name/type;
-- age range;
-- normal participant count;
-- skill distribution;
-- default duration;
-- usual location;
-- available equipment;
-- preferred formats;
-- restrictions;
-- goals;
-- default language;
-- rules profile.
-
-Examples:
-
-```text
-OCR Kids 8–11
-OCR Youth 12–15
-OCR Beginners
-OCR Advanced
-OCR Competition
-Running Group
-Open Club Training
-```
+Large media must not be stored directly in DuckDB by default.
 
 ---
 
-## 18. User & role management
+## 17. Internationalization
 
-### Super Admin
-
-- system configuration;
-- users/roles;
-- DuckDB administration;
-- migrations;
-- backup/restore;
-- AI provider configuration.
-
-### Club Admin
-
-- users;
-- groups;
-- exercises;
-- obstacles;
-- media;
-- templates;
-- club rules;
-- search profiles.
-
-### Trainer
-
-- create/edit training;
-- exercise drafts;
-- AI generation;
-- media upload when permitted.
-
-### Assistant Trainer
-
-- create drafts;
-- edit assigned sessions;
-- no global rule changes.
-
-### Viewer
-
-- view/print/share approved sessions.
-
-Sensitive changes must be written to `audit_log`.
+- [x] DB model supports `de` and `en`
+- [x] initial exercise catalogue contains DE/EN names/content
+- [x] DE/EN search-document tables
+- [ ] application route/UI localization
+- [ ] German UI dictionary
+- [ ] English UI dictionary
+- [ ] language selector
+- [ ] translation completeness indicator in Admin
 
 ---
 
-## 19. Exercise & media admin
+## 18. Testing & quality gates
 
-Exercise admin:
-
-- table/grid view;
-- bulk tagging;
-- bulk body-region mapping;
-- duplicate detection;
-- translation status;
-- missing media filter;
-- missing regression/progression filter;
-- archive/restore;
-- AI-assisted description/translation drafts;
-- CSV/JSON import/export.
-
-Media manager:
-
-- upload;
-- image crop/thumbnail;
-- video metadata;
-- alt text;
-- exercise assignment;
-- copyright/source;
-- consent status;
-- archive/delete;
-- orphaned-media detection.
+- [x] GitHub Actions CI
+- [x] lint gate
+- [x] typecheck gate
+- [x] unit-test gate
+- [x] production-build gate
+- [x] training-validation unit tests
+- [x] real in-memory DuckDB migration test
+- [x] seed-size validation
+- [x] running-seed coverage validation
+- [x] DE/EN seed translation validation
+- [x] DE/EN search-document validation
+- [x] duplicate seed-key validation
+- [ ] exercise repository integration tests
+- [ ] search ranking tests
+- [ ] CRUD integration tests
+- [ ] Quick Create E2E test
+- [ ] training editor E2E test
+- [ ] Kids/Youth rule E2E test
 
 ---
 
-## 20. DuckDB admin interface
+## 19. Practical analytics
 
-Overview:
+- [ ] exercise usage frequency
+- [ ] underused exercises
+- [ ] body-region coverage
+- [ ] movement-pattern coverage
+- [ ] obstacle exposure
+- [ ] running volume by group
+- [ ] recent repetition warnings
+- [ ] search queries with no result
+- [ ] AI suggestions frequently replaced by trainers
 
-- DB file/location;
-- DuckDB version;
-- tables/views;
-- row counts;
-- file size;
-- last backup/checkpoint;
-- migration version;
-- FTS status;
-- search document counts.
-
-Maintenance:
-
-- rebuild German FTS;
-- rebuild English FTS;
-- rebuild autocomplete;
-- rebuild search documents;
-- export data;
-- create backup;
-- restore backup with confirmation;
-- import seed pack;
-- run migrations;
-- integrity/health checks.
-
-Optional Super Admin query console:
-
-- read-only by default;
-- explicit write unlock;
-- timeout;
-- row limit;
-- audit every execution.
-
-Do not expose arbitrary SQL to normal club admins.
+Do not turn OCRCraft into athlete surveillance.
 
 ---
 
-## 21. Settings
+## 20. Current implementation milestone
 
-### Club settings
+### Completed foundation
 
-- club name/logo;
-- primary/supported languages;
-- phase defaults;
-- duration defaults;
-- intensity scale;
-- age groups;
-- risk levels;
-- equipment;
-- locations;
-- safeguarding rules;
-- media rules.
+- [x] project architecture
+- [x] specialized project skills
+- [x] CI/toolchain
+- [x] training domain + validation
+- [x] DuckDB base schema/migrations
+- [x] Quick Create UI
+- [x] body selector
+- [x] 140+ initial exercise pool
+- [x] 25+ running exercise pool
+- [x] OCR-specific initial pool
+- [x] DE/EN seed content
+- [x] exercise-library read/search/filter UI
+- [x] FTS rebuild service foundation
 
-### Search settings
+### Next implementation slice
 
-- default profile;
-- searchable sources;
-- field weights;
-- favorite/recent boosts;
-- autocomplete sources;
-- result limit;
-- language index settings;
-- custom German stopwords;
-- FTS rebuild behavior.
-
-### AI settings
-
-- provider/model;
-- creativity;
-- max retrieved references;
-- allow new exercise drafts;
-- approved exercise pool only;
-- include previous trainings;
-- repetition avoidance window;
-- store prompts/results yes/no;
-- club-specific generation rules.
+- [ ] Exercise create/edit/archive/restore service
+- [ ] Exercise create/edit UI
+- [ ] mark search documents/index dirty on CRUD changes
+- [ ] BM25 search integration
+- [ ] autocomplete service
+- [ ] search settings/admin status UI
+- [ ] connect Quick Create to exercise retrieval
+- [ ] generate first non-AI deterministic `TrainingDraft`
 
 ---
 
-## 22. Suggested seed content
+## 21. MVP acceptance checklist
 
-The initial system should not feel empty.
-
-Seed:
-
-- body regions;
-- movement patterns;
-- common equipment;
-- OCR obstacles;
-- training formats;
-- warm-up patterns;
-- cooldown/stretching patterns;
-- running drills;
-- functional exercises;
-- OCR progressions/regressions;
-- sample groups;
-- sample templates.
-
-Useful target:
-
-- 150–250 general exercises;
-- 75+ OCR-specific skills/exercises;
-- 30+ running drills;
-- 30+ mobility/cooldown items;
-- 40+ obstacle definitions;
-- 20+ reusable training templates.
-
-All seed data stays editable.
+- [ ] trainer can choose German or English UI
+- [ ] trainer/admin can manage exercises and OCR obstacles
+- [ ] trainer can search exercises and previous trainings quickly
+- [ ] admin can configure search/autocomplete sources
+- [ ] trainer can create a complete Warm-up/Main/Cooldown session manually
+- [x] visual body-region selector exists
+- [x] Quick Create interaction exists
+- [ ] Quick Create produces a real persisted training draft
+- [ ] trainer can split exercises by groups/levels
+- [ ] circuit/Tabata/AMRAP/EMOM/Rig & Run blocks can be persisted and edited
+- [ ] running + exercise rules such as every 100 m can be persisted
+- [ ] Level 1/2/3 progressions can be saved
+- [ ] sessions can be duplicated, combined and recreated
+- [ ] AI can generate/modify a complete training from approved pool
+- [ ] AI can be constrained to approved exercises
+- [ ] AI-created exercises require approval
+- [ ] admin can manage users/groups/exercises/media/settings
+- [ ] admin can inspect/rebuild DuckDB FTS
+- [ ] training history is versioned
+- [ ] group/age/risk restrictions run before save
+- [ ] final training can be printed/displayed clearly in the hall
 
 ---
 
-## 23. Starter templates
+## 22. Reference principles
 
-### OCR Full Body Circuit
+The application is informed by Landessportbund Hessen / Sportjugend Hessen and DOSB themes such as structured session planning, target-group orientation, warm-up, endurance, strength, mobility, coordination, functional movement, relaxation and safeguarding. OCR-specific obstacle/race concepts are modeled separately as club/OCR domain rules rather than presented as universal LSB rules.
 
-```text
-Warm-up
-Movement prep
-6–10 OCR/functional stations
-Short team finisher
-Cooldown
-```
-
-### Rig & Run
-
-```text
-Warm-up
-Grip/shoulder prep
-Run X m
-Rig station
-Run X m
-Carry station
-Run X m
-Wall/crawl station
-Repeat
-Cooldown
-```
-
-### Kids OCR Adventure
-
-```text
-Game warm-up
-Movement skill
-Obstacle story circuit
-Team relay
-Easy mobility/cooldown
-```
-
-### Running + Exercise
-
-```text
-Running warm-up
-Running technique
-Main run
-Exercise every X metres
-Progression levels
-Easy run/walk cooldown
-Mobility
-```
-
-### OCR Technique
-
-```text
-Warm-up
-Grip preparation
-Technique block A
-Technique block B
-Short conditioning application
-Cooldown
-```
-
-### Grip & Carry
-
-```text
-Warm-up
-Grip activation
-Carry circuit
-Hang/traverse circuit
-Run/carry combination
-Forearm/shoulder cooldown
-```
-
----
-
-## 24. Training versioning
-
-Every meaningful save creates a snapshot.
-
-Support:
-
-- version history;
-- compare versions;
-- restore;
-- duplicate old version;
-- recreate with changes.
-
-Example:
-
-```text
-Recreate session from 2026-09-01
-Duration: 75 -> 90 min
-Participants: 14 -> 26
-Avoid: Monkey Bars
-Focus: more running
-Keep warm-up, regenerate main part
-```
-
----
-
-## 25. Practical analytics
-
-Examples:
-
-- most/least used exercises;
-- training format frequency;
-- body-region coverage;
-- movement-pattern coverage;
-- obstacle exposure;
-- running volume by group;
-- recent repetition;
-- average session duration;
-- favorite templates;
-- search terms with no results;
-- AI suggestions frequently replaced by trainers.
-
-Do not turn the application into athlete surveillance.
-
----
-
-## 26. Application services
-
-```text
-TrainingService
-ExerciseService
-ObstacleService
-GroupService
-MediaService
-SearchService
-AutocompleteService
-TrainingGenerationService
-TrainingValidationService
-SearchIndexService
-AdminDatabaseService
-AuditService
-LocalizationService
-```
-
-Example operations:
-
-```ts
-training.create()
-training.update()
-training.delete()
-training.restore()
-training.clone()
-training.combine()
-training.recreate()
-training.saveAsTemplate()
-training.regeneratePhase()
-
-exercise.create()
-exercise.update()
-exercise.archive()
-exercise.restore()
-exercise.findSimilar()
-
-search.query()
-search.autocomplete()
-search.rebuild()
-
-ai.generateTraining()
-ai.regenerateSelection()
-ai.createExerciseDraft()
-```
-
----
-
-## 27. Proposed project structure
-
-```text
-src/
-├─ app/
-│  ├─ [locale]/
-│  │  ├─ dashboard/
-│  │  ├─ training/
-│  │  ├─ exercises/
-│  │  ├─ obstacles/
-│  │  ├─ quick-create/
-│  │  ├─ groups/
-│  │  ├─ media/
-│  │  ├─ settings/
-│  │  └─ admin/
-│  └─ api/
-├─ components/
-│  ├─ training/
-│  ├─ exercises/
-│  ├─ search/
-│  ├─ body-map/
-│  ├─ media/
-│  └─ ui/
-├─ domain/
-│  ├─ training/
-│  ├─ exercise/
-│  ├─ obstacle/
-│  ├─ group/
-│  └─ rules/
-├─ server/
-│  ├─ db/
-│  │  ├─ duckdb.ts
-│  │  ├─ migrations/
-│  │  ├─ repositories/
-│  │  └─ seed/
-│  ├─ search/
-│  ├─ ai/
-│  ├─ auth/
-│  ├─ media/
-│  └─ services/
-├─ schemas/
-├─ i18n/
-│  ├─ de.json
-│  └─ en.json
-└─ tests/
-```
-
----
-
-## 28. Validation examples
-
-### Session duration
-
-```text
-warm-up + main + transitions + cooldown = total planned duration
-```
-
-Warn when the sum exceeds available time.
-
-### Circuit capacity
-
-```text
-participants = 28
-stations = 7
-capacity/station = 4
-=> valid
-```
-
-### Equipment collision
-
-```text
-Station 1 requires 4 kettlebells
-Station 4 requires 4 kettlebells
-Club owns 4
-Both run simultaneously
-=> conflict
-```
-
-### Age/risk rule
-
-```text
-Group: OCR Kids 8–11
-Obstacle: advanced high wall
-Risk rule: restricted
-=> block or require an authorized alternative
-```
-
----
-
-## 29. Accessibility & UX
-
-- tablet-friendly touch targets;
-- keyboard operation;
-- no color-only meaning;
-- icons plus labels;
-- high contrast;
-- printable session view;
-- large-text trainer mode;
-- full-screen run-session mode;
-- timer integration later;
-- avoid excessive modals;
-- autosave drafts;
-- undo/redo.
-
-A trainer should create most sessions without entering Admin or advanced settings.
-
----
-
-## 30. Security, privacy & safeguarding
-
-- role-based access;
-- password/SSO-ready auth abstraction;
-- secure media upload validation;
-- audit trail;
-- no medical data by default;
-- data minimization;
-- children’s names not required for group planning;
-- media consent metadata;
-- private media protection;
-- CSRF/session protection;
-- server-side authorization for all mutations;
-- sanitized rich text;
-- validated AI output.
-
-Safeguarding rules must exist as data and validation logic, not merely documentation.
-
----
-
-## 31. Testing strategy
-
-### Unit
-
-- duration calculations;
-- station capacity;
-- equipment conflicts;
-- group rules;
-- progressions/regressions;
-- AI schema validation;
-- search ranking;
-- filter composition.
-
-### Integration
-
-- DuckDB CRUD;
-- migrations;
-- FTS build/rebuild;
-- DE/EN search;
-- search settings;
-- version restore;
-- combine/recreate.
-
-### E2E
-
-- Quick Create -> generated training -> edit -> save;
-- manual training creation;
-- combine sessions;
-- recreate previous session;
-- kids validation;
-- media upload;
-- admin search reindex.
-
----
-
-## 32. Implementation roadmap
-
-### Phase A — Foundation
-
-- project shell;
-- localization DE/EN;
-- auth/RBAC;
-- DuckDB repository;
-- migrations;
-- layout;
-- audit logging.
-
-### Phase B — Exercise/Obstacle Library
-
-- exercise CRUD;
-- obstacles;
-- body regions;
-- equipment;
-- progressions/regressions;
-- media;
-- seed data.
-
-### Phase C — Search & Autocomplete
-
-- German/English search documents;
-- DuckDB FTS;
-- profiles;
-- filters;
-- autocomplete;
-- admin rebuild/status.
-
-### Phase D — Training Editor
-
-- session CRUD;
-- phases;
-- blocks/items;
-- drag/drop;
-- duration math;
-- versioning;
-- clone/archive/restore;
-- templates.
-
-### Phase E — Quick Create Wizard
-
-- group/age;
-- duration;
-- focus;
-- body map;
-- format;
-- equipment;
-- group split;
-- intensity;
-- draft composition.
-
-### Phase F — AI Builder
-
-- retrieval;
-- structured generation;
-- validation;
-- regenerate selection;
-- combine/recreate;
-- draft exercise generation.
-
-### Phase G — Admin
-
-- users/roles;
-- groups;
-- exercises/media;
-- search settings;
-- AI settings;
-- DuckDB operations;
-- backups/import/export.
-
-### Phase H — Trainer polish
-
-- print view;
-- trainer/full-screen mode;
-- favorites/recent;
-- analytics;
-- tablet optimization;
-- optional PWA/offline cache.
-
----
-
-## 33. MVP acceptance criteria
-
-The MVP is successful when a trainer can:
-
-1. choose German or English;
-2. manage exercises and OCR obstacles;
-3. search exercises and previous trainings quickly;
-4. configure search/autocomplete sources;
-5. build a Warm-up/Main/Cooldown session manually;
-6. use the body-region selector;
-7. create sessions through the wizard;
-8. split exercises by groups/levels;
-9. build circuit, Tabata, AMRAP, EMOM, running and Rig & Run formats;
-10. create run + exercise patterns such as “every 100 m”;
-11. save Level 1/2/3 progressions;
-12. duplicate, combine and recreate previous sessions;
-13. let AI generate or modify a full session;
-14. constrain AI to the approved exercise pool;
-15. approve AI-created exercises before reusable publication;
-16. manage users, groups, exercises, images/videos and settings;
-17. inspect/rebuild DuckDB FTS from Admin;
-18. preserve training history through versioning;
-19. apply group/age/risk restrictions before save;
-20. print/display the final session clearly for hall use.
-
----
-
-## 34. Recommended first vertical slice
-
-```text
-1. DuckDB + migrations
-2. Exercise CRUD
-3. Body region mapping
-4. German FTS
-5. Training CRUD with 3 phases
-6. Search-and-add exercise
-7. Circuit block
-8. One saved club group
-9. Quick Create basic wizard
-10. AI generate from approved exercises
-```
-
-This validates the architecture early without implementing every training format first.
-
----
-
-## 35. Design decisions to keep
-
-### Isolate DuckDB FTS
-
-Search indexing is a dedicated service with explicit refresh/rebuild handling.
-
-### Keep structured metadata alongside full-text search
-
-Age, risk, body region, equipment, capacity, phase and format remain structured fields rather than generic tags.
-
-### AI is a composer, not the database
-
-The exercise/training pool is authoritative. AI retrieves, composes and proposes; deterministic rules validate.
-
-### Make replace easier than rewrite
-
-Useful live planning actions are often:
-
-- replace this;
-- easier;
-- harder;
-- less equipment;
-- more running;
-- keep everything else.
-
-### Separate trainer workflow from administration
-
-Training creation stays fast. Complex configuration belongs under Admin/Settings.
-
----
-
-## 36. Reference sources
-
-Keep these as external references rather than copied content:
-
-- Landessportbund Hessen — Ausbildungsangebote und Lizenzerwerb  
-  https://www.landessportbund-hessen.de/geschaeftsfelder/schule-bildung-und-personalentwicklung/ausbildungsangebote-und-lizenzerwerb/
-
-- Sportjugend Hessen — Materialien zu Kindeswohl-Maßnahmen  
-  https://www.sportjugend-hessen.de/kindeswohl/materialien
-
-- DOSB — Schutzkonzepte im Sport  
-  https://www.dosb.de/wissen/detail/schutzkonzepte-im-sport
-
-- DuckDB — Full-Text Search Extension  
-  https://duckdb.org/docs/lts/core_extensions/full_text_search
-
-- DuckDB — Node.js Client (Neo)  
-  https://duckdb.org/docs/current/clients/node_neo/overview
-
----
-
-## 37. Next development artifacts
-
-After this plan:
-
-```text
-/docs/domain-model.md
-/docs/search-design.md
-/docs/ai-training-schema.md
-/docs/ui-flows.md
-/src/server/db/migrations/001_initial.sql
-/src/server/db/seed/
-```
-
-Implementation should begin with the vertical slice in section 34 rather than attempting every feature simultaneously.
+Primary external references remain listed in the project documentation and should be reviewed when rule-driven features are implemented.
