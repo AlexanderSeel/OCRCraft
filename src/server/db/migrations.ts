@@ -11,6 +11,8 @@ interface Migration {
 
 const migrations: readonly Migration[] = [
   { version: 1, fileName: "001_initial.sql" },
+  { version: 2, fileName: "002_exercise_catalog.sql" },
+  { version: 3, fileName: "003_seed_exercise_catalog.sql" },
 ];
 
 async function getAppliedVersions(): Promise<Set<number>> {
@@ -27,9 +29,7 @@ async function getAppliedVersions(): Promise<Set<number>> {
       "SELECT version FROM schema_migrations ORDER BY version",
     );
 
-    return new Set(
-      reader.getRows().map(([version]) => Number(version)),
-    );
+    return new Set(reader.getRows().map(([version]) => Number(version)));
   });
 }
 
@@ -38,9 +38,7 @@ export async function applyPendingMigrations(): Promise<readonly number[]> {
   const newlyApplied: number[] = [];
 
   for (const migration of migrations) {
-    if (appliedVersions.has(migration.version)) {
-      continue;
-    }
+    if (appliedVersions.has(migration.version)) continue;
 
     const migrationPath = path.join(
       process.cwd(),
