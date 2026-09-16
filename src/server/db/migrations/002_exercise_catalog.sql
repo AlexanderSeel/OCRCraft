@@ -1,10 +1,12 @@
 BEGIN TRANSACTION;
 
 ALTER TABLE exercises ADD COLUMN IF NOT EXISTS seed_key VARCHAR;
-ALTER TABLE exercises ADD COLUMN IF NOT EXISTS category VARCHAR NOT NULL DEFAULT 'general';
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS category VARCHAR;
 ALTER TABLE exercises ADD COLUMN IF NOT EXISTS default_phase VARCHAR;
 ALTER TABLE exercises ADD COLUMN IF NOT EXISTS default_duration_seconds INTEGER;
 ALTER TABLE equipment ADD COLUMN IF NOT EXISTS seed_key VARCHAR;
+
+UPDATE exercises SET category = 'general' WHERE category IS NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS exercises_seed_key_idx ON exercises(seed_key);
 CREATE UNIQUE INDEX IF NOT EXISTS equipment_seed_key_idx ON equipment(seed_key);
