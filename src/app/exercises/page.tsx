@@ -1,4 +1,9 @@
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import {
+  exerciseCategoryLabels,
+  type ExerciseCategory,
+} from "@/domain/exercise/model";
 import {
   getExerciseCategoryCounts,
   listExercises,
@@ -6,30 +11,22 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const categoryLabels: Record<string, string> = {
-  warmup: "Aufwärmen",
-  mobility: "Mobilität",
-  strength: "Kraft",
-  core: "Core",
-  running: "Laufen",
-  "grip-rig": "Grip & Rig",
-  "carry-lift": "Carries & Lifts",
-  "ocr-skill": "OCR Skills",
-  "balance-agility": "Balance & Agilität",
-  throw: "Werfen",
-  cooldown: "Cooldown",
-};
-
 interface PageProps {
-  readonly searchParams: Promise<{ q?: string; category?: string }>;
+  readonly searchParams: Promise<{
+    q?: string;
+    category?: string;
+    status?: string;
+  }>;
 }
 
 export default async function ExercisesPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
   const category = params.category?.trim() || undefined;
+  const archived = params.status === "archived";
+
   const [exercises, categoryCounts] = await Promise.all([
-    listExercises({ query, category }),
+    listExercises({ query, category, archived }),
     getExerciseCategoryCounts(),
   ]);
   const total = categoryCounts.reduce((sum, item) => sum + item.count, 0);
@@ -38,16 +35,27 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   return (
     <AppShell
       title="Übungsbibliothek"
-      subtitle="Initialkatalog für Breitensport, OCR und Laufen – suchbar und später vollständig administrierbar."
+      subtitle="Breitensport, OCR und Laufen – vorbefüllt, suchbar und direkt administrierbar."
+      actions={
+        <Link
+          className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--dark)]"
+          href="/exercises/new"
+        >
+          + Neue Übung
+        </Link>
+      }
     >
       <div className="space-y-6">
         <section className="grid gap-3 sm:grid-cols-3">
-          <Metric label="Übungen gesamt" value={total} />
+          <Metric label="Aktive Übungen" value={total} />
           <Metric label="Laufübungen" value={runningCount} />
           <Metric label="Kategorien" value={categoryCounts.length} />
         </section>
 
-        <form className="grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-4 sm:grid-cols-[1fr_240px_auto]" method="get">
+        <form
+          className="grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-4 lg:grid-cols-[1fr_220px_180px_auto]"
+          method="get"
+        >
           <label className="grid gap-1 text-sm font-bold">
             Suchen
             <input
@@ -67,23 +75,53 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
               <option value="">Alle Bereiche</option>
               {categoryCounts.map((item) => (
                 <option key={item.category} value={item.category}>
-                  {categoryLabels[item.category] ?? item.category} ({item.count})
+                  {categoryLabel(item.category)} ({item.count})
                 </option>
               ))}
             </select>
           </label>
-          <button className="self-end rounded-xl bg-[var(--dark)] px-5 py-3 text-sm font-black text-white" type="submit">
+          <label className="grid gap-1 text-sm font-bold">
+            Status
+            <select
+              className="h-11 rounded-xl border border-[var(--border)] bg-white px-3 font-normal"
+              defaultValue={archived ? "archived" : "active"}
+              name="status"
+            >
+              <option value="active">Aktiv</option>
+              <option value="archived">Archiviert</option>
+            </select>
+          </label>
+          <button
+            className="self-end rounded-xl bg-[var(--dark)] px-5 py-3 text-sm font-black text-white"
+            type="submit"
+          >
             Filtern
           </button>
         </form>
 
+        <div className="flex items-center justify-between gap-3 text-sm text-[var(--muted)]">
+          <span>{exercises.length} Treffer in der aktuellen Ansicht</span>
+          {archived ? (
+            <Link className="font-bold text-[var(--foreground)]" href="/exercises">
+              Aktive Übungen anzeigen
+            </Link>
+          ) : (
+            <Link className="font-bold text-[var(--foreground)]" href="/exercises?status=archived">
+              Archiv anzeigen
+            </Link>
+          )}
+        </div>
+
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {exercises.map((exercise) => (
-            <article className="rounded-2xl border border-[var(--border)] bg-white p-5" key={exercise.id}>
+            <article
+              className="flex min-h-64 flex-col rounded-2xl border border-[var(--border)] bg-white p-5"
+              key={exercise.id}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-                    {categoryLabels[exercise.category] ?? exercise.category}
+                    {categoryLabel(exercise.category)}
                   </div>
                   <h2 className="mt-1 text-lg font-black">{exercise.name}</h2>
                 </div>
@@ -91,13 +129,38 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                   {exercise.riskLevel}
                 </span>
               </div>
-              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{exercise.summary}</p>
+              <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
+                {exercise.summary || "Noch keine Kurzbeschreibung hinterlegt."}
+              </p>
               <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
-                {exercise.phase ? <span className="rounded-full border border-[var(--border)] px-2.5 py-1">{exercise.phase}</span> : null}
-                {exercise.minAge ? <span className="rounded-full border border-[var(--border)] px-2.5 py-1">ab {exercise.minAge}</span> : null}
+                {exercise.phase ? (
+                  <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
+                    {exercise.phase}
+                  </span>
+                ) : null}
+                {exercise.minAge ? (
+                  <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
+                    ab {exercise.minAge}
+                  </span>
+                ) : null}
+                {exercise.seedKey ? (
+                  <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
+                    Initialkatalog
+                  </span>
+                ) : null}
                 {exercise.equipment.slice(0, 3).map((item) => (
-                  <span className="rounded-full border border-[var(--border)] px-2.5 py-1" key={item}>{item}</span>
+                  <span className="rounded-full border border-[var(--border)] px-2.5 py-1" key={item}>
+                    {item}
+                  </span>
                 ))}
+              </div>
+              <div className="mt-auto pt-5">
+                <Link
+                  className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] px-4 text-sm font-black hover:bg-[var(--surface-subtle)]"
+                  href={`/exercises/${exercise.id}/edit`}
+                >
+                  {archived ? "Ansehen / Wiederherstellen" : "Bearbeiten"}
+                </Link>
               </div>
             </article>
           ))}
@@ -111,6 +174,10 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       </div>
     </AppShell>
   );
+}
+
+function categoryLabel(category: string): string {
+  return exerciseCategoryLabels[category as ExerciseCategory] ?? category;
 }
 
 function Metric({ label, value }: { readonly label: string; readonly value: number }) {
