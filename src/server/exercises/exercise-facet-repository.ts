@@ -41,7 +41,7 @@ export interface ExerciseFacetEditorData {
   readonly selected: ExerciseFacetSelection;
 }
 
-export interface UpdateExerciseFacetsInput extends ExerciseFacetSelection {}
+export type UpdateExerciseFacetsInput = ExerciseFacetSelection;
 
 function rowsToOptions(rows: readonly (readonly unknown[])[]): readonly ExerciseFacetOption[] {
   return rows.map((row) => ({
@@ -57,16 +57,34 @@ export async function getExerciseFacetEditorData(
   await ensureDatabaseReady();
 
   return withDuckDbConnection(async (connection) => {
-    const [bodyReader, movementReader, tagReader, equipmentReader, selectedBodyReader, selectedMovementReader, selectedTagReader, selectedEquipmentReader] = await Promise.all([
-      connection.runAndReadAll("SELECT id,label_de,label_en FROM body_regions ORDER BY label_de"),
-      connection.runAndReadAll("SELECT id,label_de,label_en FROM movement_patterns ORDER BY label_de"),
-      connection.runAndReadAll("SELECT id,label_de,label_en FROM tags ORDER BY label_de"),
-      connection.runAndReadAll("SELECT id::VARCHAR,name_de,COALESCE(name_en,name_de),quantity_available FROM equipment WHERE archived=false ORDER BY name_de"),
-      connection.runAndReadAll("SELECT body_region_id,emphasis FROM exercise_body_regions WHERE exercise_id=$exerciseId::UUID ORDER BY body_region_id", { exerciseId }),
-      connection.runAndReadAll("SELECT movement_pattern_id FROM exercise_movement_patterns WHERE exercise_id=$exerciseId::UUID ORDER BY movement_pattern_id", { exerciseId }),
-      connection.runAndReadAll("SELECT tag_id FROM exercise_tags WHERE exercise_id=$exerciseId::UUID ORDER BY tag_id", { exerciseId }),
-      connection.runAndReadAll("SELECT equipment_id::VARCHAR,quantity_required FROM exercise_equipment WHERE exercise_id=$exerciseId::UUID ORDER BY equipment_id", { exerciseId }),
-    ]);
+    const bodyReader = await connection.runAndReadAll(
+      "SELECT id,label_de,label_en FROM body_regions ORDER BY label_de",
+    );
+    const movementReader = await connection.runAndReadAll(
+      "SELECT id,label_de,label_en FROM movement_patterns ORDER BY label_de",
+    );
+    const tagReader = await connection.runAndReadAll(
+      "SELECT id,label_de,label_en FROM tags ORDER BY label_de",
+    );
+    const equipmentReader = await connection.runAndReadAll(
+      "SELECT id::VARCHAR,name_de,COALESCE(name_en,name_de),quantity_available FROM equipment WHERE archived=false ORDER BY name_de",
+    );
+    const selectedBodyReader = await connection.runAndReadAll(
+      "SELECT body_region_id,emphasis FROM exercise_body_regions WHERE exercise_id=$exerciseId::UUID ORDER BY body_region_id",
+      { exerciseId },
+    );
+    const selectedMovementReader = await connection.runAndReadAll(
+      "SELECT movement_pattern_id FROM exercise_movement_patterns WHERE exercise_id=$exerciseId::UUID ORDER BY movement_pattern_id",
+      { exerciseId },
+    );
+    const selectedTagReader = await connection.runAndReadAll(
+      "SELECT tag_id FROM exercise_tags WHERE exercise_id=$exerciseId::UUID ORDER BY tag_id",
+      { exerciseId },
+    );
+    const selectedEquipmentReader = await connection.runAndReadAll(
+      "SELECT equipment_id::VARCHAR,quantity_required FROM exercise_equipment WHERE exercise_id=$exerciseId::UUID ORDER BY equipment_id",
+      { exerciseId },
+    );
 
     return {
       bodyRegions: rowsToOptions(bodyReader.getRows()),
@@ -107,12 +125,26 @@ export async function updateExerciseFacets(
         "SELECT id::VARCHAR FROM exercises WHERE id=$exerciseId::UUID",
         { exerciseId },
       );
-      if (exerciseReader.getRows().length === 0) throw new Error("Übung wurde nicht gefunden.");
+      if (exerciseReader.getRows().length === 0) {
+        throw new Error("Übung wurde nicht gefunden.");
+      }
 
-      await connection.run("DELETE FROM exercise_body_regions WHERE exercise_id=$exerciseId::UUID", { exerciseId });
-      await connection.run("DELETE FROM exercise_movement_patterns WHERE exercise_id=$exerciseId::UUID", { exerciseId });
-      await connection.run("DELETE FROM exercise_tags WHERE exercise_id=$exerciseId::UUID", { exerciseId });
-      await connection.run("DELETE FROM exercise_equipment WHERE exercise_id=$exerciseId::UUID", { exerciseId });
+      await connection.run(
+        "DELETE FROM exercise_body_regions WHERE exercise_id=$exerciseId::UUID",
+        { exerciseId },
+      );
+      await connection.run(
+        "DELETE FROM exercise_movement_patterns WHERE exercise_id=$exerciseId::UUID",
+        { exerciseId },
+      );
+      await connection.run(
+        "DELETE FROM exercise_tags WHERE exercise_id=$exerciseId::UUID",
+        { exerciseId },
+      );
+      await connection.run(
+        "DELETE FROM exercise_equipment WHERE exercise_id=$exerciseId::UUID",
+        { exerciseId },
+      );
 
       for (const bodyRegion of input.bodyRegions) {
         await connection.run(
