@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { QuickCreateWizard } from "@/components/training/quick-create-wizard";
+import { listClubGroups } from "@/server/groups/group-repository";
 import { listTrainingEquipmentOptions } from "@/server/training/training-draft-repository";
 
 export const dynamic = "force-dynamic";
 
 export default async function QuickCreatePage() {
-  const equipmentOptions = await listTrainingEquipmentOptions();
+  const [equipmentOptions, groups] = await Promise.all([
+    listTrainingEquipmentOptions(),
+    listClubGroups(false),
+  ]);
 
   return (
     <AppShell
@@ -21,7 +25,18 @@ export default async function QuickCreatePage() {
         </Link>
       }
     >
-      <QuickCreateWizard equipmentOptions={equipmentOptions} />
+      <QuickCreateWizard
+        equipmentOptions={equipmentOptions}
+        groupPresets={groups.map((group) => ({
+          id: group.id,
+          name: group.name,
+          audience: group.audience,
+          minAge: group.minAge,
+          maxAge: group.maxAge,
+          participantCount: group.defaultParticipantCount,
+          durationMinutes: group.defaultDurationMinutes,
+        }))}
+      />
     </AppShell>
   );
 }
