@@ -1,7 +1,15 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
+import type {
+  ExerciseCategory,
+  ExerciseDraft,
+  ExercisePhase,
+  ExerciseRiskLevel,
+} from "@/domain/exercise/model";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
+import type { DuckDBConnection } from "@duckdb/node-api";
 
 export interface ExerciseListItem {
   readonly id: string;
@@ -10,9 +18,26 @@ export interface ExerciseListItem {
   readonly summary: string;
   readonly category: string;
   readonly phase: string | null;
-  readonly riskLevel: "low" | "medium" | "high";
+  readonly riskLevel: ExerciseRiskLevel;
   readonly minAge: number | null;
+  readonly archived: boolean;
   readonly equipment: readonly string[];
+}
+
+export interface ExerciseEditorRecord {
+  readonly id: string;
+  readonly seedKey: string | null;
+  readonly nameDe: string;
+  readonly nameEn: string;
+  readonly summaryDe: string;
+  readonly summaryEn: string;
+  readonly aliasesDe: readonly string[];
+  readonly aliasesEn: readonly string[];
+  readonly category: ExerciseCategory;
+  readonly phase: ExercisePhase;
+  readonly riskLevel: ExerciseRiskLevel;
+  readonly minAge: number | null;
+  readonly archived: boolean;
 }
 
 export interface ExerciseCategoryCount {
@@ -24,13 +49,247 @@ interface ListExercisesOptions {
   readonly query?: string;
   readonly category?: string;
   readonly locale?: "de" | "en";
+  readonly archived?: boolean;
   readonly limit?: number;
+}
+
+async function refreshSearchDocument(
+  connection: DuckDBConnection,
+  exerciseId: string,
+  locale: "de" | "en",
+): Promise<void> {
+  const table = locale === "de" ? "search_documents_de" : "search_documents_en";
+  const equipmentName = locale === "de" ? "eq.name_de" : "COALESCE(eq.name_en, eq.name_de)";
+
+  await connection.run(`DELETE FROM ${table} WHERE document_id = $documentId`, {
+    documentId: `exercise:${exerciseId}`,
+  });
+
+  await connection.run(
+    `
+    INSERT INTO ${table} (
+      document_id, entity_type, entity_id, title, aliases, summary,
+      tags, body_regions, equipment, instructions
+    )
+    SELECT
+      'exercise:' || e.id::VARCHAR,
+      'exercise',
+      e.id::VARCHAR,
+      t.name,
+      COALESCE((
+        SELECT string_agg(a.alias, ' ')
+        FROM exercise_aliases a
+        WHERE a.exercise_id = e.id AND a.locale = $locale
+      ), ''),
+      COALESCE(t.summary, ''),
+      COALESCE(e.category, 'general') || ' ' || COALESCE((
+        SELECT string_agg(et.tag_id, ' ')
+        FROM exercise_tags et
+        WHERE et.exercise_id = e.id
+      ), ''),
+      COALESCE((
+        SELECT string_agg(ebr.body_region_id, ' ')
+        FROM exercise_body_regions ebr
+        WHERE ebr.exercise_id = e.id
+      ), ''),
+      COALESCE((
+        SELECT string_agg(${equipmentName}, ' ')
+        FROM exercise_equipment ee
+        JOIN equipment eq ON eq.id = ee.equipment_id
+        WHERE ee.exercise_id = e.id
+      ), ''),
+      COALESCE(t.instructions, '')
+    FROM exercises e
+    JOIN exercise_translations t ON t.exercise_id = e.id AND t.locale = $locale
+    WHERE e.id = $exerciseId::UUID AND e.archived = false
+    `,
+    { locale, exerciseId },
+  );
+}
+
+async function markSearchDirty(connection: DuckDBConnection): Promise<void> {
+  await connection.run(
+    "UPDATE search_index_state SET status='dirty', last_error=NULL WHERE locale IN ('de','en')",
+  );
+}
+
+async function writeAliases(
+  connection: DuckDBConnection,
+  exerciseId: string,
+  locale: "de" | "en",
+  aliases: readonly string[],
+): Promise<void> {
+  await connection.run(
+    "DELETE FROM exercise_aliases WHERE exercise_id=$exerciseId::UUID AND locale=$locale",
+    { exerciseId, locale },
+  );
+
+  for (const alias of aliases) {
+    await connection.run(
+      "INSERT OR IGNORE INTO exercise_aliases (exercise_id, locale, alias) VALUES ($exerciseId::UUID, $locale, $alias)",
+      { exerciseId, locale, alias },
+    );
+  }
+}
+
+async function writeTranslations(
+  connection: DuckDBConnection,
+  exerciseId: string,
+  draft: ExerciseDraft,
+): Promise<void> {
+  await connection.run(
+    `INSERT OR REPLACE INTO exercise_translations
+      (exercise_id, locale, name, summary)
+     VALUES ($exerciseId::UUID, 'de', $name, $summary)`,
+    { exerciseId, name: draft.nameDe, summary: draft.summaryDe },
+  );
+  await connection.run(
+    `INSERT OR REPLACE INTO exercise_translations
+      (exercise_id, locale, name, summary)
+     VALUES ($exerciseId::UUID, 'en', $name, $summary)`,
+    { exerciseId, name: draft.nameEn, summary: draft.summaryEn },
+  );
+}
+
+async function updateSearchDocuments(
+  connection: DuckDBConnection,
+  exerciseId: string,
+): Promise<void> {
+  await refreshSearchDocument(connection, exerciseId, "de");
+  await refreshSearchDocument(connection, exerciseId, "en");
+  await markSearchDirty(connection);
+}
+
+export async function createExercise(draft: ExerciseDraft): Promise<string> {
+  await ensureDatabaseReady();
+  const id = randomUUID();
+
+  await withDuckDbConnection(async (connection) => {
+    await connection.run("BEGIN TRANSACTION");
+    try {
+      await connection.run(
+        `INSERT INTO exercises
+          (id, canonical_name, category, default_phase, risk_level, min_age, indoor, outdoor)
+         VALUES ($id::UUID, $canonicalName, $category, $phase, $riskLevel, $minAge, true, true)`,
+        {
+          id,
+          canonicalName: draft.nameEn || draft.nameDe,
+          category: draft.category,
+          phase: draft.phase,
+          riskLevel: draft.riskLevel,
+          minAge: draft.minAge,
+        },
+      );
+      await writeTranslations(connection, id, draft);
+      await writeAliases(connection, id, "de", draft.aliasesDe);
+      await writeAliases(connection, id, "en", draft.aliasesEn);
+      await updateSearchDocuments(connection, id);
+      await connection.run("COMMIT");
+    } catch (error) {
+      await connection.run("ROLLBACK");
+      throw error;
+    }
+  });
+
+  return id;
+}
+
+export async function updateExercise(id: string, draft: ExerciseDraft): Promise<void> {
+  await ensureDatabaseReady();
+  await withDuckDbConnection(async (connection) => {
+    await connection.run("BEGIN TRANSACTION");
+    try {
+      await connection.run(
+        `UPDATE exercises SET
+          canonical_name=$canonicalName,
+          category=$category,
+          default_phase=$phase,
+          risk_level=$riskLevel,
+          min_age=$minAge,
+          updated_at=current_timestamp
+         WHERE id=$id::UUID`,
+        {
+          id,
+          canonicalName: draft.nameEn || draft.nameDe,
+          category: draft.category,
+          phase: draft.phase,
+          riskLevel: draft.riskLevel,
+          minAge: draft.minAge,
+        },
+      );
+      await writeTranslations(connection, id, draft);
+      await writeAliases(connection, id, "de", draft.aliasesDe);
+      await writeAliases(connection, id, "en", draft.aliasesEn);
+      await updateSearchDocuments(connection, id);
+      await connection.run("COMMIT");
+    } catch (error) {
+      await connection.run("ROLLBACK");
+      throw error;
+    }
+  });
+}
+
+export async function setExerciseArchived(id: string, archived: boolean): Promise<void> {
+  await ensureDatabaseReady();
+  await withDuckDbConnection(async (connection) => {
+    await connection.run("BEGIN TRANSACTION");
+    try {
+      await connection.run(
+        "UPDATE exercises SET archived=$archived, updated_at=current_timestamp WHERE id=$id::UUID",
+        { id, archived },
+      );
+      await updateSearchDocuments(connection, id);
+      await connection.run("COMMIT");
+    } catch (error) {
+      await connection.run("ROLLBACK");
+      throw error;
+    }
+  });
+}
+
+export async function getExerciseById(id: string): Promise<ExerciseEditorRecord | null> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `
+      SELECT
+        e.id::VARCHAR, e.seed_key, e.category, e.default_phase, e.risk_level, e.min_age, e.archived,
+        de.name, COALESCE(de.summary, ''), en.name, COALESCE(en.summary, ''),
+        COALESCE((SELECT string_agg(a.alias, ' | ') FROM exercise_aliases a WHERE a.exercise_id=e.id AND a.locale='de'), ''),
+        COALESCE((SELECT string_agg(a.alias, ' | ') FROM exercise_aliases a WHERE a.exercise_id=e.id AND a.locale='en'), '')
+      FROM exercises e
+      JOIN exercise_translations de ON de.exercise_id=e.id AND de.locale='de'
+      JOIN exercise_translations en ON en.exercise_id=e.id AND en.locale='en'
+      WHERE e.id=$id::UUID
+      `,
+      { id },
+    );
+    const row = reader.getRows()[0];
+    if (!row) return null;
+
+    return {
+      id: String(row[0]),
+      seedKey: row[1] == null ? null : String(row[1]),
+      category: String(row[2] ?? "general") as ExerciseCategory,
+      phase: String(row[3] ?? "main") as ExercisePhase,
+      riskLevel: String(row[4]) as ExerciseRiskLevel,
+      minAge: row[5] == null ? null : Number(row[5]),
+      archived: Boolean(row[6]),
+      nameDe: String(row[7]),
+      summaryDe: String(row[8]),
+      nameEn: String(row[9]),
+      summaryEn: String(row[10]),
+      aliasesDe: String(row[11] ?? "").split(" | ").filter(Boolean),
+      aliasesEn: String(row[12] ?? "").split(" | ").filter(Boolean),
+    };
+  });
 }
 
 export async function listExercises({
   query = "",
   category,
   locale = "de",
+  archived = false,
   limit = 80,
 }: ListExercisesOptions = {}): Promise<readonly ExerciseListItem[]> {
   await ensureDatabaseReady();
@@ -43,10 +302,11 @@ export async function listExercises({
         e.seed_key,
         t.name,
         COALESCE(t.summary, ''),
-        e.category,
+        COALESCE(e.category, 'general'),
         e.default_phase,
         e.risk_level,
         e.min_age,
+        e.archived,
         COALESCE((
           SELECT string_agg(CASE WHEN $locale = 'de' THEN eq.name_de ELSE COALESCE(eq.name_en, eq.name_de) END, ' | ')
           FROM exercise_equipment ee
@@ -55,13 +315,13 @@ export async function listExercises({
         ), '') AS equipment_names
       FROM exercises e
       JOIN exercise_translations t ON t.exercise_id = e.id AND t.locale = $locale
-      WHERE e.archived = false
+      WHERE e.archived = $archived
         AND ($category = '' OR e.category = $category)
         AND (
           $query = ''
           OR t.name ILIKE '%' || $query || '%'
           OR COALESCE(t.summary, '') ILIKE '%' || $query || '%'
-          OR e.category ILIKE '%' || $query || '%'
+          OR COALESCE(e.category, 'general') ILIKE '%' || $query || '%'
           OR EXISTS (
             SELECT 1 FROM exercise_aliases a
             WHERE a.exercise_id = e.id AND a.locale = $locale AND a.alias ILIKE '%' || $query || '%'
@@ -72,7 +332,7 @@ export async function listExercises({
         t.name
       LIMIT $limit
       `,
-      { locale, category: category ?? "", query: query.trim(), limit },
+      { locale, category: category ?? "", query: query.trim(), archived, limit },
     );
 
     return reader.getRows().map((row) => ({
@@ -82,9 +342,10 @@ export async function listExercises({
       summary: String(row[3]),
       category: String(row[4]),
       phase: row[5] == null ? null : String(row[5]),
-      riskLevel: String(row[6]) as ExerciseListItem["riskLevel"],
+      riskLevel: String(row[6]) as ExerciseRiskLevel,
       minAge: row[7] == null ? null : Number(row[7]),
-      equipment: String(row[8] ?? "").split(" | ").filter(Boolean),
+      archived: Boolean(row[8]),
+      equipment: String(row[9] ?? "").split(" | ").filter(Boolean),
     }));
   });
 }
@@ -93,7 +354,7 @@ export async function getExerciseCategoryCounts(): Promise<readonly ExerciseCate
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(`
-      SELECT category, count(*)
+      SELECT COALESCE(category, 'general'), count(*)
       FROM exercises
       WHERE archived = false
       GROUP BY category
