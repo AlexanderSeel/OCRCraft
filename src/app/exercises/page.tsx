@@ -4,10 +4,8 @@ import {
   exerciseCategoryLabels,
   type ExerciseCategory,
 } from "@/domain/exercise/model";
-import {
-  getExerciseCategoryCounts,
-  listExercises,
-} from "@/server/exercises/exercise-repository";
+import { getExerciseCategoryCounts } from "@/server/exercises/exercise-repository";
+import { searchExercises } from "@/server/search/exercise-search-service";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +24,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   const archived = params.status === "archived";
 
   const [exercises, categoryCounts] = await Promise.all([
-    listExercises({ query, category, archived }),
+    searchExercises({ query, category, archived }),
     getExerciseCategoryCounts(),
   ]);
   const total = categoryCounts.reduce((sum, item) => sum + item.count, 0);
