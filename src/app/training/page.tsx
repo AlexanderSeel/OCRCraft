@@ -66,8 +66,16 @@ export default async function TrainingPage() {
                   </div>
                 </dl>
 
-                <div className="mt-auto pt-5 text-xs font-semibold text-[var(--muted)]">
-                  Erstellt {formatCreatedAt(session.createdAt)} · {session.locale.toUpperCase()}
+                <div className="mt-auto flex items-end justify-between gap-3 pt-5">
+                  <div className="text-xs font-semibold text-[var(--muted)]">
+                    Erstellt {formatCreatedAt(session.createdAt)} · {session.locale.toUpperCase()}
+                  </div>
+                  <Link
+                    className="shrink-0 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-subtle)]"
+                    href={`/training/${session.id}`}
+                  >
+                    Details
+                  </Link>
                 </div>
               </article>
             ))}
