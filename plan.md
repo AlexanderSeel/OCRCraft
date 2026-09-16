@@ -41,7 +41,7 @@
 - [x] coarse/fine body-region compatibility for training composition
 - [x] station-capacity validation in the deterministic training draft, with calculated parallel-station guidance
 - [x] simultaneous equipment-conflict validation for circuit stations using per-station equipment demand and declared stock
-- [ ] transition/setup-time validation
+- [x] transition/setup-time validation using exercise logistics estimates and warning on estimated session overrun
 - [ ] age-specific club-rule engine
 - [ ] progression/regression rules
 - [ ] recent-use/load rules
@@ -101,6 +101,7 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [ ] movement patterns: squat / hinge / lunge / push / pull / carry / crawl / climb / hang / rotate / brace / jump / throw / run / balance / mobility
 - [ ] primary body regions
 - [ ] secondary body regions
+- [ ] define primary muscle and opposing/antagonist muscle pairs for exercises where relevant, separately from general secondary muscles
 - [ ] unilateral / bilateral / alternating / locomotion classification
 - [ ] movement plane where useful: sagittal / frontal / transverse / multiplanar
 - [ ] impact level: low / moderate / high
@@ -342,6 +343,7 @@ Reference entry points:
 - [x] muscle-map filtering with safe coarse/fine compatibility
 - [x] read-only muscle preview/highlighting on exercise cards
 - [ ] edit explicit goals/additional categories
+- [ ] show primary and opposing/antagonist muscle groups together in exercise details so trainers can deliberately target or balance them
 - [ ] detail page that explains the exercise without assumed expert knowledge
 - [ ] structured execution-step editor
 - [ ] coaching-cue editor
@@ -431,6 +433,7 @@ Reference entry points:
 - [ ] Quick Create obstacle availability
 - [ ] group split / station capacity
 - [ ] avoid-region selection
+- [ ] optionally select a target muscle together with its opposing/antagonist group for deliberate balanced session planning
 - [ ] use full enriched exercise detail payload for ranking beyond current tags/body/category guidance
 
 ## 9. Training formats

@@ -85,6 +85,52 @@ describe("training validation", () => {
     expect(validateTrainingSession(createSession())).toEqual([]);
   });
 
+  it("warns when setup and transitions add time beyond the planned exercise duration", () => {
+    const session = createSession();
+    const withLogistics: TrainingSession = {
+      ...session,
+      phases: session.phases.map((phase) => {
+        if (phase.kind === "main") {
+          const firstItem = phase.items[0]!;
+          return {
+            ...phase,
+            items: [
+              {
+                ...firstItem,
+                durationMinutes: 20,
+                exercise: { ...firstItem.exercise, setupSeconds: 90, transitionSeconds: 45 },
+              },
+              {
+                ...firstItem,
+                id: "main-item-second",
+                durationMinutes: 20,
+                exercise: { ...firstItem.exercise, setupSeconds: 90, transitionSeconds: 0 },
+              },
+            ],
+          };
+        }
+        return {
+          ...phase,
+          items: phase.items.map((item) => ({
+            ...item,
+            exercise: { ...item.exercise, setupSeconds: 90 },
+          })),
+        };
+      }),
+    };
+
+    expect(validateTrainingSession(withLogistics)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "setup-transition-time",
+          severity: "warning",
+          estimatedLogisticsMinutes: 7,
+          estimatedTotalMinutes: 67,
+        }),
+      ]),
+    );
+  });
+
   it("warns how many parallel stations or rotations are needed for the group", () => {
     const session = createSession();
     const withLimitedStation: TrainingSession = {

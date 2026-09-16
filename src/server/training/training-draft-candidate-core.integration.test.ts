@@ -40,7 +40,9 @@ async function createFixture() {
       level_1 VARCHAR,
       level_2 VARCHAR,
       level_3 VARCHAR,
-      station_capacity INTEGER
+      station_capacity INTEGER,
+      setup_seconds INTEGER,
+      transition_seconds INTEGER
     );
     CREATE TABLE exercise_execution_steps (
       exercise_id VARCHAR,
@@ -65,8 +67,8 @@ async function createFixture() {
     INSERT INTO exercise_equipment VALUES ('kids-carry','bag',2);
     INSERT INTO exercise_tags VALUES ('kids-carry','carry'),('kids-carry','teamwork');
     INSERT INTO exercise_details VALUES
-      ('kids-carry','de','Sicheres Tragen lernen.','Aufrecht und kontrolliert.','Leicht tragen.','Standard tragen.','Weiter tragen.',4),
-      ('kids-carry','en','Learn safe carrying.','Tall and controlled.','Light carry.','Standard carry.','Longer carry.',4);
+      ('kids-carry','de','Sicheres Tragen lernen.','Aufrecht und kontrolliert.','Leicht tragen.','Standard tragen.','Weiter tragen.',4,90,30),
+      ('kids-carry','en','Learn safe carrying.','Tall and controlled.','Light carry.','Standard carry.','Longer carry.',4,90,30);
     INSERT INTO exercise_execution_steps VALUES
       ('kids-carry','de',1,'Sandsack aufnehmen.'),('kids-carry','de',2,'Kontrolliert gehen.'),
       ('kids-carry','en',1,'Pick up the sandbag.'),('kids-carry','en',2,'Walk under control.');
@@ -128,6 +130,8 @@ describe("training draft candidate query", () => {
       expect(carry?.instructions).toContain("Pick up the sandbag.");
       expect(carry?.level2).toBe("Standard carry.");
       expect(carry?.stationCapacity).toBe(4);
+      expect(carry?.setupSeconds).toBe(90);
+      expect(carry?.transitionSeconds).toBe(30);
       expect(results.find((item) => item.id === "adult-wall")?.stationCapacity).toBe(1);
       expect(results.some((item) => item.id === "archived")).toBe(false);
     } finally {

@@ -54,6 +54,10 @@ export interface ExerciseReference {
   readonly equipmentRequirements?: readonly ExerciseEquipmentRequirement[];
   /** Maximum number of people who can use this exercise setup at once. */
   readonly stationCapacity?: number;
+  /** Approximate preparation time from the exercise catalog. */
+  readonly setupSeconds?: number;
+  /** Approximate time to move from this exercise to the next one. */
+  readonly transitionSeconds?: number;
 }
 
 export interface TrainingItem {

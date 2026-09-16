@@ -15,7 +15,8 @@ export interface TrainingValidationIssue {
     | "risk-restricted"
     | "station-capacity"
     | "equipment-conflict"
-    | "equipment-availability-unknown";
+    | "equipment-availability-unknown"
+    | "setup-transition-time";
   readonly severity: TrainingValidationSeverity;
   readonly message: string;
   readonly path?: string;
@@ -26,6 +27,8 @@ export interface TrainingValidationIssue {
   readonly equipmentId?: string;
   readonly requiredQuantity?: number;
   readonly availableQuantity?: number;
+  readonly estimatedLogisticsMinutes?: number;
+  readonly estimatedTotalMinutes?: number;
 }
 
 export interface ClubTrainingRules {
@@ -94,6 +97,30 @@ export function validateTrainingSession(
       message: `Geplant sind ${plannedDuration} Min., die Einheit ist auf ${session.totalDurationMinutes} Min. angesetzt.`,
       path: "totalDurationMinutes",
     });
+  }
+
+  let logisticsSeconds = 0;
+  for (const phase of session.phases) {
+    for (const [index, item] of phase.items.entries()) {
+      const setup = item.exercise.setupSeconds;
+      const transition = index < phase.items.length - 1 ? item.exercise.transitionSeconds : undefined;
+      if (setup != null && Number.isInteger(setup) && setup > 0) logisticsSeconds += setup;
+      if (transition != null && Number.isInteger(transition) && transition > 0) logisticsSeconds += transition;
+    }
+  }
+  if (logisticsSeconds > 0) {
+    const estimatedLogisticsMinutes = Math.ceil(logisticsSeconds / 60);
+    const estimatedTotalMinutes = plannedDuration + estimatedLogisticsMinutes;
+    if (estimatedTotalMinutes > session.totalDurationMinutes + rules.durationToleranceMinutes) {
+      issues.push({
+        code: "setup-transition-time",
+        severity: "warning",
+        message: `Übungszeiten plus geschätzter Aufbau und Übungswechsel dauern etwa ${estimatedTotalMinutes} Min.; angesetzt sind ${session.totalDurationMinutes} Min.`,
+        path: "phases",
+        estimatedLogisticsMinutes,
+        estimatedTotalMinutes,
+      });
+    }
   }
 
   if (rules.maximumRiskLevel) {

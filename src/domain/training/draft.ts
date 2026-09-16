@@ -40,6 +40,8 @@ export interface TrainingDraftExerciseCandidate {
   readonly equipment: readonly string[];
   readonly equipmentRequirements: readonly ExerciseEquipmentRequirement[];
   readonly stationCapacity: number;
+  readonly setupSeconds?: number | null;
+  readonly transitionSeconds?: number | null;
   readonly tags: readonly string[];
   readonly defaultDurationSeconds: number | null;
   readonly instructions?: string;
@@ -219,6 +221,8 @@ export function composeTrainingDraft(
           equipment: candidate.equipment,
           equipmentRequirements: candidate.equipmentRequirements,
           stationCapacity: candidate.stationCapacity,
+          setupSeconds: candidate.setupSeconds ?? undefined,
+          transitionSeconds: candidate.transitionSeconds ?? undefined,
         },
         durationMinutes: durations[index] ?? 0,
         format: selectedFormat,
