@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { DuckDBInstance } from "@duckdb/node-api";
 import { describe, expect, it } from "vitest";
+import { runSeedCompletenessQuery } from "../exercises/seed-completeness-core";
 import { reseedDatabase } from "./reseed-database";
 
 const migrationFiles = [
@@ -15,6 +16,10 @@ const migrationFiles = [
   "008_carry_lift_seed_guidance.sql",
   "009_warmup_seed_enrichment.sql",
   "010_exercise_media_assets.sql",
+  "011_muscle_regions.sql",
+  "012_seed_movement_patterns.sql",
+  "013_foundational_strength_seed_cohort.sql",
+  "014_seed_cross_locale_aliases.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -45,6 +50,7 @@ describe("initial exercise catalog", () => {
       }
 
       const total = await scalar(connection, "SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL");
+      const completenessRows = await runSeedCompletenessQuery(connection);
       const running = await scalar(connection, "SELECT count(*) FROM exercises WHERE category='running'");
       const categories = await scalar(connection, "SELECT count(DISTINCT category) FROM exercises WHERE seed_key IS NOT NULL");
       const sampleExerciseResult = await connection.runAndReadAll("SELECT id::VARCHAR FROM exercises WHERE seed_key='easy-jog'");
@@ -61,12 +67,101 @@ describe("initial exercise catalog", () => {
         FROM exercise_media_assets WHERE exercise_id=$exerciseId
       `, { exerciseId: sampleExerciseId });
       const translations = await scalar(connection, "SELECT count(*) FROM exercise_translations");
+      const missingCanonicalNames = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        WHERE e.seed_key IS NOT NULL AND (
+          NOT EXISTS (SELECT 1 FROM exercise_translations t WHERE t.exercise_id=e.id AND t.locale='de' AND length(trim(t.name)) > 0)
+          OR NOT EXISTS (SELECT 1 FROM exercise_translations t WHERE t.exercise_id=e.id AND t.locale='en' AND length(trim(t.name)) > 0)
+        )
+      `);
+      const missingCrossLocaleAliases = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        JOIN exercise_translations de ON de.exercise_id=e.id AND de.locale='de'
+        JOIN exercise_translations en ON en.exercise_id=e.id AND en.locale='en'
+        WHERE e.seed_key IS NOT NULL
+          AND lower(trim(de.name)) <> lower(trim(en.name))
+          AND (
+            NOT EXISTS (SELECT 1 FROM exercise_aliases a WHERE a.exercise_id=e.id AND a.locale='de' AND lower(trim(a.alias))=lower(trim(en.name)))
+            OR NOT EXISTS (SELECT 1 FROM exercise_aliases a WHERE a.exercise_id=e.id AND a.locale='en' AND lower(trim(a.alias))=lower(trim(de.name)))
+          )
+      `);
+      const missingCrossLocaleSearchTerms = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        JOIN exercise_translations de ON de.exercise_id=e.id AND de.locale='de'
+        JOIN exercise_translations en ON en.exercise_id=e.id AND en.locale='en'
+        LEFT JOIN search_documents_de sd ON sd.entity_id=e.id::VARCHAR AND sd.entity_type='exercise'
+        LEFT JOIN search_documents_en se ON se.entity_id=e.id::VARCHAR AND se.entity_type='exercise'
+        WHERE e.seed_key IS NOT NULL
+          AND lower(trim(de.name)) <> lower(trim(en.name))
+          AND (
+            position(lower(trim(en.name)) IN lower(COALESCE(sd.aliases,'')))=0
+            OR position(lower(trim(de.name)) IN lower(COALESCE(se.aliases,'')))=0
+          )
+      `);
       const germanSearchDocs = await scalar(connection, "SELECT count(*) FROM search_documents_de WHERE entity_type='exercise'");
       const englishSearchDocs = await scalar(connection, "SELECT count(*) FROM search_documents_en WHERE entity_type='exercise'");
       const duplicateKeys = await scalar(connection, "SELECT count(*) FROM (SELECT seed_key FROM exercises WHERE seed_key IS NOT NULL GROUP BY seed_key HAVING count(*) > 1)");
+      const missingSummariesOrPurposes = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        CROSS JOIN (VALUES ('de'),('en')) l(locale)
+        LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale=l.locale
+        LEFT JOIN exercise_details d ON d.exercise_id=e.id AND d.locale=l.locale
+        WHERE e.seed_key IS NOT NULL AND (COALESCE(trim(t.summary),'')='' OR COALESCE(trim(d.purpose),'')='')
+      `);
       const detailRows = await scalar(connection, "SELECT count(*) FROM exercise_details d JOIN exercises e ON e.id=d.exercise_id WHERE e.seed_key IS NOT NULL");
       const detailGaps = await scalar(connection, "SELECT count(*) FROM exercise_details WHERE purpose='' OR setup='' OR start_position='' OR finish_reset='' OR breathing_cue='' OR tempo_cue='' OR safety_notes='' OR quality_criteria='' OR level_1='' OR level_2='' OR level_3='' OR child_youth_variant='' OR prerequisites='' OR fallback_exercise=''");
       const shortExecution = await scalar(connection, "SELECT count(*) FROM exercises e WHERE e.seed_key IS NOT NULL AND (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=e.id AND s.locale='de') < 3");
+      const incompleteExecutionLocales = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        CROSS JOIN (VALUES ('de'),('en')) l(locale)
+        WHERE e.seed_key IS NOT NULL AND (
+          (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=e.id AND s.locale=l.locale) < 3
+          OR EXISTS (SELECT 1 FROM exercise_execution_steps s WHERE s.exercise_id=e.id AND s.locale=l.locale AND trim(s.instruction)='')
+        )
+      `);
+      const missingCoachingCues = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        CROSS JOIN (VALUES ('de'),('en')) l(locale)
+        WHERE e.seed_key IS NOT NULL AND (SELECT count(*) FROM exercise_coaching_cues c WHERE c.exercise_id=e.id AND c.locale=l.locale) < 2
+      `);
+      const missingMistakeCorrections = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        CROSS JOIN (VALUES ('de'),('en')) l(locale)
+        WHERE e.seed_key IS NOT NULL AND (SELECT count(*) FROM exercise_common_mistakes m WHERE m.exercise_id=e.id AND m.locale=l.locale) < 1
+      `);
+      const missingCoreClassification = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        WHERE e.seed_key IS NOT NULL AND (
+          COALESCE(trim(e.category),'')='' OR COALESCE(trim(e.default_phase),'')=''
+          OR COALESCE(trim(e.exercise_type),'')='' OR COALESCE(trim(e.difficulty),'')=''
+          OR COALESCE(trim(e.risk_level),'')='' OR e.suitable_for_kids IS NULL
+          OR e.suitable_for_youth IS NULL OR e.suitable_for_adults IS NULL
+          OR NOT EXISTS (SELECT 1 FROM exercise_body_regions b WHERE b.exercise_id=e.id AND b.emphasis='primary')
+          OR NOT EXISTS (SELECT 1 FROM exercise_movement_patterns m WHERE m.exercise_id=e.id)
+          OR NOT (e.supports_reps OR e.supports_seconds OR e.supports_minutes OR e.supports_metres OR e.supports_rounds OR e.supports_attempts)
+        )
+      `);
+      const missingMovementRows = await connection.runAndReadAll(`
+        SELECT e.seed_key,e.category FROM exercises e
+        WHERE e.seed_key IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM exercise_movement_patterns m WHERE m.exercise_id=e.id)
+        ORDER BY e.seed_key
+      `);
+      const missingProgressionLevels = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        CROSS JOIN (VALUES ('de'),('en')) l(locale)
+        LEFT JOIN exercise_details d ON d.exercise_id=e.id AND d.locale=l.locale
+        WHERE e.seed_key IS NOT NULL AND e.progression_required
+          AND (d.exercise_id IS NULL OR trim(d.level_1)='' OR trim(d.level_2)='' OR trim(d.level_3)='')
+      `);
+      const invalidLogisticsMetadata = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        LEFT JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de'
+        WHERE e.seed_key IS NOT NULL AND (
+          e.setup_seconds IS NULL OR e.setup_seconds < 0 OR e.transition_seconds IS NULL OR e.transition_seconds < 0
+          OR COALESCE(d.station_capacity,e.station_capacity,0) < 1
+        )
+      `);
       const runningGaps = await scalar(connection, "SELECT count(*) FROM exercises e JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de' WHERE e.seed_key IS NOT NULL AND e.category='running' AND (d.work_rest_guidance='' OR d.purpose='' OR d.tempo_cue='')");
       const obstacleGaps = await scalar(connection, "SELECT count(*) FROM exercises e JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de' WHERE e.seed_key IS NOT NULL AND e.category IN ('ocr-skill','grip-rig') AND (d.prerequisites='' OR d.fallback_exercise='' OR d.supervision='normal')");
       const runningGuidance = await scalar(connection, "SELECT count(*) FROM exercise_running_guidance");
@@ -83,16 +178,29 @@ describe("initial exercise catalog", () => {
       const carryGuidanceGaps = await scalar(connection, "SELECT count(*) FROM exercise_carry_guidance WHERE load_guidance='' OR route_setup='' OR lifting_setup='' OR movement_cue='' OR turning_cue='' OR finish_reset='' OR fallback_exercise='' OR intensity_rpe_min < 1 OR intensity_rpe_max > 10 OR station_capacity < 1 OR route_length_metres < 1");
       const carrySteps = await scalar(connection, "SELECT count(*) FROM exercise_carry_guidance g WHERE (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=g.exercise_id AND s.locale=g.locale) <> 3");
 
-      expect(total).toBeGreaterThanOrEqual(140);
+      expect(total).toBeGreaterThanOrEqual(154);
+      expect(completenessRows).toHaveLength(total);
       expect(running).toBeGreaterThanOrEqual(25);
       expect(categories).toBeGreaterThanOrEqual(11);
       expect(translations).toBe(total * 2);
+      expect(missingCanonicalNames).toBe(0);
+      expect(missingCrossLocaleAliases).toBe(0);
+      expect(missingCrossLocaleSearchTerms).toBe(0);
+      expect(await scalar(connection, "SELECT count(*) FROM search_index_state WHERE locale IN ('de','en') AND status='dirty'")).toBe(2);
       expect(germanSearchDocs).toBe(total);
       expect(englishSearchDocs).toBe(total);
       expect(duplicateKeys).toBe(0);
+      expect(missingSummariesOrPurposes).toBe(0);
       expect(detailRows).toBe(total * 2);
       expect(detailGaps).toBe(0);
       expect(shortExecution).toBe(0);
+      expect(incompleteExecutionLocales).toBe(0);
+      expect(missingCoachingCues).toBe(0);
+      expect(missingMistakeCorrections).toBe(0);
+      expect(missingMovementRows.getRows()).toEqual([]);
+      expect(missingCoreClassification).toBe(0);
+      expect(missingProgressionLevels).toBe(0);
+      expect(invalidLogisticsMetadata).toBe(0);
       expect(runningGaps).toBe(0);
       expect(obstacleGaps).toBe(0);
       expect(runningGuidance).toBe(running);

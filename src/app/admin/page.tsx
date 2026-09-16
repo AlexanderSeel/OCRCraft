@@ -1,4 +1,6 @@
 import { AppShell } from "@/components/app-shell";
+import { SeedCompletenessReportView } from "@/components/admin/seed-completeness-report";
+import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { reseedDatabaseAction } from "./actions";
 
@@ -12,7 +14,10 @@ interface AdminPageProps {
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
-  const searchStates = await getSearchIndexStates();
+  const [searchStates, seedCompleteness] = await Promise.all([
+    getSearchIndexStates(),
+    getSeedCompletenessReport(),
+  ]);
   const { reseeded, reseedError } = await searchParams;
 
   return (
@@ -21,6 +26,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       subtitle="Systemstatus und schrittweise Administration von OCRCraft."
     >
       <div className="space-y-6">
+        <SeedCompletenessReportView report={seedCompleteness} />
         <section id="database-settings" className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="max-w-3xl">
             <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenbank</div>

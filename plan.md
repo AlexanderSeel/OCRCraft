@@ -74,8 +74,9 @@ A fresh OCRCraft DB must be useful immediately. A trainer must be able to unders
 
 ### 4.1 Current validated coverage
 
-- [x] **140+ initial exercises** enforced by CI
+- [x] **154 initial exercises** enforced by CI
 - [x] **25+ running exercises** enforced by CI
+- [ ] grow the current 154-seed catalog with curated gaps in foundational strength, movement quality, teamwork and age-group coverage; require new cohorts to pass bilingual detail, mapping and safety gates
 - [x] 11+ exercise areas
 - [x] German + English content
 - [x] stable unique seed keys
@@ -90,16 +91,17 @@ The remaining generic seed records must be enriched so that every exercise is se
 
 #### Identity & classification
 
-- [ ] canonical German name for every seed
-- [ ] canonical English name for every seed
-- [ ] German/English aliases and common trainer terminology for every seed
-- [ ] primary category for every seed
+- [x] canonical German name for every seed
+- [x] canonical English name for every seed
+- [x] make the canonical name from the other locale searchable as an alias for every seed where DE/EN names differ
+- [ ] curate additional German/English aliases and common trainer terminology for every seed
+- [x] primary category for every seed
 - [ ] secondary categories/facets
 - [ ] compatible training phases: warm-up / main / cooldown
 - [ ] exercise type: drill / strength / endurance / mobility / skill / obstacle / game / recovery
 - [ ] training goals: strength / strength endurance / endurance / speed / coordination / balance / mobility / grip / OCR technique / recovery / teamwork
-- [ ] movement patterns: squat / hinge / lunge / push / pull / carry / crawl / climb / hang / rotate / brace / jump / throw / run / balance / mobility
-- [ ] primary body regions
+- [x] movement patterns: squat / hinge / lunge / push / pull / carry / crawl / climb / hang / rotate / brace / jump / throw / run / balance / mobility
+- [x] primary body regions
 - [ ] secondary body regions
 - [ ] define primary muscle and opposing/antagonist muscle pairs for exercises where relevant, separately from general secondary muscles
 - [ ] unilateral / bilateral / alternating / locomotion classification
@@ -296,22 +298,26 @@ Reference entry points:
 ### 4.7 Seed quality gates
 
 - [x] warm-up cohort gate: bilingual summaries/details, three ordered steps, specific cues/corrections, dosage and movement/body mappings
-- [ ] CI requires all seed exercises to have DE/EN names
-- [ ] CI requires all seed exercises to have summary + purpose
-- [ ] CI requires setup + start position + execution steps
-- [ ] CI requires at least 2 coaching cues for normal movement exercises
-- [ ] CI requires at least 1 common mistake/correction
-- [ ] CI requires difficulty + risk + audience metadata
-- [ ] CI requires primary body region + movement pattern unless genuinely not applicable
-- [ ] CI requires at least one supported prescription method
-- [ ] CI requires Level 1/2/3 for exercises marked `progression_required`
+- [x] CI requires all seed exercises to have DE/EN names
+- [x] CI requires both canonical names as cross-locale aliases wherever the DE/EN names differ
+- [x] CI requires all seed exercises to have summary + purpose
+- [x] CI requires setup + start position + at least 3 DE/EN execution steps
+- [x] CI requires at least 2 coaching cues for each seeded exercise and locale
+- [x] CI requires at least 1 common mistake/correction per seeded exercise and locale
+- [x] CI requires difficulty + risk + audience metadata
+- [x] CI requires primary body region + movement pattern for every seeded exercise
+- [x] CI requires at least one supported prescription method
+- [x] CI requires Level 1/2/3 for exercises marked `progression_required`
 - [ ] CI requires source/provenance for externally inspired seed records
-- [ ] admin completeness score highlights exercises that need enrichment
+- [x] Admin completeness score lists seeded exercises and their missing bilingual/catalog fields
 
 ### 4.8 Seed enrichment migration
 
 - [x] extend schema for structured detail fields
-- [ ] expert-reviewed, exercise-specific enrichment for all existing 140+ seed exercises
+- [ ] expert-reviewed, exercise-specific enrichment for all existing 154 seed exercises
+- [x] add first five foundational strength/core exercises as bilingual seeds with aliases, body/movement mappings, structured detail, equipment and safety checks
+- [x] add both canonical names as cross-locale search aliases for all existing seeds and mark DE/EN FTS indexes dirty for rebuild
+- [ ] continue adding missing catalog cohorts as versioned, bilingual seed data with aliases, mappings, structured detail, equipment and safety checks
 - [x] replace generic summaries/instructions/cues/corrections for the complete 10-exercise warm-up cohort
 - [x] enrich all 25+ running exercises with bilingual technique, dosage, correction and RPE details
 - [ ] add missing categories/facets
@@ -621,7 +627,8 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 - [x] single-exercise prompt dry run, OpenAI generation with retry handling, and filesystem/S3-compatible storage adapters
 - [x] resumable seed-catalog generation with serialized database writes and concurrent API requests
 - [x] generate and inspect one real sample exercise image
-- [x] generate and persist one image for each of the 149 initial seed exercises (all remain pending trainer review)
+- [x] generate and persist one image for each of the original 149 seed exercises (all remain pending trainer review)
+- [ ] generate matching illustrations for seed exercises added in catalog expansion cohorts
 - [x] load bilingual structured DuckDB details, movement/body metadata and available running/obstacle/carry guidance into the single-exercise prompt
 
 ## 16. Internationalization
@@ -705,7 +712,7 @@ No athlete surveillance or unnecessary personal data.
 ## Next implementation slice
 
 - [x] **expand exercise schema with self-explanatory detail fields**
-- [ ] **enrich all 140+ seed exercises**
+- [ ] **enrich all 154 seed exercises**
 - [x] enrich and classify every running seed with RPE, bilingual technique cues, corrected steps and common-mistake guidance
 - [x] add bilingual, obstacle-specific setup/prerequisite/approach/execution/exit/fallback guidance to every `ocr-skill` and `grip-rig` seed
 - [x] enrich all carry/drag/flip seeds with load selection, RPE, safe lifting, route/turn, set-down and regression guidance
