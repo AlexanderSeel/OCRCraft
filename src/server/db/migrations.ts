@@ -19,6 +19,7 @@ const migrations: readonly Migration[] = [
   { version: 6, fileName: "006_obstacle_seed_guidance.sql" },
   { version: 7, fileName: "007_grip_rig_seed_guidance.sql" },
   { version: 8, fileName: "008_carry_lift_seed_guidance.sql" },
+  { version: 9, fileName: "009_warmup_seed_enrichment.sql" },
 ];
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {

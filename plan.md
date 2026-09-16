@@ -118,6 +118,7 @@ Every seed exercise must include meaningful text, not only a short label.
 - [ ] **2–5 common mistakes** and how the trainer corrects them
 - [ ] **safety notes / stop conditions** written in practical trainer language
 - [ ] **quality criteria:** what a good repetition or successful obstacle attempt looks like
+- [x] hand-authored bilingual, exercise-specific detail for all 10 warm-up seeds (remaining categories stay open)
 
 #### Dosage & programming
 
@@ -304,6 +305,7 @@ Reference entry points:
 
 Seed completeness must be testable, not subjective.
 
+- [x] warm-up cohort gate: bilingual summaries/details, three ordered steps, specific cues/corrections, dosage and movement/body mappings
 - [ ] CI requires all seed exercises to have DE/EN names
 - [ ] CI requires all seed exercises to have summary + purpose
 - [ ] CI requires setup + start position + execution steps
@@ -320,6 +322,7 @@ Seed completeness must be testable, not subjective.
 
 - [x] extend schema for structured detail fields
 - [ ] expert-reviewed, exercise-specific enrichment for all existing 140+ seed exercises (all receive bilingual detail scaffolding; bespoke biomechanical instructions remain open)
+- [x] replace generic summaries, instructions, cues and corrections for the complete 10-exercise warm-up cohort; seed CI checks the cohort's DE/EN coverage and movement metadata
 - [x] enrich all 25+ running exercises with bilingual, exercise-specific technique, dosage, correction and RPE details
 - [ ] add missing categories/facets
 - [ ] add richer equipment + station logistics
@@ -589,6 +592,7 @@ All three figures must show the same exercise/phase and use the same OCRCraft il
 - [x] DE/EN translation/search-doc assertions
 - [x] duplicate seed-key assertion
 - [x] seed detail completeness tests for required populated DE/EN detail fields, ordered steps, running guidance, OCR prerequisites/fallback/supervision
+- [x] warm-up seed quality integration gate rejects the original generic scaffolding and checks DE/EN search documents
 - [ ] CRUD integration tests
 - [ ] autocomplete/search ranking tests
 - [ ] Quick Create E2E
@@ -637,6 +641,7 @@ No athlete surveillance or unnecessary personal data.
 - [x] add bilingual, obstacle-specific setup/prerequisite/approach/execution/exit/fallback guidance to every `ocr-skill` and `grip-rig` seed
 - [x] enrich all carry/drag/flip seeds with load selection, RPE, safe lifting, route/turn, set-down and regression guidance
 - [x] add seed completeness CI rules for bilingual detail fields, execution steps, running and OCR safety fields
+- [x] author and validate a complete exercise-specific bilingual warm-up cohort
 - [x] make Settings/Administration reachable from persistent header shortcuts and add a destructive reseed confirmation flow with transactional recovery
 - [ ] add richer categories/goals/facets
 - [ ] add VIBSS-inspired training-template/source model

@@ -13,6 +13,7 @@ const migrationFiles = [
   "006_obstacle_seed_guidance.sql",
   "007_grip_rig_seed_guidance.sql",
   "008_carry_lift_seed_guidance.sql",
+  "009_warmup_seed_enrichment.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -91,6 +92,93 @@ describe("initial exercise catalog", () => {
       expect(carryGuidance).toBe(carryExercises * 2);
       expect(carryGuidanceGaps).toBe(0);
       expect(carrySteps).toBe(0);
+
+      const warmupRows = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        JOIN exercise_translations t ON t.exercise_id=e.id
+        JOIN exercise_details d ON d.exercise_id=e.id AND d.locale=t.locale
+        WHERE e.category='warmup' AND e.seed_key IS NOT NULL
+          AND length(t.summary) >= 40
+          AND length(d.purpose) >= 50
+          AND length(d.setup) >= 45
+          AND length(d.start_position) >= 40
+          AND length(d.safety_notes) >= 50
+          AND length(d.quality_criteria) >= 50
+      `);
+      const warmups = await scalar(connection, "SELECT count(*) * 2 FROM exercises WHERE category='warmup' AND seed_key IS NOT NULL");
+      const weakWarmupText = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        JOIN exercise_translations t ON t.exercise_id=e.id
+        WHERE e.category='warmup' AND e.seed_key IS NOT NULL
+          AND (t.summary LIKE '%Warm-up drill%' OR t.summary LIKE '%Aufwärmübung zur Vorbereitung%')
+      `);
+      const genericWarmupSteps = await scalar(connection, `
+        SELECT count(*) FROM exercise_execution_steps s
+        JOIN exercises e ON e.id=s.exercise_id
+        WHERE e.category='warmup' AND (s.instruction LIKE '%brief demonstration%' OR s.instruction LIKE '%kurze Demonstration%')
+      `);
+      const genericWarmupCues = await scalar(connection, `
+        SELECT count(*) FROM exercise_coaching_cues c
+        JOIN exercises e ON e.id=c.exercise_id
+        WHERE e.category='warmup' AND c.cue IN ('Ruhig starten','Start smoothly','Sauber vor schnell','Quality before speed','Atme weiter','Keep breathing')
+      `);
+      const genericWarmupMistakes = await scalar(connection, `
+        SELECT count(*) FROM exercise_common_mistakes m
+        JOIN exercises e ON e.id=m.exercise_id
+        WHERE e.category='warmup' AND (m.mistake LIKE '%Tempo wird zu hoch%' OR m.mistake LIKE '%Pace gets too fast%')
+      `);
+      const incompleteWarmupSteps = await scalar(connection, `
+        SELECT count(*) FROM exercises e WHERE e.category='warmup' AND e.seed_key IS NOT NULL
+          AND (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=e.id) <> 6
+      `);
+      const incompleteWarmupCues = await scalar(connection, `
+        SELECT count(*) FROM exercises e WHERE e.category='warmup' AND e.seed_key IS NOT NULL
+          AND (SELECT count(*) FROM exercise_coaching_cues c WHERE c.exercise_id=e.id) < 4
+      `);
+      const incompleteWarmupCorrections = await scalar(connection, `
+        SELECT count(*) FROM exercises e WHERE e.category='warmup' AND e.seed_key IS NOT NULL
+          AND (SELECT count(*) FROM exercise_common_mistakes m WHERE m.exercise_id=e.id) < 4
+      `);
+      const incompleteWarmupMovementMetadata = await scalar(connection, `
+        SELECT count(*) FROM exercises e WHERE e.category='warmup' AND e.seed_key IS NOT NULL
+          AND ((SELECT count(*) FROM exercise_body_regions b WHERE b.exercise_id=e.id AND b.emphasis='primary') = 0
+            OR (SELECT count(*) FROM exercise_movement_patterns m WHERE m.exercise_id=e.id) = 0)
+      `);
+      const staleWarmupSearchDocs = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
+        JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de'
+        JOIN search_documents_de s ON s.entity_id=e.id::VARCHAR
+        WHERE e.category='warmup' AND e.seed_key IS NOT NULL
+          AND (s.summary <> t.summary OR s.instructions NOT LIKE '%' || d.purpose || '%')
+      `);
+      const staleEnglishWarmupSearchDocs = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='en'
+        JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='en'
+        JOIN search_documents_en s ON s.entity_id=e.id::VARCHAR
+        WHERE e.category='warmup' AND e.seed_key IS NOT NULL
+          AND (s.summary <> t.summary OR s.instructions NOT LIKE '%' || d.purpose || '%')
+      `);
+      const incompleteWarmupDosage = await scalar(connection, `
+        SELECT count(*) FROM exercises e JOIN exercise_details d ON d.exercise_id=e.id
+        WHERE e.category='warmup' AND e.seed_key IS NOT NULL
+          AND (d.beginner_prescription='' OR d.standard_prescription='' OR d.advanced_prescription=''
+            OR d.level_1='' OR d.level_2='' OR d.level_3='' OR d.child_youth_variant='')
+      `);
+
+      expect(warmupRows).toBe(warmups);
+      expect(weakWarmupText).toBe(0);
+      expect(genericWarmupSteps).toBe(0);
+      expect(genericWarmupCues).toBe(0);
+      expect(genericWarmupMistakes).toBe(0);
+      expect(incompleteWarmupSteps).toBe(0);
+      expect(incompleteWarmupCues).toBe(0);
+      expect(incompleteWarmupCorrections).toBe(0);
+      expect(incompleteWarmupMovementMetadata).toBe(0);
+      expect(staleWarmupSearchDocs).toBe(0);
+      expect(staleEnglishWarmupSearchDocs).toBe(0);
+      expect(incompleteWarmupDosage).toBe(0);
     } finally {
       connection.closeSync();
     }
