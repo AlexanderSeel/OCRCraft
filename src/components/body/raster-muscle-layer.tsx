@@ -2,22 +2,22 @@
 
 import { polygonToClipPath, type MuscleMapPart } from "@/data/muscle-map-regions";
 
-export type RasterMuscleTone = "selected" | "primary" | "secondary" | "hover";
+export type RasterMuscleTone = "selected" | "primary" | "secondary" | "hover" | "antagonist";
 
 const FILTERS: Readonly<Record<RasterMuscleTone, string>> = {
   selected: "grayscale(1) sepia(1) saturate(8) hue-rotate(338deg) brightness(.98) contrast(1.08)",
   primary: "grayscale(1) sepia(1) saturate(10) hue-rotate(312deg) brightness(.94) contrast(1.1)",
   secondary: "grayscale(1) sepia(1) saturate(9) hue-rotate(168deg) brightness(.93) contrast(1.08)",
   hover: "grayscale(1) sepia(1) saturate(10) hue-rotate(338deg) brightness(1.08) contrast(1.12)",
+  antagonist: "grayscale(1) sepia(1) saturate(8) hue-rotate(205deg) brightness(1.03) contrast(1.06)",
 };
 
 /**
  * Reuses the exact anatomy raster and clips it to a muscle hit region.
  *
- * `color` blend mode is intentional here: it keeps the luminance of the
- * anatomy below the layer. Pure/near-white background pixels therefore stay
- * white instead of becoming yellow/red/blue polygon wedges, while the darker
- * muscle fibres receive the requested selection colour.
+ * `color` blend mode keeps the luminance of the anatomy below the layer.
+ * Pure/near-white background pixels therefore stay white instead of becoming
+ * coloured polygon wedges, while the darker muscle fibres receive the tone.
  */
 export function RasterMuscleLayer({
   part,
@@ -40,7 +40,7 @@ export function RasterMuscleLayer({
         clipPath: polygonToClipPath(part.coordinates),
         filter: FILTERS[tone],
         mixBlendMode: "color",
-        opacity: subtle ? 0.24 : tone === "hover" ? 0.9 : 0.86,
+        opacity: subtle ? 0.24 : tone === "hover" ? 0.9 : tone === "antagonist" ? 0.52 : 0.86,
       }}
     />
   );
