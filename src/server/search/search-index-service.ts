@@ -4,6 +4,34 @@ import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 
 export type SearchLocale = "de" | "en";
+export type SearchIndexStatus = "healthy" | "dirty" | "rebuilding" | "failed";
+
+export interface SearchIndexState {
+  readonly locale: SearchLocale;
+  readonly status: SearchIndexStatus;
+  readonly lastRebuiltAt: string | null;
+  readonly indexedDocumentCount: number;
+  readonly lastError: string | null;
+}
+
+export async function getSearchIndexStates(): Promise<readonly SearchIndexState[]> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      SELECT locale, status, last_rebuilt_at, indexed_document_count, last_error
+      FROM search_index_state
+      ORDER BY locale
+    `);
+
+    return reader.getRows().map((row) => ({
+      locale: String(row[0]) as SearchLocale,
+      status: String(row[1]) as SearchIndexStatus,
+      lastRebuiltAt: row[2] == null ? null : String(row[2]),
+      indexedDocumentCount: Number(row[3] ?? 0),
+      lastError: row[4] == null ? null : String(row[4]),
+    }));
+  });
+}
 
 export async function rebuildSearchIndex(locale: SearchLocale): Promise<void> {
   await ensureDatabaseReady();
