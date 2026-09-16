@@ -99,7 +99,7 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [ ] secondary categories/facets
 - [x] compatible training phases: warm-up / main / cooldown
 - [ ] exercise type: drill / strength / endurance / mobility / skill / obstacle / game / recovery
-- [ ] training goals: strength / strength endurance / endurance / speed / coordination / balance / mobility / grip / OCR technique / recovery / teamwork
+- [x] training goals: strength / strength endurance / endurance / speed / coordination / balance / mobility / grip / OCR technique / recovery / teamwork
 - [x] movement patterns: squat / hinge / lunge / push / pull / carry / crawl / climb / hang / rotate / brace / jump / throw / run / balance / mobility
 - [x] primary body regions
 - [ ] secondary body regions
