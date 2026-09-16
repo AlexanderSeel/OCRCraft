@@ -15,6 +15,8 @@ export interface ExerciseSearchHit {
   readonly equipment: readonly string[];
   readonly imageUrl: string | null;
   readonly imageReviewStatus: string | null;
+  readonly imageFormat: "exercise_sequence" | "legacy_triptych" | null;
+  readonly sequenceStepCount: number | null;
 }
 
 export interface Bm25SearchOptions {
@@ -122,5 +124,7 @@ export async function runBm25ExerciseSearch(
     equipment: String(row[9] ?? "").split(" | ").filter(Boolean),
     imageUrl: safeExerciseImageUri(row[10]),
     imageReviewStatus: row[11] == null ? null : String(row[11]),
+    imageFormat: null,
+    sequenceStepCount: null,
   }));
 }

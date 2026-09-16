@@ -25,6 +25,8 @@ export interface ExerciseListItem {
   readonly equipment: readonly string[];
   readonly imageUrl: string | null;
   readonly imageReviewStatus: string | null;
+  readonly imageFormat: "exercise_sequence" | "legacy_triptych" | null;
+  readonly sequenceStepCount: number | null;
 }
 
 export interface ExerciseEditorRecord {
@@ -325,6 +327,16 @@ export async function listExercises({
           SELECT m.review_status FROM exercise_media_assets m
           WHERE m.exercise_id=e.id AND m.generation_status='generated'
           ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+        ),
+        (
+          SELECT m.illustration_format FROM exercise_media_assets m
+          WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+        ),
+        (
+          SELECT m.sequence_step_count FROM exercise_media_assets m
+          WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          ORDER BY m.created_at DESC, m.id DESC LIMIT 1
         ) AS image_review_status
       FROM exercises e
       JOIN exercise_translations t ON t.exercise_id = e.id AND t.locale = $locale
@@ -361,6 +373,8 @@ export async function listExercises({
       equipment: String(row[9] ?? "").split(" | ").filter(Boolean),
       imageUrl: safeExerciseImageUri(row[10]),
       imageReviewStatus: row[11] == null ? null : String(row[11]),
+      imageFormat: row[12] == null ? null : String(row[12]) as "exercise_sequence" | "legacy_triptych",
+      sequenceStepCount: row[13] == null ? null : Number(row[13]),
     }));
   });
 }

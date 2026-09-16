@@ -595,7 +595,7 @@ Each sequence illustration uses one adult athlete, selected randomly as a woman 
 - [x] sequence prompt uses the localized ordered execution steps in `exercise_execution_steps` as its frame-by-frame source
 - [x] use one randomly selected adult woman or man consistently across all frames
 - [x] create one frame per stored step, preserve the same athlete and equipment, and show direction of movement
-- [ ] generate and review sequence illustrations for the 8 exercises added in catalog expansion cohorts
+- [x] generate and attach sequence illustrations for the 8 exercises added in catalog expansion cohorts; two samples visually inspected, all assets pending trainer review
 - [ ] migrate legacy triptych illustrations to sequence format after exercise steps are specific enough and reviewed
 - [ ] review every generated sequence image for biomechanical plausibility and match to written instructions
 
@@ -622,9 +622,9 @@ Each sequence illustration uses one adult athlete, selected randomly as a woman 
 - [x] single-exercise prompt dry run, OpenAI generation with retry handling, and filesystem/S3-compatible storage adapters
 - [x] resumable seed-catalog generation with serialized database writes and concurrent API requests
 - [x] generate and inspect one real sample exercise image
-- [ ] generate and inspect one real sequence illustration sample before the expansion cohort batch
+- [x] generate and inspect real sequence illustration samples (partner mirror movement and quiet landing) before/within the expansion cohort batch; generated assets remain pending trainer review
 - [x] generate and persist one image for each of the original 149 seed exercises (all remain pending trainer review)
-- [ ] generate matching illustrations for seed exercises added in catalog expansion cohorts
+- [x] generate and persist matching illustrations for the 8 catalog expansion seed exercises; database recovered from a verified copy after primary WAL replay failure
 - [x] load bilingual structured DuckDB details, movement/body metadata and available running/obstacle/carry guidance into the single-exercise prompt
 
 ## 16. Internationalization
@@ -663,6 +663,7 @@ Each sequence illustration uses one adult athlete, selected randomly as a woman 
 - [x] media source/provenance tests
 - [x] image prompt, dry-run, OpenAI retry, filesystem/S3 adapter and DB metadata migration tests
 - [x] exercise-image prompt, dry-run, metadata, failure and OpenAI retry tests
+- [x] sequence image presentation, per-step prompt construction, metadata persistence and reseed preservation tests
 
 ## 18. Analytics
 
@@ -749,8 +750,8 @@ No athlete surveillance or unnecessary personal data.
 - [ ] duplicate/conflict compare screen with left/right/both resolution
 - [ ] AI composition from approved pool
 - [ ] AI-created exercises require approval
-- [x] AI example illustration generated for every initial seed exercise
-- [x] each generated exercise illustration contains child + woman + man version
+- [ ] AI sequence illustration generated and attached for every initial seed exercise (8 expansion exercises have sequences; the original 149 remain legacy triptychs pending reviewed conversion)
+- [x] new sequence illustrations show one randomly selected adult woman or man across the exercise steps
 - [x] illustration source/generation metadata stored and reviewable
 - [ ] Admin users/groups/media/settings/DB
 - [ ] training version history

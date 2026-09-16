@@ -174,6 +174,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                       KI-Bild · noch zu prüfen
                     </span>
                   ) : null}
+                  {exercise.imageFormat === "exercise_sequence" ? (
+                    <span className="absolute bottom-3 left-3 rounded-lg bg-[var(--surface)]/95 px-2.5 py-1 text-xs font-bold text-[var(--foreground)] shadow-sm">
+                      Schrittfolge{exercise.sequenceStepCount ? ` · ${exercise.sequenceStepCount} Schritte` : ""}
+                    </span>
+                  ) : null}
                 </div>
               ) : (
                 <div className="flex aspect-[3/2] w-full items-center justify-center bg-[var(--surface-subtle)] text-sm font-semibold text-[var(--muted)]">

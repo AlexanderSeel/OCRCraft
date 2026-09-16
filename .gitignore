@@ -9,6 +9,7 @@ coverage/
 !.env.example
 data/*.duckdb
 data/*.wal
+data/*.wal.*
 data/*.tmp
 /public/generated/exercises/
 .DS_Store
