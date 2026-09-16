@@ -1,35 +1,42 @@
-export type TrainingPhaseKind = "warmup" | "main" | "cooldown";
+export const TRAINING_PHASES = ["warmup", "main", "cooldown"] as const;
+export type TrainingPhaseKind = (typeof TRAINING_PHASES)[number];
 
-export type Audience = "kids" | "youth" | "adults" | "mixed";
+export const AUDIENCES = ["kids", "youth", "adults", "mixed"] as const;
+export type Audience = (typeof AUDIENCES)[number];
 
-export type RiskLevel = "low" | "medium" | "high";
+export const RISK_LEVELS = ["low", "medium", "high"] as const;
+export type RiskLevel = (typeof RISK_LEVELS)[number];
 
-export type TrainingFormat =
-  | "free"
-  | "circuit"
-  | "tabata"
-  | "amrap"
-  | "emom"
-  | "rig-run"
-  | "run-exercise"
-  | "technique"
-  | "relay";
+export const TRAINING_FORMATS = [
+  "free",
+  "circuit",
+  "tabata",
+  "amrap",
+  "emom",
+  "rig-run",
+  "run-exercise",
+  "technique",
+  "relay",
+] as const;
+export type TrainingFormat = (typeof TRAINING_FORMATS)[number];
 
-export type BodyRegion =
-  | "shoulders"
-  | "chest"
-  | "upper-back"
-  | "arms"
-  | "forearms-grip"
-  | "core"
-  | "lower-back"
-  | "hips"
-  | "glutes"
-  | "quadriceps"
-  | "hamstrings"
-  | "calves"
-  | "ankles-feet"
-  | "full-body";
+export const BODY_REGIONS = [
+  "shoulders",
+  "chest",
+  "upper-back",
+  "arms",
+  "forearms-grip",
+  "core",
+  "lower-back",
+  "hips",
+  "glutes",
+  "quadriceps",
+  "hamstrings",
+  "calves",
+  "ankles-feet",
+  "full-body",
+] as const;
+export type BodyRegion = (typeof BODY_REGIONS)[number];
 
 export interface TrainingGroup {
   readonly id: string;
