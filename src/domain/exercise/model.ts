@@ -36,6 +36,12 @@ export const exerciseCategoryLabels: Record<ExerciseCategory, string> = {
   general: "Allgemein",
 };
 
+export const exercisePhaseLabels: Record<ExercisePhase, string> = {
+  warmup: "Warm-up",
+  main: "Hauptteil",
+  cooldown: "Cooldown / Stretching",
+};
+
 export interface ExerciseDraft {
   readonly nameDe: string;
   readonly nameEn: string;
