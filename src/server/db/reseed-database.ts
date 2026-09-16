@@ -46,6 +46,7 @@ const tablesToClear = [
   "exercise_equipment",
   "exercise_aliases",
   "exercise_movement_patterns",
+  "exercise_training_phases",
   "exercise_tags",
   "exercise_body_regions",
   "exercise_translations",

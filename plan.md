@@ -97,7 +97,7 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [ ] curate additional German/English aliases and common trainer terminology for every seed
 - [x] primary category for every seed
 - [ ] secondary categories/facets
-- [ ] compatible training phases: warm-up / main / cooldown
+- [x] compatible training phases: warm-up / main / cooldown
 - [ ] exercise type: drill / strength / endurance / mobility / skill / obstacle / game / recovery
 - [ ] training goals: strength / strength endurance / endurance / speed / coordination / balance / mobility / grip / OCR technique / recovery / teamwork
 - [x] movement patterns: squat / hinge / lunge / push / pull / carry / crawl / climb / hang / rotate / brace / jump / throw / run / balance / mobility
@@ -531,7 +531,7 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] users/roles
 - [ ] groups
 - [ ] advanced exercise/obstacle/media administration
-- [ ] exercise completeness report
+- [x] exercise completeness report
 - [ ] seed-source/provenance view
 - [ ] bulk enrichment workflow for seed exercises
 - [ ] templates + club rules
