@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import type { DuckDBConnection } from "@duckdb/node-api";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import {
@@ -22,7 +23,9 @@ function assertUuid(value: string, label: string): void {
   if (!UUID_PATTERN.test(value)) throw new Error(`${label} ist ungültig.`);
 }
 
-async function inTransaction<T>(operation: Parameters<typeof withDuckDbConnection<T>>[0]): Promise<T> {
+async function inTransaction<T>(
+  operation: (connection: DuckDBConnection) => Promise<T>,
+): Promise<T> {
   return withDuckDbConnection(async (connection) => {
     await connection.run("BEGIN TRANSACTION");
     try {
