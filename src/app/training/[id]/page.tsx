@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { AddTrainingItemForm } from "@/components/training/add-training-item-form";
 import { TRAINING_PHASE_LABELS } from "@/domain/training/model";
 import { getTrainingSessionById } from "@/server/training/training-session-repository";
-import { updateTrainingSessionMetadataAction } from "./actions";
+import {
+  deleteTrainingItemAction,
+  moveTrainingItemAction,
+  updateTrainingItemAction,
+  updateTrainingSessionMetadataAction,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +23,8 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
   const session = await getTrainingSessionById(id);
   if (!session) notFound();
 
-  const updateAction = updateTrainingSessionMetadataAction.bind(null, session.id);
+  const updateMetadataAction = updateTrainingSessionMetadataAction.bind(null, session.id);
+  const editable = session.status !== "archived";
 
   return (
     <AppShell
@@ -33,14 +40,14 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
       }
     >
       <div className="space-y-6">
-        {query.saved === "1" ? (
+        {query.saved ? (
           <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">
-            Training wurde aktualisiert.
+            {query.saved === "item" ? "Trainingsinhalt wurde aktualisiert." : "Training wurde aktualisiert."}
           </div>
         ) : null}
         {query.error ? (
           <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">
-            Titel oder Status konnten nicht gespeichert werden. Bitte Eingaben prüfen.
+            Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen.
           </div>
         ) : null}
 
@@ -51,7 +58,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
         </section>
 
         <form
-          action={updateAction}
+          action={updateMetadataAction}
           className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] md:grid-cols-[minmax(0,1fr)_220px_auto]"
         >
           <label className="grid gap-2 text-sm font-bold">
@@ -85,10 +92,17 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           </button>
         </form>
 
+        {!editable ? (
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[var(--muted)]">
+            Archivierte Trainings sind schreibgeschützt. Setze den Status auf „Entwurf“, „Bereit“ oder „Abgeschlossen“, um Inhalte wieder zu bearbeiten.
+          </div>
+        ) : null}
+
         <section className="space-y-4">
           {session.phases.map((phase) => (
             <article
               className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
+              id={`phase-${phase.id}`}
               key={phase.id}
             >
               <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -106,25 +120,136 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
               <div className="mt-4 grid gap-3">
                 {phase.items.map((item, index) => (
                   <div
-                    className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 sm:grid-cols-[42px_minmax(0,1fr)_auto]"
+                    className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4"
                     key={item.id}
                   >
-                    <div className="grid size-9 place-items-center rounded-full bg-[var(--surface)] text-sm font-black ring-1 ring-[var(--border)]">
-                      {index + 1}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-black">{item.exerciseName}</div>
-                      <div className="mt-1 flex flex-wrap gap-2 text-xs font-bold text-[var(--muted)]">
-                        {item.format ? <span>{item.format}</span> : null}
-                        {item.levelLabel ? <span>· {item.levelLabel}</span> : null}
+                    <div className="grid gap-3 sm:grid-cols-[42px_minmax(0,1fr)_auto]">
+                      <div className="grid size-9 place-items-center rounded-full bg-[var(--surface)] text-sm font-black ring-1 ring-[var(--border)]">
+                        {index + 1}
                       </div>
-                      {item.instructions ? (
-                        <p className="mt-2 whitespace-pre-line text-sm leading-6 text-[var(--muted)]">
-                          {item.instructions}
-                        </p>
-                      ) : null}
+                      <div className="min-w-0">
+                        <div className="font-black">{item.exerciseName}</div>
+                        <div className="mt-1 flex flex-wrap gap-2 text-xs font-bold text-[var(--muted)]">
+                          {item.format ? <span>{item.format}</span> : null}
+                          {item.levelLabel ? <span>· {item.levelLabel}</span> : null}
+                        </div>
+                        {item.instructions ? (
+                          <p className="mt-2 whitespace-pre-line text-sm leading-6 text-[var(--muted)]">
+                            {item.instructions}
+                          </p>
+                        ) : null}
+                      </div>
+                      <div className="font-black">{item.durationMinutes} Min.</div>
                     </div>
-                    <div className="font-black">{item.durationMinutes} Min.</div>
+
+                    {editable ? (
+                      <div className="mt-4 border-t border-[var(--border)] pt-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <form action={moveTrainingItemAction}>
+                            <input name="sessionId" type="hidden" value={session.id} />
+                            <input name="itemId" type="hidden" value={item.id} />
+                            <input name="direction" type="hidden" value="up" />
+                            <button
+                              aria-label={`${item.exerciseName} nach oben verschieben`}
+                              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-elevated)] disabled:opacity-35"
+                              disabled={index === 0}
+                              type="submit"
+                            >
+                              ↑
+                            </button>
+                          </form>
+                          <form action={moveTrainingItemAction}>
+                            <input name="sessionId" type="hidden" value={session.id} />
+                            <input name="itemId" type="hidden" value={item.id} />
+                            <input name="direction" type="hidden" value="down" />
+                            <button
+                              aria-label={`${item.exerciseName} nach unten verschieben`}
+                              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-elevated)] disabled:opacity-35"
+                              disabled={index === phase.items.length - 1}
+                              type="submit"
+                            >
+                              ↓
+                            </button>
+                          </form>
+                          <details className="min-w-[220px] flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                            <summary className="cursor-pointer px-3 py-2 text-xs font-black">Eintrag bearbeiten</summary>
+                            <form action={updateTrainingItemAction} className="grid gap-3 border-t border-[var(--border)] p-3">
+                              <input name="sessionId" type="hidden" value={session.id} />
+                              <input name="itemId" type="hidden" value={item.id} />
+                              <div className="grid gap-3 md:grid-cols-3">
+                                <label className="grid gap-1 text-xs font-bold">
+                                  Dauer (Min.)
+                                  <input
+                                    className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                    defaultValue={item.durationMinutes}
+                                    min={1}
+                                    name="durationMinutes"
+                                    required
+                                    type="number"
+                                  />
+                                </label>
+                                <label className="grid gap-1 text-xs font-bold">
+                                  Format
+                                  <select
+                                    className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                    defaultValue={item.format ?? ""}
+                                    name="format"
+                                  >
+                                    <option value="">Kein spezielles Format</option>
+                                    <option value="free">Frei</option>
+                                    <option value="circuit">Zirkel</option>
+                                    <option value="tabata">Tabata</option>
+                                    <option value="amrap">AMRAP</option>
+                                    <option value="emom">EMOM</option>
+                                    <option value="rig-run">Rig & Run</option>
+                                    <option value="run-exercise">Run + Exercise</option>
+                                    <option value="technique">Technik</option>
+                                    <option value="relay">Team / Relay</option>
+                                  </select>
+                                </label>
+                                <label className="grid gap-1 text-xs font-bold">
+                                  Level / Variante
+                                  <input
+                                    className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                    defaultValue={item.levelLabel ?? ""}
+                                    maxLength={120}
+                                    name="levelLabel"
+                                  />
+                                </label>
+                              </div>
+                              <label className="grid gap-1 text-xs font-bold">
+                                Trainingshinweis
+                                <textarea
+                                  className="min-h-24 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 font-normal leading-6"
+                                  defaultValue={item.instructions ?? ""}
+                                  maxLength={4000}
+                                  name="instructions"
+                                />
+                              </label>
+                              <div className="flex justify-end">
+                                <button
+                                  className="rounded-lg bg-[var(--control-strong)] px-4 py-2 text-xs font-black text-[var(--control-strong-foreground)]"
+                                  type="submit"
+                                >
+                                  Eintrag speichern
+                                </button>
+                              </div>
+                            </form>
+                          </details>
+                          <form action={deleteTrainingItemAction}>
+                            <input name="sessionId" type="hidden" value={session.id} />
+                            <input name="itemId" type="hidden" value={item.id} />
+                            <button
+                              aria-label={`${item.exerciseName} aus Training entfernen`}
+                              className="rounded-lg border border-[var(--danger)] px-3 py-2 text-xs font-black text-[var(--danger)] hover:bg-[var(--danger-bg)]"
+                              type="submit"
+                            >
+                              Entfernen
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ))}
 
@@ -134,6 +259,8 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                   </div>
                 ) : null}
               </div>
+
+              {editable ? <AddTrainingItemForm phaseId={phase.id} sessionId={session.id} /> : null}
             </article>
           ))}
         </section>
