@@ -123,7 +123,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             <summary className="cursor-pointer text-sm font-black">
               Nach Muskelgruppen filtern{selectedMuscles.length > 0 ? ` · ${selectedMuscles.length} gewählt` : ""}
             </summary>
-            <div className="mt-4 max-w-xl">
+            <div className="mt-4 w-full xl:[&>div>div:nth-child(2)]:grid xl:[&>div>div:nth-child(2)]:grid-cols-[minmax(320px,400px)_minmax(0,1fr)] xl:[&>div>div:nth-child(2)]:items-start xl:[&>div>div:nth-child(2)]:gap-5 xl:[&>div>div:nth-child(2)>div:first-child]:max-w-none xl:[&>div>div:nth-child(2)>details]:mt-0">
               <MuscleMap
                 key={selectedMuscles.join(",") || "none"}
                 description="Wähle eine oder mehrere Regionen. Feine Muskelangaben berücksichtigen kompatible ältere Grobzuordnungen, ohne bestehende Übungen umzuschreiben."
