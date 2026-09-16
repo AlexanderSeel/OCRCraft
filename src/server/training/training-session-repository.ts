@@ -8,15 +8,22 @@ import { withDuckDbConnection } from "@/server/db/duckdb";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+export type TrainingSessionStatus = "draft" | "ready" | "completed" | "archived";
+
 export interface PersistTrainingDraftOptions {
   readonly title?: string;
   readonly locale?: "de" | "en";
 }
 
+export interface UpdateTrainingSessionMetadataInput {
+  readonly title: string;
+  readonly status: TrainingSessionStatus;
+}
+
 export interface TrainingSessionListItem {
   readonly id: string;
   readonly title: string;
-  readonly status: "draft" | "ready" | "completed" | "archived";
+  readonly status: TrainingSessionStatus;
   readonly source: string;
   readonly totalDurationMinutes: number;
   readonly locale: "de" | "en";
@@ -172,7 +179,7 @@ export async function listTrainingSessions(
     return reader.getRows().map((row) => ({
       id: String(row[0]),
       title: String(row[1]),
-      status: String(row[2]) as TrainingSessionListItem["status"],
+      status: String(row[2]) as TrainingSessionStatus,
       source: String(row[3]),
       totalDurationMinutes: Number(row[4]),
       locale: String(row[5]) as TrainingSessionListItem["locale"],
@@ -278,7 +285,7 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
     return {
       id: String(sessionRow[0]),
       title: String(sessionRow[1]),
-      status: String(sessionRow[2]) as TrainingSessionListItem["status"],
+      status: String(sessionRow[2]) as TrainingSessionStatus,
       source: String(sessionRow[3]),
       totalDurationMinutes: Number(sessionRow[4]),
       locale,
@@ -288,5 +295,28 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
       updatedAt: String(sessionRow[9]),
       phases: [...phases.values()],
     };
+  });
+}
+
+export async function updateTrainingSessionMetadata(
+  id: string,
+  input: UpdateTrainingSessionMetadataInput,
+): Promise<boolean> {
+  if (!UUID_PATTERN.test(id)) return false;
+  const title = input.title.trim();
+  if (!title) throw new Error("Trainingstitel darf nicht leer sein.");
+
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `
+      UPDATE training_sessions
+      SET title=$title, status=$status, updated_at=current_timestamp
+      WHERE id=$id::UUID
+      RETURNING id::VARCHAR
+      `,
+      { id, title, status: input.status },
+    );
+    return reader.getRows().length > 0;
   });
 }
