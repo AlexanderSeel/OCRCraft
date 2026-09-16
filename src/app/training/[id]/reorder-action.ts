@@ -24,7 +24,7 @@ export async function reorderTrainingItemsAction(formData: FormData): Promise<vo
     orderedItemIds,
   });
 
-  await reorderTrainingItems(parsed.data.sessionId, parsed.data.phaseId, parsed.data.orderedItemIds);
+  await reorderTrainingItems(parsed.sessionId, parsed.phaseId, parsed.orderedItemIds);
   revalidatePath("/training");
-  revalidatePath(`/training/${parsed.data.sessionId}`);
+  revalidatePath(`/training/${parsed.sessionId}`);
 }
