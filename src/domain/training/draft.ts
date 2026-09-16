@@ -1,5 +1,5 @@
 import type { ExerciseCategory } from "@/domain/exercise/model";
-import { bodyRegionsOverlap, isBodyRegion } from "@/domain/body-regions";
+import { bodyRegionsOverlap, isBodyRegion } from "../body-regions";
 import {
   TRAINING_PHASE_LABELS,
   type Audience,
