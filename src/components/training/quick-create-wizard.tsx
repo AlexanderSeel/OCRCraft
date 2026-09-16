@@ -49,8 +49,19 @@ const formatOptions = [
   ["relay", "Team / Relay", "Gruppen- und Staffelvarianten"],
 ] as const;
 
+export interface QuickCreateGroupPreset {
+  readonly id: string;
+  readonly name: string;
+  readonly audience: "kids" | "youth" | "adults" | "mixed";
+  readonly minAge: number | null;
+  readonly maxAge: number | null;
+  readonly participantCount: number;
+  readonly durationMinutes: number | null;
+}
+
 interface QuickCreateWizardProps {
   readonly equipmentOptions: readonly EquipmentAvailabilityOption[];
+  readonly groupPresets?: readonly QuickCreateGroupPreset[];
 }
 
 function toggleValue(values: readonly string[], value: string): string[] {
@@ -59,8 +70,20 @@ function toggleValue(values: readonly string[], value: string): string[] {
     : [...values, value];
 }
 
-export function QuickCreateWizard({ equipmentOptions }: QuickCreateWizardProps) {
+function ageRangeForPreset(preset: QuickCreateGroupPreset): string {
+  if (preset.minAge != null && preset.maxAge != null) {
+    return preset.minAge === preset.maxAge
+      ? String(preset.minAge)
+      : `${preset.minAge}–${preset.maxAge}`;
+  }
+  if (preset.minAge != null) return `${preset.minAge}+`;
+  if (preset.maxAge != null) return `bis ${preset.maxAge}`;
+  return "Offen";
+}
+
+export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: QuickCreateWizardProps) {
   const [step, setStep] = useState(1);
+  const [selectedGroupId, setSelectedGroupId] = useState("");
   const [groupType, setGroupType] = useState("mixed");
   const [ageRange, setAgeRange] = useState("16+");
   const [participantCount, setParticipantCount] = useState(16);
@@ -84,14 +107,42 @@ export function QuickCreateWizard({ equipmentOptions }: QuickCreateWizardProps) 
   const [persistedId, setPersistedId] = useState<string | null>(null);
 
   const selectedGroup = groupOptions.find(([id]) => id === groupType);
+  const selectedPreset = groupPresets.find((preset) => preset.id === selectedGroupId);
+  const durationOptions = useMemo(
+    () => [...new Set([45, 60, 75, 90, 120, duration])].sort((a, b) => a - b),
+    [duration],
+  );
   const canContinue = useMemo(() => {
     if (step === 2) return goals.length > 0;
     if (step === 3) return formats.length > 0;
     return true;
   }, [formats.length, goals.length, step]);
 
+  function invalidateDraft() {
+    setDraft(null);
+    setGenerationError(null);
+    setPersistenceError(null);
+    setPersistedId(null);
+  }
+
+  function applyGroupPreset(groupId: string) {
+    setSelectedGroupId(groupId);
+    const preset = groupPresets.find((candidate) => candidate.id === groupId);
+    if (!preset) {
+      invalidateDraft();
+      return;
+    }
+
+    setGroupType(preset.audience);
+    setAgeRange(ageRangeForPreset(preset));
+    setParticipantCount(preset.participantCount);
+    if (preset.durationMinutes != null) setDuration(preset.durationMinutes);
+    invalidateDraft();
+  }
+
   function currentDraftInput(): QuickCreateDraftClientInput {
     return {
+      groupId: selectedGroupId || undefined,
       groupType,
       ageRange,
       participantCount,
@@ -175,6 +226,27 @@ export function QuickCreateWizard({ equipmentOptions }: QuickCreateWizardProps) 
               <h3 className="text-lg font-black">Für wen und wie lange?</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Diese Angaben steuern Skalierung, Umfang und spätere Vereinsregeln.</p>
 
+              {groupPresets.length > 0 ? (
+                <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+                  <label className="grid gap-2 text-sm font-black">
+                    Vereinsgruppe als Vorlage
+                    <select
+                      className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+                      onChange={(event) => applyGroupPreset(event.target.value)}
+                      value={selectedGroupId}
+                    >
+                      <option value="">Eigene Angaben</option>
+                      {groupPresets.map((preset) => (
+                        <option key={preset.id} value={preset.id}>{preset.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                    Übernimmt Zielgruppe, Alter, Teilnehmerzahl und Standarddauer. Die Werte bleiben danach frei anpassbar; beim Speichern bleibt das Training mit der Gruppe verknüpft.
+                  </p>
+                </div>
+              ) : null}
+
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {groupOptions.map(([id, label, description]) => (
                   <button
@@ -221,7 +293,7 @@ export function QuickCreateWizard({ equipmentOptions }: QuickCreateWizardProps) 
                     onChange={(event) => setDuration(Number(event.target.value))}
                     value={duration}
                   >
-                    {[45, 60, 75, 90, 120].map((minutes) => (
+                    {durationOptions.map((minutes) => (
                       <option key={minutes} value={minutes}>{minutes} Minuten</option>
                     ))}
                   </select>
@@ -362,6 +434,7 @@ export function QuickCreateWizard({ equipmentOptions }: QuickCreateWizardProps) 
 
               <dl className="mt-5 divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
                 {[
+                  ["Vereinsgruppe", selectedPreset?.name ?? "Keine feste Gruppe"],
                   ["Gruppe", `${selectedGroup?.[1] ?? groupType} · ${ageRange} · ${participantCount} Personen`],
                   ["Dauer", `${duration} Minuten`],
                   ["Ziele", goals.join(", ")],
@@ -469,7 +542,8 @@ export function QuickCreateWizard({ equipmentOptions }: QuickCreateWizardProps) 
           <div className="mt-4 space-y-4">
             <div>
               <div className="text-xs text-[var(--sidebar-muted)]">Gruppe</div>
-              <div className="mt-1 font-black">{selectedGroup?.[1]} · {participantCount}</div>
+              <div className="mt-1 font-black">{selectedPreset?.name ?? selectedGroup?.[1]} · {participantCount}</div>
+              {selectedPreset ? <div className="mt-1 text-xs text-[var(--sidebar-muted)]">{selectedGroup?.[1]} · {ageRange}</div> : null}
             </div>
             <div>
               <div className="text-xs text-[var(--sidebar-muted)]">Zeit</div>
