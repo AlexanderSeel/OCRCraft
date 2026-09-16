@@ -1,3 +1,4 @@
+import { MuscleMap } from "@/components/body/muscle-map";
 import type { ExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
 
 interface ExerciseFacetFormProps {
@@ -7,7 +8,6 @@ interface ExerciseFacetFormProps {
 }
 
 export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFacetFormProps) {
-  const bodySelection = new Map(data.selected.bodyRegions.map((item) => [item.id, item.emphasis]));
   const movementSelection = new Set(data.selected.movementPatternIds);
   const tagSelection = new Set(data.selected.tagIds);
   const equipmentSelection = new Map(data.selected.equipment.map((item) => [item.id, item.quantityRequired]));
@@ -15,38 +15,16 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
   return (
     <form action={action} className="space-y-5">
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-        <SectionHeader
-          title="Körperregionen"
-          text="Wähle beteiligte Regionen und kennzeichne den Trainingsschwerpunkt als primär oder sekundär."
+        <MuscleMap
+          description="Klicke eine Muskelgruppe: Primär → Sekundär → Aus. Die Auswahl wird direkt als Körperregion der Übung gespeichert."
+          disabled={disabled}
+          emphasisFieldPrefix="bodyEmphasis:"
+          fieldName="bodyRegionIds"
+          mode="emphasis"
+          options={data.bodyRegions}
+          title="Muskel- & Körperregionen"
+          value={data.selected.bodyRegions}
         />
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-          {data.bodyRegions.map((option) => {
-            const emphasis = bodySelection.get(option.id);
-            return (
-              <div className="grid grid-cols-[auto_minmax(0,1fr)_125px] items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" key={option.id}>
-                <input
-                  aria-label={`${option.labelDe} auswählen`}
-                  defaultChecked={Boolean(emphasis)}
-                  disabled={disabled}
-                  name="bodyRegionIds"
-                  type="checkbox"
-                  value={option.id}
-                />
-                <FacetLabel de={option.labelDe} en={option.labelEn} />
-                <select
-                  aria-label={`Priorität für ${option.labelDe}`}
-                  className="h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs font-bold"
-                  defaultValue={emphasis ?? "primary"}
-                  disabled={disabled}
-                  name={`bodyEmphasis:${option.id}`}
-                >
-                  <option value="primary">Primär</option>
-                  <option value="secondary">Sekundär</option>
-                </select>
-              </div>
-            );
-          })}
-        </div>
       </section>
 
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
