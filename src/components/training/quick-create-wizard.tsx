@@ -1,11 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { TrainingDraft } from "@/domain/training/draft";
 import { BodyFocusSelector } from "./body-focus-selector";
 import {
   ExerciseAutocompletePicker,
   type SelectedExerciseReference,
 } from "./exercise-autocomplete-picker";
+import { requestTrainingDraft } from "./quick-create-draft-client";
+import { TrainingDraftPreview } from "./training-draft-preview";
 
 const groupOptions = [
   ["kids", "Kids", "Spielerisch, altersgerecht, klare Sicherheitsregeln"],
@@ -54,7 +57,9 @@ export function QuickCreateWizard() {
   const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>([]);
   const [formats, setFormats] = useState<readonly string[]>(["rig-run"]);
   const [intensity, setIntensity] = useState("balanced");
-  const [generated, setGenerated] = useState(false);
+  const [draft, setDraft] = useState<TrainingDraft | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   const selectedGroup = groupOptions.find(([id]) => id === groupType);
   const canContinue = useMemo(() => {
@@ -62,6 +67,38 @@ export function QuickCreateWizard() {
     if (step === 3) return formats.length > 0;
     return true;
   }, [formats.length, goals.length, step]);
+
+  async function generateDraft() {
+    setGenerating(true);
+    setGenerationError(null);
+    try {
+      const nextDraft = await requestTrainingDraft({
+        groupType,
+        ageRange,
+        participantCount,
+        durationMinutes: duration,
+        goals,
+        bodyRegions,
+        formats,
+        intensity,
+        preferredExerciseIds: preferredExercises.map((item) => item.id),
+      });
+      setDraft(nextDraft);
+    } catch (error) {
+      setDraft(null);
+      setGenerationError(error instanceof Error ? error.message : "Trainingsentwurf konnte nicht erstellt werden.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  function goBack() {
+    if (step === 5) {
+      setDraft(null);
+      setGenerationError(null);
+    }
+    setStep((current) => Math.max(1, current - 1));
+  }
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
@@ -254,7 +291,7 @@ export function QuickCreateWizard() {
           {step === 5 ? (
             <div>
               <h3 className="text-lg font-black">Entwurf prüfen</h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">Diese Parameter gehen an Suche, Vereinsregeln und später den AI Composer.</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">Diese Parameter werden gegen den realen Übungspool und die deterministischen Planungsregeln ausgewertet.</p>
 
               <dl className="mt-5 divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
                 {[
@@ -273,14 +310,14 @@ export function QuickCreateWizard() {
                 ))}
               </dl>
 
-              {generated ? (
-                <div className="mt-5 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4">
-                  <div className="font-black">Wizard-Input steht.</div>
-                  <p className="mt-1 text-sm leading-6 text-[var(--success-foreground)]">
-                    Die ausgewählten Bibliotheksübungen sind jetzt echte Referenzen. Der nächste Schritt ist der deterministische TrainingDraft-Composer.
-                  </p>
+              {generationError ? (
+                <div className="mt-5 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm">
+                  <div className="font-black text-[var(--danger)]">Entwurf konnte nicht erstellt werden</div>
+                  <p className="mt-1 leading-6">{generationError}</p>
                 </div>
               ) : null}
+
+              {draft ? <TrainingDraftPreview draft={draft} /> : null}
             </div>
           ) : null}
         </div>
@@ -288,8 +325,8 @@ export function QuickCreateWizard() {
         <footer className="flex items-center justify-between gap-3 border-t border-[var(--border)] p-5 sm:p-6">
           <button
             className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-bold hover:bg-[var(--surface-subtle)] disabled:cursor-not-allowed disabled:opacity-40"
-            disabled={step === 1}
-            onClick={() => setStep((current) => Math.max(1, current - 1))}
+            disabled={step === 1 || generating}
+            onClick={goBack}
             type="button"
           >
             Zurück
@@ -305,11 +342,12 @@ export function QuickCreateWizard() {
             </button>
           ) : (
             <button
-              className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
-              onClick={() => setGenerated(true)}
+              className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={generating}
+              onClick={() => void generateDraft()}
               type="button"
             >
-              Trainingsentwurf erstellen
+              {generating ? "Entwurf wird erstellt …" : draft ? "Entwurf neu erstellen" : "Trainingsentwurf erstellen"}
             </button>
           )}
         </footer>
@@ -347,7 +385,7 @@ export function QuickCreateWizard() {
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="font-black">Planungsprinzip</div>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Der Wizard legt Ziele und Rahmenbedingungen fest. Die Session bleibt danach editierbar und wird in Aufwärmen, Hauptteil und Cooldown geprüft.
+            Der Wizard verwendet echte Bibliotheksübungen. Der Entwurf bleibt danach editierbar und wird in Aufwärmen, Hauptteil und Cooldown geprüft.
           </p>
         </section>
       </aside>
