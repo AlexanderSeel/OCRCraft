@@ -14,8 +14,6 @@ const nullableAge = z
     message: "Bitte ein Alter zwischen 4 und 99 angeben.",
   });
 
-const facetId = z.string().trim().min(1).max(100);
-
 export const exerciseFormSchema = z.object({
   nameDe: z.string().trim().min(2, "Der deutsche Name ist erforderlich."),
   nameEn: z.string().trim(),
@@ -27,26 +25,12 @@ export const exerciseFormSchema = z.object({
   phase: z.enum(exercisePhases),
   riskLevel: z.enum(exerciseRiskLevels),
   minAge: nullableAge,
-  bodyRegions: z.array(z.object({
-    id: facetId,
-    emphasis: z.enum(["primary", "secondary"]),
-  })).max(30),
-  movementPatternIds: z.array(facetId).max(30),
-  tagIds: z.array(facetId).max(60),
-  equipment: z.array(z.object({
-    id: z.string().uuid(),
-    quantityRequired: z.number().int().min(1).max(99),
-  })).max(50),
 });
 
 export type ExerciseFormFields = z.infer<typeof exerciseFormSchema>;
 
 function aliases(value: string): readonly string[] {
   return [...new Set(value.split(",").map((item) => item.trim()).filter(Boolean))];
-}
-
-function uniqueStrings(values: readonly string[]): readonly string[] {
-  return [...new Set(values)];
 }
 
 export function toExerciseDraft(fields: ExerciseFormFields): ExerciseDraft {
@@ -61,9 +45,5 @@ export function toExerciseDraft(fields: ExerciseFormFields): ExerciseDraft {
     phase: fields.phase,
     riskLevel: fields.riskLevel,
     minAge: fields.minAge,
-    bodyRegions: [...new Map(fields.bodyRegions.map((item) => [item.id, item])).values()],
-    movementPatternIds: uniqueStrings(fields.movementPatternIds),
-    tagIds: uniqueStrings(fields.tagIds),
-    equipment: [...new Map(fields.equipment.map((item) => [item.id, item])).values()],
   };
 }
