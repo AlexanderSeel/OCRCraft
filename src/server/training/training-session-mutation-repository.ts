@@ -8,6 +8,7 @@ import {
   addTrainingItemCore,
   deleteTrainingItemCore,
   moveTrainingItemCore,
+  replaceTrainingItemExerciseCore,
   updateTrainingItemCore,
   type TrainingItemMoveDirection,
   type TrainingItemMutationInput,
@@ -75,6 +76,22 @@ export async function updateTrainingItem(
     updateTrainingItemCore(connection, { ...input, sessionId, itemId }),
   );
   if (!updated) throw new Error("Trainingseintrag wurde nicht gefunden.");
+}
+
+export async function replaceTrainingItemExercise(
+  sessionId: string,
+  itemId: string,
+  exerciseId: string,
+): Promise<void> {
+  assertUuid(sessionId, "Training");
+  assertUuid(itemId, "Trainingseintrag");
+  assertUuid(exerciseId, "Übung");
+  await ensureDatabaseReady();
+
+  const updated = await inTransaction((connection) =>
+    replaceTrainingItemExerciseCore(connection, sessionId, itemId, exerciseId),
+  );
+  if (!updated) throw new Error("Übung konnte im Training nicht ersetzt werden.");
 }
 
 export async function deleteTrainingItem(sessionId: string, itemId: string): Promise<void> {
