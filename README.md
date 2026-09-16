@@ -21,6 +21,7 @@ Die Implementierung hat begonnen. Auf `main` stehen bereits:
 - Domain-Tests mit Vitest
 - GitHub Actions CI für Lint, Typecheck, Tests und Production Build
 - projektinterne Skills für TypeScript/Clean Architecture, UI/UX und LSB-/OCR-Trainingsfachlichkeit
+- zentrale semantische UI-Tokens mit Light-, Dark- und System-Theme
 
 Der vollständige Produkt- und Architekturplan steht in [`plan.md`](./plan.md).
 
@@ -107,6 +108,10 @@ Die Persistenz wird über eine serverseitige DuckDB-Abstraktion gekapselt. Das i
 
 DuckDB FTS wird bewusst nicht direkt in React-Komponenten eingebaut. Index-Rebuilds werden später über einen `SearchIndexService` und die Admin-Oberfläche gesteuert.
 
+## UI-Theming
+
+OCRCraft besitzt eine zentrale Theme-Grundlage mit semantischen CSS-Tokens. Im Header kann zwischen **System**, **Hell** und **Dunkel** gewechselt werden. Die Auswahl wird lokal gespeichert; bei `System` folgt OCRCraft automatisch der Betriebssystem-/Browser-Einstellung. Ein Bootstrap-Script setzt das Theme vor dem Rendern, um einen sichtbaren Theme-Flash weitgehend zu vermeiden.
+
 ## AI-Prinzip
 
 Die KI soll ein **Composer**, nicht die Datenbank sein:
@@ -136,15 +141,14 @@ Die Repository-Arbeitsweise ist in drei Skills festgehalten:
 Der nächste Vertical Slice baut auf dem vorhandenen Fundament auf:
 
 ```text
-1. Migration/DB-Initialisierung aus der Anwendung
-2. Exercise Repository + Exercise CRUD
-3. Seed-Pool für OCR-/Functional-/Running-Übungen
-4. German DuckDB FTS + Autocomplete
-5. gespeicherte Club Groups und Vereinsregeln
-6. Training Editor mit Search-and-add
-7. Quick Create -> echter TrainingDraft
-8. AI Composer auf Basis des freigegebenen Pools
-9. Admin für Übungen, Medien, Benutzer und Search Index
+1. weitere Seed-Anreicherung für Übungen
+2. VIBSS-Provenance / Trainingsvorlagen
+3. BM25-Suche und erweitertes Autocomplete
+4. gespeicherte Club Groups und Vereinsregeln
+5. Training Editor mit Search-and-add
+6. Quick Create -> echter TrainingDraft
+7. AI Composer auf Basis des freigegebenen Pools
+8. Admin für Übungen, Medien, Benutzer und Search Index
 ```
 
 ## Fachliche und technische Referenzen
