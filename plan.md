@@ -259,11 +259,11 @@ Avoid one flat category field for everything. Use a broad primary area plus sear
 - [x] Rig & Run
 - [x] balance obstacles
 - [x] medicine-ball/sandbag/target/spear throws
-- [x] richer obstacle prerequisites for every seeded OCR obstacle/transition
-- [x] obstacle configuration/setup, clear-zone and station-capacity guidance
+- [x] richer obstacle prerequisites for every seeded OCR / Grip & Rig obstacle, traverse and transition
+- [x] obstacle configuration/setup, clear-zone and station-capacity guidance for all seeded OCR / Grip & Rig stations
 - [ ] record club-specific obstacle dimensions when configured; no universal height/span values are assumed
-- [x] detailed obstacle approach / execution / exit sequence
-- [x] explicit failed-attempt fallback/regression for every seeded OCR obstacle/transition
+- [x] detailed approach / execution / exit sequence for every seeded OCR / Grip & Rig obstacle task
+- [x] explicit failed-attempt fallback/regression for every seeded OCR / Grip & Rig task
 - [x] transition technique between running and obstacle work
 
 ### 4.6 VIBSS / LSB NRW reference seed
@@ -630,7 +630,7 @@ No athlete surveillance or unnecessary personal data.
 - [x] **expand exercise schema with self-explanatory detail fields** (detail data foundation; further categories and relations remain open)
 - [ ] **enrich all 140+ seed exercises, especially all running and OCR exercises**
 - [x] enrich and classify every running seed with RPE, bilingual technique cues, corrected steps and common-mistake guidance
-- [x] add bilingual, obstacle-specific setup/prerequisite/approach/execution/exit/fallback guidance to every `ocr-skill` obstacle and transition seed
+- [x] add bilingual, obstacle-specific setup/prerequisite/approach/execution/exit/fallback guidance to every `ocr-skill` and `grip-rig` seed
 - [x] add seed completeness CI rules for bilingual detail fields, execution steps, running and OCR safety fields
 - [ ] add richer categories/goals/facets
 - [ ] add VIBSS-inspired training-template/source model

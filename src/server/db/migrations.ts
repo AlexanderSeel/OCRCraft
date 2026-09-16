@@ -17,6 +17,7 @@ const migrations: readonly Migration[] = [
   { version: 4, fileName: "004_exercise_details.sql" },
   { version: 5, fileName: "005_running_seed_guidance.sql" },
   { version: 6, fileName: "006_obstacle_seed_guidance.sql" },
+  { version: 7, fileName: "007_grip_rig_seed_guidance.sql" },
 ];
 
 async function getAppliedVersions(): Promise<Set<number>> {
