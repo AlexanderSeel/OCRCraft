@@ -1,13 +1,14 @@
 import type { ExerciseCategory } from "@/domain/exercise/model";
-import type {
-  Audience,
-  BodyRegion,
-  RiskLevel,
-  TrainingFormat,
-  TrainingPhaseKind,
-  TrainingSession,
+import {
+  BODY_REGIONS,
+  TRAINING_PHASE_LABELS,
+  type Audience,
+  type BodyRegion,
+  type RiskLevel,
+  type TrainingFormat,
+  type TrainingPhaseKind,
+  type TrainingSession,
 } from "./model";
-import { TRAINING_PHASE_LABELS } from "./model";
 import { validateTrainingSession, type TrainingValidationIssue } from "./validation";
 
 export type DraftIntensity = "technique" | "balanced" | "conditioning";
@@ -74,6 +75,12 @@ const FORMAT_CATEGORY_BONUS: Readonly<Partial<Record<TrainingFormat, readonly Ex
   amrap: ["strength", "core", "carry-lift", "running", "general"],
   emom: ["strength", "core", "carry-lift", "general"],
 };
+
+const BODY_REGION_SET = new Set<string>(BODY_REGIONS);
+
+function isBodyRegion(value: string): value is BodyRegion {
+  return BODY_REGION_SET.has(value);
+}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -206,7 +213,7 @@ export function composeTrainingDraft(
           id: candidate.id,
           name: candidate.name,
           riskLevel: candidate.riskLevel,
-          bodyRegions: candidate.bodyRegions.filter((region): region is BodyRegion => input.bodyRegions.includes(region as BodyRegion)),
+          bodyRegions: candidate.bodyRegions.filter(isBodyRegion),
           equipment: candidate.equipment,
         },
         durationMinutes: durations[index] ?? 0,
