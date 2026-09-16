@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
 import { BodyFocusSelector } from "./body-focus-selector";
@@ -7,7 +8,11 @@ import {
   ExerciseAutocompletePicker,
   type SelectedExerciseReference,
 } from "./exercise-autocomplete-picker";
-import { requestTrainingDraft } from "./quick-create-draft-client";
+import {
+  persistTrainingDraft,
+  requestTrainingDraft,
+  type QuickCreateDraftClientInput,
+} from "./quick-create-draft-client";
 import { TrainingDraftPreview } from "./training-draft-preview";
 
 const groupOptions = [
@@ -60,6 +65,10 @@ export function QuickCreateWizard() {
   const [draft, setDraft] = useState<TrainingDraft | null>(null);
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [sessionTitle, setSessionTitle] = useState("");
+  const [persisting, setPersisting] = useState(false);
+  const [persistenceError, setPersistenceError] = useState<string | null>(null);
+  const [persistedId, setPersistedId] = useState<string | null>(null);
 
   const selectedGroup = groupOptions.find(([id]) => id === groupType);
   const canContinue = useMemo(() => {
@@ -68,21 +77,27 @@ export function QuickCreateWizard() {
     return true;
   }, [formats.length, goals.length, step]);
 
+  function currentDraftInput(): QuickCreateDraftClientInput {
+    return {
+      groupType,
+      ageRange,
+      participantCount,
+      durationMinutes: duration,
+      goals,
+      bodyRegions,
+      formats,
+      intensity,
+      preferredExerciseIds: preferredExercises.map((item) => item.id),
+    };
+  }
+
   async function generateDraft() {
     setGenerating(true);
     setGenerationError(null);
+    setPersistenceError(null);
+    setPersistedId(null);
     try {
-      const nextDraft = await requestTrainingDraft({
-        groupType,
-        ageRange,
-        participantCount,
-        durationMinutes: duration,
-        goals,
-        bodyRegions,
-        formats,
-        intensity,
-        preferredExerciseIds: preferredExercises.map((item) => item.id),
-      });
+      const nextDraft = await requestTrainingDraft(currentDraftInput());
       setDraft(nextDraft);
     } catch (error) {
       setDraft(null);
@@ -92,10 +107,27 @@ export function QuickCreateWizard() {
     }
   }
 
+  async function saveDraft() {
+    if (!draft) return;
+    setPersisting(true);
+    setPersistenceError(null);
+    try {
+      const result = await persistTrainingDraft(currentDraftInput(), sessionTitle);
+      setDraft(result.draft);
+      setPersistedId(result.id);
+    } catch (error) {
+      setPersistenceError(error instanceof Error ? error.message : "Trainingsentwurf konnte nicht gespeichert werden.");
+    } finally {
+      setPersisting(false);
+    }
+  }
+
   function goBack() {
     if (step === 5) {
       setDraft(null);
       setGenerationError(null);
+      setPersistenceError(null);
+      setPersistedId(null);
     }
     setStep((current) => Math.max(1, current - 1));
   }
@@ -310,10 +342,43 @@ export function QuickCreateWizard() {
                 ))}
               </dl>
 
+              {draft ? (
+                <label className="mt-5 grid gap-2 text-sm font-bold">
+                  Trainingstitel
+                  <input
+                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+                    maxLength={120}
+                    onChange={(event) => setSessionTitle(event.target.value)}
+                    placeholder="z. B. OCR Technik & Ausdauer Dienstag"
+                    value={sessionTitle}
+                  />
+                  <span className="font-normal text-[var(--muted)]">Optional. Ohne Titel wird der Standardtitel des Entwurfs verwendet.</span>
+                </label>
+              ) : null}
+
               {generationError ? (
                 <div className="mt-5 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm">
                   <div className="font-black text-[var(--danger)]">Entwurf konnte nicht erstellt werden</div>
                   <p className="mt-1 leading-6">{generationError}</p>
+                </div>
+              ) : null}
+
+              {persistenceError ? (
+                <div className="mt-5 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm">
+                  <div className="font-black text-[var(--danger)]">Entwurf konnte nicht gespeichert werden</div>
+                  <p className="mt-1 leading-6">{persistenceError}</p>
+                </div>
+              ) : null}
+
+              {persistedId ? (
+                <div className="mt-5 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm">
+                  <div className="font-black text-[var(--success-foreground)]">Training gespeichert</div>
+                  <p className="mt-1 leading-6 text-[var(--success-foreground)]">
+                    Der Server hat den Entwurf erneut aus der aktuellen Übungsdatenbank erzeugt, validiert und transaktional gespeichert.
+                  </p>
+                  <Link className="mt-3 inline-flex font-black text-[var(--foreground)] underline underline-offset-4" href="/training">
+                    Gespeicherte Trainings öffnen
+                  </Link>
                 </div>
               ) : null}
 
@@ -322,10 +387,10 @@ export function QuickCreateWizard() {
           ) : null}
         </div>
 
-        <footer className="flex items-center justify-between gap-3 border-t border-[var(--border)] p-5 sm:p-6">
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] p-5 sm:p-6">
           <button
             className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-bold hover:bg-[var(--surface-subtle)] disabled:cursor-not-allowed disabled:opacity-40"
-            disabled={step === 1 || generating}
+            disabled={step === 1 || generating || persisting}
             onClick={goBack}
             type="button"
           >
@@ -341,14 +406,24 @@ export function QuickCreateWizard() {
               Weiter
             </button>
           ) : (
-            <button
-              className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={generating}
-              onClick={() => void generateDraft()}
-              type="button"
-            >
-              {generating ? "Entwurf wird erstellt …" : draft ? "Entwurf neu erstellen" : "Trainingsentwurf erstellen"}
-            </button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 text-sm font-black hover:bg-[var(--surface-subtle)] disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={generating || persisting}
+                onClick={() => void generateDraft()}
+                type="button"
+              >
+                {generating ? "Entwurf wird erstellt …" : draft ? "Entwurf neu erstellen" : "Trainingsentwurf erstellen"}
+              </button>
+              <button
+                className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!draft || generating || persisting}
+                onClick={() => void saveDraft()}
+                type="button"
+              >
+                {persisting ? "Wird gespeichert …" : persistedId ? "Erneut speichern" : "Training speichern"}
+              </button>
+            </div>
           )}
         </footer>
       </section>
@@ -385,7 +460,7 @@ export function QuickCreateWizard() {
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="font-black">Planungsprinzip</div>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Der Wizard verwendet echte Bibliotheksübungen. Der Entwurf bleibt danach editierbar und wird in Aufwärmen, Hauptteil und Cooldown geprüft.
+            Der Wizard verwendet echte Bibliotheksübungen. Beim Speichern erzeugt und validiert der Server denselben Entwurf erneut, bevor er als bearbeitbarer Trainingsentwurf in DuckDB landet.
           </p>
         </section>
       </aside>
