@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { BodyFocusSelector } from "./body-focus-selector";
 
 const groupOptions = [
   ["kids", "Kids", "Spielerisch, altersgerecht, klare Sicherheitsregeln"],
@@ -19,18 +20,6 @@ const goalOptions = [
   "Balance",
   "Koordination",
   "Mobility",
-] as const;
-
-const bodyOptions = [
-  ["shoulders", "Schultern"],
-  ["upper-back", "Oberer Rücken"],
-  ["forearms-grip", "Unterarme / Grip"],
-  ["core", "Core"],
-  ["hips", "Hüfte"],
-  ["glutes", "Gesäß"],
-  ["quadriceps", "Oberschenkel vorn"],
-  ["hamstrings", "Oberschenkel hinten"],
-  ["calves", "Waden"],
 ] as const;
 
 const formatOptions = [
@@ -72,7 +61,7 @@ export function QuickCreateWizard() {
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
       <section className="rounded-2xl border border-[var(--border)] bg-white shadow-[0_10px_35px_rgba(20,28,35,0.04)]">
-        <div className="border-b border-[var(--border)] p-5 sm:p-6">
+        <header className="border-b border-[var(--border)] p-5 sm:p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Quick Create</div>
@@ -88,9 +77,9 @@ export function QuickCreateWizard() {
               ))}
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="min-h-[480px] p-5 sm:p-6">
+        <div className="min-h-[500px] p-5 sm:p-6">
           {step === 1 ? (
             <div>
               <h3 className="text-lg font-black">Für wen und wie lange?</h3>
@@ -175,18 +164,12 @@ export function QuickCreateWizard() {
 
               <div className="mt-8">
                 <div className="font-black">Körperregionen</div>
-                <p className="mt-1 text-sm text-[var(--muted)]">Erste funktionale Auswahl; die grafische Front-/Rückansicht folgt als eigener BodyMap-Baustein.</p>
-                <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {bodyOptions.map(([id, label]) => (
-                    <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-[var(--border)] px-4 hover:bg-[var(--surface-subtle)]" key={id}>
-                      <input
-                        checked={bodyRegions.includes(id)}
-                        onChange={() => setBodyRegions(toggleValue(bodyRegions, id))}
-                        type="checkbox"
-                      />
-                      <span className="text-sm font-bold">{label}</span>
-                    </label>
-                  ))}
+                <p className="mt-1 text-sm text-[var(--muted)]">Wähle direkt auf der Körperansicht oder über die beschrifteten Bereiche.</p>
+                <div className="mt-4">
+                  <BodyFocusSelector
+                    onToggle={(regionId) => setBodyRegions(toggleValue(bodyRegions, regionId))}
+                    selected={bodyRegions}
+                  />
                 </div>
               </div>
             </div>
@@ -195,7 +178,7 @@ export function QuickCreateWizard() {
           {step === 3 ? (
             <div>
               <h3 className="text-lg font-black">Wie soll trainiert werden?</h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">Formate lassen sich kombinieren; später kann jedes Format einer einzelnen Phase zugewiesen werden.</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">Formate lassen sich kombinieren und später einzelnen Trainingsblöcken zuweisen.</p>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {formatOptions.map(([id, label, description]) => (
                   <button
@@ -220,7 +203,7 @@ export function QuickCreateWizard() {
           {step === 4 ? (
             <div>
               <h3 className="text-lg font-black">Wie anspruchsvoll?</h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">OCRCraft nutzt diese Auswahl für Belastung und Progression, nicht um Sicherheitsregeln zu überschreiben.</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">Belastungssteuerung darf konfigurierte Sicherheitsregeln nie überschreiben.</p>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 {[
                   ["technique", "Technik zuerst", "Mehr Qualität, längere Lernfenster"],
@@ -248,7 +231,7 @@ export function QuickCreateWizard() {
               <div className="mt-8 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
                 <div className="font-black">Automatische Skalierung</div>
                 <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                  Schwierige Stationen sollen Level 1–3 erhalten. Bei Mixed-Gruppen werden gemeinsame Bewegungsmuster mit unterschiedlichen Griffen, Lasten, Distanzen oder Wiederholungen bevorzugt.
+                  Schwierige Stationen erhalten Level 1–3. Bei Mixed-Gruppen werden gemeinsame Bewegungsmuster mit unterschiedlichen Griffen, Lasten, Distanzen oder Wiederholungen bevorzugt.
                 </p>
               </div>
             </div>
@@ -257,7 +240,7 @@ export function QuickCreateWizard() {
           {step === 5 ? (
             <div>
               <h3 className="text-lg font-black">Entwurf prüfen</h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">Diese Parameter gehen später an Suche, Regelprüfung und AI Composer.</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">Diese Parameter gehen an Suche, Vereinsregeln und später den AI Composer.</p>
 
               <dl className="mt-5 divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]">
                 {[
@@ -279,7 +262,7 @@ export function QuickCreateWizard() {
                 <div className="mt-5 rounded-xl border border-[#b8d56c] bg-[#f0f7d7] p-4">
                   <div className="font-black">Wizard-Input steht.</div>
                   <p className="mt-1 text-sm leading-6 text-[#53622b]">
-                    Die nächste Implementierungsstufe verbindet diese Daten mit Übungssuche, Vereinsregeln und dem AI Training Composer.
+                    Die nächste Schicht verbindet diese Daten mit Übungssuche, Vereinsregeln und dem AI Training Composer.
                   </p>
                 </div>
               ) : null}
@@ -287,7 +270,7 @@ export function QuickCreateWizard() {
           ) : null}
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] p-5 sm:p-6">
+        <footer className="flex items-center justify-between gap-3 border-t border-[var(--border)] p-5 sm:p-6">
           <button
             className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
             disabled={step === 1}
@@ -314,7 +297,7 @@ export function QuickCreateWizard() {
               Trainingsentwurf erstellen
             </button>
           )}
-        </div>
+        </footer>
       </section>
 
       <aside className="space-y-4">
@@ -343,7 +326,7 @@ export function QuickCreateWizard() {
         <section className="rounded-2xl border border-[var(--border)] bg-white p-5">
           <div className="font-black">Planungsprinzip</div>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Der Wizard legt Ziele und Rahmenbedingungen fest. Die eigentliche Session bleibt danach vollständig editierbar und wird immer in Aufwärmen, Hauptteil und Cooldown geprüft.
+            Der Wizard legt Ziele und Rahmenbedingungen fest. Die Session bleibt danach editierbar und wird in Aufwärmen, Hauptteil und Cooldown geprüft.
           </p>
         </section>
       </aside>
