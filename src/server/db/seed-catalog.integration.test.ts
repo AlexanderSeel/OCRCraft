@@ -11,6 +11,7 @@ const migrationFiles = [
   "005_running_seed_guidance.sql",
   "006_obstacle_seed_guidance.sql",
   "007_grip_rig_seed_guidance.sql",
+  "008_carry_lift_seed_guidance.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -61,6 +62,10 @@ describe("initial exercise catalog", () => {
       const obstacleGuidance = await scalar(connection, "SELECT count(*) FROM exercise_obstacle_guidance g JOIN exercises e ON e.id=g.exercise_id WHERE e.seed_key IS NOT NULL");
       const obstacleGuidanceGaps = await scalar(connection, "SELECT count(*) FROM exercise_obstacle_guidance WHERE equipment_configuration='' OR prerequisites='' OR approach='' OR execution='' OR exit_reset='' OR fallback_exercise='' OR station_capacity <> 1 OR clear_zone_metres <= 0");
       const obstacleSteps = await scalar(connection, "SELECT count(*) FROM exercise_obstacle_guidance g WHERE (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=g.exercise_id AND s.locale=g.locale) <> 3");
+      const carryExercises = await scalar(connection, "SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL AND category='carry-lift'");
+      const carryGuidance = await scalar(connection, "SELECT count(*) FROM exercise_carry_guidance g JOIN exercises e ON e.id=g.exercise_id WHERE e.seed_key IS NOT NULL");
+      const carryGuidanceGaps = await scalar(connection, "SELECT count(*) FROM exercise_carry_guidance WHERE load_guidance='' OR route_setup='' OR lifting_setup='' OR movement_cue='' OR turning_cue='' OR finish_reset='' OR fallback_exercise='' OR intensity_rpe_min < 1 OR intensity_rpe_max > 10 OR station_capacity < 1 OR route_length_metres < 1");
+      const carrySteps = await scalar(connection, "SELECT count(*) FROM exercise_carry_guidance g WHERE (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=g.exercise_id AND s.locale=g.locale) <> 3");
 
       expect(total).toBeGreaterThanOrEqual(140);
       expect(running).toBeGreaterThanOrEqual(25);
@@ -82,6 +87,9 @@ describe("initial exercise catalog", () => {
       expect(obstacleGuidance).toBe(obstaclesAndRig * 2);
       expect(obstacleGuidanceGaps).toBe(0);
       expect(obstacleSteps).toBe(0);
+      expect(carryGuidance).toBe(carryExercises * 2);
+      expect(carryGuidanceGaps).toBe(0);
+      expect(carrySteps).toBe(0);
     } finally {
       connection.closeSync();
     }

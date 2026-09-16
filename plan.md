@@ -265,6 +265,7 @@ Avoid one flat category field for everything. Use a broad primary area plus sear
 - [x] detailed approach / execution / exit sequence for every seeded OCR / Grip & Rig obstacle task
 - [x] explicit failed-attempt fallback/regression for every seeded OCR / Grip & Rig task
 - [x] transition technique between running and obstacle work
+- [x] carry/lift seed loading, route, turn, controlled set-down, RPE and fallback guidance
 
 ### 4.6 VIBSS / LSB NRW reference seed
 
@@ -631,6 +632,7 @@ No athlete surveillance or unnecessary personal data.
 - [ ] **enrich all 140+ seed exercises, especially all running and OCR exercises**
 - [x] enrich and classify every running seed with RPE, bilingual technique cues, corrected steps and common-mistake guidance
 - [x] add bilingual, obstacle-specific setup/prerequisite/approach/execution/exit/fallback guidance to every `ocr-skill` and `grip-rig` seed
+- [x] enrich all carry/drag/flip seeds with load selection, RPE, safe lifting, route/turn, set-down and regression guidance
 - [x] add seed completeness CI rules for bilingual detail fields, execution steps, running and OCR safety fields
 - [ ] add richer categories/goals/facets
 - [ ] add VIBSS-inspired training-template/source model
