@@ -9,7 +9,7 @@ export default function QuickCreatePage() {
       subtitle="Von Gruppe und Trainingsziel zum strukturierten OCR-Trainingsentwurf."
       actions={
         <Link
-          className="inline-flex rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-bold hover:bg-[var(--surface-subtle)]"
+          className="inline-flex rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold hover:bg-[var(--surface-subtle)]"
           href="/"
         >
           Zur Übersicht

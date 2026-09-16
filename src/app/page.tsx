@@ -142,13 +142,13 @@ export default function HomePage() {
       actions={
         <>
           <a
-            className="hidden rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-bold hover:bg-[var(--surface-subtle)] sm:inline-flex"
+            className="hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold hover:bg-[var(--surface-subtle)] sm:inline-flex"
             href="/training/new"
           >
             Manuell erstellen
           </a>
           <a
-            className="inline-flex rounded-xl bg-[var(--dark)] px-4 py-2.5 text-sm font-bold text-white hover:bg-black"
+            className="inline-flex rounded-xl bg-[var(--control-strong)] px-4 py-2.5 text-sm font-bold text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
             href="/quick-create"
           >
             Quick Create
@@ -179,7 +179,7 @@ export default function HomePage() {
             </div>
             <div className="flex flex-wrap gap-2">
               {previewSession.focus.map((focus) => (
-                <span className="rounded-lg bg-white px-3 py-1.5 text-xs font-bold shadow-sm ring-1 ring-[var(--border)]" key={focus}>
+                <span className="rounded-lg bg-[var(--surface)] px-3 py-1.5 text-xs font-bold shadow-sm ring-1 ring-[var(--border)]" key={focus}>
                   {focus}
                 </span>
               ))}
@@ -194,21 +194,21 @@ export default function HomePage() {
         </section>
 
         <aside className="space-y-4">
-          <section className="rounded-2xl bg-[var(--dark)] p-5 text-white shadow-[0_14px_40px_rgba(20,28,35,0.18)]">
-            <div className="text-xs font-bold uppercase tracking-[0.16em] text-white/55">Schnellstart</div>
+          <section className="rounded-2xl bg-[var(--sidebar)] p-5 text-[var(--sidebar-foreground)] shadow-[var(--shadow-raised)]">
+            <div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--sidebar-muted)]">Schnellstart</div>
             <h2 className="mt-2 text-xl font-black">Neue Einheit in wenigen Schritten</h2>
-            <p className="mt-2 text-sm leading-6 text-white/65">
+            <p className="mt-2 text-sm leading-6 text-[var(--sidebar-muted)]">
               Gruppe, Dauer, Ziel, Körperregionen und Format wählen. OCRCraft erstellt daraus einen bearbeitbaren Entwurf.
             </p>
             <a
-              className="mt-5 inline-flex w-full justify-center rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-black text-[var(--dark)] hover:bg-[var(--accent-strong)]"
+              className="mt-5 inline-flex w-full justify-center rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
               href="/quick-create"
             >
               Quick Create öffnen
             </a>
           </section>
 
-          <section className="rounded-2xl border border-[var(--border)] bg-white p-5">
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-black">Plan-Check</h2>
               <span className="rounded-lg bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-bold">
@@ -228,16 +228,16 @@ export default function HomePage() {
             )}
           </section>
 
-          <section className="rounded-2xl border border-[var(--border)] bg-white p-5">
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
             <h2 className="font-black">Als Nächstes</h2>
             <div className="mt-3 space-y-2 text-sm">
-              <a className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[#e5e9ed]" href="/exercises">
+              <a className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/exercises">
                 Übungspool aufbauen
               </a>
-              <a className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[#e5e9ed]" href="/groups">
+              <a className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/groups">
                 Vereinsgruppen definieren
               </a>
-              <a className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[#e5e9ed]" href="/admin#database-settings">
+              <a className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/admin#database-settings">
                 Such- & Trainingsregeln einstellen
               </a>
             </div>

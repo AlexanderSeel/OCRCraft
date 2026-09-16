@@ -36,11 +36,11 @@ export function BodyFocusSelector({ selected, onToggle }: BodyFocusSelectorProps
   return (
     <div className="grid gap-4 lg:grid-cols-[250px_1fr]">
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-        <div className="mb-3 grid grid-cols-2 rounded-xl bg-white p-1 ring-1 ring-[var(--border)]">
+        <div className="mb-3 grid grid-cols-2 rounded-xl bg-[var(--surface)] p-1 ring-1 ring-[var(--border)]">
           {(["front", "back"] as const).map((bodyView) => (
             <button
               aria-pressed={view === bodyView}
-              className={`min-h-9 rounded-lg text-xs font-black ${view === bodyView ? "bg-[var(--dark)] text-white" : "text-[var(--muted)]"}`}
+              className={`min-h-9 rounded-lg text-xs font-black ${view === bodyView ? "bg-[var(--control-strong)] text-[var(--control-strong-foreground)]" : "text-[var(--muted)]"}`}
               key={bodyView}
               onClick={() => setView(bodyView)}
               type="button"
@@ -51,12 +51,12 @@ export function BodyFocusSelector({ selected, onToggle }: BodyFocusSelectorProps
         </div>
 
         <div className="relative mx-auto h-[390px] w-[190px]" aria-label={`Körperansicht ${view === "front" ? "vorne" : "hinten"}`}>
-          <div aria-hidden="true" className="absolute left-1/2 top-[3%] size-14 -translate-x-1/2 rounded-full border-2 border-[#aeb8c1] bg-white" />
-          <div aria-hidden="true" className="absolute left-1/2 top-[18%] h-36 w-20 -translate-x-1/2 rounded-[35px_35px_24px_24px] border-2 border-[#aeb8c1] bg-white" />
-          <div aria-hidden="true" className="absolute left-[25%] top-[22%] h-36 w-7 rotate-[10deg] rounded-full border-2 border-[#aeb8c1] bg-white" />
-          <div aria-hidden="true" className="absolute right-[25%] top-[22%] h-36 w-7 -rotate-[10deg] rounded-full border-2 border-[#aeb8c1] bg-white" />
-          <div aria-hidden="true" className="absolute left-[35%] top-[52%] h-40 w-8 rotate-[3deg] rounded-full border-2 border-[#aeb8c1] bg-white" />
-          <div aria-hidden="true" className="absolute right-[35%] top-[52%] h-40 w-8 -rotate-[3deg] rounded-full border-2 border-[#aeb8c1] bg-white" />
+          <div aria-hidden="true" className="absolute left-1/2 top-[3%] size-14 -translate-x-1/2 rounded-full border-2 border-[var(--border-strong)] bg-[var(--surface)]" />
+          <div aria-hidden="true" className="absolute left-1/2 top-[18%] h-36 w-20 -translate-x-1/2 rounded-[35px_35px_24px_24px] border-2 border-[var(--border-strong)] bg-[var(--surface)]" />
+          <div aria-hidden="true" className="absolute left-[25%] top-[22%] h-36 w-7 rotate-[10deg] rounded-full border-2 border-[var(--border-strong)] bg-[var(--surface)]" />
+          <div aria-hidden="true" className="absolute right-[25%] top-[22%] h-36 w-7 -rotate-[10deg] rounded-full border-2 border-[var(--border-strong)] bg-[var(--surface)]" />
+          <div aria-hidden="true" className="absolute left-[35%] top-[52%] h-40 w-8 rotate-[3deg] rounded-full border-2 border-[var(--border-strong)] bg-[var(--surface)]" />
+          <div aria-hidden="true" className="absolute right-[35%] top-[52%] h-40 w-8 -rotate-[3deg] rounded-full border-2 border-[var(--border-strong)] bg-[var(--surface)]" />
 
           {visibleRegions.map((region) => {
             const active = selected.includes(region.id);
@@ -66,8 +66,8 @@ export function BodyFocusSelector({ selected, onToggle }: BodyFocusSelectorProps
                 aria-pressed={active}
                 className={`absolute z-10 grid size-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 text-[10px] font-black shadow-sm transition ${
                   active
-                    ? "border-[var(--dark)] bg-[var(--accent)] text-[var(--dark)] scale-110"
-                    : "border-white bg-[var(--dark)] text-white hover:scale-110"
+                    ? "scale-110 border-[var(--control-strong)] bg-[var(--accent)] text-[var(--accent-foreground)]"
+                    : "border-[var(--surface)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)] hover:scale-110"
                 }`}
                 key={`${view}-${region.id}`}
                 onClick={() => onToggle(region.id)}
@@ -95,8 +95,8 @@ export function BodyFocusSelector({ selected, onToggle }: BodyFocusSelectorProps
                 aria-pressed={active}
                 className={`min-h-10 rounded-xl border px-3 text-sm font-bold ${
                   active
-                    ? "border-[var(--dark)] bg-[var(--dark)] text-white"
-                    : "border-[var(--border)] bg-white hover:bg-[var(--surface-subtle)]"
+                    ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"
+                    : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
                 }`}
                 key={region.id}
                 onClick={() => onToggle(region.id)}

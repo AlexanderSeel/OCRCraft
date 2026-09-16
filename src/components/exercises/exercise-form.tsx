@@ -27,12 +27,12 @@ export function ExerciseForm({ action, exercise, submitLabel }: ExerciseFormProp
   return (
     <form action={formAction} className="space-y-6">
       {state.message ? (
-        <div className="rounded-xl border border-[#e7c9a8] bg-[#fff7ed] p-4 text-sm font-semibold text-[#8a4b16]">
+        <div className="rounded-xl border border-[var(--warning)] bg-[var(--warning-bg)] p-4 text-sm font-semibold text-[var(--warning)]">
           {state.message}
         </div>
       ) : null}
 
-      <section className="rounded-2xl border border-[var(--border)] bg-white p-5 sm:p-6">
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
         <h2 className="text-lg font-black">Bezeichnung & Suche</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">Deutsch ist Pflicht. Englisch fällt bei neuen Übungen automatisch auf Deutsch zurück.</p>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -51,7 +51,7 @@ export function ExerciseForm({ action, exercise, submitLabel }: ExerciseFormProp
         </div>
       </section>
 
-      <section className="rounded-2xl border border-[var(--border)] bg-white p-5 sm:p-6">
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
         <h2 className="text-lg font-black">Trainingsklassifikation</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Field label="Bereich" error={state.errors?.category?.[0]}>
@@ -79,7 +79,7 @@ export function ExerciseForm({ action, exercise, submitLabel }: ExerciseFormProp
         </div>
       </section>
 
-      <section className="rounded-2xl border border-[var(--border)] bg-white p-5 sm:p-6">
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
         <h2 className="text-lg font-black">Kurzbeschreibung</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <Field label="Beschreibung (DE)" error={state.errors?.summaryDe?.[0]}>
@@ -92,7 +92,7 @@ export function ExerciseForm({ action, exercise, submitLabel }: ExerciseFormProp
       </section>
 
       <div className="flex justify-end">
-        <button className="min-h-11 rounded-xl bg-[var(--accent)] px-6 text-sm font-black text-[var(--dark)] disabled:opacity-50" disabled={pending} type="submit">
+        <button className="min-h-11 rounded-xl bg-[var(--accent)] px-6 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)] disabled:opacity-50" disabled={pending} type="submit">
           {pending ? "Speichert …" : submitLabel}
         </button>
       </div>
@@ -100,7 +100,7 @@ export function ExerciseForm({ action, exercise, submitLabel }: ExerciseFormProp
   );
 }
 
-const inputClass = "min-h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3 text-sm outline-none focus:border-[#4d75ff] focus:ring-2 focus:ring-[#4d75ff]/15";
+const inputClass = "min-h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--focus)] focus:ring-2 focus:ring-[var(--focus)]/15";
 
 function Field({
   label,
@@ -117,7 +117,7 @@ function Field({
     <label className="grid gap-1.5 text-sm font-bold">
       {label}
       {children}
-      {error ? <span className="text-xs font-semibold text-[#b42318]">{error}</span> : null}
+      {error ? <span className="text-xs font-semibold text-[var(--danger)]">{error}</span> : null}
       {!error && hint ? <span className="text-xs font-normal text-[var(--muted)]">{hint}</span> : null}
     </label>
   );

@@ -38,7 +38,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       subtitle="Breitensport, OCR und Laufen – vorbefüllt, suchbar und direkt administrierbar."
       actions={
         <Link
-          className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--dark)]"
+          className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
           href="/exercises/new"
         >
           + Neue Übung
@@ -53,13 +53,13 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         </section>
 
         <form
-          className="grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-4 lg:grid-cols-[1fr_220px_180px_auto]"
+          className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] lg:grid-cols-[1fr_220px_180px_auto]"
           method="get"
         >
           <label className="grid gap-1 text-sm font-bold">
             Suchen
             <input
-              className="h-11 rounded-xl border border-[var(--border)] px-3 font-normal outline-none focus:border-[#4d75ff]"
+              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
               defaultValue={query}
               name="q"
               placeholder="z. B. Monkey Bars, Kniebeugen, Lauf ABC ..."
@@ -68,7 +68,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           <label className="grid gap-1 text-sm font-bold">
             Bereich
             <select
-              className="h-11 rounded-xl border border-[var(--border)] bg-white px-3 font-normal"
+              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
               defaultValue={category ?? ""}
               name="category"
             >
@@ -83,7 +83,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           <label className="grid gap-1 text-sm font-bold">
             Status
             <select
-              className="h-11 rounded-xl border border-[var(--border)] bg-white px-3 font-normal"
+              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
               defaultValue={archived ? "archived" : "active"}
               name="status"
             >
@@ -92,7 +92,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             </select>
           </label>
           <button
-            className="self-end rounded-xl bg-[var(--dark)] px-5 py-3 text-sm font-black text-white"
+            className="self-end rounded-xl bg-[var(--control-strong)] px-5 py-3 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
             type="submit"
           >
             Filtern
@@ -115,7 +115,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {exercises.map((exercise) => (
             <article
-              className="flex min-h-64 flex-col rounded-2xl border border-[var(--border)] bg-white p-5"
+              className="flex min-h-64 flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
               key={exercise.id}
             >
               <div className="flex items-start justify-between gap-3">
@@ -156,7 +156,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
               </div>
               <div className="mt-auto pt-5">
                 <Link
-                  className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] px-4 text-sm font-black hover:bg-[var(--surface-subtle)]"
+                  className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-black hover:bg-[var(--surface-subtle)]"
                   href={`/exercises/${exercise.id}/edit`}
                 >
                   {archived ? "Ansehen / Wiederherstellen" : "Bearbeiten"}
@@ -167,7 +167,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         </section>
 
         {exercises.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--border)] p-10 text-center text-sm text-[var(--muted)]">
+          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--muted)]">
             Keine Übung passt zu diesem Filter.
           </div>
         ) : null}
@@ -182,7 +182,7 @@ function categoryLabel(category: string): string {
 
 function Metric({ label, value }: { readonly label: string; readonly value: number }) {
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-white p-4">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
       <div className="text-2xl font-black">{value}</div>
       <div className="mt-1 text-sm font-semibold text-[var(--muted)]">{label}</div>
     </div>
