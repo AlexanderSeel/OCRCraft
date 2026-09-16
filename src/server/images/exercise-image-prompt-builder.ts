@@ -40,7 +40,8 @@ export function buildExerciseImagePrompt(
 
   return [
     ocrcraftExerciseIllustrationV2.prompt,
-    `Use exactly one adult athlete identity: ${figurePresentation === "adult_woman" ? "an adult woman" : "an adult man"}. Repeat that same person in the movement frames; do not show a child or a second athlete.`,
+    `Use one randomly selected adult presentation for the main demonstrator: ${figurePresentation === "adult_woman" ? "an adult woman" : "an adult man"}. Keep that same main demonstrator in every frame; never show a child or a male/female comparison lineup.`,
+    "Show only the participants the exercise itself requires. Partner or team participants may appear as supporting people when the structured setup or execution steps require them; do not add extra people for representation.",
     `Create exactly ${localized.de.executionSteps.length} sequential frames in reading order, one frame for each numbered item in the structured execution steps. Use a clear left-to-right storyboard with small unobtrusive step numbers and simple directional arrows where they clarify motion.`,
     "Keep the same athlete, clothing, equipment, camera angle and scale in every frame. Make the change in body position between consecutive frames clear and biomechanically plausible.",
     "Illustrate the exact catalog exercise described below. This catalog content is the source of truth for movement mechanics; do not invent a different exercise or add unlisted equipment.",
@@ -54,7 +55,8 @@ export function buildExerciseImagePrompt(
     section("Movement patterns", movementPatterns),
     renderGuidance("de", localized.de),
     renderGuidance("en", localized.en),
-    "The ordered execution steps are the source of truth for the sequence. Each frame must depict its corresponding step; do not collapse the exercise into one pose, add unlisted movements, or invent extra stages. The image is a sequence of one person, not a comparison of people.",
+    "The ordered execution steps are the source of truth for the sequence. Each frame must depict its corresponding step; do not collapse the exercise into one pose, add unlisted movements, or invent extra stages. The image explains movement over time and is not a comparison of people.",
+    "Never invent physical contact: only show touching, high-fives, grabbing or shared contact when a structured execution step explicitly requires it. Respect all stated distance and no-contact rules in every frame.",
     "Safety is more important than dramatic action: show stable footing, controlled range, clear space and the stated supervision context. Do not depict pain, unsafe loading, a fall, collision, or an unlisted obstacle configuration.",
   ].join("\n\n");
 }

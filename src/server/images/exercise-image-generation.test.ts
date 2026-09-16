@@ -73,13 +73,15 @@ describe("exercise image prompt and generation service", () => {
     expect(prompt).toContain("friendly flat editorial artwork");
     expect(prompt).toContain("dark navy functional OCR sportswear");
     expect(prompt).toContain("restrained coral-red panels");
-    expect(prompt).toContain("exactly one adult athlete identity: an adult woman");
+    expect(prompt).toContain("one randomly selected adult presentation for the main demonstrator: an adult woman");
     expect(prompt).toContain("exactly 3 sequential frames");
     expect(prompt).toContain("one frame for each numbered item in the structured execution steps");
     expect(prompt).toContain("1. Walk to start.");
     expect(prompt).toContain("2. Jog easily.");
     expect(prompt).toContain("3. Walk to finish.");
-    expect(prompt).toContain("do not show a child or a second athlete");
+    expect(prompt).toContain("never show a child or a male/female comparison lineup");
+    expect(prompt).toContain("Partner or team participants may appear as supporting people");
+    expect(prompt).toContain("Never invent physical contact");
     expect(prompt).toContain("Lockeres Einlaufen");
     expect(prompt).toContain("Easy Jog");
     expect(prompt).toContain("Walk to start.");
