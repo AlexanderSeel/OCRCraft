@@ -24,6 +24,7 @@ const migrationFiles = [
   "016_exercise_image_sequences.sql",
   "017_exercise_training_phases.sql",
   "018_exercise_training_goals.sql",
+  "019_exercise_movement_classification.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -381,6 +382,10 @@ describe("initial exercise catalog", () => {
         SELECT count(*) FROM exercises e
         WHERE e.seed_key IS NOT NULL
           AND NOT EXISTS (SELECT 1 FROM exercise_training_phases p WHERE p.exercise_id=e.id)
+      `)).toBe(0);
+      expect(await scalar(connection, `
+        SELECT count(*) FROM exercises
+        WHERE seed_key IS NOT NULL AND (laterality IS NULL OR movement_plane IS NULL)
       `)).toBe(0);
       expect(await scalar(connection, `
         SELECT count(*) FROM exercises e

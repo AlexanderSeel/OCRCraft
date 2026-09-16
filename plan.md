@@ -98,16 +98,16 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [x] primary category for every seed
 - [ ] secondary categories/facets
 - [x] compatible training phases: warm-up / main / cooldown
-- [ ] exercise type: drill / strength / endurance / mobility / skill / obstacle / game / recovery
+- [x] exercise type: drill / strength / endurance / mobility / skill / obstacle / game / recovery
 - [x] training goals: strength / strength endurance / endurance / speed / coordination / balance / mobility / grip / OCR technique / recovery / teamwork
 - [x] movement patterns: squat / hinge / lunge / push / pull / carry / crawl / climb / hang / rotate / brace / jump / throw / run / balance / mobility
 - [x] primary body regions
 - [ ] secondary body regions
 - [ ] define primary muscle and opposing/antagonist muscle pairs for exercises where relevant, separately from general secondary muscles
-- [ ] unilateral / bilateral / alternating / locomotion classification
-- [ ] movement plane where useful: sagittal / frontal / transverse / multiplanar
-- [ ] impact level: low / moderate / high
-- [ ] coordination complexity: simple / moderate / complex
+- [x] unilateral / bilateral / alternating / locomotion classification
+- [x] movement plane where useful: sagittal / frontal / transverse / multiplanar
+- [x] impact level: low / moderate / high
+- [x] coordination complexity: simple / moderate / complex
 - [ ] OCR transfer tags, e.g. grip, wall, carry, rig, rope, transition, trail, obstacle efficiency
 
 #### Trainer-readable explanation
@@ -128,7 +128,7 @@ The remaining generic seed records must be enriched so that every exercise is se
 
 #### Dosage & programming
 
-- [ ] supported prescription units: reps / seconds / minutes / metres / rounds / attempts
+- [x] supported prescription units: reps / seconds / minutes / metres / rounds / attempts
 - [ ] suggested beginner prescription
 - [ ] suggested standard prescription
 - [ ] suggested advanced prescription
