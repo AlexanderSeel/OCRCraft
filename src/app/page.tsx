@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { TrainingPhaseCard } from "@/components/training/phase-card";
 import { StatCard } from "@/components/ui/stat-card";
@@ -141,18 +142,18 @@ export default function HomePage() {
       subtitle="Schnell planen, sinnvoll skalieren und als Trainer die Kontrolle behalten."
       actions={
         <>
-          <a
+          <Link
             className="hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold hover:bg-[var(--surface-subtle)] sm:inline-flex"
-            href="/training/new"
+            href="/training"
           >
-            Manuell erstellen
-          </a>
-          <a
+            Trainings öffnen
+          </Link>
+          <Link
             className="inline-flex rounded-xl bg-[var(--control-strong)] px-4 py-2.5 text-sm font-bold text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
             href="/quick-create"
           >
             Quick Create
-          </a>
+          </Link>
         </>
       }
     >
@@ -200,12 +201,12 @@ export default function HomePage() {
             <p className="mt-2 text-sm leading-6 text-[var(--sidebar-muted)]">
               Gruppe, Dauer, Ziel, Körperregionen und Format wählen. OCRCraft erstellt daraus einen bearbeitbaren Entwurf.
             </p>
-            <a
+            <Link
               className="mt-5 inline-flex w-full justify-center rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
               href="/quick-create"
             >
               Quick Create öffnen
-            </a>
+            </Link>
           </section>
 
           <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
@@ -231,15 +232,15 @@ export default function HomePage() {
           <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
             <h2 className="font-black">Als Nächstes</h2>
             <div className="mt-3 space-y-2 text-sm">
-              <a className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/exercises">
+              <Link className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/exercises">
                 Übungspool aufbauen
-              </a>
-              <a className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/groups">
+              </Link>
+              <Link className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/groups">
                 Vereinsgruppen definieren
-              </a>
-              <a className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/admin#database-settings">
+              </Link>
+              <Link className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/admin#database-settings">
                 Such- & Trainingsregeln einstellen
-              </a>
+              </Link>
             </div>
           </section>
         </aside>
