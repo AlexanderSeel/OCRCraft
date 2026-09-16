@@ -1,14 +1,19 @@
 "use client";
 
 import { useMemo, useRef, useState, type MouseEvent } from "react";
+import { getBodyRegionAntagonists } from "@/domain/body-regions";
 import {
   MUSCLE_MAP_PARTS,
   MUSCLE_MAP_PARTS_BY_OPTION,
   MUSCLE_MAP_REFERENCE_SIZE,
   type MuscleMapPart,
 } from "@/data/muscle-map-regions";
+import {
+  clientPointToMuscleMapPoint,
+  findMuscleMapPartAtPoint,
+} from "./muscle-map-hit-test";
 import { RasterMuscleLayer, type RasterMuscleTone } from "./raster-muscle-layer";
-import { scaledCoords, useResponsiveImageMap } from "./use-responsive-image-map";
+import { useResponsiveImageMap } from "./use-responsive-image-map";
 
 export type MuscleEmphasis = "primary" | "secondary";
 
@@ -65,10 +70,24 @@ function toneFor(mode: MuscleMapProps["mode"], value?: MuscleMapValue): RasterMu
 }
 
 function optionParts(optionId: string): readonly MuscleMapPart[] {
-  const direct = MUSCLE_MAP_PARTS_BY_OPTION.get(optionId);
-  if (direct?.length) return direct;
+  if (optionId === "full-body") return MUSCLE_MAP_PARTS;
+
+  const direct = MUSCLE_MAP_PARTS_BY_OPTION.get(optionId) ?? [];
   const fallbackIds = FALLBACK_OPTION_PARTS[optionId] ?? [];
-  return fallbackIds.flatMap((id) => MUSCLE_MAP_PARTS_BY_OPTION.get(id) ?? []);
+  const fallback = fallbackIds.flatMap((id) => MUSCLE_MAP_PARTS_BY_OPTION.get(id) ?? []);
+
+  if (fallback.length === 0) return direct;
+  const unique = new Map<string, MuscleMapPart>();
+  for (const part of [...direct, ...fallback]) unique.set(part.id, part);
+  return [...unique.values()];
+}
+
+function optionForPart(part: MuscleMapPart, optionIds: ReadonlySet<string>): string | null {
+  if (optionIds.has(part.optionId)) return part.optionId;
+  for (const optionId of optionIds) {
+    if (FALLBACK_OPTION_PARTS[optionId]?.includes(part.optionId)) return optionId;
+  }
+  return null;
 }
 
 export function MuscleMap({
@@ -88,6 +107,7 @@ export function MuscleMap({
   const [hoveredPart, setHoveredPart] = useState<MuscleMapPart | null>(null);
   const [debugPoints, setDebugPoints] = useState<readonly [number, number][]>([]);
   const [listOpen, setListOpen] = useState(true);
+  const [showAntagonists, setShowAntagonists] = useState(false);
   const [openCategories, setOpenCategories] = useState<Set<string>>(() => new Set(CATEGORY_ORDER));
   const imageRef = useRef<HTMLImageElement>(null);
   const { scaleX, scaleY } = useResponsiveImageMap(imageRef);
@@ -119,6 +139,22 @@ export function MuscleMap({
       return entries?.length ? [[category, entries] as const] : [];
     });
   }, [options]);
+
+  const hoveredOptionId = hoveredPart ? optionForPart(hoveredPart, optionIds) : null;
+  const antagonistIds = useMemo(() => {
+    if (!showAntagonists) return [] as string[];
+
+    const result = new Set<string>();
+    const sources = new Set(selection.map((item) => item.id));
+    if (hoveredOptionId) sources.add(hoveredOptionId);
+
+    for (const source of sources) {
+      for (const antagonist of getBodyRegionAntagonists(source)) {
+        if (optionIds.has(antagonist) && !selectedById.has(antagonist)) result.add(antagonist);
+      }
+    }
+    return [...result];
+  }, [hoveredOptionId, optionIds, selectedById, selection, showAntagonists]);
 
   function setSelection(next: readonly MuscleMapValue[]) {
     if (onChange) onChange(next);
@@ -175,26 +211,42 @@ export function MuscleMap({
     });
   }
 
-  function optionForPart(part: MuscleMapPart): string | null {
-    if (optionIds.has(part.optionId)) return part.optionId;
-    for (const optionId of optionIds) {
-      if (FALLBACK_OPTION_PARTS[optionId]?.includes(part.optionId)) return optionId;
-    }
-    return null;
-  }
-
-  function addDebugPoint(event: MouseEvent<HTMLDivElement>) {
-    if (!debug) return;
+  function referencePoint(event: MouseEvent<HTMLDivElement>) {
     const image = imageRef.current;
-    if (!image) return;
+    if (!image) return null;
     const rect = image.getBoundingClientRect();
-    const x = Math.round((event.clientX - rect.left) / Math.max(scaleX, 0.0001));
-    const y = Math.round((event.clientY - rect.top) / Math.max(scaleY, 0.0001));
-    if (x < 0 || y < 0 || x > MUSCLE_MAP_REFERENCE_SIZE.width || y > MUSCLE_MAP_REFERENCE_SIZE.height) return;
-    setDebugPoints((points) => [...points, [x, y]]);
+    return clientPointToMuscleMapPoint(
+      event.clientX,
+      event.clientY,
+      rect,
+      MUSCLE_MAP_REFERENCE_SIZE.width,
+      MUSCLE_MAP_REFERENCE_SIZE.height,
+    );
   }
 
-  const fullBody = selectedById.get("full-body");
+  function hitPart(event: MouseEvent<HTMLDivElement>): MuscleMapPart | null {
+    const point = referencePoint(event);
+    return point ? findMuscleMapPartAtPoint(visibleParts, point) : null;
+  }
+
+  function handleMapMouseMove(event: MouseEvent<HTMLDivElement>) {
+    if (!interactive || debug) return;
+    setHoveredPart(hitPart(event));
+  }
+
+  function handleMapClick(event: MouseEvent<HTMLDivElement>) {
+    if (debug) {
+      const point = referencePoint(event);
+      if (point) setDebugPoints((points) => [...points, [Math.round(point.x), Math.round(point.y)]]);
+      return;
+    }
+    if (!interactive) return;
+    const part = hitPart(event);
+    if (!part) return;
+    const optionId = optionForPart(part, optionIds);
+    if (optionId) cycle(optionId);
+  }
+
   const debugCoordinates = debugPoints.flatMap(([x, y]) => [x, y]).join(", ");
 
   return (
@@ -209,10 +261,12 @@ export function MuscleMap({
       <div className={compact ? "mx-auto w-full max-w-56" : "w-full"}>
         <div className={compact ? "w-full" : "mx-auto w-full max-w-3xl"}>
           <div
-            className="relative mx-auto overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]"
-            onClick={addDebugPoint}
+            className={`relative mx-auto overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)] ${interactive && !debug ? "cursor-pointer" : ""}`}
+            onClick={handleMapClick}
+            onMouseLeave={() => setHoveredPart(null)}
+            onMouseMove={handleMapMouseMove}
           >
-            {/* Raster anatomy only: no SVG source and no vector highlight drawing. */}
+            {/* Raster anatomy only: pointer hit-testing uses the same reference box as the image. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               alt="Detaillierte anatomische Vorder- und Rückansicht zur Auswahl von Muskelgruppen"
@@ -221,26 +275,12 @@ export function MuscleMap({
               height={MUSCLE_MAP_REFERENCE_SIZE.height}
               ref={imageRef}
               src="/assets/muscle-map-base.webp"
-              useMap={interactive && !debug ? "#ocrcraft-muscle-map" : undefined}
               width={MUSCLE_MAP_REFERENCE_SIZE.width}
             />
 
-            {fullBody ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill"
-                draggable={false}
-                src="/assets/muscle-map-base.webp"
-                style={{
-                  filter: fullBody.emphasis === "secondary"
-                    ? "grayscale(1) sepia(1) saturate(9) hue-rotate(168deg)"
-                    : "grayscale(1) sepia(1) saturate(9) hue-rotate(320deg)",
-                  mixBlendMode: "multiply",
-                  opacity: 0.24,
-                }}
-              />
-            ) : null}
+            {showAntagonists ? antagonistIds.flatMap((id) => optionParts(id).map((part) => (
+              <RasterMuscleLayer key={`antagonist-${id}-${part.id}`} part={part} tone="antagonist" />
+            ))) : null}
 
             {selection.flatMap((item) => optionParts(item.id).map((part) => (
               <RasterMuscleLayer key={`${item.id}-${part.id}`} part={part} tone={toneFor(mode, item)} />
@@ -267,7 +307,9 @@ export function MuscleMap({
           ) : null}
 
           {hoveredPart && !compact ? (
-            <div className="mt-2 text-center text-xs font-bold text-[var(--muted)]">{hoveredPart.labelDe}</div>
+            <div className="mt-2 text-center text-xs font-bold text-[var(--muted)]">
+              {hoveredPart.labelDe}{hoveredOptionId ? ` · ${optionById.get(hoveredOptionId)?.labelDe ?? hoveredOptionId}` : ""}
+            </div>
           ) : null}
         </div>
 
@@ -286,7 +328,7 @@ export function MuscleMap({
                   </span>
                 </div>
                 <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
-                  Volle Breite, responsive Spalten und einzeln einklappbare Bereiche. Karte und Checkboxen teilen denselben Zustand.
+                  Karte und Checkboxen teilen denselben Zustand. Hover und Klick werden direkt im Raster-Koordinatensystem ausgewertet.
                 </p>
               </div>
               <span aria-hidden="true" className="shrink-0 text-lg font-black text-[var(--muted)]">{listOpen ? "−" : "+"}</span>
@@ -309,6 +351,15 @@ export function MuscleMap({
                   >
                     Alle schließen
                   </button>
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--foreground)]">
+                    <input
+                      checked={showAntagonists}
+                      className="size-4 accent-violet-500"
+                      onChange={(event) => setShowAntagonists(event.currentTarget.checked)}
+                      type="checkbox"
+                    />
+                    Gegenmuskel anzeigen
+                  </label>
                 </div>
                 {interactive && selection.length > 0 ? (
                   <button
@@ -347,9 +398,10 @@ export function MuscleMap({
                           {entries.map((option) => {
                             const selected = selectedById.get(option.id);
                             const secondary = selected?.emphasis === "secondary";
+                            const isAntagonist = showAntagonists && antagonistIds.includes(option.id);
                             return (
                               <div
-                                className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 transition ${selected ? "border-[var(--border-strong)] bg-[var(--accent-soft)]" : "border-[var(--border)] bg-[var(--surface-subtle)]"}`}
+                                className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 transition ${selected ? "border-[var(--border-strong)] bg-[var(--accent-soft)]" : isAntagonist ? "border-violet-300 bg-violet-50 dark:border-violet-700 dark:bg-violet-950/30" : "border-[var(--border)] bg-[var(--surface-subtle)]"}`}
                                 key={option.id}
                               >
                                 <label className={`flex min-w-0 flex-1 items-center gap-2 ${interactive ? "cursor-pointer" : "cursor-default"}`}>
@@ -362,7 +414,10 @@ export function MuscleMap({
                                     type="checkbox"
                                   />
                                   <span className="min-w-0">
-                                    <span className="block truncate text-sm font-bold text-[var(--foreground)]">{option.labelDe}</span>
+                                    <span className="flex items-center gap-2">
+                                      <span className="block truncate text-sm font-bold text-[var(--foreground)]">{option.labelDe}</span>
+                                      {isAntagonist ? <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-violet-700 dark:bg-violet-900 dark:text-violet-200">Gegenmuskel</span> : null}
+                                    </span>
                                     {option.labelEn && option.labelEn !== option.labelDe ? (
                                       <span className="block truncate text-[11px] text-[var(--muted)]">{option.labelEn}</span>
                                     ) : null}
@@ -407,37 +462,12 @@ export function MuscleMap({
         ) : null}
       </div>
 
-      {interactive && !debug ? (
-        <map name="ocrcraft-muscle-map">
-          {visibleParts.map((part) => {
-            const optionId = optionForPart(part);
-            if (!optionId) return null;
-            return (
-              <area
-                alt={part.labelDe}
-                aria-label={part.labelDe}
-                coords={scaledCoords(part.coordinates, scaleX, scaleY)}
-                href="#"
-                key={part.id}
-                onClick={(event) => {
-                  event.preventDefault();
-                  cycle(optionId);
-                }}
-                onMouseEnter={() => setHoveredPart(part)}
-                onMouseLeave={() => setHoveredPart(null)}
-                shape="poly"
-                title={part.labelDe}
-              />
-            );
-          })}
-        </map>
-      ) : null}
-
-      {mode === "emphasis" ? (
+      {mode === "emphasis" || showAntagonists ? (
         <div className="flex flex-wrap gap-3 text-xs font-bold text-[var(--muted)]">
-          <Legend color="#ef4444" label="Primär" />
-          <Legend color="#3b82f6" label="Sekundär" />
-          {interactive ? <span>Karte: Primär → Sekundär → Aus · Liste: Checkbox + P/S</span> : null}
+          {mode === "emphasis" ? <Legend color="#ef4444" label="Primär" /> : null}
+          {mode === "emphasis" ? <Legend color="#3b82f6" label="Sekundär" /> : null}
+          {showAntagonists ? <Legend color="#8b5cf6" label="Typischer Gegenmuskel" /> : null}
+          {mode === "emphasis" && interactive ? <span>Karte: Primär → Sekundär → Aus · Liste: Checkbox + P/S</span> : null}
         </div>
       ) : null}
 
@@ -466,6 +496,18 @@ export function MuscleMap({
               );
             })}
           </div>
+          {showAntagonists && antagonistIds.length > 0 ? (
+            <div className="mt-3 border-t border-[var(--border)] pt-3">
+              <div className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-violet-600 dark:text-violet-300">Typische Gegenmuskeln</div>
+              <div className="flex flex-wrap gap-2">
+                {antagonistIds.map((id) => (
+                  <span className="rounded-full border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700 dark:border-violet-700 dark:bg-violet-950/30 dark:text-violet-200" key={id}>
+                    {optionById.get(id)?.labelDe ?? id}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
