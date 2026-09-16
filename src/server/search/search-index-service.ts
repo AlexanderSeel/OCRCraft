@@ -2,8 +2,12 @@ import "server-only";
 
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
+import {
+  refreshExerciseSearchDocuments,
+  type SearchLocale,
+} from "./exercise-search-documents";
 
-export type SearchLocale = "de" | "en";
+export type { SearchLocale } from "./exercise-search-documents";
 export type SearchIndexStatus = "healthy" | "dirty" | "rebuilding" | "failed";
 
 export interface SearchIndexState {
@@ -45,6 +49,7 @@ export async function rebuildSearchIndex(locale: SearchLocale): Promise<void> {
       { locale },
     );
     try {
+      await refreshExerciseSearchDocuments(connection, locale);
       await connection.run("INSTALL fts; LOAD fts;");
       await connection.run(
         `PRAGMA create_fts_index('${table}', 'document_id', 'title', 'aliases', 'summary', 'tags', 'body_regions', 'equipment', 'instructions', stemmer='${stemmer}', stopwords='${stopwords}', strip_accents=1, lower=1, overwrite=1)`,
