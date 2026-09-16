@@ -24,23 +24,27 @@ function strings(formData: FormData, name: string): string[] {
   return formData.getAll(name).map(String).map((value) => value.trim()).filter(Boolean);
 }
 
+function bodyRegions(formData: FormData) {
+  const selected = [...new Set(strings(formData, "bodyRegionIds"))];
+  return selected.flatMap((id) => {
+    const emphasis = String(formData.get(`bodyEmphasis:${id}`) ?? "primary");
+    return emphasis === "primary" || emphasis === "secondary"
+      ? [{ id, emphasis }]
+      : [];
+  });
+}
+
 export async function updateExerciseFacetsAction(
   exerciseId: string,
   formData: FormData,
 ): Promise<void> {
-  const primary = [...new Set(strings(formData, "bodyPrimary"))];
-  const primarySet = new Set(primary);
-  const secondary = [...new Set(strings(formData, "bodySecondary"))].filter((id) => !primarySet.has(id));
   const movementPatternIds = [...new Set(strings(formData, "movementPatternIds"))];
   const tagIds = [...new Set(strings(formData, "tagIds"))];
   const equipmentIds = [...new Set(strings(formData, "equipmentIds"))];
 
   const parsed = facetSchema.safeParse({
     exerciseId,
-    bodyRegions: [
-      ...primary.map((id) => ({ id, emphasis: "primary" as const })),
-      ...secondary.map((id) => ({ id, emphasis: "secondary" as const })),
-    ],
+    bodyRegions: bodyRegions(formData),
     movementPatternIds,
     tagIds,
     equipment: equipmentIds.map((id) => ({
