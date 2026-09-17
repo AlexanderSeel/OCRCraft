@@ -26,9 +26,9 @@ export function TrainingQuickPlanner() {
   const [format, setFormat] = useState("circuit");
   const [location, setLocation] = useState("mixed");
   const [warmupCount, setWarmupCount] = useState(2);
-  const [mainCount, setMainCount] = useState(4);
+  const [mainPartCounts, setMainPartCounts] = useState<readonly number[]>([4]);
   const [cooldownCount, setCooldownCount] = useState(2);
-  const [mainPartCount, setMainPartCount] = useState(1);
+  const [mainPartCount, setMainPartCountState] = useState(1);
   const [organizationMode, setOrganizationMode] = useState<"solo" | "team">("solo");
   const [teamSize, setTeamSize] = useState(4);
   const [draft, setDraft] = useState<TrainingDraft | null>(null);
@@ -40,6 +40,24 @@ export function TrainingQuickPlanner() {
   const coarseOptions = useMemo(() => BODY_REGION_OPTIONS.filter((option) =>
     (COARSE_BODY_REGION_IDS as readonly string[]).includes(option.id)
   ), []);
+
+  function setMainPartCount(value: number) {
+    const nextCount = Math.max(1, Math.min(4, value));
+    setMainPartCountState(nextCount);
+    setMainPartCounts((current) => Array.from({ length: nextCount }, (_, index) => current[index] ?? current.at(-1) ?? 4));
+    invalidateDraft();
+  }
+
+  function setMainPartExerciseCount(index: number, value: number) {
+    setMainPartCounts((current) => current.map((count, candidateIndex) => candidateIndex === index ? value : count));
+    invalidateDraft();
+  }
+
+  function invalidateDraft() {
+    setDraft(null);
+    setSavedId(null);
+    setError(null);
+  }
 
   function requestBody() {
     return {
@@ -55,7 +73,8 @@ export function TrainingQuickPlanner() {
       intensity: format === "technique" ? "technique" : "balanced",
       builderMode: "local",
       warmupExerciseCount: warmupCount,
-      mainExerciseCount: mainCount,
+      mainExerciseCount: mainPartCounts[0] ?? 4,
+      mainPartExerciseCounts: mainPartCounts,
       cooldownExerciseCount: cooldownCount,
       mainPartCount,
       organizationMode,
@@ -126,22 +145,35 @@ export function TrainingQuickPlanner() {
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <Select label="Zielgruppe" value={audience} onChange={setAudience} options={audiences} />
-        <NumberField label="Teilnehmer" value={participants} min={1} max={200} onChange={setParticipants} />
-        <NumberField label="Dauer (Min.)" value={duration} min={30} max={180} onChange={setDuration} />
-        <Select label="Ziel" value={goal} onChange={setGoal} options={goals.map((value) => [value, value] as const)} />
-        <Select label="Muskel-/Körperfokus" value={bodyRegion} onChange={setBodyRegion} options={coarseOptions.map((option) => [option.id, option.labelDe] as const)} />
-        <Select label="Format" value={format} onChange={setFormat} options={formats} />
-        <Select label="Ort" value={location} onChange={setLocation} options={locations} />
-        <Select label="Organisation" value={organizationMode} onChange={(value) => setOrganizationMode(value as "solo" | "team")} options={[["solo", "Alleine / individuell"], ["team", "Teams"]]} />
+        <Select label="Zielgruppe" value={audience} onChange={(value) => { setAudience(value); invalidateDraft(); }} options={audiences} />
+        <NumberField label="Teilnehmer" value={participants} min={1} max={200} onChange={(value) => { setParticipants(value); invalidateDraft(); }} />
+        <NumberField label="Dauer (Min.)" value={duration} min={30} max={180} onChange={(value) => { setDuration(value); invalidateDraft(); }} />
+        <Select label="Ziel" value={goal} onChange={(value) => { setGoal(value); invalidateDraft(); }} options={goals.map((value) => [value, value] as const)} />
+        <Select label="Muskel-/Körperfokus" value={bodyRegion} onChange={(value) => { setBodyRegion(value); invalidateDraft(); }} options={coarseOptions.map((option) => [option.id, option.labelDe] as const)} />
+        <Select label="Format" value={format} onChange={(value) => { setFormat(value); invalidateDraft(); }} options={formats} />
+        <Select label="Ort" value={location} onChange={(value) => { setLocation(value); invalidateDraft(); }} options={locations} />
+        <Select label="Organisation" value={organizationMode} onChange={(value) => { setOrganizationMode(value as "solo" | "team"); invalidateDraft(); }} options={[["solo", "Alleine / individuell"], ["team", "Teams"]]} />
       </div>
 
-      <div className="mt-4 grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 sm:grid-cols-2 lg:grid-cols-5">
-        <NumberField label="Warm-up Übungen" value={warmupCount} min={1} max={6} onChange={setWarmupCount} />
-        <NumberField label="Hauptteile" value={mainPartCount} min={1} max={4} onChange={setMainPartCount} />
-        <NumberField label="Übungen je Hauptteil" value={mainCount} min={1} max={8} onChange={setMainCount} />
-        <NumberField label="Cooldown Übungen" value={cooldownCount} min={1} max={6} onChange={setCooldownCount} />
-        {organizationMode === "team" ? <NumberField label="Teamgröße" value={teamSize} min={2} max={Math.max(2, participants)} onChange={setTeamSize} /> : <div className="hidden lg:block" />}
+      <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <NumberField label="Warm-up Übungen" value={warmupCount} min={1} max={6} onChange={(value) => { setWarmupCount(value); invalidateDraft(); }} />
+          <NumberField label="Hauptteile" value={mainPartCount} min={1} max={4} onChange={setMainPartCount} />
+          <NumberField label="Cooldown Übungen" value={cooldownCount} min={1} max={6} onChange={(value) => { setCooldownCount(value); invalidateDraft(); }} />
+          {organizationMode === "team" ? <NumberField label="Teamgröße" value={teamSize} min={2} max={Math.max(2, participants)} onChange={(value) => { setTeamSize(value); invalidateDraft(); }} /> : <div className="hidden lg:block" />}
+        </div>
+        <div className={`mt-3 grid gap-3 ${mainPartCount === 1 ? "sm:max-w-xs" : "sm:grid-cols-2 lg:grid-cols-4"}`}>
+          {mainPartCounts.map((count, index) => (
+            <NumberField
+              key={index}
+              label={mainPartCount === 1 ? "Übungen Hauptteil" : `Übungen Hauptteil ${index + 1}`}
+              value={count}
+              min={1}
+              max={8}
+              onChange={(value) => setMainPartExerciseCount(index, value)}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="mt-5 flex flex-wrap justify-end gap-2">
