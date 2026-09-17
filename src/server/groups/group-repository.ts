@@ -25,12 +25,14 @@ export interface ClubGroupInput {
   readonly defaultDurationMinutes: number | null;
   readonly defaultLocale: "de" | "en";
   readonly maximumRiskLevel: ClubGroupRiskLevel | null;
-  readonly defaultLocation: TrainingLocation;
-  readonly defaultEquipment: readonly ClubGroupEquipmentDefault[];
+  readonly defaultLocation?: TrainingLocation;
+  readonly defaultEquipment?: readonly ClubGroupEquipmentDefault[];
 }
 
-export interface ClubGroup extends ClubGroupInput {
+export interface ClubGroup extends Omit<ClubGroupInput, "defaultLocation" | "defaultEquipment"> {
   readonly id: string;
+  readonly defaultLocation: TrainingLocation;
+  readonly defaultEquipment: readonly ClubGroupEquipmentDefault[];
   readonly archived: boolean;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -165,10 +167,10 @@ export async function createClubGroup(input: ClubGroupInput): Promise<string> {
           duration: input.defaultDurationMinutes,
           locale: input.defaultLocale,
           risk: input.maximumRiskLevel,
-          location: input.defaultLocation,
+          location: input.defaultLocation ?? "mixed",
         },
       );
-      await replaceGroupEquipmentDefaults(connection, id, input.defaultEquipment);
+      await replaceGroupEquipmentDefaults(connection, id, input.defaultEquipment ?? []);
       await connection.run("COMMIT");
     } catch (error) {
       await connection.run("ROLLBACK");
@@ -196,7 +198,7 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
           default_duration_minutes=$duration,
           default_locale=$locale,
           maximum_risk_level=$risk,
-          default_location=$location,
+          default_location=COALESCE($location, default_location),
           updated_at=current_timestamp
         WHERE id=$id::UUID
         RETURNING id::VARCHAR
@@ -211,14 +213,16 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
           duration: input.defaultDurationMinutes,
           locale: input.defaultLocale,
           risk: input.maximumRiskLevel,
-          location: input.defaultLocation,
+          location: input.defaultLocation ?? null,
         },
       );
       if (reader.getRows().length === 0) {
         await connection.run("ROLLBACK");
         return false;
       }
-      await replaceGroupEquipmentDefaults(connection, id, input.defaultEquipment);
+      if (input.defaultEquipment !== undefined) {
+        await replaceGroupEquipmentDefaults(connection, id, input.defaultEquipment);
+      }
       await connection.run("COMMIT");
       return true;
     } catch (error) {
