@@ -19,10 +19,7 @@ export const trainingDraftRequestSchema = z.object({
   builderMode: z.enum(TRAINING_BUILDER_MODES).default("local"),
   warmupExerciseCount: z.number().int().min(1).max(6).default(2),
   mainExerciseCount: z.number().int().min(1).max(8).default(4),
-  /**
-   * Optional exact count for every numbered main-part block. Empty keeps the
-   * backwards-compatible uniform mainExerciseCount for every block.
-   */
+  /** Optional exact count for every numbered main-part block. */
   mainPartExerciseCounts: z.array(z.number().int().min(1).max(8)).max(4).default([]),
   cooldownExerciseCount: z.number().int().min(1).max(6).default(2),
   mainPartCount: z.number().int().min(1).max(4).default(1),
@@ -60,4 +57,13 @@ export const trainingDraftRequestSchema = z.object({
   { message: "Für jeden Hauptteil muss genau eine Übungsanzahl angegeben werden.", path: ["mainPartExerciseCounts"] },
 );
 
-export type TrainingDraftRequest = z.infer<typeof trainingDraftRequestSchema>;
+type ParsedTrainingDraftRequest = z.infer<typeof trainingDraftRequestSchema>;
+
+/**
+ * Type-level compatibility for callers constructing requests in code. Runtime
+ * parsing always supplies an array; callers may omit it to retain the historic
+ * uniform mainExerciseCount behavior.
+ */
+export type TrainingDraftRequest = Omit<ParsedTrainingDraftRequest, "mainPartExerciseCounts"> & {
+  readonly mainPartExerciseCounts?: readonly number[];
+};
