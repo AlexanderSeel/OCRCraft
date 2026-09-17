@@ -6,7 +6,10 @@ import { z } from "zod";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { reseedAllDatabaseData } from "@/server/db/reseed-service";
 import { refreshDuplicateReviewTasks, resolveDuplicateTask } from "@/server/exercises/duplicate-review-service";
-import { enrichImportedGymExercisesForOutdoor } from "@/server/exercises/outdoor-variant-enrichment-service";
+import {
+  enrichImportedGymExerciseForOutdoor,
+  enrichImportedGymExercisesForOutdoor,
+} from "@/server/exercises/outdoor-variant-enrichment-service";
 
 const reseedConfirmationSchema = z.literal("OCRCRAFT ZURÜCKSETZEN");
 
@@ -35,10 +38,7 @@ export async function reseedDatabaseAction(formData: FormData): Promise<void> {
 export async function runOutdoorVariantEnrichmentAction(): Promise<void> {
   try {
     const report = await enrichImportedGymExercisesForOutdoor();
-    revalidatePath("/admin");
-    revalidatePath("/admin/outdoor-variants");
-    revalidatePath("/exercises");
-    revalidatePath("/training/builder");
+    revalidateOutdoorVariantPaths();
     const params = new URLSearchParams({
       scanned: String(report.scanned),
       enriched: String(report.enriched),
@@ -50,6 +50,28 @@ export async function runOutdoorVariantEnrichmentAction(): Promise<void> {
   } catch {
     redirect("/admin/outdoor-variants?error=1");
   }
+}
+
+export async function approveOutdoorVariantCandidateAction(formData: FormData): Promise<void> {
+  const exerciseId = String(formData.get("exerciseId") ?? "");
+  if (!exerciseId) redirect("/admin/outdoor-variants?candidate=not-found");
+
+  try {
+    const status = await enrichImportedGymExerciseForOutdoor(exerciseId);
+    revalidateOutdoorVariantPaths();
+    revalidatePath(`/exercises/${exerciseId}`);
+    revalidatePath(`/exercises/${exerciseId}/edit`);
+    redirect(`/admin/outdoor-variants?candidate=${encodeURIComponent(status)}`);
+  } catch {
+    redirect("/admin/outdoor-variants?candidate=error");
+  }
+}
+
+function revalidateOutdoorVariantPaths(): void {
+  revalidatePath("/admin");
+  revalidatePath("/admin/outdoor-variants");
+  revalidatePath("/exercises");
+  revalidatePath("/training/builder");
 }
 
 export async function scanDuplicateExercisesAction(): Promise<void> {
