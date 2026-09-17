@@ -2,10 +2,12 @@ import {
   AUDIENCES,
   BODY_REGIONS,
   TRAINING_FORMATS,
+  TRAINING_LOCATIONS,
   type Audience,
   type BodyRegion,
   type TrainingEquipmentAvailability,
   type TrainingFormat,
+  type TrainingLocation,
 } from "../../domain/training/model";
 import type { DraftIntensity, TrainingDraft } from "../../domain/training/draft";
 
@@ -19,6 +21,7 @@ export interface QuickCreateDraftClientInput {
   readonly bodyRegions: readonly string[];
   readonly avoidBodyRegions?: readonly string[];
   readonly formats: readonly string[];
+  readonly location?: string;
   readonly intensity: string;
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment?: readonly TrainingEquipmentAvailability[];
@@ -37,6 +40,7 @@ export interface NormalizedTrainingDraftRequest {
   readonly bodyRegions: readonly BodyRegion[];
   readonly avoidBodyRegions: readonly BodyRegion[];
   readonly formats: readonly TrainingFormat[];
+  readonly location: TrainingLocation;
   readonly intensity: DraftIntensity;
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment: readonly TrainingEquipmentAvailability[];
@@ -53,6 +57,7 @@ export interface PersistedTrainingDraftResult {
 const AUDIENCE_SET = new Set<string>(AUDIENCES);
 const BODY_REGION_SET = new Set<string>(BODY_REGIONS);
 const FORMAT_SET = new Set<string>(TRAINING_FORMATS);
+const LOCATION_SET = new Set<string>(TRAINING_LOCATIONS);
 const INTENSITIES = new Set<string>(["technique", "balanced", "conditioning"]);
 
 function isAudience(value: string): value is Audience {
@@ -65,6 +70,10 @@ function isBodyRegion(value: string): value is BodyRegion {
 
 function isTrainingFormat(value: string): value is TrainingFormat {
   return FORMAT_SET.has(value);
+}
+
+function isTrainingLocation(value: string): value is TrainingLocation {
+  return LOCATION_SET.has(value);
 }
 
 function isDraftIntensity(value: string): value is DraftIntensity {
@@ -99,6 +108,7 @@ export function normalizeTrainingDraftRequest(
   const avoidBodyRegions = [...new Set((input.avoidBodyRegions ?? []).filter(isBodyRegion))]
     .filter((region) => !focusRegionSet.has(region));
   const formats = input.formats.filter(isTrainingFormat);
+  const location: TrainingLocation = input.location && isTrainingLocation(input.location) ? input.location : "mixed";
   const intensity: DraftIntensity = isDraftIntensity(input.intensity) ? input.intensity : "balanced";
   const ages = parseAgeRange(input.ageRange);
   const availableEquipment = new Map<string, number>();
@@ -115,6 +125,7 @@ export function normalizeTrainingDraftRequest(
     bodyRegions,
     avoidBodyRegions,
     formats,
+    location,
     intensity,
     preferredExerciseIds: input.preferredExerciseIds,
     availableEquipment: [...availableEquipment].map(([equipmentId, quantityAvailable]) => ({
