@@ -44,6 +44,9 @@ export interface TrainingDraftExerciseCandidate {
   readonly setupSeconds?: number | null;
   readonly transitionSeconds?: number | null;
   readonly tags: readonly string[];
+  readonly movementPatterns?: readonly string[];
+  /** Localized structured exercise detail collapsed into planning/search context. */
+  readonly planningText?: string;
   readonly defaultDurationSeconds: number | null;
   readonly instructions?: string;
   readonly level1?: string;
@@ -125,6 +128,31 @@ function isEligible(candidate: TrainingDraftExerciseCandidate, input: TrainingDr
   return true;
 }
 
+function planningGoalTokens(goals: readonly string[]): readonly string[] {
+  return [...new Set(goals.flatMap((goal) =>
+    goal
+      .toLocaleLowerCase("de-DE")
+      .split(/[^\p{L}\p{N}]+/u)
+      .map((term) => term.trim())
+      .filter((term) => term.length >= 3),
+  ))];
+}
+
+function enrichedContextScore(candidate: TrainingDraftExerciseCandidate, goals: readonly string[]): number {
+  const tokens = planningGoalTokens(goals);
+  if (tokens.length === 0) return 0;
+
+  const movementText = (candidate.movementPatterns ?? [])
+    .join(" ")
+    .toLocaleLowerCase("de-DE");
+  const planningText = (candidate.planningText ?? "").toLocaleLowerCase("de-DE");
+
+  const movementMatches = new Set(tokens.filter((token) => movementText.includes(token))).size;
+  const detailMatches = new Set(tokens.filter((token) => planningText.includes(token))).size;
+
+  return Math.min(movementMatches * 9, 18) + Math.min(detailMatches * 4, 20);
+}
+
 function scoreCandidate(
   candidate: TrainingDraftExerciseCandidate,
   phase: TrainingPhaseKind,
@@ -157,6 +185,7 @@ function scoreCandidate(
   const normalizedTags = candidate.tags.map((tag) => tag.toLocaleLowerCase("de-DE"));
   if (normalizedGoals.some((goal) => normalizedTags.some((tag) => goal.includes(tag) || tag.includes(goal)))) score += 8;
 
+  score += enrichedContextScore(candidate, input.goals);
   return score;
 }
 
