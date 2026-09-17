@@ -45,6 +45,9 @@ export interface ExerciseEditorRecord {
   readonly riskLevel: ExerciseRiskLevel;
   readonly minAge: number | null;
   readonly archived: boolean;
+  readonly sourceProvider: string | null;
+  readonly sourceUrl: string | null;
+  readonly sourceLicenseLabel: string | null;
 }
 
 export interface ExerciseCategoryCount {
@@ -266,7 +269,10 @@ export async function getExerciseById(id: string): Promise<ExerciseEditorRecord 
         e.id::VARCHAR, e.seed_key, e.category, e.default_phase, e.risk_level, e.min_age, e.archived,
         de.name, COALESCE(de.summary, ''), en.name, COALESCE(en.summary, ''),
         COALESCE((SELECT string_agg(a.alias, ' | ') FROM exercise_aliases a WHERE a.exercise_id=e.id AND a.locale='de'), ''),
-        COALESCE((SELECT string_agg(a.alias, ' | ') FROM exercise_aliases a WHERE a.exercise_id=e.id AND a.locale='en'), '')
+        COALESCE((SELECT string_agg(a.alias, ' | ') FROM exercise_aliases a WHERE a.exercise_id=e.id AND a.locale='en'), ''),
+        (SELECT sr.provider FROM exercise_source_references sr WHERE sr.exercise_id=e.id ORDER BY sr.created_at DESC LIMIT 1),
+        (SELECT sr.source_url FROM exercise_source_references sr WHERE sr.exercise_id=e.id ORDER BY sr.created_at DESC LIMIT 1),
+        (SELECT sr.license_label FROM exercise_source_references sr WHERE sr.exercise_id=e.id ORDER BY sr.created_at DESC LIMIT 1)
       FROM exercises e
       JOIN exercise_translations de ON de.exercise_id=e.id AND de.locale='de'
       JOIN exercise_translations en ON en.exercise_id=e.id AND en.locale='en'
@@ -291,6 +297,9 @@ export async function getExerciseById(id: string): Promise<ExerciseEditorRecord 
       summaryEn: String(row[10]),
       aliasesDe: String(row[11] ?? "").split(" | ").filter(Boolean),
       aliasesEn: String(row[12] ?? "").split(" | ").filter(Boolean),
+      sourceProvider: row[13] == null ? null : String(row[13]),
+      sourceUrl: row[14] == null ? null : String(row[14]),
+      sourceLicenseLabel: row[15] == null ? null : String(row[15]),
     };
   });
 }

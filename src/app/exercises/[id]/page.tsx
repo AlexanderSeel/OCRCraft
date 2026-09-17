@@ -191,9 +191,12 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
             <Card title="Quelle / Provenienz">
               <dl className="space-y-3 text-sm">
                 <InfoValue label="Katalogschlüssel" value={exercise.seedKey ?? "Manuell angelegt"} />
+                <InfoValue label="Quelle" value={exercise.sourceProvider ?? "OCRCraft"} />
+                {exercise.sourceLicenseLabel ? <InfoValue label="Lizenz" value={exercise.sourceLicenseLabel} /> : null}
                 <InfoValue label="DE" value={exercise.nameDe} />
                 <InfoValue label="EN" value={exercise.nameEn} />
               </dl>
+              {exercise.sourceUrl ? <a className="mt-3 block break-all text-sm font-bold underline" href={exercise.sourceUrl} rel="noreferrer" target="_blank">Quelle öffnen</a> : null}
             </Card>
           </aside>
         </section>

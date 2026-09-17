@@ -44,7 +44,7 @@
 - [x] transition/setup-time validation using exercise logistics estimates and warning on estimated session overrun
 - [x] age-specific club-rule engine
 - [x] progression/regression rules
-- [ ] recent-use/load rules
+- [x] recent-use/load rules
 
 ## 3. DuckDB schema
 
@@ -138,7 +138,7 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [x] suggested standard prescription
 - [x] suggested advanced prescription
 - [x] typical work/rest ranges where appropriate
-- [ ] suitable training formats, e.g. circuit / AMRAP / EMOM / Tabata-style / interval / technique / relay / Rig & Run
+- [x] suitable training formats, e.g. circuit / AMRAP / EMOM / Tabata-style / interval / technique / relay / Rig & Run
 - [x] reasonable station capacity
 - [x] approximate setup time
 - [x] approximate transition time
@@ -147,23 +147,23 @@ The remaining generic seed records must be enriched so that every exercise is se
 
 #### Progression, regression & mixed groups
 
-- [ ] Level 1 regression with explanation
-- [ ] Level 2 standard version
-- [ ] Level 3 progression with explanation
+- [x] Level 1 regression with explanation
+- [x] Level 2 standard version
+- [x] Level 3 progression with explanation
 - [ ] low-impact alternative where meaningful
 - [ ] no-equipment alternative where meaningful
 - [ ] child/youth variant where meaningful
 - [ ] partner/team variant where meaningful
 - [ ] prerequisite skills for advanced OCR exercises
-- [ ] fallback exercise if an obstacle/equipment item is unavailable
+- [x] fallback exercise if an obstacle/equipment item is unavailable
 
 #### Audience & safety metadata
 
-- [ ] audience suitability: kids / youth / adults / mixed
-- [ ] minimum recommended age where applicable
-- [ ] difficulty: beginner / intermediate / advanced
-- [ ] risk level: low / medium / high
-- [ ] supervision requirement: normal / increased / direct station supervision
+- [x] audience suitability: kids / youth / adults / mixed
+- [x] minimum recommended age where applicable
+- [x] difficulty: beginner / intermediate / advanced
+- [x] risk level: low / medium / high
+- [x] supervision requirement: normal / increased / direct station supervision
 - [ ] contact/partner requirement
 - [ ] club-rule restriction hooks
 
@@ -283,8 +283,8 @@ Useful VIBSS structures to map into OCRCraft include adult endurance/coordinatio
 
 Implementation rules:
 
-- [ ] add `external_source_reference` / provenance model
-- [ ] source fields: provider, title, URL, retrieval date, source type, notes
+- [x] add `external_source_reference` / provenance model
+- [x] source fields: provider, title, URL, retrieval date, source type, notes
 - [ ] tag records derived from VIBSS inspiration with `source_provider = VIBSS/LSB NRW`
 - [ ] do **not** copy VIBSS text or images verbatim unless licensing explicitly permits it
 - [ ] write independent OCRCraft descriptions based on the training concept
@@ -314,7 +314,7 @@ Reference entry points:
 - [x] CI requires primary body region + movement pattern for every seeded exercise
 - [x] CI requires at least one supported prescription method
 - [x] CI requires Level 1/2/3 for exercises marked `progression_required`
-- [ ] CI requires source/provenance for externally inspired seed records
+- [x] CI requires source/provenance for externally imported exercise records
 - [x] Admin completeness score lists seeded exercises and their missing bilingual/catalog fields
 
 ### 4.8 Seed enrichment migration
@@ -370,7 +370,7 @@ Reference entry points:
 - [x] dosage/programming editor
 - [x] Level 1/2/3 editor
 - [x] safety/logistics editor
-- [ ] source/provenance display
+- [x] source/provenance display
 - [x] source/provider and media attribution are retained for ExerciseDB imports
 - [x] dry-run adapter for hasaneyldrm/exercises-dataset preserves source and media references and requires translation/review
 - [x] optional transactional persistence imports the external exercise catalogue as reviewable OCRCraft drafts
