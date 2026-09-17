@@ -10,6 +10,19 @@ function configForLocale(locale: SearchLocale) {
         bodyRegionLabel: "br.label_de",
         tagLabel: "tag.label_de",
         movementLabel: "mp.label_de",
+        goalLabel: `CASE etg.goal
+          WHEN 'strength' THEN 'Kraft'
+          WHEN 'strength_endurance' THEN 'Kraftausdauer'
+          WHEN 'endurance' THEN 'Ausdauer'
+          WHEN 'speed' THEN 'Schnelligkeit'
+          WHEN 'coordination' THEN 'Koordination'
+          WHEN 'balance' THEN 'Balance'
+          WHEN 'mobility' THEN 'Mobilität'
+          WHEN 'grip' THEN 'Griffkraft'
+          WHEN 'ocr_technique' THEN 'OCR-Technik'
+          WHEN 'recovery' THEN 'Regeneration'
+          WHEN 'teamwork' THEN 'Teamwork'
+          ELSE etg.goal END`,
       }
     : {
         table: "search_documents_en",
@@ -17,6 +30,19 @@ function configForLocale(locale: SearchLocale) {
         bodyRegionLabel: "br.label_en",
         tagLabel: "tag.label_en",
         movementLabel: "mp.label_en",
+        goalLabel: `CASE etg.goal
+          WHEN 'strength' THEN 'Strength'
+          WHEN 'strength_endurance' THEN 'Strength Endurance'
+          WHEN 'endurance' THEN 'Endurance'
+          WHEN 'speed' THEN 'Speed'
+          WHEN 'coordination' THEN 'Coordination'
+          WHEN 'balance' THEN 'Balance'
+          WHEN 'mobility' THEN 'Mobility'
+          WHEN 'grip' THEN 'Grip'
+          WHEN 'ocr_technique' THEN 'OCR Technique'
+          WHEN 'recovery' THEN 'Recovery'
+          WHEN 'teamwork' THEN 'Teamwork'
+          ELSE etg.goal END`,
       };
 }
 
@@ -55,6 +81,11 @@ export async function refreshExerciseSearchDocuments(
         COALESCE(e.difficulty, ''),
         COALESCE(e.impact_level, ''),
         COALESCE(e.coordination_complexity, ''),
+        COALESCE((
+          SELECT string_agg(etg.goal || ' ' || ${config.goalLabel}, ' ')
+          FROM exercise_training_goals etg
+          WHERE etg.exercise_id=e.id
+        ), ''),
         COALESCE((
           SELECT string_agg(et.tag_id || ' ' || ${config.tagLabel}, ' ')
           FROM exercise_tags et
