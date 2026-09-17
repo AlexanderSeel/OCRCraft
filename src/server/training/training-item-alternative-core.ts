@@ -52,46 +52,60 @@ export async function listTrainingItemAlternativesCore(
 
   const reader = await connection.runAndReadAll(
     `
+    WITH candidate_metrics AS (
+      SELECT
+        e.id::VARCHAR AS exercise_id,
+        t.name,
+        COALESCE(e.category,'general') AS category,
+        COALESCE(e.difficulty,'beginner') AS difficulty,
+        e.risk_level,
+        COALESCE((
+          SELECT string_agg(CASE WHEN $locale='de' THEN eq.name_de ELSE COALESCE(eq.name_en,eq.name_de) END, ' | ' ORDER BY eq.name_de)
+          FROM exercise_equipment ee
+          JOIN equipment eq ON eq.id=ee.equipment_id
+          WHERE ee.exercise_id=e.id
+        ), '') AS equipment_names,
+        (
+          SELECT count(*)
+          FROM exercise_movement_patterns candidate
+          WHERE candidate.exercise_id=e.id
+            AND candidate.movement_pattern_id IN (
+              SELECT source.movement_pattern_id
+              FROM exercise_movement_patterns source
+              WHERE source.exercise_id=$currentExerciseId::UUID
+            )
+        ) AS movement_overlap,
+        (
+          SELECT count(*)
+          FROM exercise_body_regions candidate
+          WHERE candidate.exercise_id=e.id
+            AND candidate.body_region_id IN (
+              SELECT source.body_region_id
+              FROM exercise_body_regions source
+              WHERE source.exercise_id=$currentExerciseId::UUID
+            )
+        ) AS body_overlap,
+        (SELECT count(*) FROM exercise_equipment ee WHERE ee.exercise_id=e.id) AS equipment_count,
+        ${DIFFICULTY_SQL} AS difficulty_rank
+      FROM exercises e
+      JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale=$locale
+      WHERE e.archived=false AND e.id<>$currentExerciseId::UUID
+    )
     SELECT
-      e.id::VARCHAR,
-      t.name,
-      COALESCE(e.category,'general'),
-      COALESCE(e.difficulty,'beginner'),
-      e.risk_level,
-      COALESCE((
-        SELECT string_agg(CASE WHEN $locale='de' THEN eq.name_de ELSE COALESCE(eq.name_en,eq.name_de) END, ' | ' ORDER BY eq.name_de)
-        FROM exercise_equipment ee
-        JOIN equipment eq ON eq.id=ee.equipment_id
-        WHERE ee.exercise_id=e.id
-      ), ''),
-      (
-        SELECT count(*)
-        FROM exercise_movement_patterns candidate
-        WHERE candidate.exercise_id=e.id
-          AND candidate.movement_pattern_id IN (
-            SELECT source.movement_pattern_id
-            FROM exercise_movement_patterns source
-            WHERE source.exercise_id=$currentExerciseId::UUID
-          )
-      ) AS movement_overlap,
-      (
-        SELECT count(*)
-        FROM exercise_body_regions candidate
-        WHERE candidate.exercise_id=e.id
-          AND candidate.body_region_id IN (
-            SELECT source.body_region_id
-            FROM exercise_body_regions source
-            WHERE source.exercise_id=$currentExerciseId::UUID
-          )
-      ) AS body_overlap,
-      (SELECT count(*) FROM exercise_equipment ee WHERE ee.exercise_id=e.id) AS equipment_count,
-      ${DIFFICULTY_SQL} AS difficulty_rank
-    FROM exercises e
-    JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale=$locale
-    WHERE e.archived=false AND e.id<>$currentExerciseId::UUID
+      exercise_id,
+      name,
+      category,
+      difficulty,
+      risk_level,
+      equipment_names,
+      movement_overlap,
+      body_overlap,
+      equipment_count,
+      difficulty_rank
+    FROM candidate_metrics
     ORDER BY
       (
-        CASE WHEN COALESCE(e.category,'general')=$currentCategory THEN 45 ELSE 0 END
+        CASE WHEN category=$currentCategory THEN 45 ELSE 0 END
         + movement_overlap * 30
         + body_overlap * 18
         + CASE
@@ -112,7 +126,7 @@ export async function listTrainingItemAlternativesCore(
       ) DESC,
       movement_overlap DESC,
       body_overlap DESC,
-      t.name
+      name
     LIMIT $limit
     `,
     {
