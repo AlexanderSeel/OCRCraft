@@ -205,6 +205,14 @@ export function MuscleMap({
     setSelection(selection.map((item) => item.id === id ? { ...item, emphasis } : item));
   }
 
+  function addAntagonistsToSelection() {
+    if (!interactive || mode !== "select" || antagonistIds.length === 0) return;
+    setSelection([
+      ...selection,
+      ...antagonistIds.map((id) => ({ id })),
+    ]);
+  }
+
   function setCategoryOpen(category: string, open: boolean) {
     setOpenCategories((current) => {
       const next = new Set(current);
@@ -363,6 +371,15 @@ export function MuscleMap({
                     />
                     Gegenmuskel anzeigen
                   </label>
+                  {interactive && mode === "select" && showAntagonists && antagonistIds.length > 0 ? (
+                    <button
+                      className="rounded-lg border border-violet-300 bg-violet-50 px-3 py-2 text-xs font-black text-violet-700 hover:bg-violet-100 dark:border-violet-700 dark:bg-violet-950/30 dark:text-violet-200 dark:hover:bg-violet-900/50"
+                      onClick={addAntagonistsToSelection}
+                      type="button"
+                    >
+                      Gegenmuskeln übernehmen ({antagonistIds.length})
+                    </button>
+                  ) : null}
                 </div>
                 {interactive && selection.length > 0 ? (
                   <button
