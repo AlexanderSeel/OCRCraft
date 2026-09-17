@@ -198,6 +198,24 @@ async function clearOutdoorVariantEquipment(connection: DuckDBConnection, exerci
   );
 }
 
+async function writeOutdoorEquipment(
+  connection: DuckDBConnection,
+  exerciseId: string,
+  plan: OutdoorVariantPlan,
+): Promise<void> {
+  await clearOutdoorVariantEquipment(connection, exerciseId);
+  for (const item of plan.equipment) {
+    await connection.run(`
+      INSERT INTO exercise_outdoor_variant_equipment (exercise_id,equipment_id,quantity_required)
+      VALUES ($exerciseId::UUID,$equipmentId::UUID,$quantity)
+    `, {
+      exerciseId,
+      equipmentId: item.equipmentId,
+      quantity: item.quantityRequired,
+    });
+  }
+}
+
 async function applyOutdoorPlan(
   connection: DuckDBConnection,
   exercise: ImportedExerciseRow,
@@ -205,17 +223,7 @@ async function applyOutdoorPlan(
 ): Promise<void> {
   await connection.run("BEGIN TRANSACTION");
   try {
-    await clearOutdoorVariantEquipment(connection, exercise.id);
-    for (const item of plan.equipment) {
-      await connection.run(`
-        INSERT INTO exercise_outdoor_variant_equipment (exercise_id,equipment_id,quantity_required)
-        VALUES ($exerciseId::UUID,$equipmentId::UUID,$quantity)
-      `, {
-        exerciseId: exercise.id,
-        equipmentId: item.equipmentId,
-        quantity: item.quantityRequired,
-      });
-    }
+    await writeOutdoorEquipment(connection, exercise.id, plan);
     await connection.run(`
       UPDATE exercise_details
       SET outdoor_variant=CASE locale
@@ -236,6 +244,26 @@ async function applyOutdoorPlan(
   }
 }
 
+/**
+ * Keeps trainer-authored variant text untouched while making the structured
+ * replacement equipment usable by outdoor candidate selection and logistics.
+ */
+async function hydrateExistingOutdoorVariantEquipment(
+  connection: DuckDBConnection,
+  exerciseId: string,
+  plan: OutdoorVariantPlan,
+): Promise<void> {
+  await connection.run("BEGIN TRANSACTION");
+  try {
+    await writeOutdoorEquipment(connection, exerciseId, plan);
+    await setOutdoorSuitability(connection, exerciseId, true);
+    await connection.run("COMMIT");
+  } catch (error) {
+    await connection.run("ROLLBACK");
+    throw error;
+  }
+}
+
 async function markOutdoorPlanUnmappable(connection: DuckDBConnection, exerciseId: string): Promise<void> {
   await connection.run("BEGIN TRANSACTION");
   try {
@@ -248,7 +276,7 @@ async function markOutdoorPlanUnmappable(connection: DuckDBConnection, exerciseI
   }
 }
 
-/** Applies one reviewed candidate only. Existing manual variants are not overwritten. */
+/** Applies one reviewed candidate only. Existing manual variant text is never overwritten. */
 export async function enrichImportedGymExerciseForOutdoor(exerciseId: string): Promise<"enriched" | "existing" | "unmappable" | "missing-details" | "not-found"> {
   if (!UUID_PATTERN.test(exerciseId)) return "not-found";
   await ensureDatabaseReady();
@@ -267,7 +295,11 @@ export async function enrichImportedGymExerciseForOutdoor(exerciseId: string): P
 
     const plan = buildOutdoorVariantPlan(equipment, catalogue);
     if (exercise.outdoorVariant.trim()) {
-      if (plan.canApply) await setOutdoorSuitability(connection, exercise.id, true);
+      if (!plan.canApply) {
+        await markOutdoorPlanUnmappable(connection, exercise.id);
+        return "unmappable";
+      }
+      await hydrateExistingOutdoorVariantEquipment(connection, exercise.id, plan);
       return "existing";
     }
     if (!plan.canApply) {
@@ -311,11 +343,11 @@ export async function enrichImportedGymExercisesForOutdoor(
 
       const plan = buildOutdoorVariantPlan(equipment, catalogue);
 
-      // Manual/existing variants are preserved by default. A forced enrichment
-      // run is the only bulk operation allowed to regenerate their structured
-      // equipment mapping and bilingual text.
+      // Existing trainer-authored text is preserved by default, but its
+      // structured replacement equipment is refreshed so outdoor planning does
+      // not silently fall back to the original studio equipment.
       if (!force && exercise.outdoorVariant.trim() && plan.canApply) {
-        await setOutdoorSuitability(connection, exercise.id, true);
+        await hydrateExistingOutdoorVariantEquipment(connection, exercise.id, plan);
         alreadyEnriched += 1;
         continue;
       }
