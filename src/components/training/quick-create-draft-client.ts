@@ -33,6 +33,7 @@ export interface QuickCreateDraftClientInput {
   readonly builderMode?: string;
   readonly warmupExerciseCount?: number;
   readonly mainExerciseCount?: number;
+  readonly mainPartExerciseCounts?: readonly number[];
   readonly cooldownExerciseCount?: number;
   readonly mainPartCount?: number;
   readonly organizationMode?: string;
@@ -61,6 +62,7 @@ export interface NormalizedTrainingDraftRequest {
   readonly builderMode: QuickCreateBuilderMode;
   readonly warmupExerciseCount: number;
   readonly mainExerciseCount: number;
+  readonly mainPartExerciseCounts: readonly number[];
   readonly cooldownExerciseCount: number;
   readonly mainPartCount: number;
   readonly organizationMode: TrainingOrganizationMode;
@@ -125,6 +127,17 @@ function boundedInteger(value: number | undefined, fallback: number, min: number
   return Math.max(min, Math.min(max, Number(value)));
 }
 
+function normalizeMainPartExerciseCounts(
+  values: readonly number[] | undefined,
+  mainPartCount: number,
+  fallback: number,
+): readonly number[] {
+  if (values?.length === mainPartCount) {
+    return values.map((value) => boundedInteger(value, fallback, 1, 8));
+  }
+  return Array.from({ length: mainPartCount }, () => fallback);
+}
+
 export function parseAgeRange(value: string): ParsedAgeRange {
   const numbers = value.match(/\d+/g)?.map(Number).filter(Number.isFinite) ?? [];
   if (numbers.length === 0) return {};
@@ -167,6 +180,11 @@ export function normalizeTrainingDraftRequest(
   const mainExerciseCount = boundedInteger(input.mainExerciseCount, 4, 1, 8);
   const cooldownExerciseCount = boundedInteger(input.cooldownExerciseCount, 2, 1, 6);
   const mainPartCount = boundedInteger(input.mainPartCount, 1, 1, 4);
+  const mainPartExerciseCounts = normalizeMainPartExerciseCounts(
+    input.mainPartExerciseCounts,
+    mainPartCount,
+    mainExerciseCount,
+  );
   const teamSize = organizationMode === "team"
     ? boundedInteger(input.teamSize, Math.min(4, participantCount), 2, Math.min(20, Math.max(2, participantCount)))
     : undefined;
@@ -192,6 +210,7 @@ export function normalizeTrainingDraftRequest(
     builderMode,
     warmupExerciseCount,
     mainExerciseCount,
+    mainPartExerciseCounts,
     cooldownExerciseCount,
     mainPartCount,
     organizationMode,
