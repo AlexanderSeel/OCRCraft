@@ -26,7 +26,7 @@ describe("parseAgeRange", () => {
 });
 
 describe("normalizeTrainingDraftRequest", () => {
-  it("keeps supported granular muscle regions and filters unknown client values", () => {
+  it("keeps supported granular muscle regions, exercise types and builder mode while filtering unknown values", () => {
     expect(
       normalizeTrainingDraftRequest({
         groupId: "11111111-1111-4111-8111-111111111111",
@@ -37,9 +37,11 @@ describe("normalizeTrainingDraftRequest", () => {
         goals: ["OCR-Technik"],
         bodyRegions: ["core", "biceps", "rear-delts", "abs", "not-a-region"],
         avoidBodyRegions: ["calves", "core", "not-a-region"],
+        exerciseTypes: ["skill", "obstacle", "not-a-type"],
         formats: ["rig-run", "not-a-format"],
         location: "indoor",
         intensity: "technique",
+        builderMode: "ai",
         preferredExerciseIds: ["exercise-1"],
         availableEquipment: [
           { equipmentId: "sandbag", quantityAvailable: 6 },
@@ -53,9 +55,11 @@ describe("normalizeTrainingDraftRequest", () => {
       goals: ["OCR-Technik"],
       bodyRegions: ["core", "biceps", "rear-delts", "abs"],
       avoidBodyRegions: ["calves"],
+      exerciseTypes: ["skill", "obstacle"],
       formats: ["rig-run"],
       location: "indoor",
       intensity: "technique",
+      builderMode: "ai",
       preferredExerciseIds: ["exercise-1"],
       availableEquipment: [
         { equipmentId: "sandbag", quantityAvailable: 6 },
@@ -67,7 +71,7 @@ describe("normalizeTrainingDraftRequest", () => {
     });
   });
 
-  it("falls back to safe audience, location and intensity values", () => {
+  it("falls back to safe audience, location, intensity and local builder values", () => {
     const request = normalizeTrainingDraftRequest({
       groupType: "unknown",
       ageRange: "Erwachsene",
@@ -75,15 +79,19 @@ describe("normalizeTrainingDraftRequest", () => {
       durationMinutes: 45,
       goals: ["Ganzkörper"],
       bodyRegions: [],
+      exerciseTypes: ["not-a-type"],
       formats: ["circuit"],
       location: "unknown",
       intensity: "unknown",
+      builderMode: "unknown",
       preferredExerciseIds: [],
     });
 
     expect(request.audience).toBe("mixed");
     expect(request.location).toBe("mixed");
     expect(request.intensity).toBe("balanced");
+    expect(request.builderMode).toBe("local");
+    expect(request.exerciseTypes).toEqual([]);
     expect(request.minAge).toBeUndefined();
     expect(request.maxAge).toBeUndefined();
     expect(request.availableEquipment).toEqual([]);
