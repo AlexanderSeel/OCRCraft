@@ -13,8 +13,8 @@ const organizationSchema = z.object({
     z.coerce.number().int().min(2).max(20).nullable(),
   ),
   groupSplitCount: z.preprocess(
-    (value) => value === "" || value == null ? null : value,
-    z.coerce.number().int().min(1).max(20).nullable(),
+    (value) => value === "" || value === null ? null : value,
+    z.coerce.number().int().min(1).max(20).nullable().optional(),
   ),
 }).superRefine((value, context) => {
   if (value.organizationMode === "team" && value.teamSize == null) {
@@ -31,7 +31,7 @@ export async function updateTrainingOrganizationAction(formData: FormData): Prom
     sessionId,
     organizationMode: formData.get("organizationMode"),
     teamSize: formData.get("teamSize"),
-    groupSplitCount: formData.get("groupSplitCount"),
+    groupSplitCount: formData.has("groupSplitCount") ? formData.get("groupSplitCount") : undefined,
   });
   if (!parsed.success) redirect(`/training/${sessionId}?error=organization`);
 
