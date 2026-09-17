@@ -46,7 +46,9 @@ async function createFixture() {
       duration_minutes INTEGER NOT NULL,
       instructions VARCHAR,
       level_label VARCHAR,
-      sort_order INTEGER NOT NULL
+      sort_order INTEGER NOT NULL,
+      main_part_index INTEGER,
+      main_part_title VARCHAR
     );
 
     INSERT INTO exercises VALUES

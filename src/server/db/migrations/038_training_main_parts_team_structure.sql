@@ -1,7 +1,7 @@
 BEGIN TRANSACTION;
 
 ALTER TABLE training_sessions
-  ADD COLUMN IF NOT EXISTS organization_mode VARCHAR DEFAULT 'solo';
+  ADD COLUMN IF NOT EXISTS organization_mode VARCHAR;
 ALTER TABLE training_sessions
   ADD COLUMN IF NOT EXISTS team_size INTEGER;
 
@@ -9,6 +9,12 @@ ALTER TABLE training_items
   ADD COLUMN IF NOT EXISTS main_part_index INTEGER;
 ALTER TABLE training_items
   ADD COLUMN IF NOT EXISTS main_part_title VARCHAR;
+
+-- DuckDB does not support adding a column with a DEFAULT constraint to an
+-- existing table. Backfill the safe legacy value explicitly instead.
+UPDATE training_sessions
+SET organization_mode='solo'
+WHERE organization_mode IS NULL;
 
 -- Existing sessions had one implicit main part. Make that explicit without
 -- changing warm-up/cooldown rows.
