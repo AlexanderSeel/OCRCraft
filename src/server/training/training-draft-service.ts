@@ -75,6 +75,11 @@ export async function createAndPersistDeterministicTrainingDraft(
     locale: input.request.locale,
     groupId: input.groupId,
     source: "manual",
+    generation: {
+      builderMode: "local",
+      request: input.request,
+      trainerReviewed: true,
+    },
   });
 
   return { id, draft };
@@ -85,12 +90,20 @@ export async function persistReviewedAiTrainingDraft(
 ): Promise<{ readonly id: string; readonly draft: TrainingDraft }> {
   const candidates = await approvedCandidatesFor(input.request);
   const draft = composeReviewedAiTrainingDraft(input, candidates);
+  const provider = getConfiguredAiTrainingProvider();
   const id = await persistTrainingDraft(draft, {
     title: input.title,
     locale: input.request.locale,
     groupId: input.groupId,
     source: "ai",
     notes: "Quick Create · reviewed AI proposal · deterministic OCRCraft revalidation",
+    generation: {
+      builderMode: "ai",
+      providerId: provider?.id ?? null,
+      providerModel: provider?.modelId ?? null,
+      request: input.request,
+      trainerReviewed: true,
+    },
   });
   return { id, draft };
 }
