@@ -3,7 +3,7 @@ import {
   exerciseCategories,
   exercisePhases,
   exerciseRiskLevels,
-} from "@/domain/exercise/model";
+} from "../../domain/exercise/model";
 
 export const aiExerciseDraftProposalSchema = z.object({
   nameDe: z.string().trim().min(2).max(120),

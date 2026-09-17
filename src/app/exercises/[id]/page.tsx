@@ -62,12 +62,12 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
       }
     >
       <div className="space-y-6">
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          <Metric label="Kategorie" value={exerciseCategoryLabels[exercise.category] ?? exercise.category} />
-          <Metric label="Phase" value={exercisePhaseLabels[exercise.phase] ?? exercise.phase} />
-          <Metric label="Risiko" value={riskLabel(exercise.riskLevel)} />
-          <Metric label="Mindestalter" value={exercise.minAge == null ? "Kein Limit" : `ab ${exercise.minAge}`} />
-          <Metric label="Status" value={exercise.archived ? "Archiviert" : "Aktiv"} />
+        <section aria-label="Übungsmetadaten" className="flex flex-wrap gap-2">
+          <MetaTag label="Bereich" value={exerciseCategoryLabels[exercise.category] ?? exercise.category} />
+          <MetaTag label="Phase" value={exercisePhaseLabels[exercise.phase] ?? exercise.phase} />
+          <MetaTag label="Risiko" value={riskLabel(exercise.riskLevel)} />
+          <MetaTag label="Alter" value={exercise.minAge == null ? "Kein Limit" : `ab ${exercise.minAge}`} />
+          <MetaTag label="Status" value={exercise.archived ? "Archiviert" : "Aktiv"} />
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
@@ -260,12 +260,12 @@ function OptionalSection({ title, value, prominent = false }: { readonly title: 
   );
 }
 
-function Metric({ label, value }: { readonly label: string; readonly value: string }) {
+function MetaTag({ label, value }: { readonly label: string; readonly value: string }) {
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
-      <div className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted)]">{label}</div>
-      <div className="mt-1 font-black">{value}</div>
-    </div>
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-bold">
+      <span className="text-[var(--muted)]">{label}:</span>
+      <span>{value}</span>
+    </span>
   );
 }
 

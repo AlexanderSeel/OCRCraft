@@ -348,6 +348,7 @@ Reference entry points:
 - [x] compact muscle/facet filter popovers stay bounded to the viewport and do not dominate the overview
 - [x] overview metrics are reduced to compact metadata tags beside the result count
 - [x] counts, equipment, risk, min-age display
+- [x] compact metadata treatment is consistent between overview and exercise detail pages
 - [x] create exercise
 - [x] new manual exercises continue directly into the same full editor used by existing exercises
 - [x] edit exercise
