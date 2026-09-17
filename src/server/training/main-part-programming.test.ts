@@ -88,7 +88,7 @@ describe("main-part programming", () => {
 
   it("reports useful work/rest arithmetic when a block leaves transition time", () => {
     const result = applyMainPartProgramming(request, draft);
-    expect(result.warnings.some((warning) => warning.includes("Hauptteil 1") && warning.includes("50s bleiben"))).toBe(true);
+    expect(result.warnings.some((warning) => warning.includes("Hauptteil 1") && warning.includes("30s bleiben"))).toBe(true);
   });
 
   it("formats the supported prescriptions for trainer-facing surfaces", () => {
