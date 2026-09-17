@@ -26,6 +26,7 @@ const migrationFiles = [
   "018_exercise_training_goals.sql",
   "019_exercise_movement_classification.sql",
   "020_ocr_transfer_tags.sql",
+  "021_muscle_relationships.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -384,6 +385,11 @@ describe("initial exercise catalog", () => {
         WHERE e.seed_key IS NOT NULL
           AND NOT EXISTS (SELECT 1 FROM exercise_training_phases p WHERE p.exercise_id=e.id)
       `)).toBe(0);
+      expect(await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        WHERE e.seed_key IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM exercise_body_regions b WHERE b.exercise_id=e.id AND b.emphasis='secondary')
+      `)).toBeGreaterThan(0);
       expect(await scalar(connection, `
         SELECT count(*) FROM exercises e
         WHERE e.seed_key IS NOT NULL AND e.category IN ('running','ocr-skill','grip-rig')

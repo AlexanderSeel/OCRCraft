@@ -48,6 +48,7 @@ const tablesToClear = [
   "exercise_movement_patterns",
   "exercise_training_phases",
   "exercise_training_goals",
+  "exercise_muscle_oppositions",
   "exercise_tags",
   "exercise_body_regions",
   "exercise_translations",

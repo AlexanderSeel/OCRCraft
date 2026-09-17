@@ -84,6 +84,7 @@ A fresh OCRCraft DB must be useful immediately. A trainer must be able to unders
 - [x] equipment/body-region/movement/tag catalogues
 - [x] DE/EN search documents
 - [x] duplicate protection
+- [x] startup health check verifies all 157 seed exercises and bilingual identity data without reseeding automatically
 
 ### 4.2 Required exercise detail contract
 
@@ -102,8 +103,8 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [x] training goals: strength / strength endurance / endurance / speed / coordination / balance / mobility / grip / OCR technique / recovery / teamwork
 - [x] movement patterns: squat / hinge / lunge / push / pull / carry / crawl / climb / hang / rotate / brace / jump / throw / run / balance / mobility
 - [x] primary body regions
-- [ ] secondary body regions
-- [ ] define primary muscle and opposing/antagonist muscle pairs for exercises where relevant, separately from general secondary muscles
+- [x] secondary body regions
+- [x] define primary muscle and opposing/antagonist muscle pairs for exercises where relevant, separately from general secondary muscles
 - [x] unilateral / bilateral / alternating / locomotion classification
 - [x] movement plane where useful: sagittal / frontal / transverse / multiplanar
 - [x] impact level: low / moderate / high
