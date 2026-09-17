@@ -2,7 +2,7 @@ BEGIN TRANSACTION;
 
 CREATE TABLE IF NOT EXISTS ai_exercise_drafts (
   id UUID PRIMARY KEY DEFAULT uuid(),
-  status VARCHAR NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  status VARCHAR NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approving', 'approved', 'rejected')),
   provider_id VARCHAR NOT NULL,
   provider_model VARCHAR,
   request_text VARCHAR NOT NULL,
