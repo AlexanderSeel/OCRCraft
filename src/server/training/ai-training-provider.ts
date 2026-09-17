@@ -1,0 +1,152 @@
+import "server-only";
+
+import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
+import type { TrainingDraftRequest } from "./training-draft-schema";
+
+export interface AiTrainingGenerationContext {
+  readonly request: TrainingDraftRequest;
+  readonly approvedExercises: readonly TrainingDraftExerciseCandidate[];
+}
+
+export interface AiTrainingProvider {
+  readonly id: string;
+  generateTrainingPlan(context: AiTrainingGenerationContext): Promise<unknown>;
+}
+
+interface OpenAiCompatibleResponse {
+  readonly choices?: readonly {
+    readonly message?: {
+      readonly content?: string | null;
+    };
+  }[];
+}
+
+export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
+  readonly id = "openai-compatible";
+
+  constructor(
+    private readonly baseUrl: string,
+    private readonly model: string,
+    private readonly apiKey?: string,
+  ) {}
+
+  async generateTrainingPlan(context: AiTrainingGenerationContext): Promise<unknown> {
+    const response = await fetch(`${this.baseUrl.replace(/\/$/, "")}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...(this.apiKey ? { authorization: `Bearer ${this.apiKey}` } : {}),
+      },
+      body: JSON.stringify({
+        model: this.model,
+        temperature: 0.2,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: [
+              "You are OCRCraft's training-plan composer.",
+              "Use ONLY exerciseId values from the approved exercise pool.",
+              "Return JSON only. Do not invent exercises, equipment, safety facts or medical advice.",
+              "Create exactly one warmup, one main and one cooldown phase.",
+              "Respect audience, ages, goals, body focus/avoidance, requested exercise types, formats, location, intensity and equipment.",
+              "Prefer movement-pattern and body-region variety and avoid unnecessary consecutive high-impact loading.",
+              "The server will assign exact phase durations and run deterministic safety/logistics validation after your proposal.",
+            ].join(" "),
+          },
+          {
+            role: "user",
+            content: JSON.stringify(buildPromptPayload(context)),
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      throw new Error(`AI provider failed (${response.status})${detail ? `: ${detail.slice(0, 300)}` : ""}`);
+    }
+
+    const payload = await response.json() as OpenAiCompatibleResponse;
+    const content = payload.choices?.[0]?.message?.content;
+    if (!content) throw new Error("AI provider returned no JSON training proposal.");
+
+    try {
+      return JSON.parse(content) as unknown;
+    } catch {
+      throw new Error("AI provider returned invalid JSON.");
+    }
+  }
+}
+
+export function getConfiguredAiTrainingProvider(): AiTrainingProvider | null {
+  const baseUrl = process.env.OCRCRAFT_AI_BASE_URL?.trim();
+  const model = process.env.OCRCRAFT_AI_MODEL?.trim();
+  if (!baseUrl || !model) return null;
+
+  return new OpenAiCompatibleTrainingProvider(
+    baseUrl,
+    model,
+    process.env.OCRCRAFT_AI_API_KEY?.trim() || undefined,
+  );
+}
+
+function buildPromptPayload(context: AiTrainingGenerationContext) {
+  return {
+    outputSchema: {
+      title: "optional string",
+      rationale: "optional short trainer-facing rationale",
+      phases: [
+        {
+          kind: "warmup | main | cooldown",
+          items: [
+            {
+              exerciseId: "approved exercise id",
+              format: "optional free | circuit | tabata | amrap | emom | rig-run | run-exercise | technique | relay",
+              level: "optional level1 | level2 | level3",
+              trainerNote: "optional short note",
+            },
+          ],
+        },
+      ],
+    },
+    request: {
+      audience: context.request.audience,
+      minAge: context.request.minAge,
+      maxAge: context.request.maxAge,
+      participantCount: context.request.participantCount,
+      durationMinutes: context.request.durationMinutes,
+      goals: context.request.goals,
+      bodyRegions: context.request.bodyRegions,
+      avoidBodyRegions: context.request.avoidBodyRegions,
+      exerciseTypes: context.request.exerciseTypes,
+      formats: context.request.formats,
+      location: context.request.location,
+      intensity: context.request.intensity,
+      preferredExerciseIds: context.request.preferredExerciseIds,
+      availableEquipment: context.request.availableEquipment,
+    },
+    approvedExercises: context.approvedExercises.map((exercise) => ({
+      id: exercise.id,
+      name: exercise.name,
+      category: exercise.category,
+      phase: exercise.defaultPhase,
+      exerciseType: exercise.exerciseType,
+      trainingGoals: exercise.trainingGoals,
+      difficulty: exercise.difficulty,
+      impactLevel: exercise.impactLevel,
+      coordinationComplexity: exercise.coordinationComplexity,
+      riskLevel: exercise.riskLevel,
+      minAge: exercise.minAge,
+      bodyRegions: exercise.bodyRegions,
+      movementPatterns: exercise.movementPatterns,
+      tags: exercise.tags,
+      equipment: exercise.equipmentRequirements,
+      stationCapacity: exercise.stationCapacity,
+      structuredContext: exercise.planningText?.slice(0, 900),
+      level1: exercise.level1?.slice(0, 280),
+      level2: exercise.level2?.slice(0, 280),
+      level3: exercise.level3?.slice(0, 280),
+    })),
+  };
+}
