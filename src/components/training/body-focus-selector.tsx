@@ -4,6 +4,7 @@ import { MuscleMap } from "@/components/body/muscle-map";
 import {
   BODY_REGION_OPTIONS,
   getBodyRegionAntagonists,
+  normalizeBodyRegionId,
 } from "@/domain/body-regions";
 
 interface BodyFocusSelectorProps {
@@ -29,10 +30,12 @@ export function BodyFocusSelector({
 
   if (showAntagonistSuggestions) {
     for (const sourceId of selected) {
-      for (const antagonistId of getBodyRegionAntagonists(sourceId)) {
+      const normalizedSourceId = normalizeBodyRegionId(sourceId);
+      if (!normalizedSourceId) continue;
+      for (const antagonistId of getBodyRegionAntagonists(normalizedSourceId)) {
         if (selectedIds.has(antagonistId)) continue;
         const sources = antagonistSources.get(antagonistId) ?? [];
-        sources.push(labelById.get(sourceId) ?? sourceId);
+        sources.push(labelById.get(normalizedSourceId) ?? normalizedSourceId);
         antagonistSources.set(antagonistId, sources);
       }
     }

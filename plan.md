@@ -113,18 +113,18 @@ The remaining generic seed records must be enriched so that every exercise is se
 
 #### Trainer-readable explanation
 
-- [ ] **short summary:** one sentence explaining what the exercise is
-- [ ] **purpose:** why this exercise is used and what it develops
-- [ ] **setup:** equipment, spacing and preparation before starting
-- [ ] **start position:** clear body/equipment starting position
-- [ ] **execution:** 3–7 ordered steps written so a non-expert can follow them
-- [ ] **finish/reset position** where relevant
-- [ ] **breathing cue** where useful
-- [ ] **tempo/rhythm cue** where useful
-- [ ] **2–5 coaching cues** that can be called out during training
+- [x] **short summary:** one sentence explaining what the exercise is
+- [x] **purpose:** why this exercise is used and what it develops
+- [x] **setup:** equipment, spacing and preparation before starting
+- [x] **start position:** clear body/equipment starting position
+- [x] **execution:** 3–7 ordered steps written so a non-expert can follow them
+- [x] **finish/reset position** where relevant
+- [x] **breathing cue** where useful
+- [x] **tempo/rhythm cue** where useful
+- [x] **2–5 coaching cues** that can be called out during training
 - [ ] **2–5 common mistakes** and how the trainer corrects them
-- [ ] **safety notes / stop conditions** written in practical trainer language
-- [ ] **quality criteria:** what a good repetition or successful obstacle attempt looks like
+- [x] **safety notes / stop conditions** written in practical trainer language
+- [x] **quality criteria:** what a good repetition or successful obstacle attempt looks like
 - [x] hand-authored bilingual, exercise-specific detail for all 10 warm-up seeds
 
 #### Dosage & programming
@@ -399,6 +399,10 @@ Reference entry points:
 - [x] visual front/back body selector
 - [x] reusable `MuscleMap` component with select/emphasis/display modes
 - [x] OCRCraft-owned anatomical front/back asset with semantic muscle overlays
+- [x] integrate all 89 pinned `body-muscles` regions with German/English labels under the existing 24 selectable groups; distinguish muscles from other body areas
+- [x] calibrate SVG-derived regions to the 376 × 504 WebP; share adapted outer contours between highlighting and hit testing; retain source paths, transforms, Apache license and NOTICE
+- [x] support coarse/detail selection in exercise filters, editing and Quick Create; preserve existing IDs and primary/secondary state
+- [x] migrate 89 detail IDs into DuckDB and validate persistence, filter compatibility, pointer reachability, reported missing points and desktop/mobile form behavior
 - [x] accessible list fallback for precise selection of overlapping regions
 - [x] muscle highlight design tokens for Light/Dark/System themes
 - [x] Exercise create/edit UI

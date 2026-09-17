@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, type MouseEvent } from "react";
-import { getBodyRegionAntagonists } from "@/domain/body-regions";
+import { getBodyRegionAntagonists, bodyRegionParent, detailBodyRegion } from "@/domain/body-regions";
 import {
   MUSCLE_MAP_PARTS,
   MUSCLE_MAP_PARTS_BY_OPTION,
@@ -75,19 +75,17 @@ function optionParts(optionId: string): readonly MuscleMapPart[] {
   if (optionId === "full-body") return MUSCLE_MAP_PARTS;
 
   const direct = MUSCLE_MAP_PARTS_BY_OPTION.get(optionId) ?? [];
-  const fallbackIds = FALLBACK_OPTION_PARTS[optionId] ?? [];
-  const fallback = fallbackIds.flatMap((id) => MUSCLE_MAP_PARTS_BY_OPTION.get(id) ?? []);
-
-  if (fallback.length === 0) return direct;
-  const unique = new Map<string, MuscleMapPart>();
-  for (const part of [...direct, ...fallback]) unique.set(part.id, part);
-  return [...unique.values()];
+  if (detailBodyRegion(optionId)) return direct;
+  const parentIds = new Set([optionId, ...(FALLBACK_OPTION_PARTS[optionId] ?? [])]);
+  return MUSCLE_MAP_PARTS.filter(part => parentIds.has(bodyRegionParent(part.optionId)));
 }
 
-function optionForPart(part: MuscleMapPart, optionIds: ReadonlySet<string>): string | null {
-  if (optionIds.has(part.optionId)) return part.optionId;
+function optionForPart(part: MuscleMapPart, optionIds: ReadonlySet<string>, detailed = true): string | null {
+  if (detailed && optionIds.has(part.optionId)) return part.optionId;
+  const parent = bodyRegionParent(part.optionId);
+  if (optionIds.has(parent)) return parent;
   for (const optionId of optionIds) {
-    if (FALLBACK_OPTION_PARTS[optionId]?.includes(part.optionId)) return optionId;
+    if (FALLBACK_OPTION_PARTS[optionId]?.includes(bodyRegionParent(part.optionId))) return optionId;
   }
   return null;
 }
@@ -109,6 +107,8 @@ export function MuscleMap({
   const [internalSelection, setInternalSelection] = useState<MuscleMapValue[]>(() => [...value]);
   const [hoveredPart, setHoveredPart] = useState<MuscleMapPart | null>(null);
   const [debugPoints, setDebugPoints] = useState<readonly [number, number][]>([]);
+  const [debugLastHit, setDebugLastHit] = useState<string | null>(null);
+  const [detailed, setDetailed] = useState(true);
   const [listOpen, setListOpen] = useState(true);
   const [showAntagonists, setShowAntagonists] = useState(false);
   const [openCategories, setOpenCategories] = useState<Set<string>>(() => new Set(CATEGORY_ORDER));
@@ -123,8 +123,8 @@ export function MuscleMap({
 
   const visibleParts = useMemo(
     () => MUSCLE_MAP_PARTS.filter(
-      (part) => optionIds.has(part.optionId)
-        || [...optionIds].some((optionId) => FALLBACK_OPTION_PARTS[optionId]?.includes(part.optionId)),
+      (part) => optionIds.has(part.optionId) || optionIds.has(bodyRegionParent(part.optionId))
+        || [...optionIds].some((optionId) => FALLBACK_OPTION_PARTS[optionId]?.includes(bodyRegionParent(part.optionId))),
     ),
     [optionIds],
   );
@@ -132,18 +132,23 @@ export function MuscleMap({
   const groupedOptions = useMemo(() => {
     const result = new Map<string, MuscleMapOption[]>();
     for (const option of options) {
-      const category = categoryForOption(option.id);
+      const detail = detailBodyRegion(option.id);
+      if (detail && !detailed) continue;
+      const parentId = bodyRegionParent(option.id);
+      const category = detailed
+        ? options.find(o => o.id === parentId)?.labelDe ?? parentId
+        : categoryForOption(option.id);
       const bucket = result.get(category) ?? [];
       bucket.push(option);
       result.set(category, bucket);
     }
-    return CATEGORY_ORDER.flatMap((category) => {
+    return (detailed ? [...result.keys()] : CATEGORY_ORDER).flatMap((category) => {
       const entries = result.get(category);
       return entries?.length ? [[category, entries] as const] : [];
     });
-  }, [options]);
+  }, [options, detailed]);
 
-  const hoveredOptionId = hoveredPart ? optionForPart(hoveredPart, optionIds) : null;
+  const hoveredOptionId = hoveredPart ? optionForPart(hoveredPart, optionIds, detailed) : null;
   const antagonistIds = useMemo(() => {
     if (!showAntagonists) return [] as string[];
 
@@ -241,7 +246,7 @@ export function MuscleMap({
   }
 
   function handleMapMouseMove(event: MouseEvent<HTMLDivElement>) {
-    if (!interactive || debug) return;
+    if (!interactive) return;
     setHoveredPart(hitPart(event));
   }
 
@@ -249,12 +254,15 @@ export function MuscleMap({
     if (debug) {
       const point = referencePoint(event);
       if (point) setDebugPoints((points) => [...points, [Math.round(point.x), Math.round(point.y)]]);
-      return;
     }
     if (!interactive) return;
     const part = hitPart(event);
-    if (!part) return;
-    const optionId = optionForPart(part, optionIds);
+    if (!part) {
+      if (debug) setDebugLastHit(null);
+      return;
+    }
+    if (debug) setDebugLastHit(part.labelDe);
+    const optionId = optionForPart(part, optionIds, detailed);
     if (optionId) cycle(optionId);
   }
 
@@ -269,10 +277,17 @@ export function MuscleMap({
         </div>
       ) : null}
 
-      <div className={compact || visualCompact ? "mx-auto w-full max-w-56" : "w-full"}>
-        <div className={compact ? "w-full" : visualCompact ? "w-full" : "mx-auto w-full max-w-3xl"}>
+      {!compact && interactive ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" aria-pressed={!detailed} onClick={() => setDetailed(false)} className="min-h-11 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold">24 Hauptbereiche</button>
+          <button type="button" aria-pressed={detailed} onClick={() => setDetailed(true)} className="min-h-11 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold">89 Detailbereiche</button>
+          <span className="text-xs text-[var(--muted)]">{detailed ? "Detailauswahl · links/rechts aus Sicht der dargestellten Person" : "Auswahl ganzer Muskelgruppen"}</span>
+        </div>
+      ) : null}
+      <div className={compact ? "mx-auto w-full max-w-56" : "w-full"}>
+        <div className={compact ? "w-full" : visualCompact ? "mx-auto w-full max-w-xl" : "mx-auto w-full max-w-3xl"}>
           <div
-            className={`relative mx-auto aspect-[376/504] w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)] ${interactive && !debug ? "cursor-pointer" : ""}`}
+            className={`relative mx-auto aspect-[376/504] w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)] ${interactive ? "cursor-pointer" : ""}`}
             onClick={handleMapClick}
             onMouseLeave={() => setHoveredPart(null)}
             onMouseMove={handleMapMouseMove}
@@ -297,8 +312,8 @@ export function MuscleMap({
               <RasterMuscleLayer key={`${item.id}-${part.id}`} part={part} tone={toneFor(mode, item)} />
             )))}
 
-            {hoveredPart && !debug ? <RasterMuscleLayer part={hoveredPart} tone="hover" /> : null}
             {debug ? visibleParts.map((part) => <RasterMuscleLayer key={`debug-${part.id}`} part={part} subtle tone="selected" />) : null}
+            {hoveredPart ? <RasterMuscleLayer part={hoveredPart} tone="hover" /> : null}
 
             {debugPoints.map(([x, y], index) => (
               <span
@@ -339,7 +354,7 @@ export function MuscleMap({
                   </span>
                 </div>
                 <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
-                  Karte und Checkboxen teilen denselben Zustand. Hover und Klick werden direkt im Raster-Koordinatensystem ausgewertet.
+                  Hauptbereiche umfassen mehrere Details. Einzelne Details werden mit Seite und Ansicht gespeichert.
                 </p>
               </div>
               <span aria-hidden="true" className="shrink-0 text-lg font-black text-[var(--muted)]">{listOpen ? "−" : "+"}</span>
@@ -435,11 +450,11 @@ export function MuscleMap({
                                   />
                                   <span className="min-w-0">
                                     <span className="flex items-center gap-2">
-                                      <span className="block truncate text-sm font-bold text-[var(--foreground)]">{option.labelDe}</span>
+                                      <span className="block text-sm font-bold text-[var(--foreground)]">{option.labelDe}{detailBodyRegion(option.id) ? ` (${detailBodyRegion(option.id)?.view === "front" ? "vorn" : "hinten"})` : " · Gesamtbereich"}</span>
                                       {isAntagonist ? <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-violet-700 dark:bg-violet-900 dark:text-violet-200">Gegenmuskel</span> : null}
                                     </span>
                                     {option.labelEn && option.labelEn !== option.labelDe ? (
-                                      <span className="block truncate text-[11px] text-[var(--muted)]">{option.labelEn}</span>
+                                      <span className="block text-[11px] text-[var(--muted)]">{option.labelEn}</span>
                                     ) : null}
                                   </span>
                                 </label>
@@ -534,6 +549,10 @@ export function MuscleMap({
       {debug ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-xs">
           <div className="font-black">Koordinaten-Debug</div>
+          <div className="mt-1 font-mono text-[var(--muted)]">
+            Raster: {MUSCLE_MAP_REFERENCE_SIZE.width} × {MUSCLE_MAP_REFERENCE_SIZE.height} · Skalierung: {scaleX.toFixed(3)} × {scaleY.toFixed(3)}
+          </div>
+          <div className="mt-1 font-mono text-[var(--muted)]">Treffer: {debugLastHit ?? "keine hinterlegte Region"}</div>
           <div className="mt-1 font-mono text-[var(--muted)]">Letzter Punkt: {debugPoints.at(-1)?.join(" / ") ?? "–"}</div>
           <textarea className="mt-2 min-h-20 w-full rounded-lg border border-[var(--border)] p-2 font-mono" readOnly value={`coordinates: [${debugCoordinates}]`} />
           <div className="mt-2 flex flex-wrap gap-2">

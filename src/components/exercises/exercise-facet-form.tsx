@@ -18,6 +18,7 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
         <MuscleMap
           description="Klicke eine Muskelgruppe: Primär → Sekundär → Aus. Die Auswahl wird direkt als Körperregion der Übung gespeichert."
           disabled={disabled}
+          debug
           emphasisFieldPrefix="bodyEmphasis:"
           fieldName="bodyRegionIds"
           mode="emphasis"

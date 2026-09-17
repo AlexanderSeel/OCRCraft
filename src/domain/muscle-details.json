@@ -1,0 +1,892 @@
+[
+  {
+    "id": "detail:head",
+    "sourceId": "head",
+    "parentId": "full-body",
+    "labelDe": "Kopf (Körperbereich)",
+    "labelEn": "Head",
+    "view": "front",
+    "side": "center",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:face",
+    "sourceId": "face",
+    "parentId": "full-body",
+    "labelDe": "Gesicht (Körperbereich)",
+    "labelEn": "Face",
+    "view": "front",
+    "side": "center",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:neck-right",
+    "sourceId": "neck-right",
+    "parentId": "neck",
+    "labelDe": "Halsmuskulatur · rechts",
+    "labelEn": "Right Neck",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:neck-left",
+    "sourceId": "neck-left",
+    "parentId": "neck",
+    "labelDe": "Halsmuskulatur · links",
+    "labelEn": "Left Neck",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:shoulder-front-left",
+    "sourceId": "shoulder-front-left",
+    "parentId": "shoulders",
+    "labelDe": "Vordere Schulter · links",
+    "labelEn": "Left Shoulder (Front)",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:shoulder-side-left",
+    "sourceId": "shoulder-side-left",
+    "parentId": "shoulders",
+    "labelDe": "Seitliche Schulter · links",
+    "labelEn": "Left Shoulder (Side)",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:shoulder-front-right",
+    "sourceId": "shoulder-front-right",
+    "parentId": "shoulders",
+    "labelDe": "Vordere Schulter · rechts",
+    "labelEn": "Right Shoulder (Front)",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:shoulder-side-right",
+    "sourceId": "shoulder-side-right",
+    "parentId": "shoulders",
+    "labelDe": "Seitliche Schulter · rechts",
+    "labelEn": "Right Shoulder (Side)",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:biceps-left",
+    "sourceId": "biceps-left",
+    "parentId": "biceps",
+    "labelDe": "Bizeps · links",
+    "labelEn": "Left Biceps",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:forearm-left",
+    "sourceId": "forearm-left",
+    "parentId": "forearms-grip",
+    "labelDe": "Unterarm · links",
+    "labelEn": "Left Forearm",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:biceps-right",
+    "sourceId": "biceps-right",
+    "parentId": "biceps",
+    "labelDe": "Bizeps · rechts",
+    "labelEn": "Right Biceps",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:forearm-right",
+    "sourceId": "forearm-right",
+    "parentId": "forearms-grip",
+    "labelDe": "Unterarm · rechts",
+    "labelEn": "Right Forearm",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:chest-upper-left",
+    "sourceId": "chest-upper-left",
+    "parentId": "chest",
+    "labelDe": "Brust · oberer Anteil · links",
+    "labelEn": "Left Upper Chest (Clavicular)",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:chest-lower-left",
+    "sourceId": "chest-lower-left",
+    "parentId": "chest",
+    "labelDe": "Brust · unterer Anteil · links",
+    "labelEn": "Left Lower Chest (Sternal)",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:chest-upper-right",
+    "sourceId": "chest-upper-right",
+    "parentId": "chest",
+    "labelDe": "Brust · oberer Anteil · rechts",
+    "labelEn": "Right Upper Chest (Clavicular)",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:chest-lower-right",
+    "sourceId": "chest-lower-right",
+    "parentId": "chest",
+    "labelDe": "Brust · unterer Anteil · rechts",
+    "labelEn": "Right Lower Chest (Sternal)",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:abs-upper-left",
+    "sourceId": "abs-upper-left",
+    "parentId": "abs",
+    "labelDe": "Bauch · oberer Anteil · links",
+    "labelEn": "Left Abs (Upper)",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:serratus-anterior-left",
+    "sourceId": "serratus-anterior-left",
+    "parentId": "chest",
+    "labelDe": "Vorderer Sägemuskel · links",
+    "labelEn": "Left Serratus Anterior",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:obliques-left",
+    "sourceId": "obliques-left",
+    "parentId": "obliques",
+    "labelDe": "Äußere schräge Bauchmuskeln · links",
+    "labelEn": "Left External Oblique",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:abs-upper-right",
+    "sourceId": "abs-upper-right",
+    "parentId": "abs",
+    "labelDe": "Bauch · oberer Anteil · rechts",
+    "labelEn": "Right Abs (Upper)",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:abs-lower-right",
+    "sourceId": "abs-lower-right",
+    "parentId": "abs",
+    "labelDe": "Bauch · unterer Anteil · rechts",
+    "labelEn": "Right Lower Abs",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:abs-lower-left",
+    "sourceId": "abs-lower-left",
+    "parentId": "abs",
+    "labelDe": "Bauch · unterer Anteil · links",
+    "labelEn": "Left Lower Abs",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:serratus-anterior-right",
+    "sourceId": "serratus-anterior-right",
+    "parentId": "chest",
+    "labelDe": "Vorderer Sägemuskel · rechts",
+    "labelEn": "Right Serratus Anterior",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:obliques-right",
+    "sourceId": "obliques-right",
+    "parentId": "obliques",
+    "labelDe": "Äußere schräge Bauchmuskeln · rechts",
+    "labelEn": "Right External Oblique",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:hip-flexor-right",
+    "sourceId": "hip-flexor-right",
+    "parentId": "hips",
+    "labelDe": "Hüftbeuger / Leiste · rechts",
+    "labelEn": "Right Groin / Hip Flexors",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:hip-flexor-left",
+    "sourceId": "hip-flexor-left",
+    "parentId": "hips",
+    "labelDe": "Hüftbeuger / Leiste · links",
+    "labelEn": "Left Groin / Hip Flexors",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:quads-left",
+    "sourceId": "quads-left",
+    "parentId": "quadriceps",
+    "labelDe": "Quadrizeps · links",
+    "labelEn": "Left Quadriceps",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:adductors-left",
+    "sourceId": "adductors-left",
+    "parentId": "adductors",
+    "labelDe": "Adduktoren · links",
+    "labelEn": "Left Adductors",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:foot-left",
+    "sourceId": "foot-left",
+    "parentId": "ankles-feet",
+    "labelDe": "Fuß / Sprunggelenk · links",
+    "labelEn": "Left Foot",
+    "view": "front",
+    "side": "left",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:tibialis-anterior-left",
+    "sourceId": "tibialis-anterior-left",
+    "parentId": "tibialis",
+    "labelDe": "Vorderer Schienbeinmuskel · links",
+    "labelEn": "Left Tibialis Anterior",
+    "view": "front",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:knee-left",
+    "sourceId": "knee-left",
+    "parentId": "quadriceps",
+    "labelDe": "Knie (Gelenk) · links",
+    "labelEn": "Left Knee",
+    "view": "front",
+    "side": "left",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:quads-right",
+    "sourceId": "quads-right",
+    "parentId": "quadriceps",
+    "labelDe": "Quadrizeps · rechts",
+    "labelEn": "Right Quadriceps",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:adductors-right",
+    "sourceId": "adductors-right",
+    "parentId": "adductors",
+    "labelDe": "Adduktoren · rechts",
+    "labelEn": "Right Adductors",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:foot-right",
+    "sourceId": "foot-right",
+    "parentId": "ankles-feet",
+    "labelDe": "Fuß / Sprunggelenk · rechts",
+    "labelEn": "Right Foot",
+    "view": "front",
+    "side": "right",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:tibialis-anterior-right",
+    "sourceId": "tibialis-anterior-right",
+    "parentId": "tibialis",
+    "labelDe": "Vorderer Schienbeinmuskel · rechts",
+    "labelEn": "Right Tibialis Anterior",
+    "view": "front",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:knee-right",
+    "sourceId": "knee-right",
+    "parentId": "quadriceps",
+    "labelDe": "Knie (Gelenk) · rechts",
+    "labelEn": "Right Knee",
+    "view": "front",
+    "side": "right",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:elbow-right",
+    "sourceId": "elbow-right",
+    "parentId": "upper-arms",
+    "labelDe": "Ellenbogen (Gelenk) · rechts",
+    "labelEn": "Right Elbow",
+    "view": "front",
+    "side": "right",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:hand-right",
+    "sourceId": "hand-right",
+    "parentId": "forearms-grip",
+    "labelDe": "Hand / Finger · rechts",
+    "labelEn": "Right Hand",
+    "view": "front",
+    "side": "right",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:elbow-left",
+    "sourceId": "elbow-left",
+    "parentId": "upper-arms",
+    "labelDe": "Ellenbogen (Gelenk) · links",
+    "labelEn": "Left Elbow",
+    "view": "front",
+    "side": "left",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:hand-left",
+    "sourceId": "hand-left",
+    "parentId": "forearms-grip",
+    "labelDe": "Hand / Finger · links",
+    "labelEn": "Left Hand",
+    "view": "front",
+    "side": "left",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:head-back",
+    "sourceId": "head-back",
+    "parentId": "full-body",
+    "labelDe": "Hinterkopf (Körperbereich)",
+    "labelEn": "Head (Posterior)",
+    "view": "back",
+    "side": "center",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:nape",
+    "sourceId": "nape",
+    "parentId": "neck",
+    "labelDe": "Nacken",
+    "labelEn": "Nape",
+    "view": "back",
+    "side": "center",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:traps-upper-left",
+    "sourceId": "traps-upper-left",
+    "parentId": "traps",
+    "labelDe": "Trapez · oberer Anteil · links",
+    "labelEn": "Left Trapezius (Upper)",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:traps-mid-left",
+    "sourceId": "traps-mid-left",
+    "parentId": "traps",
+    "labelDe": "Trapez · mittlerer Anteil · links",
+    "labelEn": "Left Trapezius (Mid)",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:traps-lower-left",
+    "sourceId": "traps-lower-left",
+    "parentId": "traps",
+    "labelDe": "Trapez · unterer Anteil · links",
+    "labelEn": "Left Trapezius (Lower)",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:traps-upper-right",
+    "sourceId": "traps-upper-right",
+    "parentId": "traps",
+    "labelDe": "Trapez · oberer Anteil · rechts",
+    "labelEn": "Right Trapezius (Upper)",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:traps-mid-right",
+    "sourceId": "traps-mid-right",
+    "parentId": "traps",
+    "labelDe": "Trapez · mittlerer Anteil · rechts",
+    "labelEn": "Right Trapezius (Mid)",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:traps-lower-right",
+    "sourceId": "traps-lower-right",
+    "parentId": "traps",
+    "labelDe": "Trapez · unterer Anteil · rechts",
+    "labelEn": "Right Trapezius (Lower)",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:lats-upper-left",
+    "sourceId": "lats-upper-left",
+    "parentId": "lats",
+    "labelDe": "Latissimus · oberer Anteil · links",
+    "labelEn": "Left Lats (Upper)",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:deltoid-rear-left",
+    "sourceId": "deltoid-rear-left",
+    "parentId": "rear-delts",
+    "labelDe": "Hintere Schulter · links",
+    "labelEn": "Left Rear Deltoid",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:lats-mid-left",
+    "sourceId": "lats-mid-left",
+    "parentId": "lats",
+    "labelDe": "Latissimus · mittlerer Anteil · links",
+    "labelEn": "Left Lats (Mid)",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:lats-lower-left",
+    "sourceId": "lats-lower-left",
+    "parentId": "lats",
+    "labelDe": "Latissimus · unterer Anteil · links",
+    "labelEn": "Left Lats (Lower)",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:deltoid-rear-right",
+    "sourceId": "deltoid-rear-right",
+    "parentId": "rear-delts",
+    "labelDe": "Hintere Schulter · rechts",
+    "labelEn": "Right Rear Deltoid",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:lats-upper-right",
+    "sourceId": "lats-upper-right",
+    "parentId": "lats",
+    "labelDe": "Latissimus · oberer Anteil · rechts",
+    "labelEn": "Right Lats (Upper)",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:lats-mid-right",
+    "sourceId": "lats-mid-right",
+    "parentId": "lats",
+    "labelDe": "Latissimus · mittlerer Anteil · rechts",
+    "labelEn": "Right Lats (Mid)",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:lats-lower-right",
+    "sourceId": "lats-lower-right",
+    "parentId": "lats",
+    "labelDe": "Latissimus · unterer Anteil · rechts",
+    "labelEn": "Right Lats (Lower)",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:triceps-long-left",
+    "sourceId": "triceps-long-left",
+    "parentId": "triceps",
+    "labelDe": "Trizeps · langer Kopf · links",
+    "labelEn": "Left Triceps (Long Head)",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:triceps-lateral-left",
+    "sourceId": "triceps-lateral-left",
+    "parentId": "triceps",
+    "labelDe": "Trizeps · äußerer Kopf · links",
+    "labelEn": "Left Triceps (Lateral Head)",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:hand-back-left",
+    "sourceId": "hand-back-left",
+    "parentId": "forearms-grip",
+    "labelDe": "Handrücken / Finger · links",
+    "labelEn": "Left Hand (Back)",
+    "view": "back",
+    "side": "left",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:forearm-flexors-left",
+    "sourceId": "forearm-flexors-left",
+    "parentId": "forearms-grip",
+    "labelDe": "Unterarmbeuger · links",
+    "labelEn": "Forearm Flexors Left",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:forearm-extensors-left",
+    "sourceId": "forearm-extensors-left",
+    "parentId": "forearms-grip",
+    "labelDe": "Unterarmstrecker · links",
+    "labelEn": "Forearm Extensors Left",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:triceps-long-right",
+    "sourceId": "triceps-long-right",
+    "parentId": "triceps",
+    "labelDe": "Trizeps · langer Kopf · rechts",
+    "labelEn": "Right Triceps (Long Head)",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:triceps-lateral-right",
+    "sourceId": "triceps-lateral-right",
+    "parentId": "triceps",
+    "labelDe": "Trizeps · äußerer Kopf · rechts",
+    "labelEn": "Right Triceps (Lateral Head)",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:hand-back-right",
+    "sourceId": "hand-back-right",
+    "parentId": "forearms-grip",
+    "labelDe": "Handrücken / Finger · rechts",
+    "labelEn": "Right Hand (Back)",
+    "view": "back",
+    "side": "right",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:forearm-flexors-right",
+    "sourceId": "forearm-flexors-right",
+    "parentId": "forearms-grip",
+    "labelDe": "Unterarmbeuger · rechts",
+    "labelEn": "Forearm Flexors Right",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:forearm-extensors-right",
+    "sourceId": "forearm-extensors-right",
+    "parentId": "forearms-grip",
+    "labelDe": "Unterarmstrecker · rechts",
+    "labelEn": "Forearm Extensors Right",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:spine",
+    "sourceId": "spine",
+    "parentId": "upper-back",
+    "labelDe": "Wirbelsäule (Körperbereich)",
+    "labelEn": "Spine",
+    "view": "back",
+    "side": "center",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:lower-back-erectors-left",
+    "sourceId": "lower-back-erectors-left",
+    "parentId": "lower-back",
+    "labelDe": "Rückenstrecker · links",
+    "labelEn": "Erector Spinae Left",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:lower-back-ql-left",
+    "sourceId": "lower-back-ql-left",
+    "parentId": "lower-back",
+    "labelDe": "Quadratischer Lendenmuskel · links",
+    "labelEn": "Quadratus Lumborum Left",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:lower-back-erectors-right",
+    "sourceId": "lower-back-erectors-right",
+    "parentId": "lower-back",
+    "labelDe": "Rückenstrecker · rechts",
+    "labelEn": "Erector Spinae Right",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:lower-back-ql-right",
+    "sourceId": "lower-back-ql-right",
+    "parentId": "lower-back",
+    "labelDe": "Quadratischer Lendenmuskel · rechts",
+    "labelEn": "Quadratus Lumborum Right",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:gluteus-medius-left",
+    "sourceId": "gluteus-medius-left",
+    "parentId": "glutes",
+    "labelDe": "Mittlerer Gesäßmuskel · links",
+    "labelEn": "Gluteus Medius Left",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:gluteus-maximus-left",
+    "sourceId": "gluteus-maximus-left",
+    "parentId": "glutes",
+    "labelDe": "Großer Gesäßmuskel · links",
+    "labelEn": "Gluteus Maximus Left",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:gluteus-medius-right",
+    "sourceId": "gluteus-medius-right",
+    "parentId": "glutes",
+    "labelDe": "Mittlerer Gesäßmuskel · rechts",
+    "labelEn": "Gluteus Medius Right",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:gluteus-maximus-right",
+    "sourceId": "gluteus-maximus-right",
+    "parentId": "glutes",
+    "labelDe": "Großer Gesäßmuskel · rechts",
+    "labelEn": "Gluteus Maximus Right",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:knee-back-left",
+    "sourceId": "knee-back-left",
+    "parentId": "hamstrings",
+    "labelDe": "Kniekehle (Gelenk) · links",
+    "labelEn": "Left Back Knee",
+    "view": "back",
+    "side": "left",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:knee-back-right",
+    "sourceId": "knee-back-right",
+    "parentId": "hamstrings",
+    "labelDe": "Kniekehle (Gelenk) · rechts",
+    "labelEn": "Right Back Knee",
+    "view": "back",
+    "side": "right",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:calves-gastroc-medial-left",
+    "sourceId": "calves-gastroc-medial-left",
+    "parentId": "calves",
+    "labelDe": "Zwillingswade · innerer Kopf · links",
+    "labelEn": "Gastrocnemius Medial Left",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:calves-gastroc-lateral-left",
+    "sourceId": "calves-gastroc-lateral-left",
+    "parentId": "calves",
+    "labelDe": "Zwillingswade · äußerer Kopf · links",
+    "labelEn": "Gastrocnemius Lateral Left",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:calves-soleus-left",
+    "sourceId": "calves-soleus-left",
+    "parentId": "calves",
+    "labelDe": "Schollenmuskel · links",
+    "labelEn": "Soleus Left",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:calves-gastroc-medial-right",
+    "sourceId": "calves-gastroc-medial-right",
+    "parentId": "calves",
+    "labelDe": "Zwillingswade · innerer Kopf · rechts",
+    "labelEn": "Gastrocnemius Medial Right",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:calves-gastroc-lateral-right",
+    "sourceId": "calves-gastroc-lateral-right",
+    "parentId": "calves",
+    "labelDe": "Zwillingswade · äußerer Kopf · rechts",
+    "labelEn": "Gastrocnemius Lateral Right",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:calves-soleus-right",
+    "sourceId": "calves-soleus-right",
+    "parentId": "calves",
+    "labelDe": "Schollenmuskel · rechts",
+    "labelEn": "Soleus Right",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:foot-back-left",
+    "sourceId": "foot-back-left",
+    "parentId": "ankles-feet",
+    "labelDe": "Fuß / Ferse · links",
+    "labelEn": "Left Foot (Back)",
+    "view": "back",
+    "side": "left",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:hamstrings-medial-left",
+    "sourceId": "hamstrings-medial-left",
+    "parentId": "hamstrings",
+    "labelDe": "Hamstrings · innere Anteile · links",
+    "labelEn": "Medial Hamstrings (Semis) Left",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:hamstrings-lateral-left",
+    "sourceId": "hamstrings-lateral-left",
+    "parentId": "hamstrings",
+    "labelDe": "Hamstrings · äußerer Anteil · links",
+    "labelEn": "Lateral Hamstrings (Biceps) Left",
+    "view": "back",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:foot-back-right",
+    "sourceId": "foot-back-right",
+    "parentId": "ankles-feet",
+    "labelDe": "Fuß / Ferse · rechts",
+    "labelEn": "Right Foot (Back)",
+    "view": "back",
+    "side": "right",
+    "kind": "body-area"
+  },
+  {
+    "id": "detail:hamstrings-medial-right",
+    "sourceId": "hamstrings-medial-right",
+    "parentId": "hamstrings",
+    "labelDe": "Hamstrings · innere Anteile · rechts",
+    "labelEn": "Medial Hamstrings (Semis) Right",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "id": "detail:hamstrings-lateral-right",
+    "sourceId": "hamstrings-lateral-right",
+    "parentId": "hamstrings",
+    "labelDe": "Hamstrings · äußerer Anteil · rechts",
+    "labelEn": "Lateral Hamstrings (Biceps) Right",
+    "view": "back",
+    "side": "right",
+    "kind": "muscle"
+  }
+]

@@ -8,9 +8,9 @@ import {
 
 describe("body region compatibility", () => {
   it("keeps granular regions and expands only safe broad/fine relationships", () => {
-    expect(expandBodyRegionIds(["biceps"])).toEqual(["biceps", "upper-arms"]);
-    expect(expandBodyRegionIds(["upper-arms"])).toEqual(["upper-arms", "biceps", "triceps"]);
-    expect(expandBodyRegionIds(["abs"])).toEqual(["abs", "core"]);
+    expect(expandBodyRegionIds(["biceps"])).toEqual(expect.arrayContaining(["biceps", "upper-arms", "detail:biceps-left", "detail:biceps-right"]));
+    expect(expandBodyRegionIds(["upper-arms"])).toEqual(expect.arrayContaining(["upper-arms", "biceps", "triceps"]));
+    expect(expandBodyRegionIds(["abs"])).toEqual(expect.arrayContaining(["abs", "core"]));
   });
 
   it("matches new granular filters against older broad exercise mappings", () => {

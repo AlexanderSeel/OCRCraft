@@ -1,0 +1,244 @@
+{
+  "quads-right": [
+    [
+      47,
+      296
+    ],
+    [
+      51,
+      244
+    ]
+  ],
+  "tibialis-anterior-right": [
+    [
+      49,
+      380
+    ]
+  ],
+  "foot-right": [
+    [
+      45,
+      466
+    ]
+  ],
+  "calves-soleus-left": [
+    [
+      238,
+      427
+    ]
+  ],
+  "calves-gastroc-lateral-left": [
+    [
+      231,
+      384
+    ]
+  ],
+  "calves-soleus-right": [
+    [
+      320,
+      429
+    ]
+  ],
+  "calves-gastroc-lateral-right": [
+    [
+      328,
+      379
+    ]
+  ],
+  "hamstrings-lateral-left": [
+    [
+      230,
+      281
+    ],
+    [
+      238,
+      317
+    ]
+  ],
+  "hamstrings-lateral-right": [
+    [
+      329,
+      274
+    ],
+    [
+      329,
+      304
+    ]
+  ],
+  "hand-back-right": [
+    [
+      367,
+      266
+    ],
+    [
+      354,
+      262
+    ]
+  ],
+  "hand-back-left": [
+    [
+      206,
+      260
+    ],
+    [
+      197,
+      260
+    ]
+  ],
+  "hand-left": [
+    [
+      170,
+      260
+    ],
+    [
+      183,
+      260
+    ]
+  ],
+  "hand-right": [
+    [
+      10,
+      262
+    ],
+    [
+      22,
+      262
+    ]
+  ],
+  "forearm-right": [
+    [
+      24,
+      187
+    ]
+  ],
+  "shoulder-side-right": [
+    [
+      32,
+      120
+    ]
+  ],
+  "biceps-right": [
+    [
+      27,
+      155
+    ]
+  ],
+  "forearm-extensors-right": [
+    [
+      359,
+      223
+    ],
+    [
+      362,
+      204
+    ],
+    [
+      355,
+      179
+    ]
+  ],
+  "triceps-lateral-right": [
+    [
+      346,
+      145
+    ]
+  ],
+  "deltoid-rear-right": [
+    [
+      346,
+      114
+    ]
+  ],
+  "deltoid-rear-left": [
+    [
+      215,
+      119
+    ]
+  ],
+  "triceps-lateral-left": [
+    [
+      214,
+      142
+    ],
+    [
+      215,
+      166
+    ]
+  ],
+  "forearm-extensors-left": [
+    [
+      201,
+      201
+    ]
+  ],
+  "forearm-left": [
+    [
+      175,
+      194
+    ]
+  ],
+  "biceps-left": [
+    [
+      165,
+      157
+    ]
+  ],
+  "shoulder-side-left": [
+    [
+      162,
+      126
+    ]
+  ],
+  "foot-back-right": [
+    [
+      336,
+      470
+    ]
+  ],
+  "foot-back-left": [
+    [
+      223,
+      470
+    ]
+  ],
+  "foot-left": [
+    [
+      149,
+      469
+    ]
+  ],
+  "tibialis-anterior-left": [
+    [
+      140,
+      434
+    ],
+    [
+      144,
+      392
+    ],
+    [
+      152,
+      386
+    ]
+  ],
+  "quads-left": [
+    [
+      144,
+      315
+    ],
+    [
+      146,
+      286
+    ],
+    [
+      142,
+      249
+    ]
+  ],
+  "gluteus-maximus-left": [
+    [
+      235,
+      255
+    ]
+  ]
+}

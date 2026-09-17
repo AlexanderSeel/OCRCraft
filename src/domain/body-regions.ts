@@ -1,4 +1,6 @@
-export const BODY_REGION_IDS = [
+import details from "./muscle-details.json";
+
+export const COARSE_BODY_REGION_IDS = [
   "full-body",
   "neck",
   "traps",
@@ -25,14 +27,23 @@ export const BODY_REGION_IDS = [
   "ankles-feet",
 ] as const;
 
-export type BodyRegion = (typeof BODY_REGION_IDS)[number];
+export type CoarseBodyRegion = (typeof COARSE_BODY_REGION_IDS)[number];
+export type DetailBodyRegion = `detail:${string}`;
+export type BodyRegion = CoarseBodyRegion | DetailBodyRegion;
+export const DETAIL_BODY_REGION_OPTIONS = details.map(detail => ({
+  ...detail, id: detail.id as DetailBodyRegion, parentId: detail.parentId as CoarseBodyRegion,
+}));
+export const BODY_REGION_IDS: readonly BodyRegion[] = [...COARSE_BODY_REGION_IDS, ...DETAIL_BODY_REGION_OPTIONS.map(d => d.id)];
+export function detailBodyRegion(id: string) { return DETAIL_BODY_REGION_OPTIONS.find(d => d.id === id); }
+export function bodyRegionParent(id: string): string { return detailBodyRegion(id)?.parentId ?? id; }
+
 
 interface BodyRegionLabels {
   readonly labelDe: string;
   readonly labelEn: string;
 }
 
-const BODY_REGION_LABELS: Readonly<Record<BodyRegion, BodyRegionLabels>> = {
+const BODY_REGION_LABELS: Readonly<Record<CoarseBodyRegion, BodyRegionLabels>> = {
   "full-body": { labelDe: "Ganzkörper", labelEn: "Full Body" },
   neck: { labelDe: "Nacken", labelEn: "Neck" },
   traps: { labelDe: "Trapezmuskel", labelEn: "Trapezius" },
@@ -59,10 +70,10 @@ const BODY_REGION_LABELS: Readonly<Record<BodyRegion, BodyRegionLabels>> = {
   "ankles-feet": { labelDe: "Sprunggelenke / Füße", labelEn: "Ankles / Feet" },
 };
 
-export const BODY_REGION_OPTIONS = BODY_REGION_IDS.map((id) => ({
-  id,
+export const BODY_REGION_OPTIONS = [...COARSE_BODY_REGION_IDS.map((id) => ({
+  id: id as BodyRegion,
   ...BODY_REGION_LABELS[id],
-}));
+})), ...DETAIL_BODY_REGION_OPTIONS];
 
 const BODY_REGION_SET = new Set<string>(BODY_REGION_IDS);
 const BODY_REGION_ORDER = new Map<string, number>(BODY_REGION_IDS.map((id, index) => [id, index]));
@@ -83,6 +94,11 @@ const COMPATIBLE_BODY_REGIONS: Readonly<Partial<Record<BodyRegion, readonly Body
   core: ["abs", "obliques"],
   abs: ["core"],
   obliques: ["core"],
+};
+
+const CHILD_GROUPS: Readonly<Partial<Record<BodyRegion, readonly BodyRegion[]>>> = {
+  "upper-arms": ["biceps", "triceps"], core: ["abs", "obliques"],
+  "upper-back": ["traps", "lats"], shoulders: ["rear-delts"],
 };
 
 /**
@@ -131,8 +147,17 @@ export function expandBodyRegionIds(values: readonly string[]): readonly BodyReg
     const region = normalizeBodyRegionId(value);
     if (!region) continue;
     expanded.add(region);
-    for (const compatible of COMPATIBLE_BODY_REGIONS[region] ?? []) {
-      expanded.add(compatible);
+    const detail = detailBodyRegion(region);
+    if (detail) {
+      // Coarse records can match a detail filter, but opposite sides and heads cannot.
+      expanded.add(detail.parentId);
+      for (const compatible of COMPATIBLE_BODY_REGIONS[detail.parentId] ?? []) expanded.add(compatible);
+    } else {
+      const parents = [region, ...(COMPATIBLE_BODY_REGIONS[region] ?? [])];
+      for (const compatible of parents) expanded.add(compatible);
+      for (const child of DETAIL_BODY_REGION_OPTIONS) {
+        if (child.parentId === region || CHILD_GROUPS[region]?.includes(child.parentId)) expanded.add(child.id);
+      }
     }
   }
 
@@ -142,7 +167,7 @@ export function expandBodyRegionIds(values: readonly string[]): readonly BodyReg
 export function getBodyRegionAntagonists(value: string): readonly BodyRegion[] {
   const normalized = normalizeBodyRegionId(value);
   if (!normalized) return [];
-  return ANTAGONIST_BODY_REGIONS[normalized] ?? [];
+  return ANTAGONIST_BODY_REGIONS[bodyRegionParent(normalized) as BodyRegion] ?? [];
 }
 
 export function bodyRegionsOverlap(
