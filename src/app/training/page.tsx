@@ -30,17 +30,50 @@ export default async function TrainingPage({ searchParams }: PageProps) {
       title={archived ? "Training · Archiv" : "Training"}
       subtitle={archived
         ? "Archivierte Einheiten ansehen und bei Bedarf über die Detailseite wiederherstellen."
-        : "Gespeicherte Einheiten aus Quick Create und dem Training Editor."}
-      actions={
-        <Link
-          className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
-          href="/quick-create"
-        >
-          + Quick Create
-        </Link>
-      }
+        : "Gespeicherte Einheiten aus Quick Create, lokalem Sportalgorithmus, AI Builder und Training Editor."}
+      actions={archived ? undefined : (
+        <div className="flex flex-wrap gap-2">
+          <Link
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            href="/training/builder"
+          >
+            Training Builder
+          </Link>
+          <Link
+            className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
+            href="/quick-create"
+          >
+            + Quick Create
+          </Link>
+        </div>
+      )}
     >
       <div className="space-y-6">
+        {!archived ? (
+          <section className="grid gap-3 lg:grid-cols-2">
+            <Link
+              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] transition hover:border-[var(--accent-strong)] hover:bg-[var(--surface-subtle)]"
+              href="/training/builder"
+            >
+              <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Gezielte Planung</div>
+              <h2 className="mt-1 text-lg font-black">Training Builder</h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                Wähle Ziele, Übungstypen, Muskeln, Gegenmuskeln, Formate, Ort, Intensität und Equipment. Plane lokal deterministisch oder lasse aus demselben freigegebenen Pool einen AI-Vorschlag erstellen.
+              </p>
+            </Link>
+            <Link
+              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] transition hover:border-[var(--accent-strong)] hover:bg-[var(--surface-subtle)]"
+              href="/quick-create"
+            >
+              <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Schneller Einstieg</div>
+              <h2 className="mt-1 text-lg font-black">Quick Create</h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                In wenigen Schritten aus Gruppe, Schwerpunkt, Körperregionen und Format einen sicheren, bearbeitbaren Trainingsentwurf erzeugen.
+              </p>
+            </Link>
+          </section>
+        ) : null}
+
         <section className="grid gap-3 sm:grid-cols-3">
           <Metric label={archived ? "Archivierte Trainings" : "Gespeicherte Trainings"} value={sessions.length} />
           <Metric label="Offene Entwürfe" value={draftCount} />
@@ -69,13 +102,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-                      {session.source === "manual"
-                        ? "Quick Create"
-                        : session.source === "copied"
-                          ? "Kopie"
-                          : session.source === "combined"
-                            ? "Kombiniert"
-                            : session.source}
+                      {sourceLabel(session.source)}
                     </div>
                     <h2 className="mt-1 break-words text-lg font-black">{session.title}</h2>
                   </div>
@@ -137,21 +164,39 @@ export default async function TrainingPage({ searchParams }: PageProps) {
             <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--muted)]">
               {archived
                 ? "Archivierte Einheiten erscheinen hier und können über ihre Detailseite wieder aktiviert werden."
-                : "Erstelle mit Quick Create einen deterministischen Entwurf aus der realen Übungsdatenbank und speichere ihn anschließend hier als bearbeitbares Training."}
+                : "Nutze den Training Builder für gezielte lokale/AI-Planung oder Quick Create für einen schnellen deterministischen Entwurf."}
             </p>
             {!archived ? (
-              <Link
-                className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
-                href="/quick-create"
-              >
-                Erstes Training erstellen
-              </Link>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                <Link
+                  className="inline-flex min-h-11 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+                  href="/training/builder"
+                >
+                  Training Builder öffnen
+                </Link>
+                <Link
+                  className="inline-flex min-h-11 items-center rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
+                  href="/quick-create"
+                >
+                  Quick Create öffnen
+                </Link>
+              </div>
             ) : null}
           </section>
         )}
       </div>
     </AppShell>
   );
+}
+
+function sourceLabel(source: string): string {
+  if (source === "manual") return "Quick Create / lokaler Builder";
+  if (source === "ai") return "AI Builder";
+  if (source === "copied") return "Kopie";
+  if (source === "combined") return "Kombiniert";
+  if (source === "template") return "Vorlage";
+  if (source === "imported") return "Importiert";
+  return source;
 }
 
 function formatCreatedAt(value: string): string {
