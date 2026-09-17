@@ -29,9 +29,15 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
   const movementPatterns = facets.movementPatterns.filter((option) => facets.selected.movementPatternIds.includes(option.id));
   const tags = facets.tags.filter((option) => facets.selected.tagIds.includes(option.id));
   const equipmentById = new Map(facets.equipment.map((option) => [option.id, option]));
+  const bodyRegionById = new Map(facets.bodyRegions.map((option) => [option.id, option]));
   const selectedEquipment = facets.selected.equipment.flatMap((selection) => {
     const option = equipmentById.get(selection.id);
     return option ? [{ ...option, quantityRequired: selection.quantityRequired }] : [];
+  });
+  const muscleOppositions = facets.selected.muscleOppositions.map((item) => {
+    const primary = bodyRegionById.get(item.primaryRegionId)?.labelDe ?? item.primaryRegionId;
+    const opposing = bodyRegionById.get(item.opposingRegionId)?.labelDe ?? item.opposingRegionId;
+    return `${primary} ↔ ${opposing}`;
   });
 
   return (
@@ -167,6 +173,9 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
                   visualCompact
                 />
               ) : <p className="text-sm text-[var(--muted)]">Noch keine Muskelregionen zugeordnet.</p>}
+              <div className="mt-4 border-t border-[var(--border)] pt-4">
+                <FacetList title="Gespeicherte Gegenmuskel-Paare" values={muscleOppositions} />
+              </div>
             </Card>
 
             <Card title="Trainings-Metadaten">
