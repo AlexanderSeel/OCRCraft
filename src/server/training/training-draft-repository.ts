@@ -4,6 +4,7 @@ import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import type { Audience, TrainingLocation } from "@/domain/training/model";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
+import { runRecentExerciseUseQuery } from "./recent-training-use-core";
 import {
   runTrainingEquipmentOptionsQuery,
   type TrainingEquipmentOption,
@@ -18,6 +19,10 @@ interface ListTrainingDraftCandidatesOptions {
   readonly location?: TrainingLocation;
 }
 
+export type TrainingDraftCandidateWithHistory = TrainingDraftExerciseCandidate & {
+  readonly recentUseCount: number;
+};
+
 export async function listTrainingEquipmentOptions(
   locale: "de" | "en" = "de",
 ): Promise<readonly TrainingEquipmentOption[]> {
@@ -31,10 +36,18 @@ export async function listTrainingDraftCandidates({
   minAge,
   locale = "de",
   location = "mixed",
-}: ListTrainingDraftCandidatesOptions): Promise<readonly TrainingDraftExerciseCandidate[]> {
+}: ListTrainingDraftCandidatesOptions): Promise<readonly TrainingDraftCandidateWithHistory[]> {
   await ensureDatabaseReady();
 
-  return withDuckDbConnection((connection) =>
-    runTrainingDraftCandidateQuery(connection, { audience, minAge, locale, location }),
-  );
+  return withDuckDbConnection(async (connection) => {
+    const [candidates, recentUse] = await Promise.all([
+      runTrainingDraftCandidateQuery(connection, { audience, minAge, locale, location }),
+      runRecentExerciseUseQuery(connection),
+    ]);
+    const recentUseByExercise = new Map(recentUse.map((item) => [item.exerciseId, item.useCount]));
+    return candidates.map((candidate) => ({
+      ...candidate,
+      recentUseCount: recentUseByExercise.get(candidate.id) ?? 0,
+    }));
+  });
 }
