@@ -27,9 +27,7 @@ export interface AiTrainingProvider {
 
 interface OpenAiCompatibleResponse {
   readonly choices?: readonly {
-    readonly message?: {
-      readonly content?: string | null;
-    };
+    readonly message?: { readonly content?: string | null };
   }[];
 }
 
@@ -37,21 +35,14 @@ export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
   readonly id = "openai-compatible";
   readonly modelId: string;
 
-  constructor(
-    private readonly baseUrl: string,
-    model: string,
-    private readonly apiKey?: string,
-  ) {
+  constructor(private readonly baseUrl: string, model: string, private readonly apiKey?: string) {
     this.modelId = model;
   }
 
   async generateTrainingPlan(context: AiTrainingGenerationContext): Promise<unknown> {
     const response = await fetch(`${this.baseUrl.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        ...(this.apiKey ? { authorization: `Bearer ${this.apiKey}` } : {}),
-      },
+      headers: { "content-type": "application/json", ...(this.apiKey ? { authorization: `Bearer ${this.apiKey}` } : {}) },
       body: JSON.stringify({
         model: this.modelId,
         temperature: 0.2,
@@ -67,6 +58,7 @@ export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
               "Respect the exact requested exercise counts. mainPartExerciseCounts contains the exact number of exercises for main parts 1..N; assign every main item a matching 1-based mainPart.",
               "mainPartProgramming is trainer-owned programming for main parts 1..N. Use it as context when selecting suitable exercises, but never rewrite, replace or invent its work/rest, rounds, ladder, pyramid, chipper or every-X values. The server applies it canonically after selection.",
               "Respect organizationMode and teamSize. For team mode prefer exercises whose station capacity and teamwork metadata fit the requested team size.",
+              "availableObstacleExerciseIds is a hard club-inventory constraint when present. The approved pool has already removed unavailable obstacle stations; never infer or re-introduce a missing obstacle.",
               "Respect audience, ages, goals, body focus/avoidance, requested exercise types, formats, location, intensity and equipment.",
               "If sourceSessions are supplied, use them as inspiration/context for recomposition, not as permission to bypass current constraints or copy every item.",
               "When two exercises are similarly suitable, prefer the one with the lower recentUseCount so recent sessions are not repeated unnecessarily.",
@@ -75,10 +67,7 @@ export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
               "The server assigns exact phase/block durations and runs deterministic safety/logistics validation after your proposal.",
             ].join(" "),
           },
-          {
-            role: "user",
-            content: JSON.stringify(buildPromptPayload(context)),
-          },
+          { role: "user", content: JSON.stringify(buildPromptPayload(context)) },
         ],
       }),
     });
@@ -87,16 +76,10 @@ export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
       const detail = await response.text().catch(() => "");
       throw new Error(`AI provider failed (${response.status})${detail ? `: ${detail.slice(0, 300)}` : ""}`);
     }
-
     const payload = await response.json() as OpenAiCompatibleResponse;
     const content = payload.choices?.[0]?.message?.content;
     if (!content) throw new Error("AI provider returned no JSON training proposal.");
-
-    try {
-      return JSON.parse(content) as unknown;
-    } catch {
-      throw new Error("AI provider returned invalid JSON.");
-    }
+    try { return JSON.parse(content) as unknown; } catch { throw new Error("AI provider returned invalid JSON."); }
   }
 }
 
@@ -104,12 +87,7 @@ export function getConfiguredAiTrainingProvider(): AiTrainingProvider | null {
   const baseUrl = process.env.OCRCRAFT_AI_BASE_URL?.trim();
   const model = process.env.OCRCRAFT_AI_MODEL?.trim();
   if (!baseUrl || !model) return null;
-
-  return new OpenAiCompatibleTrainingProvider(
-    baseUrl,
-    model,
-    process.env.OCRCRAFT_AI_API_KEY?.trim() || undefined,
-  );
+  return new OpenAiCompatibleTrainingProvider(baseUrl, model, process.env.OCRCRAFT_AI_API_KEY?.trim() || undefined);
 }
 
 function buildPromptPayload(context: AiTrainingGenerationContext) {
@@ -117,20 +95,16 @@ function buildPromptPayload(context: AiTrainingGenerationContext) {
     outputSchema: {
       title: "optional string",
       rationale: "optional short trainer-facing rationale",
-      phases: [
-        {
-          kind: "warmup | main | cooldown",
-          items: [
-            {
-              exerciseId: "approved exercise id",
-              format: "optional free | circuit | tabata | amrap | emom | rig-run | run-exercise | technique | relay",
-              level: "optional level1 | level2 | level3",
-              trainerNote: "optional short note",
-              mainPart: "required 1-based integer for main items when mainPartCount > 1; omit outside main",
-            },
-          ],
-        },
-      ],
+      phases: [{
+        kind: "warmup | main | cooldown",
+        items: [{
+          exerciseId: "approved exercise id",
+          format: "optional free | circuit | tabata | amrap | emom | rig-run | run-exercise | technique | relay",
+          level: "optional level1 | level2 | level3",
+          trainerNote: "optional short note",
+          mainPart: "required 1-based integer for main items when mainPartCount > 1; omit outside main",
+        }],
+      }],
     },
     sportsPlanningPrinciples: SPORTS_PLANNING_PRINCIPLES,
     sourceSessions: context.sourceSessions ?? [],
@@ -157,6 +131,7 @@ function buildPromptPayload(context: AiTrainingGenerationContext) {
       teamSize: context.request.teamSize,
       preferredExerciseIds: context.request.preferredExerciseIds,
       availableEquipment: context.request.availableEquipment,
+      availableObstacleExerciseIds: context.request.availableObstacleExerciseIds,
     },
     approvedExercises: context.approvedExercises.map((exercise) => ({
       id: exercise.id,
