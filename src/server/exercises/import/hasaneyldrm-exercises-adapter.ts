@@ -34,7 +34,13 @@ export interface ExerciseImportDraft {
   readonly translationStatus: "required";
   readonly reviewStatus: "draft";
   readonly sourceReference: string;
-  readonly mediaReference: { readonly image?: string; readonly gif?: string; readonly attribution?: string };
+  readonly mediaReference: {
+    readonly image?: string;
+    readonly gif?: string;
+    readonly attribution?: string;
+    readonly licenseLabel: "Gym-Visual-Lizenz";
+    readonly usage: "template_only";
+  };
   readonly warnings: readonly string[];
 }
 
@@ -67,7 +73,7 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
   const warnings = [
     ...(bodyRegionIds.length ? [] : ["No OCRCraft body region could be mapped"]),
     ...(equipmentSeedKeys.some((key) => !Object.values(EQUIPMENT_MAP).includes(key)) ? ["One or more equipment values need catalogue review"] : []),
-    ...(record.image || record.gif_url ? ["Media is referenced only; verify Gym Visual licensing before copying"] : []),
+    ...(record.image || record.gif_url ? ["Media is a template reference only and carries the Gym-Visual-Lizenz label"] : []),
     "German translation and trainer review are required before publishing",
   ];
   return {
@@ -83,7 +89,13 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
     translationStatus: "required",
     reviewStatus: "draft",
     sourceReference: `https://github.com/hasaneyldrm/exercises-dataset#${String(record.id)}`,
-    mediaReference: { image: record.image, gif: record.gif_url, attribution: record.attribution },
+    mediaReference: {
+      image: record.image,
+      gif: record.gif_url,
+      attribution: record.attribution,
+      licenseLabel: "Gym-Visual-Lizenz",
+      usage: "template_only",
+    },
     warnings,
   };
 }

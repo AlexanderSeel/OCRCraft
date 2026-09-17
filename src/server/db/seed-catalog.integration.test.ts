@@ -29,6 +29,7 @@ const migrationFiles = [
   "021_muscle_relationships.sql",
   "022_detailed_body_regions.sql",
   "025_seed_alias_completeness.sql",
+  "026_external_media_licensing.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {

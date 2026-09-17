@@ -14,7 +14,9 @@ describe("hasaneyldrm exercise adapter", () => {
     expect(draft.equipmentSeedKeys).toEqual(["kettlebell"]);
     expect(draft.translationStatus).toBe("required");
     expect(draft.reviewStatus).toBe("draft");
-    expect(draft.warnings.join(" ")).toContain("licensing");
+    expect(draft.mediaReference.licenseLabel).toBe("Gym-Visual-Lizenz");
+    expect(draft.mediaReference.usage).toBe("template_only");
+    expect(draft.warnings.join(" ")).toContain("Gym-Visual-Lizenz");
   });
 
   it("rejects non-array batch input and supplies safe fallback steps", () => {

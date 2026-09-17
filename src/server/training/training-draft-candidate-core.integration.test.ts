@@ -21,7 +21,11 @@ async function createFixture() {
       indoor_suitable BOOLEAN,
       outdoor_suitable BOOLEAN,
       default_duration_seconds INTEGER,
-      station_capacity INTEGER
+      station_capacity INTEGER,
+      exercise_type VARCHAR DEFAULT 'drill',
+      difficulty VARCHAR DEFAULT 'beginner',
+      impact_level VARCHAR DEFAULT 'low',
+      coordination_complexity VARCHAR DEFAULT 'simple'
     );
     CREATE TABLE exercise_translations (
       exercise_id VARCHAR,
@@ -40,6 +44,7 @@ async function createFixture() {
     );
     CREATE TABLE exercise_equipment (exercise_id VARCHAR, equipment_id VARCHAR, quantity_required INTEGER);
     CREATE TABLE exercise_tags (exercise_id VARCHAR, tag_id VARCHAR);
+    CREATE TABLE exercise_training_goals (exercise_id VARCHAR, goal VARCHAR);
     CREATE TABLE exercise_details (
       exercise_id VARCHAR,
       locale VARCHAR,
@@ -85,7 +90,11 @@ async function createFixture() {
       correction VARCHAR
     );
 
-    INSERT INTO exercises VALUES
+    INSERT INTO exercises (
+      id, category, default_phase, risk_level, min_age, archived,
+      suitable_for_kids, suitable_for_youth, suitable_for_adults,
+      indoor_suitable, outdoor_suitable, default_duration_seconds, station_capacity
+    ) VALUES
       ('kids-carry','carry-lift','main','low',8,false,true,true,true,true,true,240,4),
       ('adult-wall','ocr-skill','main','high',16,false,false,true,true,false,true,300,1),
       ('archived','strength','main','low',NULL,true,true,true,true,true,true,180,4);
