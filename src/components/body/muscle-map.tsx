@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useRef, useState, type MouseEvent } from "react";
-import { getBodyRegionAntagonists, bodyRegionParent, detailBodyRegion } from "@/domain/body-regions";
+import {
+  COARSE_BODY_REGION_IDS,
+  DETAIL_BODY_REGION_OPTIONS,
+  getBodyRegionAntagonists,
+  bodyRegionParent,
+  detailBodyRegion,
+} from "@/domain/body-regions";
 import {
   MUSCLE_MAP_PARTS,
   MUSCLE_MAP_PARTS_BY_OPTION,
@@ -48,12 +54,12 @@ const UPPER_IDS = new Set([
   "neck", "traps", "shoulders", "rear-delts", "chest", "upper-back", "lats",
   "upper-arms", "biceps", "triceps", "forearms-grip",
 ]);
-const CORE_IDS = new Set(["core", "abs", "obliques", "lower-back", "hips"]);
+const CORE_IDS = new Set(["core", "abs", "obliques", "serratus", "lower-back", "hips"]);
 const CATEGORY_ORDER = ["Gesamt", "Oberkörper", "Core", "Unterkörper"] as const;
 
 const FALLBACK_OPTION_PARTS: Readonly<Record<string, readonly string[]>> = {
   "upper-arms": ["biceps", "triceps"],
-  core: ["abs", "obliques"],
+  core: ["abs", "obliques", "serratus"],
   shoulders: ["rear-delts"],
   "upper-back": ["traps", "lats"],
 };
@@ -283,8 +289,8 @@ export function MuscleMap({
 
       {!compact && interactive ? (
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" aria-pressed={!detailed} onClick={() => setDetailed(false)} className="min-h-11 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold">24 Hauptbereiche</button>
-          <button type="button" aria-pressed={detailed} onClick={() => setDetailed(true)} className="min-h-11 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold">89 Detailbereiche</button>
+          <button type="button" aria-pressed={!detailed} onClick={() => setDetailed(false)} className="min-h-11 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold">{COARSE_BODY_REGION_IDS.length} Hauptbereiche</button>
+          <button type="button" aria-pressed={detailed} onClick={() => setDetailed(true)} className="min-h-11 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold">{DETAIL_BODY_REGION_OPTIONS.length} Detailbereiche</button>
           <span className="text-xs text-[var(--muted)]">{detailed ? "Detailauswahl · links/rechts aus Sicht der dargestellten Person" : "Auswahl ganzer Muskelgruppen"}</span>
         </div>
       ) : null}
@@ -439,7 +445,7 @@ export function MuscleMap({
                       </summary>
 
                       <div className="ml-4 border-l-2 border-[var(--border)] p-1">
-              <div className="grid w-full gap-1">
+                        <div className="grid w-full gap-1">
                           {entries.map((option) => {
                             const selected = selectedById.get(option.id);
                             const secondary = selected?.emphasis === "secondary";
