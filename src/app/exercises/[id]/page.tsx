@@ -157,6 +157,8 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
                 <LevelCard title="Fortgeschritten" value={guidance?.advancedPrescription} />
               </div>
               <OptionalSection title="Belastung / Pause" value={guidance?.workRestGuidance} />
+              {guidance?.paceGuidance ? <OptionalSection title="Pace / Tempoleitlinie" value={guidance.paceGuidance} /> : null}
+              {guidance?.heartRateZone ? <OptionalSection title="Herzfrequenz-Zone" value={guidance.heartRateZone} /> : null}
               <div className="mt-4 grid gap-3 lg:grid-cols-3">
                 <LevelCard title="Level 1" value={guidance?.level1} />
                 <LevelCard title="Level 2" value={guidance?.level2} />

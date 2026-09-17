@@ -24,6 +24,8 @@ export interface LocalizedExerciseDetailsInput {
   readonly childYouthVariant: string;
   readonly prerequisites: string;
   readonly fallbackExercise: string;
+  readonly paceGuidance: string;
+  readonly heartRateZone: string;
 }
 
 export interface ExerciseLogisticsInput {
@@ -110,14 +112,14 @@ export async function updateLocalizedExerciseDetails(
           breathing_cue, tempo_cue, safety_notes, quality_criteria,
           beginner_prescription, standard_prescription, advanced_prescription,
           work_rest_guidance, level_1, level_2, level_3, child_youth_variant,
-          prerequisites, fallback_exercise, difficulty, supervision,
+          prerequisites, fallback_exercise, pace_guidance, heart_rate_zone, difficulty, supervision,
           space_requirement, setup_seconds, transition_seconds, station_capacity
         ) VALUES (
           $exerciseId::UUID, $locale, $purpose, $setup, $startPosition, $finishReset,
           $breathingCue, $tempoCue, $safetyNotes, $qualityCriteria,
           $beginnerPrescription, $standardPrescription, $advancedPrescription,
           $workRestGuidance, $level1, $level2, $level3, $childYouthVariant,
-          $prerequisites, $fallbackExercise, $difficulty, $supervision,
+          $prerequisites, $fallbackExercise, $paceGuidance, $heartRateZone, $difficulty, $supervision,
           $spaceRequirement, $setupSeconds, $transitionSeconds, $stationCapacity
         )
         `,

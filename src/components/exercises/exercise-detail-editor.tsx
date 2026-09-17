@@ -58,6 +58,10 @@ export function ExerciseDetailEditor({
           <TextArea disabled={disabled} label="Standard-Dosierung" name="standardPrescription" value={guidance?.standardPrescription} />
           <TextArea disabled={disabled} label="Fortgeschrittenen-Dosierung" name="advancedPrescription" value={guidance?.advancedPrescription} />
           <TextArea disabled={disabled} label="Belastung / Pause" name="workRestGuidance" value={guidance?.workRestGuidance} />
+          <div className="grid gap-3 lg:grid-cols-2">
+            <TextArea disabled={disabled} label="Pace / Tempoleitlinie" name="paceGuidance" value={guidance?.paceGuidance} />
+            <TextArea disabled={disabled} label="Herzfrequenz-Zone (Orientierung)" name="heartRateZone" value={guidance?.heartRateZone} />
+          </div>
         </div>
       </details>
 

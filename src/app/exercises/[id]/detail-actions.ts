@@ -30,6 +30,8 @@ const localizedDetailsSchema = z.object({
   childYouthVariant: optionalText,
   prerequisites: optionalText,
   fallbackExercise: optionalText,
+  paceGuidance: optionalText,
+  heartRateZone: optionalText,
 });
 
 const logisticsSchema = z.object({
@@ -73,6 +75,8 @@ export async function updateLocalizedExerciseDetailsAction(
     childYouthVariant: stringField(formData, "childYouthVariant"),
     prerequisites: stringField(formData, "prerequisites"),
     fallbackExercise: stringField(formData, "fallbackExercise"),
+    paceGuidance: stringField(formData, "paceGuidance"),
+    heartRateZone: stringField(formData, "heartRateZone"),
   });
 
   if (!parsed.success) {

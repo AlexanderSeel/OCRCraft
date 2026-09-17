@@ -29,6 +29,8 @@ export interface TrainingExerciseGuidance {
   readonly childYouthVariant: string | null;
   readonly prerequisites: string | null;
   readonly fallbackExercise: string | null;
+  readonly paceGuidance: string | null;
+  readonly heartRateZone: string | null;
   readonly difficulty: string | null;
   readonly supervision: string | null;
   readonly spaceRequirement: string | null;
@@ -91,6 +93,8 @@ export async function getTrainingExerciseGuidanceMap(
         d.child_youth_variant,
         d.prerequisites,
         d.fallback_exercise,
+        d.pace_guidance,
+        d.heart_rate_zone,
         d.difficulty,
         d.supervision,
         d.space_requirement,
@@ -140,16 +144,18 @@ export async function getTrainingExerciseGuidanceMap(
         childYouthVariant: textOrNull(row[17]),
         prerequisites: textOrNull(row[18]),
         fallbackExercise: textOrNull(row[19]),
-        difficulty: textOrNull(row[20]),
-        supervision: textOrNull(row[21]),
-        spaceRequirement: textOrNull(row[22]),
-        setupSeconds: numberOrNull(row[23]),
-        transitionSeconds: numberOrNull(row[24]),
-        stationCapacity: numberOrNull(row[25]),
-        maxSimultaneousParticipants: numberOrNull(row[26]),
-        surfaceRequirements: textOrNull(row[27]),
-        weatherTerrain: textOrNull(row[28]),
-        obstacleConfiguration: textOrNull(row[29]),
+        paceGuidance: textOrNull(row[20]),
+        heartRateZone: textOrNull(row[21]),
+        difficulty: textOrNull(row[22]),
+        supervision: textOrNull(row[23]),
+        spaceRequirement: textOrNull(row[24]),
+        setupSeconds: numberOrNull(row[25]),
+        transitionSeconds: numberOrNull(row[26]),
+        stationCapacity: numberOrNull(row[27]),
+        maxSimultaneousParticipants: numberOrNull(row[28]),
+        surfaceRequirements: textOrNull(row[29]),
+        weatherTerrain: textOrNull(row[30]),
+        obstacleConfiguration: textOrNull(row[31]),
         executionSteps: [],
         coachingCues: [],
         commonMistakes: [],
