@@ -10,6 +10,7 @@ async function createAutocompleteFixture() {
     CREATE TABLE exercises (id VARCHAR PRIMARY KEY, category VARCHAR, archived BOOLEAN);
     CREATE TABLE exercise_translations (exercise_id VARCHAR, locale VARCHAR, name VARCHAR);
     CREATE TABLE exercise_aliases (exercise_id VARCHAR, locale VARCHAR, alias VARCHAR);
+    CREATE TABLE exercise_training_goals (exercise_id VARCHAR, goal VARCHAR);
     CREATE TABLE tags (id VARCHAR PRIMARY KEY, label_de VARCHAR, label_en VARCHAR);
     CREATE TABLE exercise_tags (exercise_id VARCHAR, tag_id VARCHAR);
     CREATE TABLE movement_patterns (id VARCHAR PRIMARY KEY, label_de VARCHAR, label_en VARCHAR);
@@ -29,6 +30,7 @@ async function createAutocompleteFixture() {
       ('hang','de','Grip Hang'),('hang','en','Grip Hang');
     INSERT INTO exercise_aliases VALUES
       ('carry','de','Farmer Walk'),('carry','en','Farmer Walk');
+    INSERT INTO exercise_training_goals VALUES ('carry','strength_endurance'),('hang','ocr_technique');
     INSERT INTO tags VALUES ('grip','Griffkraft','Grip Strength');
     INSERT INTO exercise_tags VALUES ('carry','grip'),('hang','grip');
     INSERT INTO movement_patterns VALUES ('squat','Kniebeuge','Squat');
@@ -61,6 +63,20 @@ describe("exercise autocomplete", () => {
       const english = await runExerciseAutocomplete(connection, "Lower Body", "en", 10);
       expect(german[0]?.label).toBe("Kniebeuge");
       expect(english[0]?.label).toBe("Squat");
+    } finally {
+      connection.closeSync();
+    }
+  });
+
+  it("finds exercises from localized explicit training goals", async () => {
+    const connection = await createAutocompleteFixture();
+    try {
+      const german = await runExerciseAutocomplete(connection, "Kraftausdauer", "de", 10);
+      const english = await runExerciseAutocomplete(connection, "OCR Technique", "en", 10);
+      expect(german[0]?.label).toBe("Farmer Carry");
+      expect(german[0]?.matchedContext).toBe("Kraftausdauer");
+      expect(english[0]?.label).toBe("Grip Hang");
+      expect(english[0]?.matchedContext).toBe("OCR Technique");
     } finally {
       connection.closeSync();
     }
