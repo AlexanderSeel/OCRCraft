@@ -36,17 +36,19 @@ export async function runOutdoorVariantEnrichmentAction(): Promise<void> {
   try {
     const report = await enrichImportedGymExercisesForOutdoor();
     revalidatePath("/admin");
+    revalidatePath("/admin/outdoor-variants");
     revalidatePath("/exercises");
     revalidatePath("/training/builder");
     const params = new URLSearchParams({
-      outdoorScanned: String(report.scanned),
-      outdoorEnriched: String(report.enriched),
-      outdoorExisting: String(report.alreadyEnriched),
-      outdoorUnmappable: String(report.unmappable),
+      scanned: String(report.scanned),
+      enriched: String(report.enriched),
+      existing: String(report.alreadyEnriched),
+      unmappable: String(report.unmappable),
+      missingDetails: String(report.missingDetails),
     });
-    redirect(`/admin?${params.toString()}#outdoor-variants`);
+    redirect(`/admin/outdoor-variants?${params.toString()}`);
   } catch {
-    redirect("/admin?outdoorError=1#outdoor-variants");
+    redirect("/admin/outdoor-variants?error=1");
   }
 }
 
