@@ -37,28 +37,49 @@ export function ObstacleAvailabilityPicker({
         <span>
           <span className="block font-black">Vereins-Hindernisbestand berücksichtigen</span>
           <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">
-            Wenn aktiv, sind OCR-Hindernisübungen nur erlaubt, wenn die zugehörige Station unten verfügbar ist. Normale Übungen bleiben davon unberührt.
+            Wenn aktiv, sind OCR-Hindernisübungen nur erlaubt, wenn die zugehörige Station unten verfügbar ist. Normale Übungen bleiben davon unberührt. Eine aktive Liste ohne Auswahl bedeutet bewusst: keine Hindernisstation verfügbar.
           </span>
         </span>
       </label>
 
       {declared ? (
         options.length > 0 ? (
-          <div className="grid max-h-80 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
-            {options.map((option) => (
-              <label
-                className={`flex gap-3 rounded-lg border p-3 text-sm ${selected.has(option.id) ? "border-[var(--accent-strong)] bg-[var(--accent-soft)]" : "border-[var(--border)] bg-[var(--surface)]"}`}
-                key={option.id}
-              >
-                <input checked={selected.has(option.id)} onChange={() => toggle(option.id)} type="checkbox" />
-                <span className="min-w-0">
-                  <span className="block font-black">{option.name}</span>
-                  <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">
-                    {metadata(option)}
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-bold text-[var(--muted)]">{selected.size} von {options.length} Stationen verfügbar</span>
+              <div className="flex gap-2">
+                <button
+                  className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-black"
+                  onClick={() => onSelectionChange(options.map((option) => option.id))}
+                  type="button"
+                >
+                  Alle
+                </button>
+                <button
+                  className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-black"
+                  onClick={() => onSelectionChange([])}
+                  type="button"
+                >
+                  Keine
+                </button>
+              </div>
+            </div>
+            <div className="grid max-h-80 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+              {options.map((option) => (
+                <label
+                  className={`flex cursor-pointer gap-3 rounded-lg border p-3 text-sm ${selected.has(option.id) ? "border-[var(--accent-strong)] bg-[var(--accent-soft)]" : "border-[var(--border)] bg-[var(--surface)]"}`}
+                  key={option.id}
+                >
+                  <input checked={selected.has(option.id)} onChange={() => toggle(option.id)} type="checkbox" />
+                  <span className="min-w-0">
+                    <span className="block font-black">{option.name}</span>
+                    <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">
+                      {metadata(option)}
+                    </span>
                   </span>
-                </span>
-              </label>
-            ))}
+                </label>
+              ))}
+            </div>
           </div>
         ) : (
           <p className="rounded-lg border border-dashed border-[var(--border)] p-3 text-xs text-[var(--muted)]">
