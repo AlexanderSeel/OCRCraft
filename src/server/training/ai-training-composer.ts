@@ -8,7 +8,7 @@ import {
 } from "../../domain/training/draft";
 import { TRAINING_PHASE_LABELS, type TrainingFormat, type TrainingPhaseKind, type TrainingSession } from "../../domain/training/model";
 import { validateTrainingSession } from "../../domain/training/validation";
-import { aiTrainingPlanSchema } from "./ai-training-schema";
+import { aiTrainingPlanSchema, type AiTrainingPlan } from "./ai-training-schema";
 import type { ReviewedAiTrainingPersistence } from "./reviewed-training-draft-schema";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 
@@ -25,6 +25,8 @@ interface CanonicalAiItem {
   readonly format?: TrainingFormat;
   readonly instructions?: string;
   readonly levelLabel?: string;
+  readonly mainPartIndex?: number;
+  readonly mainPartTitle?: string;
 }
 
 interface CanonicalAiPhase {
@@ -40,20 +42,43 @@ export function composeAiTrainingDraft({
   providerId,
 }: ComposeAiTrainingDraftInput): TrainingDraft {
   const plan = aiTrainingPlanSchema.parse(proposal);
+  assertRequestedStructure(plan, request);
   const budgets = getTrainingPhaseBudgets(request.durationMinutes);
   const phases: CanonicalAiPhase[] = plan.phases.map((phase) => {
-    const durations = distributeTrainingMinutes(budgets[phase.kind], phase.items.length);
-    return {
-      kind: phase.kind,
-      items: phase.items.map((item, index) => ({
-        exerciseId: item.exerciseId,
-        durationMinutes: durations[index] ?? 0,
-        format: item.format,
-        instructions: item.trainerNote,
-        levelLabel: item.level,
-      })),
-    };
+    if (phase.kind !== "main") {
+      const durations = distributeTrainingMinutes(budgets[phase.kind], phase.items.length);
+      return {
+        kind: phase.kind,
+        items: phase.items.map((item, index) => ({
+          exerciseId: item.exerciseId,
+          durationMinutes: durations[index] ?? 0,
+          format: item.format,
+          instructions: item.trainerNote,
+          levelLabel: item.level,
+        })),
+      };
+    }
+
+    const blockBudgets = distributeTrainingMinutes(budgets.main, request.mainPartCount);
+    const items: CanonicalAiItem[] = [];
+    for (let part = 1; part <= request.mainPartCount; part += 1) {
+      const blockItems = phase.items.filter((item) => (item.mainPart ?? 1) === part);
+      const durations = distributeTrainingMinutes(blockBudgets[part - 1] ?? 0, blockItems.length);
+      blockItems.forEach((item, index) => {
+        items.push({
+          exerciseId: item.exerciseId,
+          durationMinutes: durations[index] ?? 0,
+          format: item.format,
+          instructions: item.trainerNote,
+          levelLabel: item.level,
+          mainPartIndex: part,
+          mainPartTitle: request.mainPartCount > 1 ? `Hauptteil ${part}` : "Hauptteil",
+        });
+      });
+    }
+    return { kind: "main", items };
   });
+
   const rationaleWarnings = plan.rationale ? [`AI-Begründung: ${plan.rationale}`] : [];
   return buildCanonicalAiDraft(
     request,
@@ -85,6 +110,41 @@ export function composeReviewedAiTrainingDraft(
   );
 }
 
+function assertRequestedStructure(plan: AiTrainingPlan, request: TrainingDraftRequest): void {
+  const warmup = plan.phases.find((phase) => phase.kind === "warmup");
+  const main = plan.phases.find((phase) => phase.kind === "main");
+  const cooldown = plan.phases.find((phase) => phase.kind === "cooldown");
+
+  if (!warmup || !main || !cooldown) {
+    throw new Error("AI-Vorschlag enthält nicht alle drei Pflichtphasen.");
+  }
+  if (warmup.items.length !== request.warmupExerciseCount) {
+    throw new Error(`AI-Vorschlag enthält ${warmup.items.length} statt ${request.warmupExerciseCount} Aufwärmübungen.`);
+  }
+  if (cooldown.items.length !== request.cooldownExerciseCount) {
+    throw new Error(`AI-Vorschlag enthält ${cooldown.items.length} statt ${request.cooldownExerciseCount} Cooldown-Übungen.`);
+  }
+
+  const expectedMainItems = request.mainPartCount * request.mainExerciseCount;
+  if (main.items.length !== expectedMainItems) {
+    throw new Error(`AI-Vorschlag enthält ${main.items.length} statt ${expectedMainItems} Übungen im Hauptteil.`);
+  }
+
+  for (let part = 1; part <= request.mainPartCount; part += 1) {
+    const blockCount = main.items.filter((item) => (item.mainPart ?? 1) === part).length;
+    if (blockCount !== request.mainExerciseCount) {
+      throw new Error(`AI-Vorschlag enthält in Hauptteil ${part} ${blockCount} statt ${request.mainExerciseCount} Übungen.`);
+    }
+  }
+
+  if (main.items.some((item) => (item.mainPart ?? 1) > request.mainPartCount)) {
+    throw new Error("AI-Vorschlag enthält einen nicht angeforderten Hauptteil.");
+  }
+  if (request.mainPartCount > 1 && main.items.some((item) => item.mainPart == null)) {
+    throw new Error("AI-Vorschlag muss bei mehreren Hauptteilen jede Hauptteil-Übung eindeutig einem Block zuordnen.");
+  }
+}
+
 function buildCanonicalAiDraft(
   request: TrainingDraftRequest,
   approvedExercises: readonly TrainingDraftExerciseCandidate[],
@@ -107,6 +167,9 @@ function buildCanonicalAiDraft(
       if (request.avoidBodyRegions.some((region) => bodyRegionsOverlap([region], candidate.bodyRegions))) {
         throw new Error(`AI-Vorschlag verwendet ${candidate.name} trotz ausgeschlossener Körperregion.`);
       }
+      if (phase.kind === "main" && item.mainPartIndex != null && item.mainPartIndex > request.mainPartCount) {
+        throw new Error(`AI-Vorschlag ordnet ${candidate.name} einem nicht angeforderten Hauptteil zu.`);
+      }
       return {
         id: `ai-${phase.kind}-${candidate.id}`,
         exercise: {
@@ -124,6 +187,13 @@ function buildCanonicalAiDraft(
         format: canonicalFormat(item.format, phase.kind, request),
         instructions: item.instructions?.trim() || candidate.instructions,
         levelLabel: reviewedLevelText(item.levelLabel, candidate, request),
+        ...(phase.kind === "main"
+          ? {
+              mainPartIndex: item.mainPartIndex ?? 1,
+              mainPartTitle: item.mainPartTitle?.trim()
+                || (request.mainPartCount > 1 ? `Hauptteil ${item.mainPartIndex ?? 1}` : "Hauptteil"),
+            }
+          : {}),
       };
     }),
   }));
@@ -140,16 +210,24 @@ function buildCanonicalAiDraft(
     }
   }
 
+  if (request.organizationMode === "team") {
+    const teamSize = request.teamSize ?? 2;
+    const teamCount = Math.ceil(request.participantCount / teamSize);
+    warnings.push(`Teamorganisation: ${teamCount} Teams mit Zielgröße ${teamSize}.`);
+  }
+
   const session: TrainingSession = {
     id: "ai-training-draft",
     title,
     group: {
       id: "ai-training-group",
-      name: "AI Training Builder",
+      name: request.organizationMode === "team" ? "AI Training Builder · Team" : "AI Training Builder",
       audience: request.audience,
       minAge: request.minAge,
       maxAge: request.maxAge,
       participantCount: request.participantCount,
+      organizationMode: request.organizationMode,
+      teamSize: request.organizationMode === "team" ? request.teamSize : undefined,
     },
     totalDurationMinutes: request.durationMinutes,
     focus: request.goals,
