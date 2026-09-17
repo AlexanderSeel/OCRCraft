@@ -22,6 +22,11 @@ export interface ExerciseBodyRegionSelection {
   readonly emphasis: BodyRegionEmphasis;
 }
 
+export interface ExerciseMuscleOppositionSelection {
+  readonly primaryRegionId: string;
+  readonly opposingRegionId: string;
+}
+
 export interface ExerciseEquipmentSelection {
   readonly id: string;
   readonly quantityRequired: number;
@@ -29,6 +34,7 @@ export interface ExerciseEquipmentSelection {
 
 export interface ExerciseFacetSelection {
   readonly bodyRegions: readonly ExerciseBodyRegionSelection[];
+  readonly muscleOppositions: readonly ExerciseMuscleOppositionSelection[];
   readonly movementPatternIds: readonly string[];
   readonly tagIds: readonly string[];
   readonly equipment: readonly ExerciseEquipmentSelection[];
@@ -136,6 +142,13 @@ export async function getExerciseFacetEditorData(
       "SELECT body_region_id,emphasis FROM exercise_body_regions WHERE exercise_id=$exerciseId::UUID ORDER BY body_region_id",
       { exerciseId },
     );
+    const selectedOppositionReader = await connection.runAndReadAll(
+      `SELECT primary_region_id,opposing_region_id
+       FROM exercise_muscle_oppositions
+       WHERE exercise_id=$exerciseId::UUID AND relationship='antagonist'
+       ORDER BY primary_region_id,opposing_region_id`,
+      { exerciseId },
+    );
     const selectedMovementReader = await connection.runAndReadAll(
       "SELECT movement_pattern_id FROM exercise_movement_patterns WHERE exercise_id=$exerciseId::UUID ORDER BY movement_pattern_id",
       { exerciseId },
@@ -163,6 +176,10 @@ export async function getExerciseFacetEditorData(
         bodyRegions: selectedBodyReader.getRows().map((row) => ({
           id: String(row[0]),
           emphasis: String(row[1]) as BodyRegionEmphasis,
+        })),
+        muscleOppositions: selectedOppositionReader.getRows().map((row) => ({
+          primaryRegionId: String(row[0]),
+          opposingRegionId: String(row[1]),
         })),
         movementPatternIds: selectedMovementReader.getRows().map((row) => String(row[0])),
         tagIds: selectedTagReader.getRows().map((row) => String(row[0])),
