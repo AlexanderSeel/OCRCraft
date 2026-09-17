@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { MuscleMap, type MuscleMapValue } from "@/components/body/muscle-map";
 import { getBodyRegionAntagonists } from "@/domain/body-regions";
+import { Disclosure } from "@/components/ui/disclosure";
 import type { ExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
 
 interface ExerciseFacetFormProps {
@@ -153,8 +154,7 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
         </div>
       </section>
 
-      <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
-        <summary className="min-h-8 cursor-pointer font-bold">Bewegungsmuster</summary>
+      <Disclosure className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" summaryClassName="min-h-8 items-center font-bold" summary="Bewegungsmuster">
         <div className="mt-2">
           <CheckboxGrid
             disabled={disabled}
@@ -163,10 +163,9 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
             selected={movementSelection}
           />
         </div>
-      </details>
+      </Disclosure>
 
-      <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
-        <summary className="min-h-8 cursor-pointer font-bold">Tags & Trainingsziele</summary>
+      <Disclosure className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" summaryClassName="min-h-8 items-center font-bold" summary="Tags & Trainingsziele">
         <div className="mt-2">
           <CheckboxGrid
             disabled={disabled}
@@ -175,10 +174,9 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
             selected={tagSelection}
           />
         </div>
-      </details>
+      </Disclosure>
 
-      <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
-        <summary className="min-h-8 cursor-pointer font-bold">Equipment</summary>
+      <Disclosure className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" summaryClassName="min-h-8 items-center font-bold" summary="Equipment">
         <div className="mt-2">
           <div className="mt-4 grid gap-2 lg:grid-cols-2">
             {data.equipment.map((option) => {
@@ -218,7 +216,7 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
             })}
           </div>
         </div>
-      </details>
+      </Disclosure>
 
       <div className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
         <p className="text-sm leading-6 text-[var(--muted)]">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { Disclosure } from "@/components/ui/disclosure";
 import type { ClubGroup } from "@/server/groups/group-repository";
 import { listClubGroups } from "@/server/groups/group-repository";
 import {
@@ -46,8 +47,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         ) : null}
 
         {!archivedView ? (
-          <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
-            <summary className="cursor-pointer px-5 py-4 font-black">+ Neue Gruppe anlegen</summary>
+          <Disclosure className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]" summaryClassName="px-5 py-4 font-black" summary="+ Neue Gruppe anlegen">
             <form action={createClubGroupAction} className="border-t border-[var(--border)] p-5">
               <GroupFields />
               <div className="mt-4 flex justify-end">
@@ -59,7 +59,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                 </button>
               </div>
             </form>
-          </details>
+          </Disclosure>
         ) : null}
 
         <section className="grid gap-4 xl:grid-cols-2">
@@ -93,8 +93,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
 
               <div className="mt-4 flex flex-wrap items-start gap-2 border-t border-[var(--border)] pt-4">
                 {!group.archived ? (
-                  <details className="min-w-[280px] flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]">
-                    <summary className="cursor-pointer px-4 py-3 text-sm font-black">Gruppe bearbeiten</summary>
+                  <Disclosure className="min-w-[280px] flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]" summaryClassName="px-4 py-3 text-sm font-black" summary="Gruppe bearbeiten">
                     <form action={updateClubGroupAction} className="border-t border-[var(--border)] p-4">
                       <input name="id" type="hidden" value={group.id} />
                       <GroupFields group={group} />
@@ -107,7 +106,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                         </button>
                       </div>
                     </form>
-                  </details>
+                  </Disclosure>
                 ) : null}
 
                 <form action={setClubGroupArchivedAction}>

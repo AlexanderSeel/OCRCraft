@@ -46,7 +46,8 @@ async function createFixture() {
       level_label VARCHAR,
       sort_order INTEGER NOT NULL,
       main_part_index INTEGER,
-      main_part_title VARCHAR
+      main_part_title VARCHAR,
+      programming_json VARCHAR
     );
 
     INSERT INTO training_sessions
