@@ -5,6 +5,7 @@ import type {
   Audience,
   ExerciseEquipmentRequirement,
   RiskLevel,
+  TrainingLocation,
   TrainingPhaseKind,
 } from "@/domain/training/model";
 
@@ -12,11 +13,12 @@ export interface TrainingDraftCandidateQueryOptions {
   readonly audience: Audience;
   readonly minAge?: number;
   readonly locale: "de" | "en";
+  readonly location?: TrainingLocation;
 }
 
 export async function runTrainingDraftCandidateQuery(
   connection: DuckDBConnection,
-  { audience, minAge, locale }: TrainingDraftCandidateQueryOptions,
+  { audience, minAge, locale, location = "mixed" }: TrainingDraftCandidateQueryOptions,
 ): Promise<readonly TrainingDraftExerciseCandidate[]> {
   const reader = await connection.runAndReadAll(
     `
@@ -114,11 +116,17 @@ export async function runTrainingDraftCandidateQuery(
         OR ($audience='youth' AND COALESCE(e.suitable_for_youth, true))
         OR ($audience='adults' AND COALESCE(e.suitable_for_adults, true))
       )
+      AND (
+        $location='mixed'
+        OR ($location='indoor' AND COALESCE(e.indoor_suitable, true))
+        OR ($location='outdoor' AND COALESCE(e.outdoor_suitable, true))
+      )
     ORDER BY t.name
     `,
     {
       locale,
       audience,
+      location,
       minAge: minAge ?? null,
     },
   );
