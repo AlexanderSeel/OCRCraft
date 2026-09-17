@@ -6,6 +6,7 @@ import { TRAINING_PHASE_LABELS, type TrainingPhase, type TrainingSession } from 
 import { validateTrainingSession } from "../../domain/training/validation";
 import { composeAiTrainingDraft } from "./ai-training-composer";
 import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
+import { applyMainPartProgramming } from "./main-part-programming";
 import { composeStructuredSportsTrainingDraft } from "./structured-sports-training-composer";
 import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
@@ -76,7 +77,7 @@ export async function regenerateTrainingDraftPhase(
     phases,
   };
 
-  return {
+  return applyMainPartProgramming(request, {
     source: request.builderMode === "ai" ? "ai" : "deterministic",
     session,
     validationIssues: validateTrainingSession(session, undefined, request.availableEquipment),
@@ -84,7 +85,7 @@ export async function regenerateTrainingDraftPhase(
       ...replacementDraft.warnings,
       `${TRAINING_PHASE_LABELS[targetKind]} wurde neu erzeugt; die beiden anderen Phasen wurden unverändert aus der geprüften Auswahl übernommen.`,
     ],
-  };
+  });
 }
 
 async function generateReplacementDraft(

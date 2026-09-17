@@ -25,6 +25,42 @@ export const TRAINING_FORMATS = [
 ] as const;
 export type TrainingFormat = (typeof TRAINING_FORMATS)[number];
 
+/** Programming applied to a numbered main-part block independently of exercise selection. */
+export const MAIN_PART_PROGRAMMING_MODES = [
+  "standard",
+  "interval",
+  "rounds",
+  "ladder",
+  "reverse-ladder",
+  "pyramid",
+  "chipper",
+  "every",
+] as const;
+export type MainPartProgrammingMode = (typeof MAIN_PART_PROGRAMMING_MODES)[number];
+
+export const MAIN_PART_SCORE_MODES = ["time", "quality"] as const;
+export type MainPartScoreMode = (typeof MAIN_PART_SCORE_MODES)[number];
+
+export const MAIN_PART_EVERY_UNITS = ["metres", "minutes", "checkpoint"] as const;
+export type MainPartEveryUnit = (typeof MAIN_PART_EVERY_UNITS)[number];
+
+export interface MainPartProgramming {
+  readonly mode: MainPartProgrammingMode;
+  /** Work/rest prescription for generic interval blocks. */
+  readonly workSeconds?: number;
+  readonly restSeconds?: number;
+  /** Fixed rounds for time or quality. */
+  readonly rounds?: number;
+  readonly scoreMode?: MainPartScoreMode;
+  /** Repetition range for ladder/reverse-ladder/pyramid programming. */
+  readonly ladderStart?: number;
+  readonly ladderEnd?: number;
+  readonly ladderStep?: number;
+  /** Trigger cadence for running/checkpoint combinations. */
+  readonly everyValue?: number;
+  readonly everyUnit?: MainPartEveryUnit;
+}
+
 export const TRAINING_ORGANIZATION_MODES = ["solo", "team"] as const;
 export type TrainingOrganizationMode = (typeof TRAINING_ORGANIZATION_MODES)[number];
 
@@ -86,6 +122,8 @@ export interface TrainingItem {
   readonly mainPartIndex?: number;
   /** Optional trainer-facing title for the block, e.g. "Hauptteil 2". */
   readonly mainPartTitle?: string;
+  /** Structured programming shared by all exercises in the same main-part block. */
+  readonly programming?: MainPartProgramming;
 }
 
 export interface TrainingPhase {

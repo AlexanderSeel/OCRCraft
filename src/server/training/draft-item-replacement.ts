@@ -6,6 +6,7 @@ import { TRAINING_PHASE_LABELS, type TrainingPhase, type TrainingSession } from 
 import { validateTrainingSession } from "../../domain/training/validation";
 import { rankDraftExerciseAlternatives } from "./draft-item-alternative";
 import type { DraftItemReplacementRequest } from "./draft-item-replacement-schema";
+import { applyMainPartProgramming } from "./main-part-programming";
 import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
 
@@ -86,14 +87,14 @@ export async function replaceDraftExerciseWithAlternative(
     phases,
   };
 
-  return {
+  return applyMainPartProgramming(request, {
     source: request.builderMode === "ai" ? "ai" : "deterministic",
     session,
     validationIssues: validateTrainingSession(session, undefined, request.availableEquipment),
     warnings: [
       `${currentCandidate.name} wurde durch ${replacement.candidate.name} ersetzt: ${replacement.reason}.`,
     ],
-  };
+  });
 }
 
 function hydrateItem(

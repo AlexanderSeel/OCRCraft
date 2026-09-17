@@ -2,9 +2,10 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import type { TrainingDraft } from "@/domain/training/draft";
-import type { TrainingOrganizationMode, TrainingPhaseKind } from "@/domain/training/model";
+import type { MainPartProgramming, TrainingOrganizationMode, TrainingPhaseKind } from "@/domain/training/model";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
+import { mainPartProgrammingSchema } from "./training-draft-schema";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -60,6 +61,7 @@ export interface PersistedTrainingItem {
   readonly sortOrder: number;
   readonly mainPartIndex: number | null;
   readonly mainPartTitle: string | null;
+  readonly programming: MainPartProgramming | null;
 }
 
 export interface PersistedTrainingPhase {
@@ -192,16 +194,19 @@ export async function persistTrainingDraft(
           const mainPartTitle = phase.kind === "main"
             ? item.mainPartTitle?.trim() || ((mainPartIndex ?? 1) > 1 ? `Hauptteil ${mainPartIndex ?? 1}` : "Hauptteil")
             : null;
+          const programmingJson = phase.kind === "main" && item.programming
+            ? JSON.stringify(item.programming)
+            : null;
           await connection.run(
             `
             INSERT INTO training_items (
               id, training_phase_id, exercise_id, title_override, format,
               duration_minutes, instructions, level_label, sort_order,
-              main_part_index, main_part_title
+              main_part_index, main_part_title, programming_json
             ) VALUES (
               $id::UUID, $phaseId::UUID, $exerciseId::UUID, NULL, $format,
               $duration, $instructions, $levelLabel, $sortOrder,
-              $mainPartIndex, $mainPartTitle
+              $mainPartIndex, $mainPartTitle, $programmingJson
             )
             `,
             {
@@ -215,6 +220,7 @@ export async function persistTrainingDraft(
               sortOrder: itemIndex,
               mainPartIndex,
               mainPartTitle,
+              programmingJson,
             },
           );
         }
@@ -319,7 +325,8 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
           i.level_label,
           i.sort_order,
           i.main_part_index,
-          i.main_part_title
+          i.main_part_title,
+          i.programming_json
         FROM training_items i
         LEFT JOIN exercise_translations t ON t.exercise_id=i.exercise_id AND t.locale=$locale
         WHERE i.training_phase_id=$phaseId::UUID
@@ -343,6 +350,7 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
           sortOrder: Number(row[7]),
           mainPartIndex: row[8] == null ? null : Number(row[8]),
           mainPartTitle: row[9] == null ? null : String(row[9]),
+          programming: parsePersistedProgramming(row[10]),
         })),
       });
     }
@@ -400,4 +408,14 @@ export async function updateTrainingSessionMetadata(
     );
     return reader.getRows().length > 0;
   });
+}
+
+function parsePersistedProgramming(value: unknown): MainPartProgramming | null {
+  if (value == null) return null;
+  try {
+    const parsed = mainPartProgrammingSchema.safeParse(JSON.parse(String(value)));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
 }
