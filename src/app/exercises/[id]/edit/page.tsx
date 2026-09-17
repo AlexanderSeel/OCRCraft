@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { ExerciseClassificationEditor } from "@/components/exercises/exercise-classification-editor";
 import {
   ExerciseDetailEditor,
   ExerciseLogisticsEditor,
@@ -8,10 +9,12 @@ import {
 import { ExerciseFacetForm } from "@/components/exercises/exercise-facet-form";
 import { ExerciseForm } from "@/components/exercises/exercise-form";
 import { ExerciseGuidanceListEditor } from "@/components/exercises/exercise-guidance-list-editor";
+import { getExerciseClassificationEditorData } from "@/server/exercises/exercise-classification-repository";
 import { getExerciseById } from "@/server/exercises/exercise-repository";
 import { getExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 import { setExerciseArchivedAction, updateExerciseAction } from "../../actions";
+import { updateExerciseClassificationAction } from "../classification-actions";
 import {
   updateExerciseLogisticsAction,
   updateLocalizedExerciseDetailsAction,
@@ -25,6 +28,8 @@ interface PageProps {
     created?: string;
     saved?: string;
     restored?: string;
+    classificationSaved?: string;
+    classificationError?: string;
     facetsSaved?: string;
     facetError?: string;
     guidanceSaved?: string;
@@ -42,14 +47,18 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const exercise = await getExerciseById(id);
   if (!exercise) notFound();
 
-  const [facets, guidanceDeMap, guidanceEnMap] = await Promise.all([
+  const [classification, facets, guidanceDeMap, guidanceEnMap] = await Promise.all([
+    getExerciseClassificationEditorData(exercise.id),
     getExerciseFacetEditorData(exercise.id),
     getTrainingExerciseGuidanceMap([exercise.id], "de"),
     getTrainingExerciseGuidanceMap([exercise.id], "en"),
   ]);
+  if (!classification) notFound();
+
   const guidanceDe = guidanceDeMap[exercise.id];
   const guidanceEn = guidanceEnMap[exercise.id];
   const updateAction = updateExerciseAction.bind(null, exercise.id);
+  const updateClassificationAction = updateExerciseClassificationAction.bind(null, exercise.id);
   const updateFacetsAction = updateExerciseFacetsAction.bind(null, exercise.id);
   const updateGuidanceAction = updateExerciseGuidanceListsAction.bind(null, exercise.id);
   const updateDetailAction = updateLocalizedExerciseDetailsAction.bind(null, exercise.id);
@@ -58,6 +67,8 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const manualExercise = exercise.seedKey == null;
   const fullEditorOpen = manualExercise || Boolean(
     status.created
+    || status.classificationError
+    || status.classificationSaved
     || status.detailError
     || status.logisticsError
     || status.detailSaved
@@ -90,15 +101,18 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
       <div className="space-y-5">
         {status.created ? (
           <Notice>
-            Grunddaten angelegt. Der vollständige Editor ist geöffnet: ergänze jetzt Muskeln/Gegenmuskeln, Bewegungsmuster, Equipment, Programmierung, Sicherheit sowie DE/EN-Ausführung und Coaching.
+            Grunddaten angelegt. Der vollständige Editor ist geöffnet: ergänze jetzt Trainingsziele, Zielgruppe, Muskeln/Gegenmuskeln, Bewegungsmuster, Equipment, Programmierung, Sicherheit sowie DE/EN-Ausführung und Coaching.
           </Notice>
         ) : null}
         {status.saved ? <Notice>Änderungen gespeichert. Der Suchindex wurde als „dirty“ markiert.</Notice> : null}
         {status.restored ? <Notice>Übung wiederhergestellt.</Notice> : null}
+        {status.classificationSaved ? <Notice>Trainingsziele, Bewegungsprofil, Zielgruppe und Dosierungseinheiten wurden gespeichert.</Notice> : null}
         {status.facetsSaved ? <Notice>Körperregionen, Gegenmuskeln, Bewegungsmuster, Tags und Equipment wurden gespeichert.</Notice> : null}
         {status.guidanceSaved ? <Notice>{status.guidanceSaved === "en" ? "Englische" : "Deutsche"} Ausführung, Coaching-Cues und Fehlerkorrekturen wurden gespeichert.</Notice> : null}
         {status.detailSaved ? <Notice>{status.detailSaved === "en" ? "Englische" : "Deutsche"} Planungs-, Sicherheits- und Skalierungsdetails wurden gespeichert.</Notice> : null}
         {status.logisticsSaved ? <Notice>Schwierigkeit, Aufsicht und Stationslogistik wurden gespeichert.</Notice> : null}
+        {status.classificationError === "invalid" ? <ErrorNotice>Die Klassifikation ist unvollständig oder ungültig. Wähle mindestens ein Trainingsziel.</ErrorNotice> : null}
+        {status.classificationError === "save" ? <ErrorNotice>Die Klassifikation konnte nicht gespeichert werden.</ErrorNotice> : null}
         {status.facetError === "invalid" ? <ErrorNotice>Die Facetten- oder Gegenmuskel-Auswahl enthält ungültige Werte.</ErrorNotice> : null}
         {status.facetError === "save" ? <ErrorNotice>Die Facetten konnten nicht gespeichert werden.</ErrorNotice> : null}
         {status.guidanceError === "invalid" ? <ErrorNotice>Die Coaching-Inhalte enthalten leere, unvollständige oder zu lange Einträge.</ErrorNotice> : null}
@@ -111,6 +125,13 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" open={Boolean(status.created || status.saved)}>
           <summary className="min-h-8 cursor-pointer font-bold">Stammdaten bearbeiten</summary>
           <ExerciseForm action={updateAction} exercise={exercise} submitLabel="Änderungen speichern" />
+        </details>
+
+        <details open={fullEditorOpen} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <summary className="min-h-8 cursor-pointer font-bold">Trainingsziele, Zielgruppe & Bewegungsprofil</summary>
+          <div className="mt-4">
+            <ExerciseClassificationEditor action={updateClassificationAction} data={classification} disabled={exercise.archived} />
+          </div>
         </details>
 
         <ExerciseFacetForm action={updateFacetsAction} data={facets} disabled={exercise.archived} />
