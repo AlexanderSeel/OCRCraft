@@ -312,3 +312,26 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
     };
   });
 }
+
+export async function updateTrainingSessionMetadata(
+  id: string,
+  input: UpdateTrainingSessionMetadataInput,
+): Promise<boolean> {
+  if (!UUID_PATTERN.test(id)) return false;
+  const title = input.title.trim();
+  if (!title) throw new Error("Trainingstitel darf nicht leer sein.");
+
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `
+      UPDATE training_sessions
+      SET title=$title, status=$status, updated_at=current_timestamp
+      WHERE id=$id::UUID
+      RETURNING id::VARCHAR
+      `,
+      { id, title, status: input.status },
+    );
+    return reader.getRows().length > 0;
+  });
+}
