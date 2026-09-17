@@ -4,6 +4,7 @@ import type { TrainingDraft, TrainingDraftExerciseCandidate } from "@/domain/tra
 import { composeAiTrainingDraft, composeReviewedAiTrainingDraft } from "./ai-training-composer";
 import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
 import { loadAiTrainingSourceSessions } from "./ai-training-source-context";
+import { applyMainPartProgramming } from "./main-part-programming";
 import { composeStructuredSportsTrainingDraft } from "./structured-sports-training-composer";
 import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
@@ -37,6 +38,14 @@ function applySportsQualityAudit(
   };
 }
 
+function finalizeDraft(
+  request: TrainingDraftRequest,
+  draft: TrainingDraft,
+  candidates: readonly TrainingDraftExerciseCandidate[],
+): TrainingDraft {
+  return applySportsQualityAudit(request, applyMainPartProgramming(request, draft), candidates);
+}
+
 export async function createTrainingDraft(request: TrainingDraftRequest): Promise<TrainingDraft> {
   const candidates = await approvedCandidatesFor(request);
   if (request.builderMode === "ai") {
@@ -61,7 +70,7 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
     const recompositionWarnings = sourceSessions.length > 0
       ? [`AI-Rekomposition verwendet ${sourceSessions.length} ausgewählte Quelltrainings als Kontext; aktuelle Trainer-Randbedingungen und der freigegebene Übungspool bleiben maßgeblich.`]
       : [];
-    return applySportsQualityAudit(
+    return finalizeDraft(
       request,
       { ...draft, warnings: [...draft.warnings, ...recompositionWarnings] },
       candidates,
@@ -93,7 +102,7 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
     },
     candidates,
   );
-  return applySportsQualityAudit(request, draft, candidates);
+  return finalizeDraft(request, draft, candidates);
 }
 
 /** Kept as a stable explicit entry point for local-only callers/tests. */
@@ -127,7 +136,7 @@ export async function persistReviewedAiTrainingDraft(
 ): Promise<{ readonly id: string; readonly draft: TrainingDraft }> {
   const candidates = await approvedCandidatesFor(input.request);
   const reviewedDraft = composeReviewedAiTrainingDraft(input, candidates);
-  const draft = applySportsQualityAudit(input.request, reviewedDraft, candidates);
+  const draft = finalizeDraft(input.request, reviewedDraft, candidates);
   const provider = getConfiguredAiTrainingProvider();
   const id = await persistTrainingDraft(draft, {
     title: input.title,
