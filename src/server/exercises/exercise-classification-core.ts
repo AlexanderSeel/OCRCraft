@@ -36,6 +36,7 @@ export async function replaceExerciseClassification(
   exerciseId: string,
   input: ExerciseClassificationInput,
 ): Promise<boolean> {
+  const { trainingGoals, ...columns } = input;
   const reader = await connection.runAndReadAll(
     `
     UPDATE exercises SET
@@ -61,7 +62,7 @@ export async function replaceExerciseClassification(
     WHERE id=$exerciseId::UUID
     RETURNING id::VARCHAR
     `,
-    { exerciseId, ...input },
+    { exerciseId, ...columns },
   );
   if (reader.getRows().length === 0) return false;
 
@@ -69,7 +70,7 @@ export async function replaceExerciseClassification(
     "DELETE FROM exercise_training_goals WHERE exercise_id=$exerciseId::UUID",
     { exerciseId },
   );
-  for (const goal of [...new Set(input.trainingGoals)]) {
+  for (const goal of [...new Set(trainingGoals)]) {
     await connection.run(
       "INSERT INTO exercise_training_goals (exercise_id,goal) VALUES ($exerciseId::UUID,$goal)",
       { exerciseId, goal },
