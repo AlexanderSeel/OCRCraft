@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { reseedAllDatabaseData } from "@/server/db/reseed-service";
 import { refreshDuplicateReviewTasks, resolveDuplicateTask } from "@/server/exercises/duplicate-review-service";
+import { enrichImportedGymExercisesForOutdoor } from "@/server/exercises/outdoor-variant-enrichment-service";
 
 const reseedConfirmationSchema = z.literal("OCRCRAFT ZURÜCKSETZEN");
 
@@ -29,6 +30,24 @@ export async function reseedDatabaseAction(formData: FormData): Promise<void> {
   revalidatePath("/admin");
   revalidatePath("/exercises");
   redirect("/admin?reseeded=1#database-settings");
+}
+
+export async function runOutdoorVariantEnrichmentAction(): Promise<void> {
+  try {
+    const report = await enrichImportedGymExercisesForOutdoor();
+    revalidatePath("/admin");
+    revalidatePath("/exercises");
+    revalidatePath("/training/builder");
+    const params = new URLSearchParams({
+      outdoorScanned: String(report.scanned),
+      outdoorEnriched: String(report.enriched),
+      outdoorExisting: String(report.alreadyEnriched),
+      outdoorUnmappable: String(report.unmappable),
+    });
+    redirect(`/admin?${params.toString()}#outdoor-variants`);
+  } catch {
+    redirect("/admin?outdoorError=1#outdoor-variants");
+  }
 }
 
 export async function scanDuplicateExercisesAction(): Promise<void> {
