@@ -2,7 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import type { TrainingDraft } from "@/domain/training/draft";
-import type { TrainingPhaseKind } from "@/domain/training/model";
+import type { TrainingOrganizationMode, TrainingPhaseKind } from "@/domain/training/model";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 
@@ -53,6 +53,8 @@ export interface PersistedTrainingItem {
   readonly instructions: string | null;
   readonly levelLabel: string | null;
   readonly sortOrder: number;
+  readonly mainPartIndex: number | null;
+  readonly mainPartTitle: string | null;
 }
 
 export interface PersistedTrainingPhase {
@@ -66,6 +68,8 @@ export interface PersistedTrainingPhase {
 export interface TrainingSessionDetail extends TrainingSessionListItem {
   readonly notes: string | null;
   readonly updatedAt: string;
+  readonly organizationMode: TrainingOrganizationMode;
+  readonly teamSize: number | null;
   readonly phases: readonly PersistedTrainingPhase[];
 }
 
@@ -94,6 +98,8 @@ export async function persistTrainingDraft(
 
   const sessionId = randomUUID();
   const sessionTitle = title?.trim() || draft.session.title;
+  const organizationMode = draft.session.group.organizationMode ?? "solo";
+  const teamSize = organizationMode === "team" ? draft.session.group.teamSize ?? null : null;
 
   await withDuckDbConnection(async (connection) => {
     await connection.run("BEGIN TRANSACTION");
@@ -111,9 +117,11 @@ export async function persistTrainingDraft(
       await connection.run(
         `
         INSERT INTO training_sessions (
-          id, title, group_id, status, source, total_duration_minutes, locale, notes
+          id, title, group_id, status, source, total_duration_minutes, locale, notes,
+          organization_mode, team_size
         ) VALUES (
-          $id::UUID, $title, $groupId::UUID, 'draft', $source, $duration, $locale, $notes
+          $id::UUID, $title, $groupId::UUID, 'draft', $source, $duration, $locale, $notes,
+          $organizationMode, $teamSize
         )
         `,
         {
@@ -124,6 +132,8 @@ export async function persistTrainingDraft(
           duration: draft.session.totalDurationMinutes,
           locale,
           notes,
+          organizationMode,
+          teamSize,
         },
       );
 
@@ -168,14 +178,20 @@ export async function persistTrainingDraft(
         );
 
         for (const [itemIndex, item] of phase.items.entries()) {
+          const mainPartIndex = phase.kind === "main" ? item.mainPartIndex ?? 1 : null;
+          const mainPartTitle = phase.kind === "main"
+            ? item.mainPartTitle?.trim() || (mainPartIndex > 1 ? `Hauptteil ${mainPartIndex}` : "Hauptteil")
+            : null;
           await connection.run(
             `
             INSERT INTO training_items (
               id, training_phase_id, exercise_id, title_override, format,
-              duration_minutes, instructions, level_label, sort_order
+              duration_minutes, instructions, level_label, sort_order,
+              main_part_index, main_part_title
             ) VALUES (
               $id::UUID, $phaseId::UUID, $exerciseId::UUID, NULL, $format,
-              $duration, $instructions, $levelLabel, $sortOrder
+              $duration, $instructions, $levelLabel, $sortOrder,
+              $mainPartIndex, $mainPartTitle
             )
             `,
             {
@@ -187,6 +203,8 @@ export async function persistTrainingDraft(
               instructions: item.instructions ?? null,
               levelLabel: item.levelLabel ?? null,
               sortOrder: itemIndex,
+              mainPartIndex,
+              mainPartTitle,
             },
           );
         }
@@ -256,7 +274,7 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
       SELECT
         s.id::VARCHAR,s.title,s.status,s.source,s.total_duration_minutes,s.locale,
         (SELECT count(*) FROM training_phases p JOIN training_items i ON i.training_phase_id=p.id WHERE p.training_session_id=s.id),
-        s.created_at,s.notes,s.updated_at
+        s.created_at,s.notes,s.updated_at,COALESCE(s.organization_mode,'solo'),s.team_size
       FROM training_sessions s
       WHERE s.id=$id::UUID
       `,
@@ -287,7 +305,9 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
           i.duration_minutes,
           i.instructions,
           i.level_label,
-          i.sort_order
+          i.sort_order,
+          i.main_part_index,
+          i.main_part_title
         FROM training_items i
         LEFT JOIN exercise_translations t ON t.exercise_id=i.exercise_id AND t.locale=$locale
         WHERE i.training_phase_id=$phaseId::UUID
@@ -309,6 +329,8 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
           instructions: row[5] == null ? null : String(row[5]),
           levelLabel: row[6] == null ? null : String(row[6]),
           sortOrder: Number(row[7]),
+          mainPartIndex: row[8] == null ? null : Number(row[8]),
+          mainPartTitle: row[9] == null ? null : String(row[9]),
         })),
       });
     }
@@ -324,6 +346,8 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
       createdAt: String(sessionRow[7]),
       notes: sessionRow[8] == null ? null : String(sessionRow[8]),
       updatedAt: String(sessionRow[9]),
+      organizationMode: String(sessionRow[10] ?? "solo") as TrainingOrganizationMode,
+      teamSize: sessionRow[11] == null ? null : Number(sessionRow[11]),
       phases,
     };
   });
