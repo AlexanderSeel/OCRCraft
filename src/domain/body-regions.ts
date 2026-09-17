@@ -16,6 +16,7 @@ export const COARSE_BODY_REGION_IDS = [
   "core",
   "abs",
   "obliques",
+  "serratus",
   "lower-back",
   "hips",
   "glutes",
@@ -30,13 +31,25 @@ export const COARSE_BODY_REGION_IDS = [
 export type CoarseBodyRegion = (typeof COARSE_BODY_REGION_IDS)[number];
 export type DetailBodyRegion = `detail:${string}`;
 export type BodyRegion = CoarseBodyRegion | DetailBodyRegion;
+
+/**
+ * The pinned body-muscles catalogue describes physical source regions. Training
+ * semantics are intentionally kept separate so one raster part can move between
+ * trainer-facing groups without changing its stable upstream/detail identity.
+ */
+const DETAIL_PARENT_OVERRIDES: Readonly<Partial<Record<string, CoarseBodyRegion>>> = {
+  "serratus-anterior-left": "serratus",
+  "serratus-anterior-right": "serratus",
+};
+
 export const DETAIL_BODY_REGION_OPTIONS = details.map(detail => ({
-  ...detail, id: detail.id as DetailBodyRegion, parentId: detail.parentId as CoarseBodyRegion,
+  ...detail,
+  id: detail.id as DetailBodyRegion,
+  parentId: (DETAIL_PARENT_OVERRIDES[detail.sourceId] ?? detail.parentId) as CoarseBodyRegion,
 }));
 export const BODY_REGION_IDS: readonly BodyRegion[] = [...COARSE_BODY_REGION_IDS, ...DETAIL_BODY_REGION_OPTIONS.map(d => d.id)];
 export function detailBodyRegion(id: string) { return DETAIL_BODY_REGION_OPTIONS.find(d => d.id === id); }
 export function bodyRegionParent(id: string): string { return detailBodyRegion(id)?.parentId ?? id; }
-
 
 interface BodyRegionLabels {
   readonly labelDe: string;
@@ -59,6 +72,7 @@ const BODY_REGION_LABELS: Readonly<Record<CoarseBodyRegion, BodyRegionLabels>> =
   core: { labelDe: "Core", labelEn: "Core" },
   abs: { labelDe: "Bauchmuskulatur", labelEn: "Abdominals" },
   obliques: { labelDe: "Seitlicher Core", labelEn: "Obliques" },
+  serratus: { labelDe: "Vorderer Sägemuskel", labelEn: "Serratus Anterior" },
   "lower-back": { labelDe: "Unterer Rücken", labelEn: "Lower Back" },
   hips: { labelDe: "Hüfte", labelEn: "Hips" },
   glutes: { labelDe: "Gesäß", labelEn: "Glutes" },
@@ -91,13 +105,14 @@ const COMPATIBLE_BODY_REGIONS: Readonly<Partial<Record<BodyRegion, readonly Body
   "upper-arms": ["biceps", "triceps"],
   biceps: ["upper-arms"],
   triceps: ["upper-arms"],
-  core: ["abs", "obliques"],
+  core: ["abs", "obliques", "serratus"],
   abs: ["core"],
   obliques: ["core"],
+  serratus: ["core"],
 };
 
 const CHILD_GROUPS: Readonly<Partial<Record<BodyRegion, readonly BodyRegion[]>>> = {
-  "upper-arms": ["biceps", "triceps"], core: ["abs", "obliques"],
+  "upper-arms": ["biceps", "triceps"], core: ["abs", "obliques", "serratus"],
   "upper-back": ["traps", "lats"], shoulders: ["rear-delts"],
 };
 
