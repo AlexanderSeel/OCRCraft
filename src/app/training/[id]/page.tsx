@@ -2,12 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { AddTrainingItemForm } from "@/components/training/add-training-item-form";
+import { PersistedMainPartProgrammingForm } from "@/components/training/persisted-main-part-programming-form";
 import { ReplaceTrainingItemForm } from "@/components/training/replace-training-item-form";
 import { TrainingItemAlternatives } from "@/components/training/training-item-alternatives";
 import { TrainingItemGuidance } from "@/components/training/training-item-guidance";
 import { TrainingItemReorderZone } from "@/components/training/training-item-reorder-zone";
 import { TRAINING_PHASE_LABELS } from "@/domain/training/model";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
+import { getLatestTrainingGeneration } from "@/server/training/training-generation-repository";
 import { getTrainingSessionById } from "@/server/training/training-session-repository";
 import {
   deleteTrainingItemAction,
@@ -39,7 +41,10 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
   const exerciseIds = session.phases.flatMap((phase) =>
     phase.items.flatMap((item) => item.exerciseId ? [item.exerciseId] : []),
   );
-  const guidanceByExerciseId = await getTrainingExerciseGuidanceMap(exerciseIds, session.locale);
+  const [guidanceByExerciseId, generation] = await Promise.all([
+    getTrainingExerciseGuidanceMap(exerciseIds, session.locale),
+    getLatestTrainingGeneration(session.id),
+  ]);
   const updateMetadataAction = updateTrainingSessionMetadataAction.bind(null, session.id);
   const duplicateAction = duplicateTrainingSessionAction.bind(null, session.id);
   const editable = session.status !== "archived";
@@ -56,6 +61,14 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
       subtitle={`${session.totalDurationMinutes} Minuten · ${session.itemCount} Übungen · ${session.locale.toUpperCase()}`}
       actions={
         <div className="flex flex-wrap gap-2">
+          {editable && generation ? (
+            <Link
+              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+              href={`/training/builder?source=${session.id}`}
+            >
+              Im Builder anpassen
+            </Link>
+          ) : null}
           {editable ? (
             <Link
               className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
@@ -95,7 +108,9 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                 ? "Level konnte nicht gespeichert werden. Bitte erneut versuchen."
                 : query.error === "organization"
                   ? "Solo-/Teamorganisation konnte nicht gespeichert werden. Prüfe die Teamgröße."
-                  : "Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen."}
+                  : query.error === "programming"
+                    ? "Hauptteil-Programmierung konnte nicht gespeichert werden. Bitte die Werte prüfen."
+                    : "Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen."}
           </div>
         ) : null}
 
@@ -218,6 +233,27 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                   {phase.items.reduce((sum, item) => sum + item.durationMinutes, 0)} Min.
                 </div>
               </div>
+
+              {phase.kind === "main" && phase.items.length > 0 ? (
+                <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                  {mainPartSummaries(phase.items).map((part) => editable ? (
+                    <PersistedMainPartProgrammingForm
+                      initialProgramming={part.programming}
+                      key={part.index}
+                      mainPartIndex={part.index}
+                      sessionId={session.id}
+                      title={part.title}
+                    />
+                  ) : (
+                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm" key={part.index}>
+                      <span className="font-black">{part.title}</span>
+                      {part.programming && part.programming.mode !== "standard" ? (
+                        <span className="ml-2 text-[var(--muted)]">· {programmingSummary(part.programming)}</span>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
 
               <div className="mt-4">
                 {phase.items.length > 0 ? (
@@ -447,10 +483,47 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
   );
 }
 
+function mainPartSummaries(items: readonly {
+  readonly mainPartIndex: number | null;
+  readonly mainPartTitle: string | null;
+  readonly programming: import("@/domain/training/model").MainPartProgramming | null;
+}[]) {
+  const summaries = new Map<number, {
+    readonly index: number;
+    readonly title: string;
+    readonly programming: import("@/domain/training/model").MainPartProgramming | null;
+  }>();
+  for (const item of items) {
+    const index = item.mainPartIndex ?? 1;
+    if (!summaries.has(index)) {
+      summaries.set(index, {
+        index,
+        title: item.mainPartTitle ?? `Hauptteil ${index}`,
+        programming: item.programming,
+      });
+    }
+  }
+  return [...summaries.values()].sort((left, right) => left.index - right.index);
+}
+
+function programmingSummary(programming: import("@/domain/training/model").MainPartProgramming): string {
+  if (programming.mode === "interval") return `${programming.workSeconds ?? 0}s Arbeit / ${programming.restSeconds ?? 0}s Pause`;
+  if (programming.mode === "rounds") return `${programming.rounds ?? 1} Runden · ${programming.scoreMode === "time" ? "auf Zeit" : "auf Qualität"}`;
+  if (programming.mode === "ladder") return `Ladder ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}`;
+  if (programming.mode === "reverse-ladder") return `Reverse Ladder ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}`;
+  if (programming.mode === "pyramid") return `Pyramide ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}→${programming.ladderStart ?? 1}`;
+  if (programming.mode === "chipper") return "Chipper";
+  if (programming.mode === "every") return programming.everyUnit === "checkpoint"
+    ? `jeder ${programming.everyValue ?? 1}. Checkpoint`
+    : `alle ${programming.everyValue ?? 1} ${programming.everyUnit === "minutes" ? "Min." : "m"}`;
+  return "Standard / frei";
+}
+
 function savedMessage(saved: string): string {
   if (saved === "item") return "Trainingsinhalt wurde aktualisiert.";
   if (saved === "item-level") return "Level-Zuordnung wurde aktualisiert.";
   if (saved === "organization") return "Solo-/Teamorganisation wurde aktualisiert.";
+  if (saved === "programming") return "Hauptteil-Programmierung wurde aktualisiert.";
   if (saved === "duplicated") return "Training wurde als neue Kopie angelegt.";
   if (saved === "combined") return "Kombiniertes Training wurde als neuer Entwurf angelegt.";
   return "Training wurde aktualisiert.";
