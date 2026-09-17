@@ -1,5 +1,5 @@
 import type { TrainingDraft } from "@/domain/training/draft";
-import type { TrainingItem, TrainingPhase, TrainingPhaseKind } from "@/domain/training/model";
+import type { MainPartProgramming, TrainingItem, TrainingPhase, TrainingPhaseKind } from "@/domain/training/model";
 
 export type DraftPreviewAlternativeMode = "easier" | "harder" | "equipment";
 
@@ -15,6 +15,7 @@ interface MainPartBlock {
   readonly index: number;
   readonly title: string;
   readonly items: readonly TrainingItem[];
+  readonly programming?: MainPartProgramming;
 }
 
 export function TrainingDraftPreview({
@@ -135,6 +136,11 @@ function PhasePreview({
                   {block.items.reduce((sum, item) => sum + item.durationMinutes, 0)} Min. · {block.items.length} Übungen
                 </span>
               </div>
+              {block.programming && block.programming.mode !== "standard" ? (
+                <div className="mt-2 rounded-lg border border-[var(--accent-strong)] bg-[var(--accent-soft)] px-3 py-2 text-xs font-black">
+                  {programmingLabel(block.programming)}
+                </div>
+              ) : null}
               <ol className="mt-2 space-y-2">
                 {block.items.map((item) => (
                   <TrainingItemPreview
@@ -260,6 +266,7 @@ function groupMainParts(items: readonly TrainingItem[]): readonly MainPartBlock[
       index,
       title: titles.get(index) ?? `Hauptteil ${index}`,
       items: blockItems,
+      programming: blockItems[0]?.programming,
     }));
 }
 
@@ -276,4 +283,18 @@ function participantsAtItem(
   if (item.format !== "circuit") return participantCount;
   const circuitStationCount = blockItems.filter((candidate) => candidate.format === "circuit").length;
   return Math.ceil(participantCount / Math.max(1, circuitStationCount));
+}
+
+function programmingLabel(programming: MainPartProgramming): string {
+  if (programming.mode === "interval") return `${programming.workSeconds ?? 0}s Arbeit / ${programming.restSeconds ?? 0}s Pause`;
+  if (programming.mode === "rounds") return `${programming.rounds ?? 1} Runden · ${programming.scoreMode === "time" ? "auf Zeit" : "auf Qualität"}`;
+  if (programming.mode === "ladder") return `Ladder ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1} · +${programming.ladderStep ?? 1}`;
+  if (programming.mode === "reverse-ladder") return `Reverse Ladder ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1} · -${programming.ladderStep ?? 1}`;
+  if (programming.mode === "pyramid") return `Pyramide ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}→${programming.ladderStart ?? 1} · Schritt ${programming.ladderStep ?? 1}`;
+  if (programming.mode === "chipper") return "Chipper · Übungen nacheinander vollständig abarbeiten";
+  if (programming.mode === "every") {
+    if (programming.everyUnit === "checkpoint") return `An jedem ${programming.everyValue ?? 1}. Checkpoint`;
+    return `Alle ${programming.everyValue ?? 1} ${programming.everyUnit === "minutes" ? "Min." : "m"}`;
+  }
+  return "Standard / frei programmiert";
 }
