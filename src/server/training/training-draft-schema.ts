@@ -7,6 +7,7 @@ export const trainingDraftRequestSchema = z.object({
   durationMinutes: z.number().int().min(30).max(180),
   goals: z.array(z.string().trim().min(1).max(80)).min(1).max(12),
   bodyRegions: z.array(z.enum(BODY_REGIONS)).max(BODY_REGIONS.length),
+  avoidBodyRegions: z.array(z.enum(BODY_REGIONS)).max(BODY_REGIONS.length).default([]),
   formats: z.array(z.enum(TRAINING_FORMATS)).min(1).max(4),
   intensity: z.enum(["technique", "balanced", "conditioning"]),
   preferredExerciseIds: z.array(z.string().trim().min(1).max(100)).max(12),
@@ -23,6 +24,9 @@ export const trainingDraftRequestSchema = z.object({
 ).refine(
   (value) => value.minAge == null || value.maxAge == null || value.minAge <= value.maxAge,
   { message: "minAge darf nicht größer als maxAge sein.", path: ["maxAge"] },
+).refine(
+  (value) => !value.bodyRegions.some((region) => value.avoidBodyRegions.includes(region)),
+  { message: "Eine Körperregion kann nicht gleichzeitig Fokus und Ausschluss sein.", path: ["avoidBodyRegions"] },
 );
 
 export type TrainingDraftRequest = z.infer<typeof trainingDraftRequestSchema>;
