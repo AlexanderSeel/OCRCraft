@@ -67,6 +67,7 @@ export interface TrainingBuilderInitialState {
   readonly intensity: string;
   readonly warmupExerciseCount?: number;
   readonly mainExerciseCount?: number;
+  readonly mainPartExerciseCounts?: readonly number[];
   readonly cooldownExerciseCount?: number;
   readonly mainPartCount?: number;
   readonly organizationMode?: "solo" | "team";
@@ -101,6 +102,15 @@ function clampInteger(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, Math.trunc(value)));
 }
 
+function initialMainPartCounts(initialState?: TrainingBuilderInitialState): readonly number[] {
+  const count = clampInteger(initialState?.mainPartCount ?? 1, 1, 4);
+  const fallback = clampInteger(initialState?.mainExerciseCount ?? 4, 1, 8);
+  if (initialState?.mainPartExerciseCounts?.length === count) {
+    return initialState.mainPartExerciseCounts.map((value) => clampInteger(value, 1, 8));
+  }
+  return Array.from({ length: count }, () => fallback);
+}
+
 export function TrainingBuilderPanel({
   equipmentOptions,
   sourceTrainingOptions = [],
@@ -123,9 +133,9 @@ export function TrainingBuilderPanel({
   const [location, setLocation] = useState(initialState?.location ?? "mixed");
   const [intensity, setIntensity] = useState(initialState?.intensity ?? "balanced");
   const [warmupExerciseCount, setWarmupExerciseCount] = useState(initialState?.warmupExerciseCount ?? 2);
-  const [mainExerciseCount, setMainExerciseCount] = useState(initialState?.mainExerciseCount ?? 4);
+  const [mainPartExerciseCounts, setMainPartExerciseCounts] = useState<readonly number[]>(() => initialMainPartCounts(initialState));
   const [cooldownExerciseCount, setCooldownExerciseCount] = useState(initialState?.cooldownExerciseCount ?? 2);
-  const [mainPartCount, setMainPartCount] = useState(initialState?.mainPartCount ?? 1);
+  const [mainPartCount, setMainPartCountState] = useState(initialState?.mainPartCount ?? 1);
   const [organizationMode, setOrganizationMode] = useState<"solo" | "team">(initialState?.organizationMode ?? "solo");
   const [teamSize, setTeamSize] = useState(initialState?.teamSize ?? 4);
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
@@ -148,12 +158,31 @@ export function TrainingBuilderPanel({
   const effectiveTeamSize = organizationMode === "team"
     ? clampInteger(teamSize, 2, Math.min(20, Math.max(2, participants)))
     : undefined;
-  const totalRequestedExercises = warmupExerciseCount + cooldownExerciseCount + mainPartCount * mainExerciseCount;
+  const totalRequestedExercises = warmupExerciseCount
+    + cooldownExerciseCount
+    + mainPartExerciseCounts.reduce((sum, count) => sum + count, 0);
 
   function invalidate() {
     setDraft(null);
     setSavedId(null);
     setError(null);
+  }
+
+  function updateMainPartCount(value: number) {
+    const nextCount = clampInteger(value, 1, 4);
+    setMainPartCountState(nextCount);
+    setMainPartExerciseCounts((current) => Array.from(
+      { length: nextCount },
+      (_, index) => current[index] ?? current.at(-1) ?? 4,
+    ));
+    invalidate();
+  }
+
+  function updateMainPartExerciseCount(index: number, value: number) {
+    setMainPartExerciseCounts((current) => current.map((count, candidateIndex) =>
+      candidateIndex === index ? clampInteger(value, 1, 8) : count
+    ));
+    invalidate();
   }
 
   function toggleSourceTraining(id: string) {
@@ -180,7 +209,8 @@ export function TrainingBuilderPanel({
       intensity,
       builderMode,
       warmupExerciseCount,
-      mainExerciseCount,
+      mainExerciseCount: mainPartExerciseCounts[0] ?? 4,
+      mainPartExerciseCounts,
       cooldownExerciseCount,
       mainPartCount,
       organizationMode,
@@ -360,11 +390,23 @@ export function TrainingBuilderPanel({
             </span>
           </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <NumberField label="Warm-up Übungen" value={warmupExerciseCount} min={1} max={6} onChange={(value) => { setWarmupExerciseCount(value); invalidate(); }} />
-            <NumberField label="Hauptteile" value={mainPartCount} min={1} max={4} onChange={(value) => { setMainPartCount(value); invalidate(); }} />
-            <NumberField label="Übungen je Hauptteil" value={mainExerciseCount} min={1} max={8} onChange={(value) => { setMainExerciseCount(value); invalidate(); }} />
+            <NumberField label="Hauptteile" value={mainPartCount} min={1} max={4} onChange={updateMainPartCount} />
             <NumberField label="Cooldown Übungen" value={cooldownExerciseCount} min={1} max={6} onChange={(value) => { setCooldownExerciseCount(value); invalidate(); }} />
+          </div>
+
+          <div className={`mt-4 grid gap-3 ${mainPartCount === 1 ? "sm:max-w-xs" : "sm:grid-cols-2 lg:grid-cols-4"}`}>
+            {mainPartExerciseCounts.map((count, index) => (
+              <NumberField
+                key={index}
+                label={mainPartCount === 1 ? "Übungen Hauptteil" : `Übungen Hauptteil ${index + 1}`}
+                value={count}
+                min={1}
+                max={8}
+                onChange={(value) => updateMainPartExerciseCount(index, value)}
+              />
+            ))}
           </div>
 
           <div className="mt-5 grid gap-4 border-t border-[var(--border)] pt-4 sm:grid-cols-2">
