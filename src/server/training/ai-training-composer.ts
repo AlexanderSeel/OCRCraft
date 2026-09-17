@@ -121,9 +121,9 @@ function buildCanonicalAiDraft(
           transitionSeconds: candidate.transitionSeconds ?? undefined,
         },
         durationMinutes: item.durationMinutes ?? 0,
-        format: item.format ?? (phase.kind === "main" ? request.formats[0] : "free"),
+        format: canonicalFormat(item.format, phase.kind, request),
         instructions: item.instructions?.trim() || candidate.instructions,
-        levelLabel: reviewedLevelText(item.levelLabel, candidate),
+        levelLabel: reviewedLevelText(item.levelLabel, candidate, request),
       };
     }),
   }));
@@ -163,9 +163,41 @@ function buildCanonicalAiDraft(
   };
 }
 
-function reviewedLevelText(value: string | undefined, candidate: TrainingDraftExerciseCandidate): string | undefined {
-  if (value === "level1") return candidate.level1 || "Level 1";
-  if (value === "level2") return candidate.level2 || "Level 2";
-  if (value === "level3") return candidate.level3 || "Level 3";
-  return value || candidate.level2;
+function canonicalFormat(
+  value: TrainingFormat | undefined,
+  phase: TrainingPhaseKind,
+  request: TrainingDraftRequest,
+): TrainingFormat {
+  if (phase !== "main") return "free";
+  if (value && !request.formats.includes(value)) {
+    throw new Error(`AI-Vorschlag verwendet das nicht gewählte Trainingsformat ${value}.`);
+  }
+  return value ?? request.formats[0] ?? "free";
+}
+
+function reviewedLevelText(
+  value: string | undefined,
+  candidate: TrainingDraftExerciseCandidate,
+  request: TrainingDraftRequest,
+): string | undefined {
+  const standard = candidate.level2 || candidate.level1 || candidate.level3;
+  if (request.audience === "kids") return candidate.level1 || standard;
+
+  if (request.audience === "youth") {
+    const conservative = candidate.difficulty === "advanced"
+      || candidate.riskLevel === "high"
+      || candidate.impactLevel === "high"
+      || candidate.coordinationComplexity === "complex";
+    if (conservative) return candidate.level1 || standard;
+  }
+
+  if (value === "level1") return candidate.level1 || standard;
+  if (value === "level2") return candidate.level2 || standard;
+  if (value === "level3") {
+    const progressionIsConservative = candidate.riskLevel === "low"
+      && candidate.impactLevel !== "high"
+      && candidate.coordinationComplexity !== "complex";
+    return progressionIsConservative ? candidate.level3 || standard : standard;
+  }
+  return value || standard;
 }

@@ -42,7 +42,9 @@ function candidate(
     trainingGoals: phase === "cooldown" ? ["recovery"] : ["strength"],
     planningText: "",
     defaultDurationSeconds: 180,
+    level1: "Leicht",
     level2: "Standard",
+    level3: "Fortgeschritten",
     ...overrides,
   };
 }
@@ -146,5 +148,79 @@ describe("local sports training composer", () => {
     );
 
     expect(draft.warnings.some((warning) => warning.includes("push") && warning.includes("pull"))).toBe(true);
+  });
+
+  it("selects warm-up and cooldown exercises that match the actual main-part demands", () => {
+    const draft = composeSportsTrainingDraft(
+      {
+        ...baseInput,
+        durationMinutes: 45,
+        goals: ["OCR-Technik"],
+        bodyRegions: ["shoulders"],
+        exerciseTypes: ["skill"],
+        intensity: "technique",
+      },
+      [
+        candidate("generic-warmup", "warmup", {
+          bodyRegions: ["quadriceps"],
+          movementPatterns: ["squat"],
+        }),
+        candidate("shoulder-prep", "warmup", {
+          bodyRegions: ["shoulders"],
+          movementPatterns: ["hang"],
+          exerciseType: "drill",
+        }),
+        candidate("generic-cooldown", "cooldown", {
+          bodyRegions: ["calves"],
+        }),
+        candidate("shoulder-recovery", "cooldown", {
+          bodyRegions: ["shoulders"],
+          movementPatterns: ["mobility"],
+          exerciseType: "recovery",
+        }),
+        candidate("rig-skill", "main", {
+          category: "grip-rig",
+          bodyRegions: ["shoulders", "forearms-grip"],
+          movementPatterns: ["hang"],
+          exerciseType: "skill",
+          trainingGoals: ["ocr_technique", "grip"],
+        }),
+        candidate("pull-skill", "main", {
+          category: "grip-rig",
+          bodyRegions: ["lats", "biceps"],
+          movementPatterns: ["pull"],
+          exerciseType: "skill",
+          trainingGoals: ["ocr_technique"],
+        }),
+        candidate("core", "main", { bodyRegions: ["core"], movementPatterns: ["brace"] }),
+      ],
+    );
+
+    expect(phaseIds(draft, "warmup")).toContain("shoulder-prep");
+    expect(phaseIds(draft, "cooldown")).toContain("shoulder-recovery");
+  });
+
+  it("assigns conservative stored levels for kids and safe progressions for adult conditioning", () => {
+    const pool = [
+      candidate("warm", "warmup"),
+      candidate("cool", "cooldown"),
+      candidate("main-a", "main", { bodyRegions: ["biceps"], movementPatterns: ["pull"] }),
+      candidate("main-b", "main", { bodyRegions: ["triceps"], movementPatterns: ["push"] }),
+      candidate("main-c", "main", { bodyRegions: ["quadriceps"], movementPatterns: ["squat"] }),
+    ];
+
+    const kids = composeSportsTrainingDraft(
+      { ...baseInput, audience: "kids", minAge: 10, durationMinutes: 45 },
+      pool,
+    );
+    const kidLevels = kids.session.phases.find((phase) => phase.kind === "main")?.items.map((item) => item.levelLabel) ?? [];
+    expect(kidLevels.every((level) => level === "Leicht")).toBe(true);
+
+    const conditioning = composeSportsTrainingDraft(
+      { ...baseInput, intensity: "conditioning", durationMinutes: 45 },
+      pool,
+    );
+    const adultLevels = conditioning.session.phases.find((phase) => phase.kind === "main")?.items.map((item) => item.levelLabel) ?? [];
+    expect(adultLevels.every((level) => level === "Fortgeschritten")).toBe(true);
   });
 });
