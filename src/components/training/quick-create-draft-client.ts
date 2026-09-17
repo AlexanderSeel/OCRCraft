@@ -189,11 +189,12 @@ export async function requestTrainingDraft(
 export async function persistTrainingDraft(
   input: QuickCreateDraftClientInput,
   title?: string,
+  reviewedDraft?: TrainingDraft,
 ): Promise<PersistedTrainingDraftResult> {
   const normalized = normalizeTrainingDraftRequest(input);
-  if (normalized.builderMode === "ai") {
-    throw new Error("AI-Entwürfe müssen nach der Vorschau explizit als geprüfter Vorschlag gespeichert werden.");
-  }
+  const reviewed = normalized.builderMode === "ai"
+    ? toReviewedAiSelection(reviewedDraft)
+    : undefined;
 
   const response = await fetch("/api/training/draft/persist", {
     method: "POST",
@@ -202,6 +203,7 @@ export async function persistTrainingDraft(
       request: normalized,
       title: title?.trim() || undefined,
       groupId: input.groupId?.trim() || undefined,
+      reviewed,
     }),
   });
 
@@ -215,4 +217,22 @@ export async function persistTrainingDraft(
   }
 
   return (await response.json()) as PersistedTrainingDraftResult;
+}
+
+function toReviewedAiSelection(draft?: TrainingDraft) {
+  if (!draft || draft.source !== "ai") {
+    throw new Error("Der AI-Vorschlag muss vor dem Speichern erzeugt und geprüft werden.");
+  }
+  return {
+    phases: draft.session.phases.map((phase) => ({
+      kind: phase.kind,
+      items: phase.items.map((item) => ({
+        exerciseId: item.exercise.id,
+        durationMinutes: item.durationMinutes,
+        format: item.format,
+        instructions: item.instructions,
+        levelLabel: item.levelLabel,
+      })),
+    })),
+  };
 }
