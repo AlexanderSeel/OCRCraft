@@ -53,6 +53,12 @@ describe("normalizeTrainingDraftRequest", () => {
           { equipmentId: "sandbag", quantityAvailable: 6 },
           { equipmentId: "cones", quantityAvailable: 0 },
         ],
+        availableObstacleExerciseIds: [
+          "33333333-3333-4333-8333-333333333333",
+          "33333333-3333-4333-8333-333333333333",
+          "not-an-obstacle-id",
+          "44444444-4444-4444-8444-444444444444",
+        ],
       }),
     ).toEqual({
       audience: "kids",
@@ -83,10 +89,31 @@ describe("normalizeTrainingDraftRequest", () => {
         { equipmentId: "sandbag", quantityAvailable: 6 },
         { equipmentId: "cones", quantityAvailable: 0 },
       ],
+      availableObstacleExerciseIds: [
+        "33333333-3333-4333-8333-333333333333",
+        "44444444-4444-4444-8444-444444444444",
+      ],
       minAge: 8,
       maxAge: 12,
       locale: "de",
     });
+  });
+
+  it("preserves the difference between undeclared and explicitly empty obstacle inventory", () => {
+    const base = {
+      groupType: "adults",
+      ageRange: "18+",
+      participantCount: 10,
+      durationMinutes: 60,
+      goals: ["OCR-Technik"],
+      bodyRegions: [],
+      formats: ["circuit"],
+      intensity: "balanced",
+      preferredExerciseIds: [],
+    };
+
+    expect(normalizeTrainingDraftRequest(base).availableObstacleExerciseIds).toBeUndefined();
+    expect(normalizeTrainingDraftRequest({ ...base, availableObstacleExerciseIds: [] }).availableObstacleExerciseIds).toEqual([]);
   });
 
   it("falls back to safe audience, location, intensity and local builder values", () => {
@@ -114,6 +141,7 @@ describe("normalizeTrainingDraftRequest", () => {
     expect(request.minAge).toBeUndefined();
     expect(request.maxAge).toBeUndefined();
     expect(request.availableEquipment).toEqual([]);
+    expect(request.availableObstacleExerciseIds).toBeUndefined();
     expect(request.avoidBodyRegions).toEqual([]);
   });
 });
