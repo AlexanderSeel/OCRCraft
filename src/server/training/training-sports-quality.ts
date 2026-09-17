@@ -34,7 +34,8 @@ const LOWER_BODY = new Set([
 /**
  * Deterministic post-composition audit shared by local and AI builders.
  * This does not diagnose medical suitability. It checks training-plan structure,
- * requested coverage, basic movement/muscle balance and load sequencing.
+ * requested coverage, preparation/recovery relevance, basic movement/muscle
+ * balance and fatigue-sensitive load sequencing.
  */
 export function assessTrainingSportsQuality(
   request: TrainingDraftRequest,
@@ -42,12 +43,14 @@ export function assessTrainingSportsQuality(
   candidates: readonly TrainingDraftExerciseCandidate[],
 ): TrainingSportsQualityResult {
   const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
-  const selected = draft.session.phases.flatMap((phase) =>
-    phase.items.flatMap((item) => byId.get(item.exercise.id) ?? []),
-  );
-  const main = draft.session.phases
-    .find((phase) => phase.kind === "main")
-    ?.items.flatMap((item) => byId.get(item.exercise.id) ?? []) ?? [];
+  const phaseCandidates = (kind: "warmup" | "main" | "cooldown") =>
+    draft.session.phases
+      .find((phase) => phase.kind === kind)
+      ?.items.flatMap((item) => byId.get(item.exercise.id) ?? []) ?? [];
+  const warmup = phaseCandidates("warmup");
+  const main = phaseCandidates("main");
+  const cooldown = phaseCandidates("cooldown");
+  const selected = [...warmup, ...main, ...cooldown];
 
   const warnings: string[] = [];
   const checks: string[] = [];
@@ -68,6 +71,35 @@ export function assessTrainingSportsQuality(
     } else {
       warnings.push(`Sportqualitätscheck: gewünschter Übungstyp ${type} fehlt im Entwurf.`);
       score -= 10;
+    }
+  }
+
+  if (main.length > 0 && warmup.length > 0) {
+    if (warmup.some((candidate) => preparesForMain(candidate, main))) {
+      checks.push("Warm-up bereitet Bewegungsmuster oder belastete Körperregionen des Hauptteils vor.");
+    } else {
+      warnings.push("Sportqualitätscheck: Warm-up hat keinen erkennbaren Bezug zu Bewegungsmustern oder belasteten Körperregionen des Hauptteils.");
+      score -= 8;
+    }
+  }
+
+  if (cooldown.length > 0) {
+    const unsuitableCooldown = cooldown.filter((candidate) =>
+      candidate.riskLevel === "high"
+      || candidate.impactLevel === "high"
+      || candidate.exerciseType === "obstacle"
+      || candidate.exerciseType === "strength",
+    );
+    if (unsuitableCooldown.length > 0) {
+      warnings.push(`Sportqualitätscheck: Cooldown enthält ${unsuitableCooldown.length} hoch belastende oder ungeeignete Auswahl(en).`);
+      score -= Math.min(14, unsuitableCooldown.length * 7);
+    } else {
+      checks.push("Cooldown vermeidet hohe Stoßbelastung und Hochrisiko-/Kraft-/Obstacle-Arbeit.");
+    }
+
+    if (main.length > 0 && !cooldown.some((candidate) => recoversMainDemand(candidate, main))) {
+      warnings.push("Sportqualitätscheck: Cooldown reduziert zwar Belastung, adressiert aber keine im Hauptteil beanspruchte Körperregion und enthält keine allgemeine Recovery/Mobility-Option.");
+      score -= 5;
     }
   }
 
@@ -118,6 +150,18 @@ export function assessTrainingSportsQuality(
       warnings.push(`Sportqualitätscheck: zwei Hochrisiko-Übungen direkt hintereinander (${previous.name} → ${current.name}).`);
       score -= 8;
     }
+    if (previous.impactLevel === "high" && current.coordinationComplexity === "complex") {
+      warnings.push(`Sportqualitätscheck: komplexe Koordinationsaufgabe direkt nach High-Impact-Belastung (${previous.name} → ${current.name}).`);
+      score -= 5;
+    }
+  }
+
+  for (let index = 2; index < main.length; index += 1) {
+    const window = main.slice(index - 2, index + 1);
+    if (sharesRepeatedMacroLoad(window)) {
+      warnings.push(`Sportqualitätscheck: drei aufeinanderfolgende Hauptteil-Übungen belasten denselben Körper-Makrobereich (${window.map((item) => item.name).join(" → ")}).`);
+      score -= 5;
+    }
   }
 
   if (request.audience === "kids") {
@@ -136,6 +180,31 @@ export function assessTrainingSportsQuality(
     warnings: [`Sportqualitätscheck: ${score}/100.`, ...warnings],
     checks,
   };
+}
+
+function preparesForMain(
+  candidate: TrainingDraftExerciseCandidate,
+  main: readonly TrainingDraftExerciseCandidate[],
+): boolean {
+  if (candidate.bodyRegions.includes("full-body")) return true;
+  const mainPatterns = new Set(main.flatMap((item) => item.movementPatterns ?? []));
+  if ((candidate.movementPatterns ?? []).some((pattern) => mainPatterns.has(pattern))) return true;
+  return main.some((item) => candidate.bodyRegions.some((region) => bodyRegionsOverlap([region], item.bodyRegions)));
+}
+
+function recoversMainDemand(
+  candidate: TrainingDraftExerciseCandidate,
+  main: readonly TrainingDraftExerciseCandidate[],
+): boolean {
+  if (candidate.exerciseType === "recovery" || candidate.exerciseType === "mobility") return true;
+  if (candidate.bodyRegions.includes("full-body")) return true;
+  return main.some((item) => candidate.bodyRegions.some((region) => bodyRegionsOverlap([region], item.bodyRegions)));
+}
+
+function sharesRepeatedMacroLoad(candidates: readonly TrainingDraftExerciseCandidate[]): boolean {
+  if (candidates.length < 3) return false;
+  const macroSets = candidates.map((candidate) => new Set(macroRegions(candidate)));
+  return [...macroSets[0]].some((macro) => macroSets.slice(1).every((macros) => macros.has(macro)));
 }
 
 function isWholeBodyGoal(goals: readonly string[]): boolean {
