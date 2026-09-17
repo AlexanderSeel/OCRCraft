@@ -90,6 +90,7 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
   const [duration, setDuration] = useState(75);
   const [goals, setGoals] = useState<readonly string[]>(["Ganzkörper", "OCR-Technik"]);
   const [bodyRegions, setBodyRegions] = useState<readonly string[]>(["forearms-grip", "core"]);
+  const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>([]);
   const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>([]);
   const [formats, setFormats] = useState<readonly string[]>(["rig-run"]);
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
@@ -140,6 +141,24 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
     invalidateDraft();
   }
 
+  function toggleFocusRegion(regionId: string) {
+    const selecting = !bodyRegions.includes(regionId);
+    setBodyRegions(toggleValue(bodyRegions, regionId));
+    if (selecting) {
+      setAvoidBodyRegions((current) => current.filter((id) => id !== regionId));
+    }
+    invalidateDraft();
+  }
+
+  function toggleAvoidRegion(regionId: string) {
+    const selecting = !avoidBodyRegions.includes(regionId);
+    setAvoidBodyRegions(toggleValue(avoidBodyRegions, regionId));
+    if (selecting) {
+      setBodyRegions((current) => current.filter((id) => id !== regionId));
+    }
+    invalidateDraft();
+  }
+
   function currentDraftInput(): QuickCreateDraftClientInput {
     return {
       groupId: selectedGroupId || undefined,
@@ -149,6 +168,7 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
       durationMinutes: duration,
       goals,
       bodyRegions,
+      avoidBodyRegions,
       formats,
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
         quantity.trim() === "" ? [] : [{ equipmentId, quantityAvailable: Number(quantity) }]
@@ -329,11 +349,35 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                 <p className="mt-1 text-sm text-[var(--muted)]">Wähle direkt auf der Körperansicht oder über die beschrifteten Bereiche.</p>
                 <div className="mt-4">
                   <BodyFocusSelector
-                    onToggle={(regionId) => setBodyRegions(toggleValue(bodyRegions, regionId))}
+                    onToggle={toggleFocusRegion}
                     selected={bodyRegions}
                   />
                 </div>
               </div>
+
+              <details className="mt-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)]">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 marker:hidden sm:px-5">
+                  <span>
+                    <span className="font-black">Bereiche bewusst ausschließen</span>
+                    <span className="ml-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[11px] font-bold text-[var(--muted)]">
+                      {avoidBodyRegions.length} ausgewählt
+                    </span>
+                    <span className="mt-1 block text-xs font-normal leading-5 text-[var(--muted)]">
+                      Übungen mit diesen Körperregionen werden aus der deterministischen Planung ausgeschlossen.
+                    </span>
+                  </span>
+                  <span aria-hidden="true" className="text-lg font-black text-[var(--muted)]">+</span>
+                </summary>
+                <div className="border-t border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+                  <BodyFocusSelector
+                    description="Wähle Bereiche, die diese Einheit bewusst nicht belasten soll. Wenn ein Bereich hier ausgewählt wird, wird er automatisch aus dem Trainingsfokus entfernt – und umgekehrt. Diese Einstellung ist eine Planungsregel des Trainers, keine medizinische Diagnose."
+                    onToggle={toggleAvoidRegion}
+                    selected={avoidBodyRegions}
+                    title="Nicht belasten / vermeiden"
+                    visualCompact
+                  />
+                </div>
+              </details>
 
               <div className="mt-8 border-t border-[var(--border)] pt-6">
                 <ExerciseAutocompletePicker
@@ -439,6 +483,7 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                   ["Dauer", `${duration} Minuten`],
                   ["Ziele", goals.join(", ")],
                   ["Körperregionen", bodyRegions.length ? bodyRegions.join(", ") : "Keine Vorgabe"],
+                  ["Nicht belasten", avoidBodyRegions.length ? avoidBodyRegions.join(", ") : "Keine Ausschlüsse"],
                   ["Wunschübungen", preferredExercises.length ? preferredExercises.map((item) => item.label).join(", ") : "Keine Vorgabe"],
                   ["Formate", formats.join(", ")],
                   ["Ausrichtung", intensity],
@@ -553,6 +598,12 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
               <div className="text-xs text-[var(--sidebar-muted)]">Fokus</div>
               <div className="mt-1 text-sm font-bold leading-6">{goals.join(" · ") || "Noch auswählen"}</div>
             </div>
+            {avoidBodyRegions.length > 0 ? (
+              <div>
+                <div className="text-xs text-[var(--sidebar-muted)]">Nicht belasten</div>
+                <div className="mt-1 text-sm font-bold leading-6">{avoidBodyRegions.join(" · ")}</div>
+              </div>
+            ) : null}
             <div>
               <div className="text-xs text-[var(--sidebar-muted)]">Wunschübungen</div>
               <div className="mt-1 text-sm font-bold leading-6">
