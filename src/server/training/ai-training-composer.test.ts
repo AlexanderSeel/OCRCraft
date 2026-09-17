@@ -98,7 +98,7 @@ describe("AI training composer", () => {
   });
 
   it("rejects exercises that conflict with an avoided muscle region", () => {
-    const avoidCore = { ...request, bodyRegions: [], avoidBodyRegions: ["core"] as const };
+    const avoidCore = { ...request, bodyRegions: [], avoidBodyRegions: ["core"] };
     expect(() => composeAiTrainingDraft({
       proposal: proposal(), request: avoidCore, approvedExercises: approved, providerId: "test",
     })).toThrow(/ausgeschlossener Körperregion/);
