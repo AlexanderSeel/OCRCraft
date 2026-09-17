@@ -195,4 +195,35 @@ describe("assessTrainingSportsQuality", () => {
     expect(result.warnings.join(" ")).toContain("komplexe Koordinationsaufgabe direkt nach High-Impact-Belastung");
     expect(result.score).toBeLessThan(90);
   });
+
+  it("flags complex skill work placed after two fatigue-heavy exercises", () => {
+    const candidates = [
+      candidate("strength-a", "Strength A", ["quadriceps"], ["squat"], { exerciseType: "strength" }),
+      candidate("endurance", "Conditioning", ["calves"], ["run"], { exerciseType: "endurance" }),
+      candidate("skill", "Precision Rig", ["forearms-grip"], ["hang"], {
+        exerciseType: "skill",
+        coordinationComplexity: "complex",
+      }),
+    ];
+    const result = assessTrainingSportsQuality(
+      request({ goals: ["OCR-Technik"], bodyRegions: [], exerciseTypes: ["skill"] }),
+      draft(candidates),
+      candidates,
+    );
+    expect(result.warnings.join(" ")).toContain("technisch/koordinativ anspruchsvolle Übung erst nach zwei ermüdenden Belastungen");
+  });
+
+  it("detects three consecutive selections loading the same local muscle region", () => {
+    const candidates = [
+      candidate("grip-a", "Grip A", ["forearms-grip", "shoulders"], ["hang"]),
+      candidate("grip-b", "Grip B", ["forearms-grip", "lats"], ["pull"]),
+      candidate("grip-c", "Grip C", ["forearms-grip", "core"], ["carry"]),
+    ];
+    const result = assessTrainingSportsQuality(
+      request({ goals: ["Grip"], bodyRegions: ["forearms-grip"], exerciseTypes: [] }),
+      draft(candidates),
+      candidates,
+    );
+    expect(result.warnings.join(" ")).toContain("dieselbe lokale Region (forearms-grip");
+  });
 });
