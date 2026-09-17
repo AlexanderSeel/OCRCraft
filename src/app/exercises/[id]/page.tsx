@@ -5,10 +5,7 @@ import { MuscleMap } from "@/components/body/muscle-map";
 import { exerciseCategoryLabels, exercisePhaseLabels } from "@/domain/exercise/model";
 import { getExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
 import { getExerciseById } from "@/server/exercises/exercise-repository";
-import {
-  getTrainingExerciseGuidanceMap,
-  type TrainingExerciseGuidance,
-} from "@/server/training/training-exercise-guidance-repository";
+import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 
 export const dynamic = "force-dynamic";
 
