@@ -38,6 +38,7 @@ const migrations: readonly Migration[] = [
   { version: 25, fileName: "025_seed_alias_completeness.sql" },
   { version: 26, fileName: "026_external_media_licensing.sql" },
   { version: 27, fileName: "027_exercise_source_references.sql" },
+  { version: 28, fileName: "028_training_generation_history.sql" },
 ];
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {
@@ -74,36 +75,22 @@ export async function runSqlScript(
   sql: string,
 ): Promise<void> {
   const statements = await connection.extractStatements(sql);
-
   for (let index = 0; index < statements.count; index += 1) {
     const statement = await statements.prepare(index);
     await statement.run();
   }
 }
 
-export async function applyPendingMigrations(): Promise<readonly number[]> {
-  const appliedVersions = await getAppliedVersions();
-  const newlyApplied: number[] = [];
+export async function runMigrations(): Promise<void> {
+  const applied = await getAppliedVersions();
+  const scripts = await readAllMigrationScripts();
 
-  for (const migration of migrations) {
-    if (appliedVersions.has(migration.version)) continue;
-
-    const migrationPath = path.join(
-      process.cwd(),
-      "src",
-      "server",
-      "db",
-      "migrations",
-      migration.fileName,
-    );
-    const sql = await readFile(migrationPath, "utf8");
+  for (let index = 0; index < migrations.length; index += 1) {
+    const migration = migrations[index];
+    if (applied.has(migration.version)) continue;
 
     await withDuckDbConnection(async (connection) => {
-      await runSqlScript(connection, sql);
+      await runSqlScript(connection, scripts[index]);
     });
-
-    newlyApplied.push(migration.version);
   }
-
-  return newlyApplied;
 }
