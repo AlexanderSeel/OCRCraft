@@ -61,7 +61,6 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
         <MuscleMap
           description="Klicke eine Muskelgruppe: Primär → Sekundär → Aus. Gegenmuskeln können auf der Karte eingeblendet und darunter separat als Antagonisten gespeichert werden."
           disabled={disabled}
-          debug
           emphasisFieldPrefix="bodyEmphasis:"
           fieldName="bodyRegionIds"
           mode="emphasis"

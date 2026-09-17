@@ -14,7 +14,7 @@ try {
   }
   await page.getByRole("button", { name: "Liste", exact: true }).click();
   await page.reload({ waitUntil: "networkidle" });
-  if (await page.locator(".overview-layout").getAttribute("data-view") !== "list") throw new Error("Overview view was not retained");
+  await page.waitForFunction(() => document.querySelector(".overview-layout")?.getAttribute("data-view") === "list");
   const edit = await page.locator('a[href$="/edit"]').first().getAttribute("href");
   if (!edit) throw new Error("No exercise edit link");
   await page.goto(`http://localhost:3000${edit}`, { waitUntil: "networkidle" });
@@ -29,7 +29,7 @@ try {
   await detail.check();
   await page.getByRole("searchbox", { name: "Muskel suchen" }).fill("");
   if (!(await page.locator('input[type="hidden"][value="detail:biceps-right"]').count())) throw new Error("Detail was not added to form");
-  await page.getByRole("button", { name: "24 Hauptbereiche", exact: true }).click();
+  await page.getByRole("button", { name: /Hauptbereiche$/ }).click();
   if (!(await page.locator('input[type="hidden"][value="detail:biceps-right"]').count())) throw new Error("Switching precision lost detail selection");
   await page.setViewportSize({ width: 390, height: 844 });
   await map.scrollIntoViewIfNeeded();

@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { SeedCompletenessReportView } from "@/components/admin/seed-completeness-report";
+import { MuscleMapDebugSetting } from "@/components/admin/muscle-map-debug-setting";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { reseedDatabaseAction } from "./actions";
@@ -80,6 +81,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               </form>
             </div>
           </details>
+          <MuscleMapDebugSetting />
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">

@@ -302,6 +302,7 @@ Reference entry points:
 - [x] warm-up cohort gate: bilingual summaries/details, three ordered steps, specific cues/corrections, dosage and movement/body mappings
 - [x] CI requires all seed exercises to have DE/EN names
 - [x] CI requires both canonical names as cross-locale aliases wherever the DE/EN names differ
+- [x] startup migration fills missing DE/EN canonical aliases for the initial seed catalogue
 - [x] CI requires all seed exercises to have summary + purpose
 - [x] CI requires setup + start position + at least 3 DE/EN execution steps
 - [x] CI requires at least 2 coaching cues for each seeded exercise and locale
@@ -364,6 +365,7 @@ Reference entry points:
 - [x] Level 1/2/3 editor
 - [x] safety/logistics editor
 - [ ] source/provenance display
+- [x] dry-run adapter for hasaneyldrm/exercises-dataset preserves source and media references and requires translation/review
 - [ ] protected hard delete
 - [ ] progressions/regressions
 - [ ] duplicate detection / bulk edit / import-export
@@ -712,6 +714,7 @@ No athlete surveillance or unnecessary personal data.
 - [x] BM25 live search + structured fallback
 - [x] enriched autocomplete API including explicit training goals
 - [x] read-only Admin search status
+- [x] Admin setting for muscle-map debug overlay, disabled by default
 - [x] reusable anatomical MuscleMap across Quick Create, exercise editing, filtering and previews
 - [x] granular muscle taxonomy with safe compatibility for legacy coarse mappings
 - [x] Quick Create UI + body selector + live exercise retrieval
@@ -742,6 +745,7 @@ No athlete surveillance or unnecessary personal data.
 - [x] connect Quick Create to real autocomplete/retrieval
 - [x] body-region/movement/equipment/tag facet editing
 - [x] reusable muscle map selection/filter/preview slice
+- [x] compact side-by-side muscle map workspace with list/small/medium/large/detail exercise overview modes
 - [x] deterministic non-AI `TrainingDraft`
 - [x] persisted Training Session CRUD foundation
 - [ ] selectable JSON import/export with duplicate compare/resolution workflow

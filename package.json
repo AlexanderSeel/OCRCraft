@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "exercise:image": "node --conditions=react-server --import=tsx scripts/generate-exercise-image.ts",
-    "exercise:images:seed": "node --conditions=react-server --import=tsx scripts/generate-seed-exercise-images.ts"
+    "exercise:images:seed": "node --conditions=react-server --import=tsx scripts/generate-seed-exercise-images.ts",
+    "exercise:import:hasaneyldrm": "node --conditions=react-server --import=tsx scripts/import-hasaneyldrm-exercises.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1133.0",

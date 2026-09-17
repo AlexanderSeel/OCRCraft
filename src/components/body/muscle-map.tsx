@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type MouseEvent } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
 import {
   COARSE_BODY_REGION_IDS,
   DETAIL_BODY_REGION_OPTIONS,
@@ -22,6 +22,16 @@ import { RasterMuscleLayer, type RasterMuscleTone } from "./raster-muscle-layer"
 import { useResponsiveImageMap } from "./use-responsive-image-map";
 
 export type MuscleEmphasis = "primary" | "secondary";
+export const MUSCLE_MAP_DEBUG_STORAGE_KEY = "ocrcraft-muscle-map-debug";
+const muscleDebugEvent = "ocrcraft-muscle-map-debug-change";
+function subscribeDebug(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(muscleDebugEvent, callback);
+  return () => { window.removeEventListener("storage", callback); window.removeEventListener(muscleDebugEvent, callback); };
+}
+function readDebugSetting() {
+  try { return window.localStorage.getItem(MUSCLE_MAP_DEBUG_STORAGE_KEY) === "true"; } catch { return false; }
+}
 
 export interface MuscleMapOption {
   readonly id: string;
@@ -110,6 +120,8 @@ export function MuscleMap({
   description,
   debug = false,
 }: MuscleMapProps) {
+  const configuredDebug = useSyncExternalStore(subscribeDebug, readDebugSetting, () => false);
+  const showDebug = debug || configuredDebug;
   const [internalSelection, setInternalSelection] = useState<MuscleMapValue[]>(() => [...value]);
   const [hoveredPart, setHoveredPart] = useState<MuscleMapPart | null>(null);
   const [debugPoints, setDebugPoints] = useState<readonly [number, number][]>([]);
@@ -261,17 +273,17 @@ export function MuscleMap({
   }
 
   function handleMapClick(event: MouseEvent<HTMLDivElement>) {
-    if (debug) {
+    if (showDebug) {
       const point = referencePoint(event);
       if (point) setDebugPoints((points) => [...points, [Math.round(point.x), Math.round(point.y)]]);
     }
     if (!interactive) return;
     const part = hitPart(event);
     if (!part) {
-      if (debug) setDebugLastHit(null);
+      if (showDebug) setDebugLastHit(null);
       return;
     }
-    if (debug) setDebugLastHit(part.labelDe);
+    if (showDebug) setDebugLastHit(part.labelDe);
     const optionId = optionForPart(part, optionIds, detailed);
     if (optionId) cycle(optionId);
   }
@@ -322,7 +334,7 @@ export function MuscleMap({
               <RasterMuscleLayer key={`${item.id}-${part.id}`} part={part} tone={toneFor(mode, item)} />
             )))}
 
-            {debug ? visibleParts.map((part) => <RasterMuscleLayer key={`debug-${part.id}`} part={part} subtle tone="selected" />) : null}
+            {showDebug ? visibleParts.map((part) => <RasterMuscleLayer key={`debug-${part.id}`} part={part} subtle tone="selected" />) : null}
             {hoveredPart ? <RasterMuscleLayer part={hoveredPart} tone="hover" /> : null}
 
             {debugPoints.map(([x, y], index) => (
@@ -532,7 +544,7 @@ export function MuscleMap({
               const secondary = item.emphasis === "secondary";
               return (
                 <button
-                  className="rounded-full border px-3 py-1.5 text-xs font-bold text-[var(--foreground)]"
+                  className="rounded-full border px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-slate-900"
                   disabled={!interactive}
                   key={item.id}
                   onClick={() => cycle(item.id)}
@@ -562,7 +574,7 @@ export function MuscleMap({
         </div>
       ) : null}
 
-      {debug ? (
+      {showDebug ? (
         <details className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-2 text-xs">
           <summary className="min-h-8 cursor-pointer font-black">Koordinaten-Debug · {debugPoints.length} Punkte</summary>
           <div className="mt-1 font-mono text-[var(--muted)]">
