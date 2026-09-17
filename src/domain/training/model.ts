@@ -9,6 +9,9 @@ export type Audience = (typeof AUDIENCES)[number];
 export const RISK_LEVELS = ["low", "medium", "high"] as const;
 export type RiskLevel = (typeof RISK_LEVELS)[number];
 
+export const TRAINING_LOCATIONS = ["indoor", "outdoor", "mixed"] as const;
+export type TrainingLocation = (typeof TRAINING_LOCATIONS)[number];
+
 export const TRAINING_FORMATS = [
   "free",
   "circuit",
