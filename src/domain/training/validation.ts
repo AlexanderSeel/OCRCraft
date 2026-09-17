@@ -1,6 +1,7 @@
 import type {
   RiskLevel,
   TrainingEquipmentAvailability,
+  TrainingItem,
   TrainingPhaseKind,
   TrainingSession,
 } from "./model";
@@ -174,124 +175,173 @@ export function validateTrainingSession(
 
   for (const phase of session.phases) {
     if (phase.kind !== "main") continue;
-
-    const circuitItems = phase.items.filter((item) => item.format === "circuit");
-    const circuitStationCount = circuitItems.length;
-    const groupSizePerCircuitStation = circuitStationCount > 0
-      ? Math.ceil(session.group.participantCount / circuitStationCount)
-      : 0;
-
-    for (const item of phase.items) {
-      const stationCapacity = item.exercise.stationCapacity;
-      const participantsAtExercise = item.format === "circuit"
-        ? groupSizePerCircuitStation
-        : session.group.participantCount;
-      if (
-        stationCapacity == null ||
-        !Number.isInteger(stationCapacity) ||
-        stationCapacity < 1 ||
-        participantsAtExercise <= stationCapacity
-      ) {
-        continue;
-      }
-
-      const recommendedStationCount = Math.ceil(participantsAtExercise / stationCapacity);
-      issues.push({
-        code: "station-capacity",
-        severity: "warning",
-        message: item.format === "circuit"
-          ? `${item.exercise.name}: Bei ${circuitStationCount} Zirkelstationen sind bis zu ${participantsAtExercise} Teilnehmende gleichzeitig an dieser Übung. Eine Übungsstation fasst ${stationCapacity}; richte ${recommendedStationCount} parallele Varianten ein oder passe die Gruppeneinteilung an.`
-          : `${item.exercise.name}: Eine Station fasst maximal ${stationCapacity} gleichzeitig Trainierende. Für ${session.group.participantCount} Teilnehmende brauchst du ${recommendedStationCount} parallele Stationen oder eine Gruppenrotation.`,
-        path: `phases.${phase.id}.items.${item.id}`,
-        participantCount: session.group.participantCount,
-        participantsAtExercise,
-        stationCapacity,
-        recommendedStationCount,
-      });
-    }
-
-    if (circuitStationCount === 0) continue;
-
-    const stockByEquipment = new Map(
-      availableEquipment.map((item) => [item.equipmentId, item.quantityAvailable]),
-    );
-    const equipmentDemandById = new Map<string, {
-      name: string;
-      stationDemands: number[];
-      exerciseNames: Set<string>;
-    }>();
-    const unknownEquipmentById = new Map<string, {
-      name: string;
-      exerciseNames: Set<string>;
-    }>();
-    const baseGroupSize = Math.floor(session.group.participantCount / circuitStationCount);
-    const remainder = session.group.participantCount % circuitStationCount;
-
-    for (const [index, item] of circuitItems.entries()) {
-      const groupSize = session.group.participantCount < circuitStationCount
-        ? 1
-        : baseGroupSize + (index < remainder ? 1 : 0);
-      if (groupSize === 0) continue;
-
-      const capacity = item.exercise.stationCapacity;
-      const parallelCopies = capacity != null && Number.isInteger(capacity) && capacity > 0
-        ? Math.ceil(groupSize / capacity)
-        : 1;
-
-      for (const requirement of item.exercise.equipmentRequirements ?? []) {
-        if (!Number.isInteger(requirement.quantityPerStation) || requirement.quantityPerStation < 1) continue;
-
-        if (!stockByEquipment.has(requirement.equipmentId)) {
-          const unknown = unknownEquipmentById.get(requirement.equipmentId) ?? {
-            name: requirement.name,
-            exerciseNames: new Set<string>(),
-          };
-          unknown.exerciseNames.add(item.exercise.name);
-          unknownEquipmentById.set(requirement.equipmentId, unknown);
-          continue;
-        }
-
-        const demand = equipmentDemandById.get(requirement.equipmentId) ?? {
-          name: requirement.name,
-          stationDemands: [],
-          exerciseNames: new Set<string>(),
-        };
-        demand.stationDemands.push(requirement.quantityPerStation * parallelCopies);
-        demand.exerciseNames.add(item.exercise.name);
-        equipmentDemandById.set(requirement.equipmentId, demand);
-      }
-    }
-
-    const simultaneouslyActiveStations = Math.min(session.group.participantCount, circuitStationCount);
-    for (const [equipmentId, demand] of equipmentDemandById) {
-      const requiredQuantity = demand.stationDemands
-        .sort((left, right) => right - left)
-        .slice(0, simultaneouslyActiveStations)
-        .reduce((sum, quantity) => sum + quantity, 0);
-      const availableQuantity = stockByEquipment.get(equipmentId);
-      if (availableQuantity == null || requiredQuantity <= availableQuantity) continue;
-
-      issues.push({
-        code: "equipment-conflict",
-        severity: "warning",
-        message: `Im gleichzeitigen Zirkelbetrieb benötigen ${[...demand.exerciseNames].join(" und ")} zusammen bis zu ${requiredQuantity} × ${demand.name}; für diese Einheit sind ${availableQuantity} vorhanden. Ergänze Material oder ändere die Stationsplanung.`,
-        path: `phases.${phase.id}.equipment.${equipmentId}`,
-        equipmentId,
-        requiredQuantity,
-        availableQuantity,
-      });
-    }
-
-    for (const [equipmentId, unknown] of unknownEquipmentById) {
-      issues.push({
-        code: "equipment-availability-unknown",
-        severity: "warning",
-        message: `Der Bestand für ${unknown.name} wurde nicht angegeben, obwohl ${[...unknown.exerciseNames].join(" und ")} es im Zirkel benötigen. Ergänze die verfügbare Menge, damit OCRCraft Engpässe prüfen kann.`,
-        path: `phases.${phase.id}.equipment.${equipmentId}`,
-        equipmentId,
-      });
+    const blocks = groupMainPartItems(phase.items);
+    for (const [mainPartIndex, items] of blocks) {
+      validateMainPartLogistics(
+        issues,
+        session,
+        phase.id,
+        mainPartIndex,
+        items,
+        availableEquipment,
+      );
     }
   }
 
   return issues;
+}
+
+function groupMainPartItems(items: readonly TrainingItem[]): ReadonlyMap<number, readonly TrainingItem[]> {
+  const groups = new Map<number, TrainingItem[]>();
+  for (const item of items) {
+    const index = Number.isInteger(item.mainPartIndex) && (item.mainPartIndex ?? 0) > 0
+      ? item.mainPartIndex as number
+      : 1;
+    const group = groups.get(index) ?? [];
+    group.push(item);
+    groups.set(index, group);
+  }
+  return groups;
+}
+
+function validateMainPartLogistics(
+  issues: TrainingValidationIssue[],
+  session: TrainingSession,
+  phaseId: string,
+  mainPartIndex: number,
+  items: readonly TrainingItem[],
+  availableEquipment: readonly TrainingEquipmentAvailability[],
+): void {
+  const circuitItems = items.filter((item) => item.format === "circuit");
+  const circuitStationCount = circuitItems.length;
+  const teamMode = session.group.organizationMode === "team" && (session.group.teamSize ?? 0) >= 2;
+  const teamSize = teamMode
+    ? Math.min(session.group.participantCount, session.group.teamSize ?? session.group.participantCount)
+    : null;
+  const teamCount = teamSize != null ? Math.ceil(session.group.participantCount / teamSize) : null;
+  const groupSizePerCircuitStation = circuitStationCount > 0
+    ? teamSize ?? Math.ceil(session.group.participantCount / circuitStationCount)
+    : 0;
+  const pathPrefix = `phases.${phaseId}.mainPart.${mainPartIndex}`;
+
+  for (const item of items) {
+    const stationCapacity = item.exercise.stationCapacity;
+    const participantsAtExercise = item.format === "circuit"
+      ? groupSizePerCircuitStation
+      : teamSize ?? session.group.participantCount;
+    if (
+      stationCapacity == null ||
+      !Number.isInteger(stationCapacity) ||
+      stationCapacity < 1 ||
+      participantsAtExercise <= stationCapacity
+    ) {
+      continue;
+    }
+
+    const recommendedStationCount = Math.ceil(participantsAtExercise / stationCapacity);
+    issues.push({
+      code: "station-capacity",
+      severity: "warning",
+      message: item.format === "circuit"
+        ? `${item.exercise.name}: Im Hauptteil ${mainPartIndex} arbeiten bis zu ${participantsAtExercise} Personen gleichzeitig an dieser Übung. Eine Station fasst ${stationCapacity}; richte ${recommendedStationCount} parallele Varianten ein oder passe Team-/Stationsgröße an.`
+        : teamMode
+          ? `${item.exercise.name}: Ein Team umfasst bis zu ${participantsAtExercise} Personen, die Station fasst ${stationCapacity}. Plane ${recommendedStationCount} parallele Ausführungen innerhalb des Teams oder verkleinere die Teamgröße.`
+          : `${item.exercise.name}: Eine Station fasst maximal ${stationCapacity} gleichzeitig Trainierende. Für ${session.group.participantCount} Teilnehmende brauchst du ${recommendedStationCount} parallele Stationen oder eine Gruppenrotation.`,
+      path: `${pathPrefix}.items.${item.id}`,
+      participantCount: session.group.participantCount,
+      participantsAtExercise,
+      stationCapacity,
+      recommendedStationCount,
+    });
+  }
+
+  if (circuitStationCount === 0) return;
+
+  const stockByEquipment = new Map(
+    availableEquipment.map((item) => [item.equipmentId, item.quantityAvailable]),
+  );
+  const equipmentDemandById = new Map<string, {
+    name: string;
+    stationDemands: number[];
+    exerciseNames: Set<string>;
+  }>();
+  const unknownEquipmentById = new Map<string, {
+    name: string;
+    exerciseNames: Set<string>;
+  }>();
+
+  const baseGroupSize = teamMode
+    ? teamSize ?? 1
+    : Math.floor(session.group.participantCount / circuitStationCount);
+  const remainder = teamMode ? 0 : session.group.participantCount % circuitStationCount;
+
+  for (const [index, item] of circuitItems.entries()) {
+    const groupSize = teamMode
+      ? baseGroupSize
+      : session.group.participantCount < circuitStationCount
+        ? 1
+        : baseGroupSize + (index < remainder ? 1 : 0);
+    if (groupSize === 0) continue;
+
+    const capacity = item.exercise.stationCapacity;
+    const parallelCopies = capacity != null && Number.isInteger(capacity) && capacity > 0
+      ? Math.ceil(groupSize / capacity)
+      : 1;
+
+    for (const requirement of item.exercise.equipmentRequirements ?? []) {
+      if (!Number.isInteger(requirement.quantityPerStation) || requirement.quantityPerStation < 1) continue;
+
+      if (!stockByEquipment.has(requirement.equipmentId)) {
+        const unknown = unknownEquipmentById.get(requirement.equipmentId) ?? {
+          name: requirement.name,
+          exerciseNames: new Set<string>(),
+        };
+        unknown.exerciseNames.add(item.exercise.name);
+        unknownEquipmentById.set(requirement.equipmentId, unknown);
+        continue;
+      }
+
+      const demand = equipmentDemandById.get(requirement.equipmentId) ?? {
+        name: requirement.name,
+        stationDemands: [],
+        exerciseNames: new Set<string>(),
+      };
+      demand.stationDemands.push(requirement.quantityPerStation * parallelCopies);
+      demand.exerciseNames.add(item.exercise.name);
+      equipmentDemandById.set(requirement.equipmentId, demand);
+    }
+  }
+
+  const simultaneouslyActiveStations = teamMode
+    ? Math.min(teamCount ?? 1, circuitStationCount)
+    : Math.min(session.group.participantCount, circuitStationCount);
+
+  for (const [equipmentId, demand] of equipmentDemandById) {
+    const requiredQuantity = [...demand.stationDemands]
+      .sort((left, right) => right - left)
+      .slice(0, simultaneouslyActiveStations)
+      .reduce((sum, quantity) => sum + quantity, 0);
+    const availableQuantity = stockByEquipment.get(equipmentId);
+    if (availableQuantity == null || requiredQuantity <= availableQuantity) continue;
+
+    issues.push({
+      code: "equipment-conflict",
+      severity: "warning",
+      message: `Im Hauptteil ${mainPartIndex} benötigen ${[...demand.exerciseNames].join(" und ")} gleichzeitig bis zu ${requiredQuantity} × ${demand.name}; verfügbar sind ${availableQuantity}. Ergänze Material oder ändere Team-/Stationsplanung.`,
+      path: `${pathPrefix}.equipment.${equipmentId}`,
+      equipmentId,
+      requiredQuantity,
+      availableQuantity,
+    });
+  }
+
+  for (const [equipmentId, unknown] of unknownEquipmentById) {
+    issues.push({
+      code: "equipment-availability-unknown",
+      severity: "warning",
+      message: `Der Bestand für ${unknown.name} wurde nicht angegeben, obwohl ${[...unknown.exerciseNames].join(" und ")} es im Hauptteil ${mainPartIndex} benötigen. Ergänze die verfügbare Menge, damit OCRCraft Engpässe prüfen kann.`,
+      path: `${pathPrefix}.equipment.${equipmentId}`,
+      equipmentId,
+    });
+  }
 }
