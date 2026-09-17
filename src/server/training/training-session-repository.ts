@@ -387,7 +387,16 @@ export async function updateTrainingSessionMetadata(
       WHERE id=$id::UUID
       RETURNING id::VARCHAR
       `,
-      { id, title: input.title.trim(), status: input.status },
+      {
+        id,
+        title: input.title.trim(),
+        status: input.status,
+        routeName: input.routeName,
+        routeDistanceMetres: input.routeDistanceMetres,
+        routeSurface: input.routeSurface,
+        routeGpsReference: input.routeGpsReference,
+        routeNotes: input.routeNotes,
+      },
     );
     return reader.getRows().length > 0;
   });
