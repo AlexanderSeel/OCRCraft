@@ -26,6 +26,9 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
           <Link className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" href="/admin#database-settings">
             Einstellungen
           </Link>
+          <Link className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" href="/admin/outdoor-variants">
+            Outdoor-Varianten
+          </Link>
           <Link className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" href="/admin">
             Administration
           </Link>

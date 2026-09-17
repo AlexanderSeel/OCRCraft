@@ -4,7 +4,7 @@ import type { TrainingDraft, TrainingDraftExerciseCandidate } from "@/domain/tra
 import { composeAiTrainingDraft, composeReviewedAiTrainingDraft } from "./ai-training-composer";
 import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
 import { loadAiTrainingSourceSessions } from "./ai-training-source-context";
-import { composeSportsTrainingDraft } from "./sports-training-composer";
+import { composeStructuredSportsTrainingDraft } from "./structured-sports-training-composer";
 import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
 import type { TrainingDraftPersistenceRequest } from "./training-draft-persistence-schema";
@@ -68,7 +68,7 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
     );
   }
 
-  const draft = composeSportsTrainingDraft(
+  const draft = composeStructuredSportsTrainingDraft(
     {
       audience: request.audience,
       participantCount: request.participantCount,
@@ -83,6 +83,12 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
       availableEquipment: request.availableEquipment,
       minAge: request.minAge,
       maxAge: request.maxAge,
+      warmupExerciseCount: request.warmupExerciseCount,
+      mainExerciseCount: request.mainExerciseCount,
+      cooldownExerciseCount: request.cooldownExerciseCount,
+      mainPartCount: request.mainPartCount,
+      organizationMode: request.organizationMode,
+      teamSize: request.teamSize,
     },
     candidates,
   );
