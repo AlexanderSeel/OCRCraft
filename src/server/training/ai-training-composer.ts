@@ -1,13 +1,13 @@
-import { bodyRegionsOverlap, isBodyRegion } from "@/domain/body-regions";
+import { bodyRegionsOverlap, isBodyRegion } from "../../domain/body-regions";
 import {
   distributeTrainingMinutes,
   getTrainingPhaseBudgets,
   inferTrainingPhase,
   type TrainingDraft,
   type TrainingDraftExerciseCandidate,
-} from "@/domain/training/draft";
-import { TRAINING_PHASE_LABELS, type TrainingFormat, type TrainingPhaseKind, type TrainingSession } from "@/domain/training/model";
-import { validateTrainingSession } from "@/domain/training/validation";
+} from "../../domain/training/draft";
+import { TRAINING_PHASE_LABELS, type TrainingFormat, type TrainingPhaseKind, type TrainingSession } from "../../domain/training/model";
+import { validateTrainingSession } from "../../domain/training/validation";
 import { aiTrainingPlanSchema } from "./ai-training-schema";
 import type { ReviewedAiTrainingPersistence } from "./reviewed-training-draft-schema";
 import type { TrainingDraftRequest } from "./training-draft-schema";
