@@ -22,6 +22,7 @@ import { updateExerciseGuidanceListsAction } from "../guidance-actions";
 interface PageProps {
   readonly params: Promise<{ id: string }>;
   readonly searchParams: Promise<{
+    created?: string;
     saved?: string;
     restored?: string;
     facetsSaved?: string;
@@ -54,11 +55,21 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const updateDetailAction = updateLocalizedExerciseDetailsAction.bind(null, exercise.id);
   const updateLogisticsAction = updateExerciseLogisticsAction.bind(null, exercise.id);
   const toggleArchivedAction = setExerciseArchivedAction.bind(null, exercise.id, !exercise.archived);
+  const manualExercise = exercise.seedKey == null;
+  const fullEditorOpen = manualExercise || Boolean(
+    status.created
+    || status.detailError
+    || status.logisticsError
+    || status.detailSaved
+    || status.logisticsSaved
+    || status.guidanceError
+    || status.guidanceSaved,
+  );
 
   return (
     <AppShell
       title={exercise.nameDe}
-      subtitle={exercise.seedKey ? `Initialkatalog · ${exercise.seedKey}` : "Vereinsübung"}
+      subtitle={exercise.seedKey ? `Initialkatalog · ${exercise.seedKey}` : "Vereinsübung · vollständiger Editor"}
       actions={(
         <div className="flex flex-wrap gap-2">
           <Link
@@ -77,13 +88,18 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
       )}
     >
       <div className="space-y-5">
+        {status.created ? (
+          <Notice>
+            Grunddaten angelegt. Der vollständige Editor ist geöffnet: ergänze jetzt Muskeln/Gegenmuskeln, Bewegungsmuster, Equipment, Programmierung, Sicherheit sowie DE/EN-Ausführung und Coaching.
+          </Notice>
+        ) : null}
         {status.saved ? <Notice>Änderungen gespeichert. Der Suchindex wurde als „dirty“ markiert.</Notice> : null}
         {status.restored ? <Notice>Übung wiederhergestellt.</Notice> : null}
-        {status.facetsSaved ? <Notice>Körperregionen, Bewegungsmuster, Tags und Equipment wurden gespeichert.</Notice> : null}
+        {status.facetsSaved ? <Notice>Körperregionen, Gegenmuskeln, Bewegungsmuster, Tags und Equipment wurden gespeichert.</Notice> : null}
         {status.guidanceSaved ? <Notice>{status.guidanceSaved === "en" ? "Englische" : "Deutsche"} Ausführung, Coaching-Cues und Fehlerkorrekturen wurden gespeichert.</Notice> : null}
         {status.detailSaved ? <Notice>{status.detailSaved === "en" ? "Englische" : "Deutsche"} Planungs-, Sicherheits- und Skalierungsdetails wurden gespeichert.</Notice> : null}
         {status.logisticsSaved ? <Notice>Schwierigkeit, Aufsicht und Stationslogistik wurden gespeichert.</Notice> : null}
-        {status.facetError === "invalid" ? <ErrorNotice>Die Facettenauswahl enthält ungültige Werte.</ErrorNotice> : null}
+        {status.facetError === "invalid" ? <ErrorNotice>Die Facetten- oder Gegenmuskel-Auswahl enthält ungültige Werte.</ErrorNotice> : null}
         {status.facetError === "save" ? <ErrorNotice>Die Facetten konnten nicht gespeichert werden.</ErrorNotice> : null}
         {status.guidanceError === "invalid" ? <ErrorNotice>Die Coaching-Inhalte enthalten leere, unvollständige oder zu lange Einträge.</ErrorNotice> : null}
         {status.guidanceError === "save" ? <ErrorNotice>Die Coaching-Inhalte konnten nicht gespeichert werden.</ErrorNotice> : null}
@@ -92,17 +108,16 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         {status.logisticsError === "invalid" ? <ErrorNotice>Die Logistikwerte sind ungültig. Prüfe Zeiten, Kapazität und Pflichtfelder.</ErrorNotice> : null}
         {status.logisticsError === "save" ? <ErrorNotice>Die Logistikwerte konnten nicht gespeichert werden.</ErrorNotice> : null}
 
-        <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" open={Boolean(status.saved)}>
+        <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" open={Boolean(status.created || status.saved)}>
           <summary className="min-h-8 cursor-pointer font-bold">Stammdaten bearbeiten</summary>
           <ExerciseForm action={updateAction} exercise={exercise} submitLabel="Änderungen speichern" />
         </details>
 
         <ExerciseFacetForm action={updateFacetsAction} data={facets} disabled={exercise.archived} />
 
-        <details open={Boolean(status.detailError || status.logisticsError || status.detailSaved || status.logisticsSaved)} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-<summary className="min-h-8 cursor-pointer font-bold">Programmierung, Sicherheit & Stationslogistik</summary>
+        <details open={fullEditorOpen} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <summary className="min-h-8 cursor-pointer font-bold">Programmierung, Sicherheit & Stationslogistik</summary>
           <div className="mb-5">
-            
             <p className="mt-1 max-w-4xl text-sm leading-6 text-[var(--muted)]">
               Pflege Dosierung, Level 1–3, Zielgruppenvarianten und Sicherheitsinformationen sprachspezifisch. Schwierigkeit, Aufsicht, Aufbauzeit und Stationskapazität gelten für die Übung global und werden für beide Sprachen synchron gehalten.
             </p>
@@ -128,10 +143,9 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
           </div>
         </details>
 
-        <details open={Boolean(status.guidanceError || status.guidanceSaved)} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-<summary className="min-h-8 cursor-pointer font-bold">Strukturierte Ausführung & Coaching</summary>
+        <details open={fullEditorOpen} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <summary className="min-h-8 cursor-pointer font-bold">Strukturierte Ausführung & Coaching</summary>
           <div className="mb-5">
-            
             <p className="mt-1 max-w-4xl text-sm leading-6 text-[var(--muted)]">
               Pflege die Reihenfolge der Ausführungsschritte, kurze Trainer-Cues sowie typische Fehler mit konkreter Korrektur getrennt für Deutsch und Englisch. Diese Inhalte werden in der Übungsdetailansicht und direkt in Trainings verwendet.
             </p>
