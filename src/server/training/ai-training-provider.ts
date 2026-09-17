@@ -12,6 +12,7 @@ export interface AiTrainingGenerationContext {
 
 export interface AiTrainingProvider {
   readonly id: string;
+  readonly modelId?: string;
   generateTrainingPlan(context: AiTrainingGenerationContext): Promise<unknown>;
 }
 
@@ -25,12 +26,15 @@ interface OpenAiCompatibleResponse {
 
 export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
   readonly id = "openai-compatible";
+  readonly modelId: string;
 
   constructor(
     private readonly baseUrl: string,
-    private readonly model: string,
+    model: string,
     private readonly apiKey?: string,
-  ) {}
+  ) {
+    this.modelId = model;
+  }
 
   async generateTrainingPlan(context: AiTrainingGenerationContext): Promise<unknown> {
     const response = await fetch(`${this.baseUrl.replace(/\/$/, "")}/chat/completions`, {
@@ -40,7 +44,7 @@ export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
         ...(this.apiKey ? { authorization: `Bearer ${this.apiKey}` } : {}),
       },
       body: JSON.stringify({
-        model: this.model,
+        model: this.modelId,
         temperature: 0.2,
         response_format: { type: "json_object" },
         messages: [

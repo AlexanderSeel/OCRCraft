@@ -40,10 +40,8 @@ export async function listTrainingDraftCandidates({
   await ensureDatabaseReady();
 
   return withDuckDbConnection(async (connection) => {
-    const [candidates, recentUse] = await Promise.all([
-      runTrainingDraftCandidateQuery(connection, { audience, minAge, locale, location }),
-      runRecentExerciseUseQuery(connection),
-    ]);
+    const candidates = await runTrainingDraftCandidateQuery(connection, { audience, minAge, locale, location });
+    const recentUse = await runRecentExerciseUseQuery(connection);
     const recentUseByExercise = new Map(recentUse.map((item) => [item.exerciseId, item.useCount]));
     return candidates.map((candidate) => ({
       ...candidate,
