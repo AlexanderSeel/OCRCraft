@@ -2,10 +2,17 @@ import { exerciseTypes, type ExerciseType } from "../../domain/exercise/classifi
 import {
   AUDIENCES,
   BODY_REGIONS,
+  MAIN_PART_EVERY_UNITS,
+  MAIN_PART_PROGRAMMING_MODES,
+  MAIN_PART_SCORE_MODES,
   TRAINING_FORMATS,
   TRAINING_LOCATIONS,
   type Audience,
   type BodyRegion,
+  type MainPartEveryUnit,
+  type MainPartProgramming,
+  type MainPartProgrammingMode,
+  type MainPartScoreMode,
   type TrainingEquipmentAvailability,
   type TrainingFormat,
   type TrainingLocation,
@@ -34,6 +41,7 @@ export interface QuickCreateDraftClientInput {
   readonly warmupExerciseCount?: number;
   readonly mainExerciseCount?: number;
   readonly mainPartExerciseCounts?: readonly number[];
+  readonly mainPartProgramming?: readonly MainPartProgramming[];
   readonly cooldownExerciseCount?: number;
   readonly mainPartCount?: number;
   readonly organizationMode?: string;
@@ -63,6 +71,7 @@ export interface NormalizedTrainingDraftRequest {
   readonly warmupExerciseCount: number;
   readonly mainExerciseCount: number;
   readonly mainPartExerciseCounts: readonly number[];
+  readonly mainPartProgramming: readonly MainPartProgramming[];
   readonly cooldownExerciseCount: number;
   readonly mainPartCount: number;
   readonly organizationMode: TrainingOrganizationMode;
@@ -88,6 +97,9 @@ const LOCATION_SET = new Set<string>(TRAINING_LOCATIONS);
 const INTENSITIES = new Set<string>(["technique", "balanced", "conditioning"]);
 const BUILDER_MODES = new Set<string>(["local", "ai"]);
 const ORGANIZATION_MODES = new Set<string>(["solo", "team"]);
+const PROGRAMMING_MODE_SET = new Set<string>(MAIN_PART_PROGRAMMING_MODES);
+const SCORE_MODE_SET = new Set<string>(MAIN_PART_SCORE_MODES);
+const EVERY_UNIT_SET = new Set<string>(MAIN_PART_EVERY_UNITS);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function isAudience(value: string): value is Audience {
@@ -122,6 +134,18 @@ function isOrganizationMode(value: string): value is TrainingOrganizationMode {
   return ORGANIZATION_MODES.has(value);
 }
 
+function isProgrammingMode(value: string): value is MainPartProgrammingMode {
+  return PROGRAMMING_MODE_SET.has(value);
+}
+
+function isScoreMode(value: string | undefined): value is MainPartScoreMode {
+  return value != null && SCORE_MODE_SET.has(value);
+}
+
+function isEveryUnit(value: string | undefined): value is MainPartEveryUnit {
+  return value != null && EVERY_UNIT_SET.has(value);
+}
+
 function boundedInteger(value: number | undefined, fallback: number, min: number, max: number): number {
   if (!Number.isFinite(value) || !Number.isInteger(value)) return fallback;
   return Math.max(min, Math.min(max, Number(value)));
@@ -136,6 +160,57 @@ function normalizeMainPartExerciseCounts(
     return values.map((value) => boundedInteger(value, fallback, 1, 8));
   }
   return Array.from({ length: mainPartCount }, () => fallback);
+}
+
+function normalizeProgramming(value: MainPartProgramming | undefined): MainPartProgramming {
+  const mode: MainPartProgrammingMode = value?.mode && isProgrammingMode(value.mode) ? value.mode : "standard";
+  if (mode === "interval") {
+    return {
+      mode,
+      workSeconds: boundedInteger(value?.workSeconds, 40, 5, 3600),
+      restSeconds: boundedInteger(value?.restSeconds, 20, 0, 1800),
+    };
+  }
+  if (mode === "rounds") {
+    return {
+      mode,
+      rounds: boundedInteger(value?.rounds, 3, 1, 50),
+      scoreMode: isScoreMode(value?.scoreMode) ? value.scoreMode : "quality",
+    };
+  }
+  if (mode === "ladder") {
+    const start = boundedInteger(value?.ladderStart, 2, 1, 100);
+    const end = Math.max(start + 1, boundedInteger(value?.ladderEnd, 10, 1, 200));
+    return { mode, ladderStart: start, ladderEnd: end, ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50) };
+  }
+  if (mode === "reverse-ladder") {
+    const start = boundedInteger(value?.ladderStart, 10, 2, 200);
+    const end = Math.min(start - 1, boundedInteger(value?.ladderEnd, 2, 1, 199));
+    return { mode, ladderStart: start, ladderEnd: end, ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50) };
+  }
+  if (mode === "pyramid") {
+    return {
+      mode,
+      ladderStart: boundedInteger(value?.ladderStart, 2, 1, 100),
+      ladderEnd: boundedInteger(value?.ladderEnd, 10, 2, 200),
+      ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50),
+    };
+  }
+  if (mode === "every") {
+    return {
+      mode,
+      everyValue: boundedInteger(value?.everyValue, 500, 1, 10000),
+      everyUnit: isEveryUnit(value?.everyUnit) ? value.everyUnit : "metres",
+    };
+  }
+  return { mode };
+}
+
+function normalizeMainPartProgramming(
+  values: readonly MainPartProgramming[] | undefined,
+  mainPartCount: number,
+): readonly MainPartProgramming[] {
+  return Array.from({ length: mainPartCount }, (_, index) => normalizeProgramming(values?.[index]));
 }
 
 export function parseAgeRange(value: string): ParsedAgeRange {
@@ -185,6 +260,7 @@ export function normalizeTrainingDraftRequest(
     mainPartCount,
     mainExerciseCount,
   );
+  const mainPartProgramming = normalizeMainPartProgramming(input.mainPartProgramming, mainPartCount);
   const teamSize = organizationMode === "team"
     ? boundedInteger(input.teamSize, Math.min(4, participantCount), 2, Math.min(20, Math.max(2, participantCount)))
     : undefined;
@@ -211,6 +287,7 @@ export function normalizeTrainingDraftRequest(
     warmupExerciseCount,
     mainExerciseCount,
     mainPartExerciseCounts,
+    mainPartProgramming,
     cooldownExerciseCount,
     mainPartCount,
     organizationMode,
