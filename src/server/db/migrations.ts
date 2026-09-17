@@ -82,9 +82,10 @@ export async function runSqlScript(
   }
 }
 
-export async function runMigrations(): Promise<void> {
+export async function applyPendingMigrations(): Promise<readonly number[]> {
   const applied = await getAppliedVersions();
   const scripts = await readAllMigrationScripts();
+  const newlyApplied: number[] = [];
 
   for (let index = 0; index < migrations.length; index += 1) {
     const migration = migrations[index];
@@ -93,5 +94,12 @@ export async function runMigrations(): Promise<void> {
     await withDuckDbConnection(async (connection) => {
       await runSqlScript(connection, scripts[index]);
     });
+    newlyApplied.push(migration.version);
   }
+
+  return newlyApplied;
+}
+
+export async function runMigrations(): Promise<void> {
+  await applyPendingMigrations();
 }
