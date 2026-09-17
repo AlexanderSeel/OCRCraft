@@ -1,4 +1,11 @@
 import type { DuckDBConnection } from "@duckdb/node-api";
+import type {
+  ExerciseCoordinationComplexity,
+  ExerciseDifficulty,
+  ExerciseImpactLevel,
+  ExerciseTrainingGoal,
+  ExerciseType,
+} from "@/domain/exercise/classification";
 import type { ExerciseCategory } from "@/domain/exercise/model";
 import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import type {
@@ -29,6 +36,15 @@ export async function runTrainingDraftCandidateQuery(
       e.default_phase,
       e.risk_level,
       e.min_age,
+      e.exercise_type,
+      e.difficulty,
+      e.impact_level,
+      e.coordination_complexity,
+      COALESCE((
+        SELECT string_agg(etg.goal, ' | ' ORDER BY etg.goal)
+        FROM exercise_training_goals etg
+        WHERE etg.exercise_id=e.id
+      ), ''),
       COALESCE((
         SELECT string_agg(ebr.body_region_id, ' | ')
         FROM exercise_body_regions ebr
@@ -165,19 +181,24 @@ export async function runTrainingDraftCandidateQuery(
     defaultPhase: row[3] == null ? null : String(row[3]) as TrainingPhaseKind,
     riskLevel: String(row[4]) as RiskLevel,
     minAge: row[5] == null ? null : Number(row[5]),
-    bodyRegions: String(row[6] ?? "").split(" | ").filter(Boolean),
-    equipment: String(row[7] ?? "").split(" | ").filter(Boolean),
+    exerciseType: row[6] == null ? undefined : String(row[6]) as ExerciseType,
+    difficulty: row[7] == null ? undefined : String(row[7]) as ExerciseDifficulty,
+    impactLevel: row[8] == null ? undefined : String(row[8]) as ExerciseImpactLevel,
+    coordinationComplexity: row[9] == null ? undefined : String(row[9]) as ExerciseCoordinationComplexity,
+    trainingGoals: String(row[10] ?? "").split(" | ").filter(Boolean) as ExerciseTrainingGoal[],
+    bodyRegions: String(row[11] ?? "").split(" | ").filter(Boolean),
+    equipment: String(row[12] ?? "").split(" | ").filter(Boolean),
     equipmentRequirements: equipmentByExercise.get(String(row[0])) ?? [],
-    tags: String(row[8] ?? "").split(" | ").filter(Boolean),
-    movementPatterns: String(row[9] ?? "").split(" | ").filter(Boolean),
-    defaultDurationSeconds: row[10] == null ? null : Number(row[10]),
-    instructions: row[11] == null ? undefined : String(row[11]),
-    planningText: row[12] == null ? undefined : String(row[12]),
-    level1: row[13] == null ? undefined : String(row[13]),
-    level2: row[14] == null ? undefined : String(row[14]),
-    level3: row[15] == null ? undefined : String(row[15]),
-    stationCapacity: Number(row[16]),
-    setupSeconds: row[17] == null ? null : Number(row[17]),
-    transitionSeconds: row[18] == null ? null : Number(row[18]),
+    tags: String(row[13] ?? "").split(" | ").filter(Boolean),
+    movementPatterns: String(row[14] ?? "").split(" | ").filter(Boolean),
+    defaultDurationSeconds: row[15] == null ? null : Number(row[15]),
+    instructions: row[16] == null ? undefined : String(row[16]),
+    planningText: row[17] == null ? undefined : String(row[17]),
+    level1: row[18] == null ? undefined : String(row[18]),
+    level2: row[19] == null ? undefined : String(row[19]),
+    level3: row[20] == null ? undefined : String(row[20]),
+    stationCapacity: Number(row[21]),
+    setupSeconds: row[22] == null ? null : Number(row[22]),
+    transitionSeconds: row[23] == null ? null : Number(row[23]),
   }));
 }
