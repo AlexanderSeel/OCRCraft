@@ -16,14 +16,22 @@ export default async function QuickCreatePage() {
     <AppShell
       title="Quick Create"
       subtitle="Von Gruppe und Trainingsziel zum strukturierten OCR-Trainingsentwurf."
-      actions={
-        <Link
-          className="inline-flex rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold hover:bg-[var(--surface-subtle)]"
-          href="/"
-        >
-          Zur Übersicht
-        </Link>
-      }
+      actions={(
+        <div className="flex flex-wrap gap-2">
+          <Link
+            className="inline-flex rounded-xl bg-[var(--control-strong)] px-4 py-2.5 text-sm font-black text-[var(--control-strong-foreground)]"
+            href="/training/builder"
+          >
+            Training Builder
+          </Link>
+          <Link
+            className="inline-flex rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold hover:bg-[var(--surface-subtle)]"
+            href="/"
+          >
+            Zur Übersicht
+          </Link>
+        </div>
+      )}
     >
       <QuickCreateWizard
         equipmentOptions={equipmentOptions}
