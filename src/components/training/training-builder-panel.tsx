@@ -81,6 +81,7 @@ export interface TrainingBuilderInitialState {
   readonly mainPartCount?: number;
   readonly organizationMode?: "solo" | "team";
   readonly teamSize?: number;
+  readonly groupSplitCount?: number;
   readonly sourceTrainingIds?: readonly string[];
   readonly preferredExercises: readonly SelectedExerciseReference[];
   readonly availableEquipment: readonly {
@@ -157,6 +158,7 @@ export function TrainingBuilderPanel({
   const [mainPartCount, setMainPartCountState] = useState(initialState?.mainPartCount ?? 1);
   const [organizationMode, setOrganizationMode] = useState<"solo" | "team">(initialState?.organizationMode ?? "solo");
   const [teamSize, setTeamSize] = useState(initialState?.teamSize ?? 4);
+  const [groupSplitCount, setGroupSplitCount] = useState<number | undefined>(initialState?.groupSplitCount);
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
     initialState
       ? Object.fromEntries(initialState.availableEquipment.map((item) => [item.equipmentId, String(item.quantityAvailable)]))
@@ -180,6 +182,9 @@ export function TrainingBuilderPanel({
   const selectedGoalLabels = useMemo(() => new Set(goals), [goals]);
   const effectiveTeamSize = organizationMode === "team"
     ? clampInteger(teamSize, 2, Math.min(20, Math.max(2, participants)))
+    : undefined;
+  const effectiveGroupSplitCount = organizationMode === "solo" && groupSplitCount != null
+    ? clampInteger(groupSplitCount, 1, Math.min(20, Math.max(1, participants)))
     : undefined;
   const totalRequestedExercises = warmupExerciseCount
     + cooldownExerciseCount
@@ -250,6 +255,7 @@ export function TrainingBuilderPanel({
       mainPartCount,
       organizationMode,
       teamSize: effectiveTeamSize,
+      groupSplitCount: effectiveGroupSplitCount,
       sourceTrainingIds: builderMode === "ai" ? sourceTrainingIds : [],
       preferredExerciseIds: preferredExercises.map((exercise) => exercise.id),
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
@@ -418,7 +424,7 @@ export function TrainingBuilderPanel({
             <div>
               <h2 className="text-lg font-black">Trainingsstruktur & Organisation</h2>
               <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                Steuert die exakte Anzahl der Übungen und die konkrete Programmierung je Hauptteil. Mehrere Hauptteile werden als getrennte Blöcke geplant und gespeichert.
+                Steuert die exakte Anzahl der Übungen, Rotationsgruppen und die konkrete Programmierung je Hauptteil. Mehrere Hauptteile werden als getrennte Blöcke geplant und gespeichert.
               </p>
             </div>
             <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5 text-xs font-black">
@@ -482,16 +488,31 @@ export function TrainingBuilderPanel({
                 onChange={(value) => { setTeamSize(value); invalidate(); }}
               />
             ) : (
-              <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm leading-5 text-[var(--muted)]">
-                Solo/Rotation: Kapazitäts- und Equipmentprüfung rechnet mit Stationsverteilung statt fester Teamgröße.
-              </div>
+              <Field label="Rotationsgruppen (optional)">
+                <input
+                  className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                  max={Math.min(20, Math.max(1, participants))}
+                  min={1}
+                  onChange={(event) => {
+                    setGroupSplitCount(event.target.value === "" ? undefined : clampInteger(Number(event.target.value), 1, Math.min(20, Math.max(1, participants))));
+                    invalidate();
+                  }}
+                  placeholder="Automatisch"
+                  type="number"
+                  value={groupSplitCount ?? ""}
+                />
+              </Field>
             )}
           </div>
           {organizationMode === "team" ? (
             <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
               Der lokale Planer bevorzugt bei Teamtraining Teamwork-/Drill-Übungen und berücksichtigt die Teamgröße bei Stationskapazität und gleichzeitigem Equipmentbedarf. Die AI erhält dieselben Werte als verbindliche Strukturvorgabe.
             </p>
-          ) : null}
+          ) : (
+            <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
+              Leer = automatische Verteilung über die aktiven Stationen. Mit einer festen Zahl, z. B. 4 Gruppen bei 20 Personen, prüft OCRCraft mit bis zu 5 Personen je Rotationsgruppe und berechnet parallelen Equipmentbedarf entsprechend.
+            </p>
+          )}
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
@@ -578,7 +599,7 @@ export function TrainingBuilderPanel({
           <li>Warm-up, ein bis vier Hauptteile und Cooldown mit exakter Zeit- und Übungsanzahl.</li>
           <li>Jeder Hauptteil kann unabhängig als Intervall, Rundenblock, Ladder/Pyramide, Chipper oder Every-X programmiert werden.</li>
           <li>Bei mehreren Hauptteilen werden Übungen blockübergreifend variiert und nicht unnötig wiederholt.</li>
-          <li>Teamgröße fließt in Stationskapazität, Teamwork-Gewichtung und gleichzeitigen Equipmentbedarf ein.</li>
+          <li>Teamgröße oder explizite Rotationsgruppen fließen in Stationskapazität und gleichzeitigen Equipmentbedarf ein.</li>
           <li>Technik und Koordination vor unnötiger Ermüdung; Conditioning danach, wenn gewählt.</li>
           <li>Abdeckung gewünschter Muskeln plus typische Gegenmuskeln und Gegenbewegungen.</li>
           <li>Push/Pull, Squat/Hinge und Rumpfrotation/Stabilisation werden für eine ausgewogene Einheit bevorzugt ergänzt.</li>
