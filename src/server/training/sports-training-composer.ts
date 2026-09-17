@@ -4,11 +4,8 @@ import {
   getBodyRegionAntagonists,
   isBodyRegion,
   normalizeBodyRegionId,
-} from "@/domain/body-regions";
-import type {
-  ExerciseTrainingGoal,
-  ExerciseType,
-} from "@/domain/exercise/classification";
+} from "../../domain/body-regions";
+import type { ExerciseTrainingGoal } from "../../domain/exercise/classification";
 import {
   distributeTrainingMinutes,
   getTrainingPhaseBudgets,
@@ -17,14 +14,14 @@ import {
   type TrainingDraft,
   type TrainingDraftExerciseCandidate,
   type TrainingDraftInput,
-} from "@/domain/training/draft";
+} from "../../domain/training/draft";
 import {
   TRAINING_PHASE_LABELS,
   type TrainingFormat,
   type TrainingPhaseKind,
   type TrainingSession,
-} from "@/domain/training/model";
-import { validateTrainingSession } from "@/domain/training/validation";
+} from "../../domain/training/model";
+import { validateTrainingSession } from "../../domain/training/validation";
 
 const GOAL_TERMS: Readonly<Record<ExerciseTrainingGoal, readonly string[]>> = {
   strength: ["kraft", "strength"],
