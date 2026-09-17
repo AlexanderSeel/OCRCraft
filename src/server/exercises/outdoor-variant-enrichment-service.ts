@@ -178,6 +178,17 @@ export async function listOutdoorVariantCandidates(): Promise<readonly OutdoorVa
   });
 }
 
+async function setOutdoorSuitability(
+  connection: DuckDBConnection,
+  exerciseId: string,
+  suitable: boolean,
+): Promise<void> {
+  await connection.run(
+    "UPDATE exercises SET outdoor_suitable=$suitable,updated_at=current_timestamp WHERE id=$exerciseId::UUID",
+    { exerciseId, suitable },
+  );
+}
+
 export async function enrichImportedGymExercisesForOutdoor(
   force = false,
 ): Promise<OutdoorVariantEnrichmentReport> {
@@ -193,24 +204,43 @@ export async function enrichImportedGymExercisesForOutdoor(
     const unmappableExercises: string[] = [];
 
     for (const exercise of exercises) {
-      if (!exercise.hasDetails) {
-        missingDetails += 1;
-        continue;
-      }
-      if (!force && exercise.outdoorVariant.trim()) {
-        alreadyEnriched += 1;
-        continue;
-      }
-
       const equipment = await loadExerciseEquipment(connection, exercise.id);
+      const hasGymDependency = equipment.some((item) => isGymBoundEquipment(item.seedKey));
 
-      if (!equipment.some((item) => isGymBoundEquipment(item.seedKey))) {
+      if (!hasGymDependency) {
         noGymDependency += 1;
         continue;
       }
 
+      if (!exercise.hasDetails) {
+        await setOutdoorSuitability(connection, exercise.id, false);
+        missingDetails += 1;
+        continue;
+      }
+
       const plan = buildOutdoorVariantPlan(equipment, catalogue);
+
+      // Existing variants remain valid only when their currently structured
+      // replacement equipment still fully maps the original gym dependencies.
+      if (!force && exercise.outdoorVariant.trim() && plan.canApply) {
+        await setOutdoorSuitability(connection, exercise.id, true);
+        alreadyEnriched += 1;
+        continue;
+      }
+
       if (!plan.canApply) {
+        await connection.run("BEGIN TRANSACTION");
+        try {
+          await connection.run(
+            "DELETE FROM exercise_outdoor_variant_equipment WHERE exercise_id=$exerciseId::UUID",
+            { exerciseId: exercise.id },
+          );
+          await setOutdoorSuitability(connection, exercise.id, false);
+          await connection.run("COMMIT");
+        } catch (error) {
+          await connection.run("ROLLBACK");
+          throw error;
+        }
         unmappable += 1;
         unmappableExercises.push(exercise.name);
         continue;
@@ -244,10 +274,7 @@ export async function enrichImportedGymExercisesForOutdoor(
           de: outdoorVariantText(plan, "de"),
           en: outdoorVariantText(plan, "en"),
         });
-        await connection.run(
-          "UPDATE exercises SET outdoor_suitable=true,updated_at=current_timestamp WHERE id=$exerciseId::UUID",
-          { exerciseId: exercise.id },
-        );
+        await setOutdoorSuitability(connection, exercise.id, true);
         await connection.run("COMMIT");
         enriched += 1;
       } catch (error) {
