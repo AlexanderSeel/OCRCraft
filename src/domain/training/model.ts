@@ -78,6 +78,8 @@ export interface TrainingGroup {
   readonly organizationMode?: TrainingOrganizationMode;
   /** Target team size when organizationMode is team. */
   readonly teamSize?: number;
+  /** Explicit number of parallel rotation groups in solo/rotation mode. */
+  readonly groupSplitCount?: number;
 }
 
 export interface TrainingEquipmentAvailability {
