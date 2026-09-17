@@ -12,15 +12,14 @@ import { filterCandidatesForDeclaredEquipment } from "./training-candidate-const
 import { listTrainingDraftCandidates } from "./training-draft-repository";
 import type { TrainingPhaseRegenerationRequest } from "./training-phase-regeneration-schema";
 
-export async function regenerateTrainingDraftPhase(
-  input: TrainingPhaseRegenerationRequest,
-): Promise<TrainingDraft> {
+export async function regenerateTrainingDraftPhase(input: TrainingPhaseRegenerationRequest): Promise<TrainingDraft> {
   const { request, phase: targetKind, current } = input;
   const rawCandidates = await listTrainingDraftCandidates({
     audience: request.audience,
     minAge: request.minAge,
     locale: request.locale,
     location: request.location,
+    availableObstacleExerciseIds: request.availableObstacleExerciseIds,
   });
   const candidates = filterCandidatesForDeclaredEquipment(rawCandidates, request.availableEquipment);
   const candidateById = new Map(candidates.map((candidate) => [candidate.id, candidate]));
@@ -30,34 +29,19 @@ export async function regenerateTrainingDraftPhase(
     if (phase.kind === targetKind) continue;
     const minutes = phase.items.reduce((sum, item) => sum + item.durationMinutes, 0);
     if (minutes !== budgets[phase.kind]) {
-      throw new Error(
-        `Die bestehende Phase ${phase.kind} hat ${minutes} statt ${budgets[phase.kind]} Minuten und kann nicht sicher unverändert übernommen werden.`,
-      );
+      throw new Error(`Die bestehende Phase ${phase.kind} hat ${minutes} statt ${budgets[phase.kind]} Minuten und kann nicht sicher unverändert übernommen werden.`);
     }
   }
 
-  const preservedIds = new Set(
-    current.phases
-      .filter((phase) => phase.kind !== targetKind)
-      .flatMap((phase) => phase.items.map((item) => item.exerciseId)),
-  );
+  const preservedIds = new Set(current.phases.filter((phase) => phase.kind !== targetKind).flatMap((phase) => phase.items.map((item) => item.exerciseId)));
   const replacementPool = candidates.filter((candidate) => !preservedIds.has(candidate.id));
   const replacementDraft = await generateReplacementDraft(request, replacementPool);
   const replacement = replacementDraft.session.phases.find((phase) => phase.kind === targetKind);
-  if (!replacement || replacement.items.length === 0) {
-    throw new Error(`Für ${TRAINING_PHASE_LABELS[targetKind]} konnte keine neue Phase erzeugt werden.`);
-  }
+  if (!replacement || replacement.items.length === 0) throw new Error(`Für ${TRAINING_PHASE_LABELS[targetKind]} konnte keine neue Phase erzeugt werden.`);
 
-  const phases: TrainingPhase[] = current.phases.map((phase) => {
-    if (phase.kind === targetKind) {
-      return {
-        ...replacement,
-        id: `regenerated-${targetKind}`,
-        title: TRAINING_PHASE_LABELS[targetKind],
-      };
-    }
-    return rehydratePreservedPhase(phase, candidateById);
-  });
+  const phases: TrainingPhase[] = current.phases.map((phase) => phase.kind === targetKind
+    ? { ...replacement, id: `regenerated-${targetKind}`, title: TRAINING_PHASE_LABELS[targetKind] }
+    : rehydratePreservedPhase(phase, candidateById));
 
   const session: TrainingSession = {
     id: "regenerated-training-draft",
@@ -81,68 +65,50 @@ export async function regenerateTrainingDraftPhase(
     source: request.builderMode === "ai" ? "ai" : "deterministic",
     session,
     validationIssues: validateTrainingSession(session, undefined, request.availableEquipment),
-    warnings: [
-      ...replacementDraft.warnings,
-      `${TRAINING_PHASE_LABELS[targetKind]} wurde neu erzeugt; die beiden anderen Phasen wurden unverändert aus der geprüften Auswahl übernommen.`,
-    ],
+    warnings: [...replacementDraft.warnings, `${TRAINING_PHASE_LABELS[targetKind]} wurde neu erzeugt; die beiden anderen Phasen wurden unverändert aus der geprüften Auswahl übernommen.`],
   });
 }
 
-async function generateReplacementDraft(
-  request: TrainingPhaseRegenerationRequest["request"],
-  candidates: readonly TrainingDraftExerciseCandidate[],
-): Promise<TrainingDraft> {
+async function generateReplacementDraft(request: TrainingPhaseRegenerationRequest["request"], candidates: readonly TrainingDraftExerciseCandidate[]): Promise<TrainingDraft> {
   if (request.builderMode === "ai") {
     const provider = getConfiguredAiTrainingProvider();
-    if (!provider) {
-      throw new Error(
-        "AI Training Builder ist nicht konfiguriert. Nutze den lokalen Sportalgorithmus oder konfiguriere OCRCRAFT_AI_BASE_URL und OCRCRAFT_AI_MODEL.",
-      );
-    }
+    if (!provider) throw new Error("AI Training Builder ist nicht konfiguriert. Nutze den lokalen Sportalgorithmus oder konfiguriere OCRCRAFT_AI_BASE_URL und OCRCRAFT_AI_MODEL.");
     const proposal = await provider.generateTrainingPlan({ request, approvedExercises: candidates });
     return composeAiTrainingDraft({ proposal, request, approvedExercises: candidates, providerId: provider.id });
   }
 
-  return composeStructuredSportsTrainingDraft(
-    {
-      audience: request.audience,
-      participantCount: request.participantCount,
-      durationMinutes: request.durationMinutes,
-      goals: request.goals,
-      bodyRegions: request.bodyRegions,
-      avoidBodyRegions: request.avoidBodyRegions,
-      exerciseTypes: request.exerciseTypes,
-      formats: request.formats,
-      intensity: request.intensity,
-      preferredExerciseIds: request.preferredExerciseIds.filter((id) => candidates.some((candidate) => candidate.id === id)),
-      availableEquipment: request.availableEquipment,
-      minAge: request.minAge,
-      maxAge: request.maxAge,
-      warmupExerciseCount: request.warmupExerciseCount,
-      mainExerciseCount: request.mainExerciseCount,
-      mainPartExerciseCounts: request.mainPartExerciseCounts,
-      cooldownExerciseCount: request.cooldownExerciseCount,
-      mainPartCount: request.mainPartCount,
-      organizationMode: request.organizationMode,
-      teamSize: request.teamSize,
-    },
-    candidates,
-  );
+  return composeStructuredSportsTrainingDraft({
+    audience: request.audience,
+    participantCount: request.participantCount,
+    durationMinutes: request.durationMinutes,
+    goals: request.goals,
+    bodyRegions: request.bodyRegions,
+    avoidBodyRegions: request.avoidBodyRegions,
+    exerciseTypes: request.exerciseTypes,
+    formats: request.formats,
+    intensity: request.intensity,
+    preferredExerciseIds: request.preferredExerciseIds.filter((id) => candidates.some((candidate) => candidate.id === id)),
+    availableEquipment: request.availableEquipment,
+    minAge: request.minAge,
+    maxAge: request.maxAge,
+    warmupExerciseCount: request.warmupExerciseCount,
+    mainExerciseCount: request.mainExerciseCount,
+    mainPartExerciseCounts: request.mainPartExerciseCounts,
+    cooldownExerciseCount: request.cooldownExerciseCount,
+    mainPartCount: request.mainPartCount,
+    organizationMode: request.organizationMode,
+    teamSize: request.teamSize,
+  }, candidates);
 }
 
-function rehydratePreservedPhase(
-  phase: TrainingPhaseRegenerationRequest["current"]["phases"][number],
-  candidateById: ReadonlyMap<string, TrainingDraftExerciseCandidate>,
-): TrainingPhase {
+function rehydratePreservedPhase(phase: TrainingPhaseRegenerationRequest["current"]["phases"][number], candidateById: ReadonlyMap<string, TrainingDraftExerciseCandidate>): TrainingPhase {
   return {
     id: `preserved-${phase.kind}`,
     kind: phase.kind,
     title: TRAINING_PHASE_LABELS[phase.kind],
     items: phase.items.map((item) => {
       const candidate = candidateById.get(item.exerciseId);
-      if (!candidate) {
-        throw new Error(`Die beizubehaltende Übung ${item.exerciseId} ist nicht mehr im freigegebenen Übungspool oder passt nicht zum deklarierten Equipment.`);
-      }
+      if (!candidate) throw new Error(`Die beizubehaltende Übung ${item.exerciseId} ist nicht mehr im freigegebenen Übungspool oder passt nicht zu den deklarierten Equipment-/Hindernisbedingungen.`);
       return {
         id: `preserved-${phase.kind}-${candidate.id}`,
         exercise: {
@@ -160,12 +126,7 @@ function rehydratePreservedPhase(
         format: item.format,
         instructions: item.instructions || candidate.instructions,
         levelLabel: item.levelLabel || candidate.level2,
-        ...(phase.kind === "main"
-          ? {
-              mainPartIndex: item.mainPartIndex ?? 1,
-              mainPartTitle: item.mainPartTitle || `Hauptteil ${item.mainPartIndex ?? 1}`,
-            }
-          : {}),
+        ...(phase.kind === "main" ? { mainPartIndex: item.mainPartIndex ?? 1, mainPartTitle: item.mainPartTitle || `Hauptteil ${item.mainPartIndex ?? 1}` } : {}),
       };
     }),
   };
