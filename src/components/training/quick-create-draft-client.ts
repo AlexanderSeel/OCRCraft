@@ -9,6 +9,7 @@ import {
   type TrainingEquipmentAvailability,
   type TrainingFormat,
   type TrainingLocation,
+  type TrainingOrganizationMode,
   type TrainingPhaseKind,
 } from "../../domain/training/model";
 import type { DraftIntensity, TrainingDraft } from "../../domain/training/draft";
@@ -30,6 +31,12 @@ export interface QuickCreateDraftClientInput {
   readonly location?: string;
   readonly intensity: string;
   readonly builderMode?: string;
+  readonly warmupExerciseCount?: number;
+  readonly mainExerciseCount?: number;
+  readonly cooldownExerciseCount?: number;
+  readonly mainPartCount?: number;
+  readonly organizationMode?: string;
+  readonly teamSize?: number;
   readonly sourceTrainingIds?: readonly string[];
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment?: readonly TrainingEquipmentAvailability[];
@@ -52,6 +59,12 @@ export interface NormalizedTrainingDraftRequest {
   readonly location: TrainingLocation;
   readonly intensity: DraftIntensity;
   readonly builderMode: QuickCreateBuilderMode;
+  readonly warmupExerciseCount: number;
+  readonly mainExerciseCount: number;
+  readonly cooldownExerciseCount: number;
+  readonly mainPartCount: number;
+  readonly organizationMode: TrainingOrganizationMode;
+  readonly teamSize?: number;
   readonly sourceTrainingIds: readonly string[];
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment: readonly TrainingEquipmentAvailability[];
@@ -72,6 +85,7 @@ const FORMAT_SET = new Set<string>(TRAINING_FORMATS);
 const LOCATION_SET = new Set<string>(TRAINING_LOCATIONS);
 const INTENSITIES = new Set<string>(["technique", "balanced", "conditioning"]);
 const BUILDER_MODES = new Set<string>(["local", "ai"]);
+const ORGANIZATION_MODES = new Set<string>(["solo", "team"]);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function isAudience(value: string): value is Audience {
@@ -102,6 +116,15 @@ function isBuilderMode(value: string): value is QuickCreateBuilderMode {
   return BUILDER_MODES.has(value);
 }
 
+function isOrganizationMode(value: string): value is TrainingOrganizationMode {
+  return ORGANIZATION_MODES.has(value);
+}
+
+function boundedInteger(value: number | undefined, fallback: number, min: number, max: number): number {
+  if (!Number.isFinite(value) || !Number.isInteger(value)) return fallback;
+  return Math.max(min, Math.min(max, Number(value)));
+}
+
 export function parseAgeRange(value: string): ParsedAgeRange {
   const numbers = value.match(/\d+/g)?.map(Number).filter(Number.isFinite) ?? [];
   if (numbers.length === 0) return {};
@@ -125,6 +148,7 @@ export function normalizeTrainingDraftRequest(
   input: QuickCreateDraftClientInput,
 ): NormalizedTrainingDraftRequest {
   const audience: Audience = isAudience(input.groupType) ? input.groupType : "mixed";
+  const participantCount = boundedInteger(input.participantCount, 1, 1, 200);
   const bodyRegions = [...new Set(input.bodyRegions.filter(isBodyRegion))];
   const focusRegionSet = new Set(bodyRegions);
   const avoidBodyRegions = [...new Set((input.avoidBodyRegions ?? []).filter(isBodyRegion))]
@@ -136,6 +160,16 @@ export function normalizeTrainingDraftRequest(
   const builderMode: QuickCreateBuilderMode = input.builderMode && isBuilderMode(input.builderMode)
     ? input.builderMode
     : "local";
+  const organizationMode: TrainingOrganizationMode = input.organizationMode && isOrganizationMode(input.organizationMode)
+    ? input.organizationMode
+    : "solo";
+  const warmupExerciseCount = boundedInteger(input.warmupExerciseCount, 2, 1, 6);
+  const mainExerciseCount = boundedInteger(input.mainExerciseCount, 4, 1, 8);
+  const cooldownExerciseCount = boundedInteger(input.cooldownExerciseCount, 2, 1, 6);
+  const mainPartCount = boundedInteger(input.mainPartCount, 1, 1, 4);
+  const teamSize = organizationMode === "team"
+    ? boundedInteger(input.teamSize, Math.min(4, participantCount), 2, Math.min(20, Math.max(2, participantCount)))
+    : undefined;
   const sourceTrainingIds = [...new Set((input.sourceTrainingIds ?? []).filter((id) => UUID_PATTERN.test(id)))].slice(0, 6);
   const ages = parseAgeRange(input.ageRange);
   const availableEquipment = new Map<string, number>();
@@ -146,8 +180,8 @@ export function normalizeTrainingDraftRequest(
 
   return {
     audience,
-    participantCount: input.participantCount,
-    durationMinutes: input.durationMinutes,
+    participantCount,
+    durationMinutes: boundedInteger(input.durationMinutes, 60, 30, 180),
     goals: input.goals,
     bodyRegions,
     avoidBodyRegions,
@@ -156,6 +190,12 @@ export function normalizeTrainingDraftRequest(
     location,
     intensity,
     builderMode,
+    warmupExerciseCount,
+    mainExerciseCount,
+    cooldownExerciseCount,
+    mainPartCount,
+    organizationMode,
+    teamSize,
     sourceTrainingIds,
     preferredExerciseIds: input.preferredExerciseIds,
     availableEquipment: [...availableEquipment].map(([equipmentId, quantityAvailable]) => ({
@@ -293,6 +333,8 @@ function toDraftSelection(draft: TrainingDraft) {
         format: item.format,
         instructions: item.instructions,
         levelLabel: item.levelLabel,
+        mainPartIndex: item.mainPartIndex,
+        mainPartTitle: item.mainPartTitle,
       })),
     })),
   };
