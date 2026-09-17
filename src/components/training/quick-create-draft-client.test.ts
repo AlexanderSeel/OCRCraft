@@ -70,6 +70,7 @@ describe("normalizeTrainingDraftRequest", () => {
       mainExerciseCount: 4,
       cooldownExerciseCount: 2,
       mainPartCount: 1,
+      mainPartExerciseCounts: [4],
       organizationMode: "solo",
       teamSize: undefined,
       sourceTrainingIds: [

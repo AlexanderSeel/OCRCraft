@@ -10,8 +10,9 @@ import { ExerciseFacetForm } from "@/components/exercises/exercise-facet-form";
 import { ExerciseForm } from "@/components/exercises/exercise-form";
 import { ExerciseGuidanceListEditor } from "@/components/exercises/exercise-guidance-list-editor";
 import { ExerciseOutdoorVariantEditor } from "@/components/exercises/exercise-outdoor-variant-editor";
+import { ExerciseProgressionEditor } from "@/components/exercises/exercise-progression-editor";
 import { getExerciseClassificationEditorData } from "@/server/exercises/exercise-classification-repository";
-import { getExerciseById } from "@/server/exercises/exercise-repository";
+import { getExerciseById, getExerciseProgressionRelations, listExerciseRelationOptions } from "@/server/exercises/exercise-repository";
 import { getExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
 import { getExerciseOutdoorVariantEditorData } from "@/server/exercises/exercise-outdoor-variant-repository";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
@@ -24,6 +25,7 @@ import {
 import { updateExerciseFacetsAction } from "../facet-actions";
 import { updateExerciseGuidanceListsAction } from "../guidance-actions";
 import { updateExerciseOutdoorVariantAction } from "../outdoor-variant-actions";
+import { addExerciseProgressionRelationAction, deleteExerciseProgressionRelationAction } from "../progression-actions";
 
 interface PageProps {
   readonly params: Promise<{ id: string }>;
@@ -43,6 +45,8 @@ interface PageProps {
     logisticsError?: string;
     outdoorSaved?: string;
     outdoorError?: string;
+    progressionSaved?: string;
+    progressionError?: string;
   }>;
 }
 
@@ -52,12 +56,14 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const exercise = await getExerciseById(id);
   if (!exercise) notFound();
 
-  const [classification, facets, outdoorVariant, guidanceDeMap, guidanceEnMap] = await Promise.all([
+  const [classification, facets, outdoorVariant, guidanceDeMap, guidanceEnMap, progressionRelations, relationOptions] = await Promise.all([
     getExerciseClassificationEditorData(exercise.id),
     getExerciseFacetEditorData(exercise.id),
     getExerciseOutdoorVariantEditorData(exercise.id),
     getTrainingExerciseGuidanceMap([exercise.id], "de"),
     getTrainingExerciseGuidanceMap([exercise.id], "en"),
+    getExerciseProgressionRelations(exercise.id),
+    listExerciseRelationOptions(exercise.id),
   ]);
   if (!classification) notFound();
 
@@ -71,6 +77,8 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const updateDetailAction = updateLocalizedExerciseDetailsAction.bind(null, exercise.id);
   const updateLogisticsAction = updateExerciseLogisticsAction.bind(null, exercise.id);
   const toggleArchivedAction = setExerciseArchivedAction.bind(null, exercise.id, !exercise.archived);
+  const addProgressionAction = addExerciseProgressionRelationAction.bind(null, exercise.id);
+  const deleteProgressionAction = deleteExerciseProgressionRelationAction.bind(null, exercise.id);
   const manualExercise = exercise.seedKey == null;
   const fullEditorOpen = manualExercise || Boolean(
     status.created
@@ -121,6 +129,8 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         {status.detailSaved ? <Notice>{status.detailSaved === "en" ? "Englische" : "Deutsche"} Planungs-, Sicherheits- und Skalierungsdetails wurden gespeichert.</Notice> : null}
         {status.logisticsSaved ? <Notice>Schwierigkeit, Aufsicht und Stationslogistik wurden gespeichert.</Notice> : null}
         {status.outdoorSaved ? <Notice>Outdoor-Variante und alternatives Equipment wurden gespeichert und stehen der Outdoor-Trainingsplanung zur Verfügung.</Notice> : null}
+        {status.progressionSaved ? <Notice>Progressionsbeziehung gespeichert.</Notice> : null}
+        {status.progressionError ? <ErrorNotice>Die Progressionsbeziehung ist ungültig oder konnte nicht gespeichert werden.</ErrorNotice> : null}
         {status.classificationError === "invalid" ? <ErrorNotice>Die Klassifikation ist unvollständig oder ungültig. Wähle mindestens ein Trainingsziel.</ErrorNotice> : null}
         {status.classificationError === "save" ? <ErrorNotice>Die Klassifikation konnte nicht gespeichert werden.</ErrorNotice> : null}
         {status.facetError === "invalid" ? <ErrorNotice>Die Facetten- oder Gegenmuskel-Auswahl enthält ungültige Werte.</ErrorNotice> : null}
@@ -146,6 +156,12 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         </details>
 
         <ExerciseFacetForm action={updateFacetsAction} data={facets} disabled={exercise.archived} />
+
+        <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" open={Boolean(status.progressionSaved || status.progressionError || progressionRelations.length)}>
+          <summary className="min-h-8 cursor-pointer font-bold">Progressionen, Regressionen & Alternativen</summary>
+          <p className="mt-3 max-w-4xl text-sm leading-6 text-[var(--muted)]">Verknüpfe eine Übung mit einer leichteren, anspruchsvolleren oder gleichwertigen Variante. Die Beziehung wird separat von den Freitext-Leveln gespeichert.</p>
+          <div className="mt-4"><ExerciseProgressionEditor addAction={addProgressionAction} deleteAction={deleteProgressionAction} disabled={exercise.archived} options={relationOptions} relations={progressionRelations} /></div>
+        </details>
 
         <details
           className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"

@@ -43,6 +43,7 @@ async function createFixture() {
       archived BOOLEAN DEFAULT false
     );
     CREATE TABLE exercise_equipment (exercise_id VARCHAR, equipment_id VARCHAR, quantity_required INTEGER);
+    CREATE TABLE exercise_outdoor_variant_equipment (exercise_id VARCHAR, equipment_id VARCHAR, quantity_required INTEGER);
     CREATE TABLE exercise_tags (exercise_id VARCHAR, tag_id VARCHAR);
     CREATE TABLE exercise_training_goals (exercise_id VARCHAR, goal VARCHAR);
     CREATE TABLE exercise_details (
@@ -64,6 +65,7 @@ async function createFixture() {
       level_2 VARCHAR,
       level_3 VARCHAR,
       child_youth_variant VARCHAR,
+      outdoor_variant VARCHAR,
       prerequisites VARCHAR,
       fallback_exercise VARCHAR,
       station_capacity INTEGER,

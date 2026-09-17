@@ -430,6 +430,60 @@ export interface ExerciseProgressionRelation {
   readonly notesEn: string;
 }
 
+export interface ExerciseRelationOption {
+  readonly id: string;
+  readonly name: string;
+}
+
+export async function listExerciseRelationOptions(exerciseId: string): Promise<readonly ExerciseRelationOption[]> {
+  if (!UUID_PATTERN.test(exerciseId)) return [];
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `SELECT e.id::VARCHAR, COALESCE(t.name, e.canonical_name)
+       FROM exercises e
+       LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
+       WHERE e.id<>$exerciseId::UUID AND e.archived=false
+       ORDER BY COALESCE(t.name,e.canonical_name), e.id`,
+      { exerciseId },
+    );
+    return reader.getRows().map((row) => ({ id: String(row[0]), name: String(row[1]) }));
+  });
+}
+
+export async function addExerciseProgressionRelation(input: {
+  readonly exerciseId: string;
+  readonly relatedExerciseId: string;
+  readonly type: ExerciseProgressionRelationType;
+  readonly notesDe: string;
+  readonly notesEn?: string;
+}): Promise<boolean> {
+  if (!UUID_PATTERN.test(input.exerciseId) || !UUID_PATTERN.test(input.relatedExerciseId) || input.exerciseId === input.relatedExerciseId) return false;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `INSERT INTO exercise_progression_relations (exercise_id,related_exercise_id,relation_type,notes_de,notes_en)
+       VALUES ($exerciseId::UUID,$relatedExerciseId::UUID,$type,$notesDe,$notesEn)
+       ON CONFLICT (exercise_id,related_exercise_id,relation_type) DO UPDATE SET notes_de=excluded.notes_de, notes_en=excluded.notes_en
+       RETURNING id`,
+      { ...input, notesEn: input.notesEn ?? "" },
+    );
+    return reader.getRows().length > 0;
+  });
+}
+
+export async function deleteExerciseProgressionRelation(id: string, exerciseId: string): Promise<boolean> {
+  if (!UUID_PATTERN.test(id) || !UUID_PATTERN.test(exerciseId)) return false;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      "DELETE FROM exercise_progression_relations WHERE id=$id::UUID AND exercise_id=$exerciseId::UUID RETURNING id",
+      { id, exerciseId },
+    );
+    return reader.getRows().length > 0;
+  });
+}
+
 export async function getExerciseProgressionRelations(
   exerciseId: string,
   locale: "de" | "en" = "de",
