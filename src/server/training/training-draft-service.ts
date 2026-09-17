@@ -13,6 +13,7 @@ export async function createDeterministicTrainingDraft(
     audience: request.audience,
     minAge: request.minAge,
     locale: request.locale,
+    location: request.location,
   });
 
   return composeTrainingDraft(
