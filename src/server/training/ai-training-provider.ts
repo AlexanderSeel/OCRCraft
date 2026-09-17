@@ -1,5 +1,3 @@
-import "server-only";
-
 import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import { SPORTS_PLANNING_PRINCIPLES } from "./sports-planning-principles";
 import type { TrainingDraftRequest } from "./training-draft-schema";

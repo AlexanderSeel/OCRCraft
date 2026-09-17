@@ -71,7 +71,6 @@ describe("normalizeTrainingDraftRequest", () => {
         "22222222-2222-4222-8222-222222222222",
       ],
       preferredExerciseIds: ["exercise-1"],
-      sourceTrainingIds: [],
       availableEquipment: [
         { equipmentId: "sandbag", quantityAvailable: 6 },
         { equipmentId: "cones", quantityAvailable: 0 },
