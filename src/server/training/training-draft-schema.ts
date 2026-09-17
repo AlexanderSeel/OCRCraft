@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AUDIENCES, BODY_REGIONS, TRAINING_FORMATS } from "../../domain/training/model";
+import { AUDIENCES, BODY_REGIONS, TRAINING_FORMATS, TRAINING_LOCATIONS } from "../../domain/training/model";
 
 export const trainingDraftRequestSchema = z.object({
   audience: z.enum(AUDIENCES),
@@ -9,6 +9,7 @@ export const trainingDraftRequestSchema = z.object({
   bodyRegions: z.array(z.enum(BODY_REGIONS)).max(BODY_REGIONS.length),
   avoidBodyRegions: z.array(z.enum(BODY_REGIONS)).max(BODY_REGIONS.length).default([]),
   formats: z.array(z.enum(TRAINING_FORMATS)).min(1).max(4),
+  location: z.enum(TRAINING_LOCATIONS).default("mixed"),
   intensity: z.enum(["technique", "balanced", "conditioning"]),
   preferredExerciseIds: z.array(z.string().trim().min(1).max(100)).max(12),
   availableEquipment: z.array(z.object({
