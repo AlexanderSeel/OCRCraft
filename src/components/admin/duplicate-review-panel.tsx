@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ActionProgressButton } from "./action-progress-button";
 
 interface DuplicateReviewTask {
   readonly id: string;
@@ -65,18 +66,26 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
           {selectedTasks.length > 0 ? (
             <form action={bulkAction} className="flex flex-wrap items-center gap-2">
               {selectedTasks.map((task) => <input key={task.id} name="selection" type="hidden" value={`${task.id}:${task.leftExerciseId}:${task.rightExerciseId}`} />)}
-              <button className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" name="decision" type="submit" value="left">Linke übernehmen</button>
-              <button className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" name="decision" type="submit" value="right">Rechte übernehmen</button>
-              <button className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black text-[var(--muted)]" name="decision" type="submit" value="ignored">Ignorieren</button>
+              <ActionProgressButton className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" name="decision" pendingLabel={`${selectedTasks.length} Einträge werden verarbeitet`} value="left">Linke übernehmen</ActionProgressButton>
+              <ActionProgressButton className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" name="decision" pendingLabel={`${selectedTasks.length} Einträge werden verarbeitet`} value="right">Rechte übernehmen</ActionProgressButton>
+              <ActionProgressButton className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black text-[var(--muted)]" name="decision" pendingLabel={`${selectedTasks.length} Einträge werden verarbeitet`} value="ignored">Ignorieren</ActionProgressButton>
             </form>
           ) : null}
         </div>
       ) : null}
       <div className="mt-4 grid gap-3">
         {tasks.map((task) => (
-          <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" key={task.id}>
+          <article
+            aria-pressed={selected.has(task.id)}
+            className={`cursor-pointer rounded-xl border p-3 transition-colors ${selected.has(task.id) ? "border-[var(--control-strong)] bg-[var(--surface)]" : "border-[var(--border)] bg-[var(--surface-subtle)]"}`}
+            key={task.id}
+            onClick={(event) => { if (!(event.target instanceof HTMLElement) || !event.target.closest("button,input,form,a")) toggle(task.id); }}
+            onKeyDown={(event) => { if ((event.key === "Enter" || event.key === " ") && event.target === event.currentTarget) { event.preventDefault(); toggle(task.id); } }}
+            role="button"
+            tabIndex={0}
+          >
             <div className="flex items-start gap-3">
-              <input aria-label={`${task.leftName} und ${task.rightName} auswählen`} checked={selected.has(task.id)} className="mt-1" onChange={() => toggle(task.id)} type="checkbox" />
+              <input aria-label={`${task.leftName} und ${task.rightName} auswählen`} checked={selected.has(task.id)} className="mt-1" onChange={() => toggle(task.id)} onClick={(event) => event.stopPropagation()} type="checkbox" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <button className="text-left font-black underline-offset-2 hover:underline" onClick={() => setComparison(task)} type="button">{task.leftName} ↔ {task.rightName}</button>

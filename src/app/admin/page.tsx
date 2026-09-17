@@ -2,6 +2,7 @@ import { AppShell } from "@/components/app-shell";
 import { SeedCompletenessReportView } from "@/components/admin/seed-completeness-report";
 import { MuscleMapDebugSetting } from "@/components/admin/muscle-map-debug-setting";
 import { DuplicateReviewPanel } from "@/components/admin/duplicate-review-panel";
+import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, scanDuplicateExercisesAction } from "./actions";
@@ -35,7 +36,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität</div><h2 className="mt-1 text-xl font-black">Doppelungen prüfen</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Die Engine vergleicht normalisierte Namen, Aliase, Equipment, Körperregionen und externe IDs. Zusammenführen archiviert den überzähligen Datensatz und erhält die Trainingshistorie.</p></div>
-            <form action={scanDuplicateExercisesAction}><button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Jetzt prüfen</button></form>
+            <form action={scanDuplicateExercisesAction}><ActionProgressButton className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" pendingLabel="Vergleiche Namen, Aliase und Zuordnungen …">Jetzt prüfen</ActionProgressButton></form>
           </div>
           {duplicateTasks.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Keine offenen Doppelungsaufgaben.</p> : <DuplicateReviewPanel bulkAction={resolveDuplicateExercisesBulkAction} comparisonRecords={Object.fromEntries(comparisonRecords)} resolveAction={resolveDuplicateExerciseAction} tasks={duplicateTasks} />}
         </section>
@@ -85,9 +86,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   title="OCRCRAFT ZURÜCKSETZEN"
                 />
                 <div className="flex flex-wrap justify-end gap-2">
-                  <button className="min-h-11 rounded-xl bg-[var(--danger)] px-4 text-sm font-black text-white" type="submit">
-                    Löschen und neu aufbauen
-                  </button>
+                  <ActionProgressButton className="min-h-11 rounded-xl bg-[var(--danger)] px-4 text-sm font-black text-white" pendingLabel="Migrationen und Initialdaten werden aufgebaut …">Löschen und neu aufbauen</ActionProgressButton>
                 </div>
               </form>
             </div>
