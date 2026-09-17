@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { TrainingDraft } from "@/domain/training/draft";
+import type { TrainingDraft, TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import { composeAiTrainingDraft, composeReviewedAiTrainingDraft } from "./ai-training-composer";
 import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
 import { composeSportsTrainingDraft } from "./sports-training-composer";
@@ -9,6 +9,7 @@ import { listTrainingDraftCandidates } from "./training-draft-repository";
 import type { TrainingDraftPersistenceRequest } from "./training-draft-persistence-schema";
 import type { ReviewedAiTrainingPersistence } from "./reviewed-training-draft-schema";
 import type { TrainingDraftRequest } from "./training-draft-schema";
+import { assessTrainingSportsQuality } from "./training-sports-quality";
 import { persistTrainingDraft } from "./training-session-repository";
 
 async function approvedCandidatesFor(request: TrainingDraftRequest) {
@@ -21,6 +22,18 @@ async function approvedCandidatesFor(request: TrainingDraftRequest) {
   return filterCandidatesForDeclaredEquipment(candidates, request.availableEquipment);
 }
 
+function applySportsQualityAudit(
+  request: TrainingDraftRequest,
+  draft: TrainingDraft,
+  candidates: readonly TrainingDraftExerciseCandidate[],
+): TrainingDraft {
+  const quality = assessTrainingSportsQuality(request, draft, candidates);
+  return {
+    ...draft,
+    warnings: [...draft.warnings, ...quality.warnings],
+  };
+}
+
 export async function createTrainingDraft(request: TrainingDraftRequest): Promise<TrainingDraft> {
   const candidates = await approvedCandidatesFor(request);
   if (request.builderMode === "ai") {
@@ -31,15 +44,16 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
       );
     }
     const proposal = await provider.generateTrainingPlan({ request, approvedExercises: candidates });
-    return composeAiTrainingDraft({
+    const draft = composeAiTrainingDraft({
       proposal,
       request,
       approvedExercises: candidates,
       providerId: provider.id,
     });
+    return applySportsQualityAudit(request, draft, candidates);
   }
 
-  return composeSportsTrainingDraft(
+  const draft = composeSportsTrainingDraft(
     {
       audience: request.audience,
       participantCount: request.participantCount,
@@ -57,6 +71,7 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
     },
     candidates,
   );
+  return applySportsQualityAudit(request, draft, candidates);
 }
 
 /** Kept as a stable explicit entry point for local-only callers/tests. */
@@ -89,7 +104,8 @@ export async function persistReviewedAiTrainingDraft(
   input: ReviewedAiTrainingPersistence,
 ): Promise<{ readonly id: string; readonly draft: TrainingDraft }> {
   const candidates = await approvedCandidatesFor(input.request);
-  const draft = composeReviewedAiTrainingDraft(input, candidates);
+  const reviewedDraft = composeReviewedAiTrainingDraft(input, candidates);
+  const draft = applySportsQualityAudit(input.request, reviewedDraft, candidates);
   const provider = getConfiguredAiTrainingProvider();
   const id = await persistTrainingDraft(draft, {
     title: input.title,
