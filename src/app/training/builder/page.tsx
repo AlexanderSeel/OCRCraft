@@ -6,6 +6,7 @@ import {
   type TrainingBuilderSourceOption,
 } from "@/components/training/training-builder-panel";
 import { TrainingQuickPlanner } from "@/components/training/training-quick-planner";
+import type { MainPartProgramming } from "@/domain/training/model";
 import { listTrainingEquipmentOptions } from "@/server/training/training-draft-repository";
 import { getLatestTrainingGeneration } from "@/server/training/training-generation-repository";
 import {
@@ -88,7 +89,7 @@ export default async function TrainingBuilderPage({ searchParams }: PageProps) {
             ) : null}
           </form>
           <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-            Die ursprünglichen Builder-Parameter werden mit der aktuell gespeicherten Hauptteil-/Teamstruktur kombiniert. Das bestehende Training wird nicht überschrieben; Speichern erzeugt immer einen neuen Entwurf.
+            Die ursprünglichen Builder-Parameter werden mit der aktuell gespeicherten Hauptteil-/Teamstruktur und Programmierung kombiniert. Das bestehende Training wird nicht überschrieben; Speichern erzeugt immer einen neuen Entwurf.
           </p>
           {source && !initialState ? (
             <p className="mt-2 text-xs font-bold text-[var(--danger)]">
@@ -138,6 +139,13 @@ async function buildInitialState(trainingId: string): Promise<TrainingBuilderIni
   const mainPartExerciseCounts = hasUsefulStoredStructure
     ? actualMainPartExerciseCounts
     : request.mainPartExerciseCounts;
+  const mainPartProgramming: readonly MainPartProgramming[] = Array.from(
+    { length: mainPartCount },
+    (_, zeroBasedIndex) => {
+      const stored = mainItems.find((item) => (item.mainPartIndex ?? 1) === zeroBasedIndex + 1)?.programming;
+      return stored ?? request.mainPartProgramming?.[zeroBasedIndex] ?? { mode: "standard" };
+    },
+  );
 
   return {
     sourceTrainingId: session.id,
@@ -159,6 +167,7 @@ async function buildInitialState(trainingId: string): Promise<TrainingBuilderIni
       || request.warmupExerciseCount,
     mainExerciseCount: mainPartExerciseCounts?.[0] ?? request.mainExerciseCount,
     mainPartExerciseCounts,
+    mainPartProgramming,
     cooldownExerciseCount: session.phases.find((phase) => phase.kind === "cooldown")?.items.length
       || request.cooldownExerciseCount,
     mainPartCount,
