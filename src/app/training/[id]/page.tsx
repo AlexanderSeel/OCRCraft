@@ -42,6 +42,12 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
   const updateMetadataAction = updateTrainingSessionMetadataAction.bind(null, session.id);
   const duplicateAction = duplicateTrainingSessionAction.bind(null, session.id);
   const editable = session.status !== "archived";
+  const mainPartCount = Math.max(
+    1,
+    ...session.phases
+      .filter((phase) => phase.kind === "main")
+      .flatMap((phase) => phase.items.map((item) => item.mainPartIndex ?? 1)),
+  );
 
   return (
     <AppShell
@@ -90,10 +96,16 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           </div>
         ) : null}
 
-        <section className="grid gap-3 sm:grid-cols-3">
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <InfoCard label="Status" value={statusLabel(session.status)} />
           <InfoCard label="Quelle" value={sourceLabel(session.source)} />
           <InfoCard label="Dauer" value={`${session.totalDurationMinutes} Min.`} />
+          <InfoCard
+            label="Organisation"
+            value={session.organizationMode === "team"
+              ? `${Math.ceil(session.itemCount > 0 ? 1 : 1)}Team · ${session.teamSize ?? 2} Pers. · ${mainPartCount} ${mainPartCount === 1 ? "Hauptteil" : "Hauptteile"}`
+              : `Individuell · ${mainPartCount} ${mainPartCount === 1 ? "Hauptteil" : "Hauptteile"}`}
+          />
         </section>
 
         <form
@@ -202,6 +214,11 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                           <div className="min-w-0">
                             <div className="font-black">{item.exerciseName}</div>
                             <div className="mt-1 flex flex-wrap gap-2 text-xs font-bold text-[var(--muted)]">
+                              {phase.kind === "main" ? (
+                                <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[var(--foreground)]">
+                                  {item.mainPartTitle ?? `Hauptteil ${item.mainPartIndex ?? 1}`}
+                                </span>
+                              ) : null}
                               {item.format ? <span>{item.format}</span> : null}
                               {item.levelLabel ? <span>· {item.levelLabel}</span> : null}
                             </div>
@@ -293,6 +310,30 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                         />
                                       </label>
                                     </div>
+                                    {phase.kind === "main" ? (
+                                      <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-3 md:grid-cols-2">
+                                        <label className="grid gap-1 text-xs font-bold">
+                                          Hauptteil Nr.
+                                          <input
+                                            className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                            defaultValue={item.mainPartIndex ?? 1}
+                                            max={12}
+                                            min={1}
+                                            name="mainPartIndex"
+                                            type="number"
+                                          />
+                                        </label>
+                                        <label className="grid gap-1 text-xs font-bold">
+                                          Hauptteil-Bezeichnung
+                                          <input
+                                            className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                            defaultValue={item.mainPartTitle ?? `Hauptteil ${item.mainPartIndex ?? 1}`}
+                                            maxLength={120}
+                                            name="mainPartTitle"
+                                          />
+                                        </label>
+                                      </div>
+                                    ) : null}
                                     <label className="grid gap-1 text-xs font-bold">
                                       Trainingshinweis
                                       <textarea
