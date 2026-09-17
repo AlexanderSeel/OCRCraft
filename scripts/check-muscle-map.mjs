@@ -7,15 +7,27 @@ try {
   page.on("pageerror", error => errors.push(error.message));
   await page.goto("http://localhost:3000/exercises", { waitUntil: "networkidle" });
   await mkdir(".next/muscle-map-review", { recursive: true });
+  for (const [mode, label] of [["list", "Liste"], ["small", "Klein"], ["medium", "Mittel"], ["large", "Groß"], ["detail", "Detail"]]) {
+    await page.getByRole("button", { name: label, exact: true }).click();
+    await page.waitForFunction(value => document.querySelector(".overview-layout")?.getAttribute("data-view") === value, mode);
+    await page.screenshot({ path: `.next/muscle-map-review/overview-${mode}.png` });
+  }
+  await page.getByRole("button", { name: "Liste", exact: true }).click();
+  await page.reload({ waitUntil: "networkidle" });
+  if (await page.locator(".overview-layout").getAttribute("data-view") !== "list") throw new Error("Overview view was not retained");
   const edit = await page.locator('a[href$="/edit"]').first().getAttribute("href");
   if (!edit) throw new Error("No exercise edit link");
   await page.goto(`http://localhost:3000${edit}`, { waitUntil: "networkidle" });
   const map = page.getByRole("img", { name: "Detaillierte anatomische Vorder- und Rückansicht zur Auswahl von Muskelgruppen" });
   await map.scrollIntoViewIfNeeded();
+  const desktopMap = await map.boundingBox();
+  const desktopTree = await page.locator(".muscle-tree").boundingBox();
+  if (!desktopMap || !desktopTree || desktopTree.x < desktopMap.x + desktopMap.width) throw new Error("Map and selection are not side by side");
   await page.screenshot({ path: ".next/muscle-map-review/desktop.png" });
-  await page.getByRole("button", { name: "Alle öffnen", exact: true }).click();
+  await page.getByRole("searchbox", { name: "Muskel suchen" }).fill("Bizeps");
   const detail = page.getByRole("checkbox", { name: "Bizeps · rechts", exact: true });
   await detail.check();
+  await page.getByRole("searchbox", { name: "Muskel suchen" }).fill("");
   if (!(await page.locator('input[type="hidden"][value="detail:biceps-right"]').count())) throw new Error("Detail was not added to form");
   await page.getByRole("button", { name: "24 Hauptbereiche", exact: true }).click();
   if (!(await page.locator('input[type="hidden"][value="detail:biceps-right"]').count())) throw new Error("Switching precision lost detail selection");

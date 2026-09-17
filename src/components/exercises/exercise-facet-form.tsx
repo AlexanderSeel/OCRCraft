@@ -29,37 +29,31 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
         />
       </section>
 
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-        <SectionHeader
-          title="Bewegungsmuster"
-          text="Diese Facetten verbessern Suche, Trainingszusammenstellung und spätere Variantenlogik."
-        />
+      <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
+<summary className="min-h-8 cursor-pointer font-bold">Bewegungsmuster</summary><div className="mt-2">
+        
         <CheckboxGrid
           disabled={disabled}
           name="movementPatternIds"
           options={data.movementPatterns}
           selected={movementSelection}
         />
-      </section>
+      </div></details>
 
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-        <SectionHeader
-          title="Tags & Trainingsziele"
-          text="Mehrfachauswahl für OCR-Bezug, Trainingsziel und typische Einsatzkontexte."
-        />
+      <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
+<summary className="min-h-8 cursor-pointer font-bold">Tags & Trainingsziele</summary><div className="mt-2">
+        
         <CheckboxGrid
           disabled={disabled}
           name="tagIds"
           options={data.tags}
           selected={tagSelection}
         />
-      </section>
+      </div></details>
 
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-        <SectionHeader
-          title="Equipment"
-          text="Nur benötigtes Material auswählen; die Menge beschreibt den Bedarf pro Station bzw. Übungsaufbau."
-        />
+      <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
+<summary className="min-h-8 cursor-pointer font-bold">Equipment</summary><div className="mt-2">
+        
         <div className="mt-4 grid gap-2 lg:grid-cols-2">
           {data.equipment.map((option) => {
             const quantity = equipmentSelection.get(option.id);
@@ -97,7 +91,7 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
             );
           })}
         </div>
-      </section>
+      </div></details>
 
       <div className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
         <p className="text-sm leading-6 text-[var(--muted)]">
@@ -154,11 +148,3 @@ function FacetLabel({ de, en }: { readonly de: string; readonly en: string }) {
   );
 }
 
-function SectionHeader({ title, text }: { readonly title: string; readonly text: string }) {
-  return (
-    <div>
-      <h2 className="text-lg font-black">{title}</h2>
-      <p className="mt-1 text-sm leading-6 text-[var(--muted)]">{text}</p>
-    </div>
-  );
-}

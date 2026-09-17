@@ -1,3 +1,4 @@
+import { OverviewLayout } from "@/components/overview-layout";
 import Link from "next/link";
 import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
@@ -123,7 +124,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             <summary className="cursor-pointer text-sm font-black">
               Nach Muskelgruppen filtern{selectedMuscles.length > 0 ? ` · ${selectedMuscles.length} gewählt` : ""}
             </summary>
-            <div className="mt-4 w-full xl:[&>div>div:nth-child(2)]:grid xl:[&>div>div:nth-child(2)]:grid-cols-[minmax(320px,400px)_minmax(0,1fr)] xl:[&>div>div:nth-child(2)]:items-start xl:[&>div>div:nth-child(2)]:gap-5 xl:[&>div>div:nth-child(2)>div:first-child]:max-w-none xl:[&>div>div:nth-child(2)>details]:mt-0">
+            <div className="mt-3 min-w-0">
               <MuscleMap
                 key={selectedMuscles.join(",") || "none"}
                 description="Wähle eine oder mehrere Regionen. Feine Muskelangaben berücksichtigen kompatible ältere Grobzuordnungen, ohne bestehende Übungen umzuschreiben."
@@ -150,19 +151,20 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           )}
         </div>
 
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <OverviewLayout storageKey="ocrcraft-exercise-view">
+        <section className="exercise-results grid gap-3">
           {exercises.map((exercise, index) => {
             const affectedMuscles = bodyRegionMap[exercise.id] ?? [];
             return (
             <article
-              className="flex min-h-64 flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]"
+              className="exercise-card flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]"
               key={exercise.id}
             >
               {exercise.imageUrl ? (
-                <div className="relative aspect-[3/2] w-full overflow-hidden bg-[var(--surface-subtle)]">
+                <div className="exercise-card-image relative w-full overflow-hidden bg-[var(--surface-subtle)]">
                   <Image
                     alt={`Übungsillustration: ${exercise.name}`}
-                    className="object-cover"
+                    className="object-contain"
                     fill
                     loading={index === 0 ? "eager" : "lazy"}
                     sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
@@ -181,11 +183,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                   ) : null}
                 </div>
               ) : (
-                <div className="flex aspect-[3/2] w-full items-center justify-center bg-[var(--surface-subtle)] text-sm font-semibold text-[var(--muted)]">
+                <div className="exercise-card-image flex w-full items-center justify-center bg-[var(--surface-subtle)] text-sm font-semibold text-[var(--muted)]">
                   Noch kein Bild verfügbar
                 </div>
               )}
-              <div className="flex flex-1 flex-col p-5">
+              <div className="exercise-card-content flex min-w-0 flex-1 flex-col p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
@@ -197,11 +199,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                     {exercise.riskLevel}
                   </span>
                 </div>
-                <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
+                <p className="exercise-card-summary mt-2 line-clamp-3 text-sm leading-5 text-[var(--muted)]">
                   {exercise.summary || "Noch keine Kurzbeschreibung hinterlegt."}
                 </p>
                 {affectedMuscles.length > 0 ? (
-                  <div className="mt-3 flex items-center gap-3 rounded-xl bg-[var(--surface-subtle)] p-2">
+                  <div className="exercise-card-muscles mt-3 flex items-center gap-3 rounded-xl bg-[var(--surface-subtle)] p-2">
                     <div className="w-20 shrink-0" title="Beanspruchte Muskel- und Körperregionen">
                       <MuscleMap
                         compact
@@ -217,7 +219,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                     </p>
                   </div>
                 ) : null}
-                <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
+                <div className="exercise-card-tags mt-3 flex flex-wrap gap-2 text-xs font-bold">
                   {exercise.phase ? (
                     <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
                       {exercise.phase}
@@ -239,7 +241,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                     </span>
                   ))}
                 </div>
-                <div className="mt-auto flex flex-wrap gap-2 pt-5">
+                <div className="exercise-card-actions mt-auto flex flex-wrap gap-2 pt-3">
                   <Link
                     className="inline-flex min-h-10 items-center rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
                     href={`/exercises/${exercise.id}`}
@@ -258,6 +260,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             );
           })}
         </section>
+        </OverviewLayout>
 
         {exercises.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--muted)]">

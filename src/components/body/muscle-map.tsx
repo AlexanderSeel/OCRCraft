@@ -109,6 +109,7 @@ export function MuscleMap({
   const [debugPoints, setDebugPoints] = useState<readonly [number, number][]>([]);
   const [debugLastHit, setDebugLastHit] = useState<string | null>(null);
   const [detailed, setDetailed] = useState(true);
+  const [regionSearch, setRegionSearch] = useState("");
   const [listOpen, setListOpen] = useState(true);
   const [showAntagonists, setShowAntagonists] = useState(false);
   const [openCategories, setOpenCategories] = useState<Set<string>>(() => new Set(CATEGORY_ORDER));
@@ -131,12 +132,15 @@ export function MuscleMap({
 
   const groupedOptions = useMemo(() => {
     const result = new Map<string, MuscleMapOption[]>();
+    const query = regionSearch.trim().toLocaleLowerCase("de");
     for (const option of options) {
       const detail = detailBodyRegion(option.id);
       if (detail && !detailed) continue;
       const parentId = bodyRegionParent(option.id);
+      const parentLabel = options.find(o => o.id === parentId)?.labelDe ?? parentId;
+      if (query && !`${option.labelDe} ${option.labelEn ?? ""} ${parentLabel}`.toLocaleLowerCase("de").includes(query)) continue;
       const category = detailed
-        ? options.find(o => o.id === parentId)?.labelDe ?? parentId
+        ? parentLabel
         : categoryForOption(option.id);
       const bucket = result.get(category) ?? [];
       bucket.push(option);
@@ -146,7 +150,7 @@ export function MuscleMap({
       const entries = result.get(category);
       return entries?.length ? [[category, entries] as const] : [];
     });
-  }, [options, detailed]);
+  }, [options, detailed, regionSearch]);
 
   const hoveredOptionId = hoveredPart ? optionForPart(hoveredPart, optionIds, detailed) : null;
   const antagonistIds = useMemo(() => {
@@ -269,7 +273,7 @@ export function MuscleMap({
   const debugCoordinates = debugPoints.flatMap(([x, y]) => [x, y]).join(", ");
 
   return (
-    <div className={compact ? "space-y-2" : "w-full space-y-4"}>
+    <div className={compact ? "muscle-map-component space-y-2" : "muscle-map-component w-full space-y-3"}>
       {!compact ? (
         <div>
           <h3 className="font-black text-[var(--foreground)]">{title}</h3>
@@ -284,8 +288,8 @@ export function MuscleMap({
           <span className="text-xs text-[var(--muted)]">{detailed ? "Detailauswahl · links/rechts aus Sicht der dargestellten Person" : "Auswahl ganzer Muskelgruppen"}</span>
         </div>
       ) : null}
-      <div className={compact ? "mx-auto w-full max-w-56" : "w-full"}>
-        <div className={compact ? "w-full" : visualCompact ? "mx-auto w-full max-w-xl" : "mx-auto w-full max-w-3xl"}>
+      <div className={compact ? "mx-auto w-full max-w-56" : "muscle-workspace grid items-start gap-4"}>
+        <div className={compact ? "w-full" : visualCompact ? "muscle-figure mx-auto w-full max-w-[300px]" : "muscle-figure mx-auto w-full max-w-[360px]"}>
           <div
             className={`relative mx-auto aspect-[376/504] w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)] ${interactive ? "cursor-pointer" : ""}`}
             onClick={handleMapClick}
@@ -341,11 +345,11 @@ export function MuscleMap({
 
         {!compact ? (
           <details
-            className="mt-5 w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] shadow-[var(--shadow-card)]"
+            className="muscle-tree min-w-0 w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] shadow-[var(--shadow-card)]"
             onToggle={(event) => setListOpen(event.currentTarget.open)}
             open={listOpen}
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 marker:hidden sm:px-5">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-3 py-2 marker:hidden">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-black text-[var(--foreground)]">Muskelgruppen</span>
@@ -360,7 +364,13 @@ export function MuscleMap({
               <span aria-hidden="true" className="shrink-0 text-lg font-black text-[var(--muted)]">{listOpen ? "−" : "+"}</span>
             </summary>
 
-            <div className="border-t border-[var(--border)] p-3 sm:p-4">
+            <div className="muscle-tree-content border-t border-[var(--border)] p-2">
+              <label className="mb-2 block text-xs font-bold">
+                Muskel suchen
+                <input type="search" value={regionSearch} onChange={event => setRegionSearch(event.target.value)}
+                  className="mt-1 h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+                  placeholder="Name oder Muskelgruppe" />
+              </label>
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -407,10 +417,10 @@ export function MuscleMap({
                 ) : null}
               </div>
 
-              <div className="grid w-full gap-3">
+              <div className="grid w-full gap-1">
                 {groupedOptions.map(([category, entries]) => {
                   const selectedCount = entries.filter((entry) => selectedById.has(entry.id)).length;
-                  const categoryOpen = openCategories.has(category);
+                  const categoryOpen = regionSearch.trim().length > 0 || openCategories.has(category);
                   return (
                     <details
                       className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]"
@@ -418,7 +428,7 @@ export function MuscleMap({
                       onToggle={(event) => setCategoryOpen(category, event.currentTarget.open)}
                       open={categoryOpen}
                     >
-                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 marker:hidden sm:px-4">
+                      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 marker:hidden">
                         <span className="font-black text-[var(--foreground)]">{category}</span>
                         <span className="flex items-center gap-2">
                           {selectedCount > 0 ? (
@@ -428,15 +438,15 @@ export function MuscleMap({
                         </span>
                       </summary>
 
-                      <div className="border-t border-[var(--border)] p-3 sm:p-4">
-                        <div className="grid w-full grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-2">
+                      <div className="ml-4 border-l-2 border-[var(--border)] p-1">
+              <div className="grid w-full gap-1">
                           {entries.map((option) => {
                             const selected = selectedById.get(option.id);
                             const secondary = selected?.emphasis === "secondary";
                             const isAntagonist = showAntagonists && antagonistIds.includes(option.id);
                             return (
                               <div
-                                className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 transition ${selected ? "border-[var(--border-strong)] bg-[var(--accent-soft)]" : isAntagonist ? "border-violet-300 bg-violet-50 dark:border-violet-700 dark:bg-violet-950/30" : "border-[var(--border)] bg-[var(--surface-subtle)]"}`}
+                                className={`flex min-h-11 items-center gap-2 rounded-lg border px-2 py-1 transition ${selected ? "border-[var(--border-strong)] bg-[var(--accent-soft)]" : isAntagonist ? "border-violet-300 bg-violet-50 dark:border-violet-700 dark:bg-violet-950/30" : "border-[var(--border)] bg-[var(--surface-subtle)]"}`}
                                 key={option.id}
                               >
                                 <label className={`flex min-w-0 flex-1 items-center gap-2 ${interactive ? "cursor-pointer" : "cursor-default"}`}>
@@ -450,7 +460,7 @@ export function MuscleMap({
                                   />
                                   <span className="min-w-0">
                                     <span className="flex items-center gap-2">
-                                      <span className="block text-sm font-bold text-[var(--foreground)]">{option.labelDe}{detailBodyRegion(option.id) ? ` (${detailBodyRegion(option.id)?.view === "front" ? "vorn" : "hinten"})` : " · Gesamtbereich"}</span>
+                                      <span className="block text-sm font-bold text-[var(--foreground)]">{option.labelDe}{detailBodyRegion(option.id) ? ` (${[...new Set(optionParts(option.id).map(part => part.view === "front" ? "vorn" : "hinten"))].join(" / ")})` : " · Gesamtbereich"}</span>
                                       {isAntagonist ? <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-violet-700 dark:bg-violet-900 dark:text-violet-200">Gegenmuskel</span> : null}
                                     </span>
                                     {option.labelEn && option.labelEn !== option.labelDe ? (
@@ -547,8 +557,8 @@ export function MuscleMap({
       ) : null}
 
       {debug ? (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-xs">
-          <div className="font-black">Koordinaten-Debug</div>
+        <details className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-2 text-xs">
+          <summary className="min-h-8 cursor-pointer font-black">Koordinaten-Debug · {debugPoints.length} Punkte</summary>
           <div className="mt-1 font-mono text-[var(--muted)]">
             Raster: {MUSCLE_MAP_REFERENCE_SIZE.width} × {MUSCLE_MAP_REFERENCE_SIZE.height} · Skalierung: {scaleX.toFixed(3)} × {scaleY.toFixed(3)}
           </div>
@@ -560,7 +570,7 @@ export function MuscleMap({
             <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-bold" onClick={() => setDebugPoints([])} type="button">Clear</button>
             <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-bold" onClick={() => void navigator.clipboard.writeText(`[${debugCoordinates}]`)} type="button">Copy Coordinates</button>
           </div>
-        </div>
+        </details>
       ) : null}
 
       {mode !== "display" ? selection.map((item) => (

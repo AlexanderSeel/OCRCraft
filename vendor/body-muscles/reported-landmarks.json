@@ -31,6 +31,10 @@
     [
       231,
       384
+    ],
+    [
+      233,
+      360
     ]
   ],
   "calves-soleus-right": [
@@ -239,6 +243,50 @@
     [
       235,
       255
+    ]
+  ],
+  "calves-gastroc-medial-left": [
+    [
+      122,
+      384
+    ],
+    [
+      127,
+      407
+    ]
+  ],
+  "calves-gastroc-medial-right": [
+    [
+      70,
+      390
+    ],
+    [
+      66,
+      407
+    ]
+  ],
+  "traps-upper-right": [
+    [
+      66,
+      90
+    ]
+  ],
+  "traps-upper-left": [
+    [
+      126,
+      92
+    ]
+  ],
+  "lats-upper-left": [
+    [
+      253,
+      128
+    ]
+  ],
+  "lats-upper-right": [
+    [
+      306,
+      129
     ]
   ]
 }

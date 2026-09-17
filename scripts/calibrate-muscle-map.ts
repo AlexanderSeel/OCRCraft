@@ -10,6 +10,7 @@ interface Calibration {
   id: string; sourceId: string; parentId: string; labelDe: string; labelEn: string;
   view: "front" | "back"; side: "left" | "right" | "center";
   kind: "muscle" | "body-area"; targetContour: number[];
+  projections?: { view: "front" | "back"; coordinates: number[] }[];
 }
 interface Point { x: number; y: number }
 function contours(path: string): Point[][] {
@@ -79,8 +80,11 @@ async function main() {
   // for review, but close those illustration gaps for the WebP interaction surface.
   // Highlight and pointer testing both use this same calibrated outer contour.
   await writeFile("vendor/body-muscles/transformed-svg-contours.json", JSON.stringify(parts) + "\n");
-  const surfaces = calibration.map(entry => ({ id: entry.id, optionId: entry.id,
-    labelDe: entry.labelDe, view: entry.view, side: entry.side, coordinates: entry.targetContour }));
+  const surfaces = calibration.flatMap(entry => [
+    { id: entry.id, optionId: entry.id, labelDe: entry.labelDe, view: entry.view, side: entry.side, coordinates: entry.targetContour },
+    ...(entry.projections ?? []).map((projection, index) => ({ id: `${entry.id}:projection:${index}`,
+      optionId: entry.id, labelDe: entry.labelDe, view: projection.view, side: entry.side, coordinates: projection.coordinates })),
+  ]);
   const metadata = calibration.map(entry => ({ id: entry.id, sourceId: entry.sourceId,
     parentId: entry.parentId, labelDe: entry.labelDe, labelEn: entry.labelEn,
     view: entry.view, side: entry.side, kind: entry.kind }));

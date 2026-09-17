@@ -92,13 +92,17 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         {status.logisticsError === "invalid" ? <ErrorNotice>Die Logistikwerte sind ungültig. Prüfe Zeiten, Kapazität und Pflichtfelder.</ErrorNotice> : null}
         {status.logisticsError === "save" ? <ErrorNotice>Die Logistikwerte konnten nicht gespeichert werden.</ErrorNotice> : null}
 
-        <ExerciseForm action={updateAction} exercise={exercise} submitLabel="Änderungen speichern" />
+        <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" open={Boolean(status.saved)}>
+          <summary className="min-h-8 cursor-pointer font-bold">Stammdaten bearbeiten</summary>
+          <ExerciseForm action={updateAction} exercise={exercise} submitLabel="Änderungen speichern" />
+        </details>
 
         <ExerciseFacetForm action={updateFacetsAction} data={facets} disabled={exercise.archived} />
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+        <details open={Boolean(status.detailError || status.logisticsError || status.detailSaved || status.logisticsSaved)} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+<summary className="min-h-8 cursor-pointer font-bold">Programmierung, Sicherheit & Stationslogistik</summary>
           <div className="mb-5">
-            <h2 className="text-lg font-black">Programmierung, Sicherheit & Stationslogistik</h2>
+            
             <p className="mt-1 max-w-4xl text-sm leading-6 text-[var(--muted)]">
               Pflege Dosierung, Level 1–3, Zielgruppenvarianten und Sicherheitsinformationen sprachspezifisch. Schwierigkeit, Aufsicht, Aufbauzeit und Stationskapazität gelten für die Übung global und werden für beide Sprachen synchron gehalten.
             </p>
@@ -122,11 +126,12 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
               locale="en"
             />
           </div>
-        </section>
+        </details>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+        <details open={Boolean(status.guidanceError || status.guidanceSaved)} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+<summary className="min-h-8 cursor-pointer font-bold">Strukturierte Ausführung & Coaching</summary>
           <div className="mb-5">
-            <h2 className="text-lg font-black">Strukturierte Ausführung & Coaching</h2>
+            
             <p className="mt-1 max-w-4xl text-sm leading-6 text-[var(--muted)]">
               Pflege die Reihenfolge der Ausführungsschritte, kurze Trainer-Cues sowie typische Fehler mit konkreter Korrektur getrennt für Deutsch und Englisch. Diese Inhalte werden in der Übungsdetailansicht und direkt in Trainings verwendet.
             </p>
@@ -149,7 +154,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
               locale="en"
             />
           </div>
-        </section>
+        </details>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
