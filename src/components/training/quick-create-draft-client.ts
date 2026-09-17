@@ -46,6 +46,8 @@ export interface QuickCreateDraftClientInput {
   readonly mainPartCount?: number;
   readonly organizationMode?: string;
   readonly teamSize?: number;
+  /** Explicit number of parallel groups in solo/rotation mode. */
+  readonly groupSplitCount?: number;
   readonly sourceTrainingIds?: readonly string[];
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment?: readonly TrainingEquipmentAvailability[];
@@ -78,6 +80,7 @@ export interface NormalizedTrainingDraftRequest {
   readonly mainPartCount: number;
   readonly organizationMode: TrainingOrganizationMode;
   readonly teamSize?: number;
+  readonly groupSplitCount?: number;
   readonly sourceTrainingIds: readonly string[];
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment: readonly TrainingEquipmentAvailability[];
@@ -183,6 +186,9 @@ export function normalizeTrainingDraftRequest(input: QuickCreateDraftClientInput
   const mainPartExerciseCounts = normalizeMainPartExerciseCounts(input.mainPartExerciseCounts, mainPartCount, mainExerciseCount);
   const mainPartProgramming = normalizeMainPartProgramming(input.mainPartProgramming, mainPartCount);
   const teamSize = organizationMode === "team" ? boundedInteger(input.teamSize, Math.min(4, participantCount), 2, Math.min(20, Math.max(2, participantCount))) : undefined;
+  const groupSplitCount = organizationMode === "solo" && input.groupSplitCount != null
+    ? boundedInteger(input.groupSplitCount, 1, 1, Math.min(20, participantCount))
+    : undefined;
   const sourceTrainingIds = [...new Set((input.sourceTrainingIds ?? []).filter((id) => UUID_PATTERN.test(id)))].slice(0, 6);
   const availableObstacleExerciseIds = input.availableObstacleExerciseIds == null
     ? undefined
@@ -214,6 +220,7 @@ export function normalizeTrainingDraftRequest(input: QuickCreateDraftClientInput
     mainPartCount,
     organizationMode,
     teamSize,
+    groupSplitCount,
     sourceTrainingIds,
     preferredExerciseIds: input.preferredExerciseIds,
     availableEquipment: [...availableEquipment].map(([equipmentId, quantityAvailable]) => ({ equipmentId, quantityAvailable })),
