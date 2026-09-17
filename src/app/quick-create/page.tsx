@@ -2,13 +2,17 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { QuickCreateWizard } from "@/components/training/quick-create-wizard";
 import { listClubGroups } from "@/server/groups/group-repository";
-import { listTrainingEquipmentOptions } from "@/server/training/training-draft-repository";
+import {
+  listTrainingEquipmentOptions,
+  listTrainingObstacleOptions,
+} from "@/server/training/training-draft-repository";
 
 export const dynamic = "force-dynamic";
 
 export default async function QuickCreatePage() {
-  const [equipmentOptions, groups] = await Promise.all([
+  const [equipmentOptions, obstacleOptions, groups] = await Promise.all([
     listTrainingEquipmentOptions(),
+    listTrainingObstacleOptions(),
     listClubGroups(false),
   ]);
 
@@ -35,6 +39,7 @@ export default async function QuickCreatePage() {
     >
       <QuickCreateWizard
         equipmentOptions={equipmentOptions}
+        obstacleOptions={obstacleOptions}
         groupPresets={groups.map((group) => ({
           id: group.id,
           name: group.name,
