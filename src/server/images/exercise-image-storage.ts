@@ -23,7 +23,7 @@ export interface ExerciseImageStorage {
 
 function safeObjectKey(exerciseId: string, assetId: string, fileStem?: string): string {
   const stem = fileStem && /^[a-z0-9][a-z0-9-]*$/i.test(fileStem) ? fileStem : assetId;
-  return `${exerciseId}/${stem}.png`;
+  return `${fileStem && /^[a-z0-9][a-z0-9-]*$/i.test(fileStem) ? stem : exerciseId}/${stem}.png`;
 }
 
 export class FileSystemExerciseImageStorage implements ExerciseImageStorage {

@@ -204,6 +204,24 @@ export async function listTrainingSessions(
   });
 }
 
+export async function updateTrainingSessionMetadata(
+  id: string,
+  input: UpdateTrainingSessionMetadataInput,
+): Promise<boolean> {
+  await ensureDatabaseReady();
+  if (!UUID_PATTERN.test(id)) throw new Error("Training ist ungültig.");
+  const title = input.title.trim();
+  if (!title) throw new Error("Trainingstitel darf nicht leer sein.");
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `UPDATE training_sessions SET title=$title, status=$status, updated_at=current_timestamp
+       WHERE id=$id::UUID AND status <> 'archived' RETURNING id`,
+      { id, title, status: input.status },
+    );
+    return reader.getRows().length === 1;
+  });
+}
+
 export async function getTrainingSessionById(id: string): Promise<TrainingSessionDetail | null> {
   if (!UUID_PATTERN.test(id)) return null;
   await ensureDatabaseReady();

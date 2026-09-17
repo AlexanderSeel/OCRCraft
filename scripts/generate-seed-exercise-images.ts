@@ -30,7 +30,7 @@ async function main(): Promise<void> {
   let nextIndex = 0;
 
   try {
-    const concurrency = 3;
+    const concurrency = 8;
     process.stdout.write(`Generating illustrations for ${exercises.length} active seed exercises (${concurrency} requests at a time). Existing generated assets are preserved.\n`);
     const worker = async (): Promise<void> => {
       while (nextIndex < exercises.length) {

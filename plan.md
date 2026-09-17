@@ -624,8 +624,7 @@ Each sequence illustration uses one adult athlete, selected randomly as a woman 
 - [x] resumable seed-catalog generation with serialized database writes and concurrent API requests
 - [x] generate and inspect one real sample exercise image
 - [x] generate and inspect real sequence illustration samples (partner mirror movement and quiet landing) before/within the expansion cohort batch; generated assets remain pending trainer review
-- [x] generate and persist one image for each of the original 149 seed exercises (all remain pending trainer review)
-- [x] generate and persist matching illustrations for the 8 catalog expansion seed exercises; database recovered from a verified copy after primary WAL replay failure
+- [x] generate and persist one sequence image for each of the 157 seed exercises (all remain pending trainer review)
 - [x] load bilingual structured DuckDB details, movement/body metadata and available running/obstacle/carry guidance into the single-exercise prompt
 
 ## 16. Internationalization
@@ -751,7 +750,7 @@ No athlete surveillance or unnecessary personal data.
 - [ ] duplicate/conflict compare screen with left/right/both resolution
 - [ ] AI composition from approved pool
 - [ ] AI-created exercises require approval
-- [ ] AI sequence illustration generated and attached for every initial seed exercise (regeneration with seed-name files is resumable; current API credit limit stopped the run after the first successful subset)
+- [x] AI sequence illustration generated and attached for every initial seed exercise using stable seed-name files (all 157 remain pending trainer review)
 - [x] new sequence illustrations show one randomly selected adult woman or man across the exercise steps
 - [x] illustration source/generation metadata stored and reviewable
 - [ ] Admin users/groups/media/settings/DB
