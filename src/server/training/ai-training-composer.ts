@@ -6,9 +6,10 @@ import {
   type TrainingDraft,
   type TrainingDraftExerciseCandidate,
 } from "@/domain/training/draft";
-import { TRAINING_PHASE_LABELS, type TrainingSession } from "@/domain/training/model";
+import { TRAINING_PHASE_LABELS, type TrainingFormat, type TrainingPhaseKind, type TrainingSession } from "@/domain/training/model";
 import { validateTrainingSession } from "@/domain/training/validation";
 import { aiTrainingPlanSchema } from "./ai-training-schema";
+import type { ReviewedAiTrainingPersistence } from "./reviewed-training-draft-schema";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 
 export interface ComposeAiTrainingDraftInput {
@@ -18,11 +19,20 @@ export interface ComposeAiTrainingDraftInput {
   readonly providerId: string;
 }
 
-/**
- * Converts untrusted provider output into a canonical OCRCraft TrainingDraft.
- * Provider-selected IDs are rehydrated exclusively from the approved pool;
- * duration, equipment, risk and validation data always come from OCRCraft.
- */
+interface CanonicalAiItem {
+  readonly exerciseId: string;
+  readonly durationMinutes?: number;
+  readonly format?: TrainingFormat;
+  readonly instructions?: string;
+  readonly levelLabel?: string;
+}
+
+interface CanonicalAiPhase {
+  readonly kind: TrainingPhaseKind;
+  readonly items: readonly CanonicalAiItem[];
+}
+
+/** Converts untrusted provider output into a canonical OCRCraft TrainingDraft. */
 export function composeAiTrainingDraft({
   proposal,
   request,
@@ -30,31 +40,74 @@ export function composeAiTrainingDraft({
   providerId,
 }: ComposeAiTrainingDraftInput): TrainingDraft {
   const plan = aiTrainingPlanSchema.parse(proposal);
-  const byId = new Map(approvedExercises.map((exercise) => [exercise.id, exercise]));
   const budgets = getTrainingPhaseBudgets(request.durationMinutes);
-  const warnings: string[] = [];
+  const phases: CanonicalAiPhase[] = plan.phases.map((phase) => {
+    const durations = distributeTrainingMinutes(budgets[phase.kind], phase.items.length);
+    return {
+      kind: phase.kind,
+      items: phase.items.map((item, index) => ({
+        exerciseId: item.exerciseId,
+        durationMinutes: durations[index] ?? 0,
+        format: item.format,
+        instructions: item.trainerNote,
+        levelLabel: item.level,
+      })),
+    };
+  });
+  const rationaleWarnings = plan.rationale ? [`AI-Begründung: ${plan.rationale}`] : [];
+  return buildCanonicalAiDraft(
+    request,
+    approvedExercises,
+    phases,
+    plan.title || "AI Trainingsentwurf",
+    [`AI-Anbieter: ${providerId}. Vorschlag wurde gegen OCRCraft-Regeln validiert.`, ...rationaleWarnings],
+  );
+}
 
-  const phases = plan.phases.map((phase) => {
-    const candidates = phase.items.map((item) => {
+/** Rehydrates the exact reviewed AI selection against the current approved pool. */
+export function composeReviewedAiTrainingDraft(
+  input: ReviewedAiTrainingPersistence,
+  approvedExercises: readonly TrainingDraftExerciseCandidate[],
+): TrainingDraft {
+  const budgets = getTrainingPhaseBudgets(input.request.durationMinutes);
+  for (const phase of input.reviewed.phases) {
+    const actual = phase.items.reduce((sum, item) => sum + item.durationMinutes, 0);
+    if (actual !== budgets[phase.kind]) {
+      throw new Error(`Geprüfter AI-Entwurf hat für ${phase.kind} ${actual} statt ${budgets[phase.kind]} Minuten.`);
+    }
+  }
+  return buildCanonicalAiDraft(
+    input.request,
+    approvedExercises,
+    input.reviewed.phases,
+    input.title || "AI Trainingsentwurf",
+    ["Geprüfter AI-Vorschlag wurde vor dem Speichern erneut gegen den aktuellen OCRCraft-Katalog validiert."],
+  );
+}
+
+function buildCanonicalAiDraft(
+  request: TrainingDraftRequest,
+  approvedExercises: readonly TrainingDraftExerciseCandidate[],
+  phaseSelections: readonly CanonicalAiPhase[],
+  title: string,
+  initialWarnings: readonly string[],
+): TrainingDraft {
+  const byId = new Map(approvedExercises.map((exercise) => [exercise.id, exercise]));
+  const warnings = [...initialWarnings];
+  const phases = phaseSelections.map((phase) => ({
+    id: `ai-${phase.kind}`,
+    kind: phase.kind,
+    title: TRAINING_PHASE_LABELS[phase.kind],
+    items: phase.items.map((item) => {
       const candidate = byId.get(item.exerciseId);
-      if (!candidate) {
-        throw new Error(`AI-Vorschlag enthält eine nicht freigegebene Übung: ${item.exerciseId}.`);
-      }
+      if (!candidate) throw new Error(`AI-Vorschlag enthält eine nicht freigegebene Übung: ${item.exerciseId}.`);
       if (inferTrainingPhase(candidate) !== phase.kind) {
         throw new Error(`AI-Vorschlag ordnet ${candidate.name} einer unpassenden Phase ${phase.kind} zu.`);
       }
       if (request.avoidBodyRegions.some((region) => bodyRegionsOverlap([region], candidate.bodyRegions))) {
         throw new Error(`AI-Vorschlag verwendet ${candidate.name} trotz ausgeschlossener Körperregion.`);
       }
-      return { item, candidate };
-    });
-
-    const durations = distributeTrainingMinutes(budgets[phase.kind], candidates.length);
-    return {
-      id: `ai-${phase.kind}`,
-      kind: phase.kind,
-      title: TRAINING_PHASE_LABELS[phase.kind],
-      items: candidates.map(({ item, candidate }, index) => ({
+      return {
         id: `ai-${phase.kind}-${candidate.id}`,
         exercise: {
           id: candidate.id,
@@ -67,13 +120,13 @@ export function composeAiTrainingDraft({
           setupSeconds: candidate.setupSeconds ?? undefined,
           transitionSeconds: candidate.transitionSeconds ?? undefined,
         },
-        durationMinutes: durations[index] ?? 0,
+        durationMinutes: item.durationMinutes ?? 0,
         format: item.format ?? (phase.kind === "main" ? request.formats[0] : "free"),
-        instructions: item.trainerNote?.trim() || candidate.instructions,
-        levelLabel: levelText(item.level, candidate),
-      })),
-    };
-  });
+        instructions: item.instructions?.trim() || candidate.instructions,
+        levelLabel: reviewedLevelText(item.levelLabel, candidate),
+      };
+    }),
+  }));
 
   const selected = phases.flatMap((phase) => phase.items);
   for (const focus of request.bodyRegions) {
@@ -86,11 +139,10 @@ export function composeAiTrainingDraft({
       warnings.push(`Der gewünschte Übungstyp ${exerciseType} wurde im AI-Vorschlag nicht abgedeckt.`);
     }
   }
-  if (plan.rationale) warnings.unshift(`AI-Begründung: ${plan.rationale}`);
 
   const session: TrainingSession = {
     id: "ai-training-draft",
-    title: plan.title || "AI Trainingsentwurf",
+    title,
     group: {
       id: "ai-training-group",
       name: "AI Training Builder",
@@ -103,21 +155,17 @@ export function composeAiTrainingDraft({
     focus: request.goals,
     phases,
   };
-
   return {
     source: "ai",
     session,
     validationIssues: validateTrainingSession(session, undefined, request.availableEquipment),
-    warnings: [`AI-Anbieter: ${providerId}. Vorschlag wurde gegen OCRCraft-Regeln validiert.`, ...warnings],
+    warnings,
   };
 }
 
-function levelText(
-  level: "level1" | "level2" | "level3" | undefined,
-  candidate: TrainingDraftExerciseCandidate,
-): string | undefined {
-  if (level === "level1") return candidate.level1 || "Level 1";
-  if (level === "level3") return candidate.level3 || "Level 3";
-  if (level === "level2") return candidate.level2 || "Level 2";
-  return candidate.level2;
+function reviewedLevelText(value: string | undefined, candidate: TrainingDraftExerciseCandidate): string | undefined {
+  if (value === "level1") return candidate.level1 || "Level 1";
+  if (value === "level2") return candidate.level2 || "Level 2";
+  if (value === "level3") return candidate.level3 || "Level 3";
+  return value || candidate.level2;
 }
