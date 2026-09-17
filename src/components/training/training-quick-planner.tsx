@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
 import { BODY_REGION_OPTIONS, COARSE_BODY_REGION_IDS } from "@/domain/body-regions";
+import type { EquipmentAvailabilityOption } from "./equipment-availability-picker";
 import { TrainingDraftPreview } from "./training-draft-preview";
 
 const goals = ["Ganzkörper", "OCR-Technik", "Grip", "Kraftausdauer", "Laufen", "Core", "Balance", "Koordination"] as const;
@@ -17,7 +18,11 @@ const formats = [
 const locations = [["mixed", "Flexibel"], ["indoor", "Indoor"], ["outdoor", "Outdoor"]] as const;
 const audiences = [["adults", "Erwachsene"], ["youth", "Jugend"], ["kids", "Kids"], ["mixed", "Mixed"]] as const;
 
-export function TrainingQuickPlanner() {
+interface TrainingQuickPlannerProps {
+  readonly equipmentOptions?: readonly EquipmentAvailabilityOption[];
+}
+
+export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPlannerProps) {
   const [audience, setAudience] = useState("adults");
   const [participants, setParticipants] = useState(12);
   const [duration, setDuration] = useState(60);
@@ -40,6 +45,11 @@ export function TrainingQuickPlanner() {
   const coarseOptions = useMemo(() => BODY_REGION_OPTIONS.filter((option) =>
     (COARSE_BODY_REGION_IDS as readonly string[]).includes(option.id)
   ), []);
+  const automaticEquipment = useMemo(() => equipmentOptions.flatMap((option) =>
+    option.quantityAvailable == null
+      ? []
+      : [{ equipmentId: option.id, quantityAvailable: option.quantityAvailable }]
+  ), [equipmentOptions]);
 
   function setMainPartCount(value: number) {
     const nextCount = Math.max(1, Math.min(4, value));
@@ -81,7 +91,7 @@ export function TrainingQuickPlanner() {
       teamSize: organizationMode === "team" ? Math.min(teamSize, participants) : undefined,
       sourceTrainingIds: [],
       preferredExerciseIds: [],
-      availableEquipment: [],
+      availableEquipment: automaticEquipment,
       locale: "de",
     };
   }
@@ -174,6 +184,11 @@ export function TrainingQuickPlanner() {
             />
           ))}
         </div>
+        <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
+          {automaticEquipment.length > 0
+            ? `Der Quickplaner verwendet automatisch ${automaticEquipment.length} bekannte Equipment-Bestände aus OCRCraft. Für Outdoor werden vorhandene Outdoor-Ersatzvarianten berücksichtigt.`
+            : "Es ist kein Equipment-Bestand hinterlegt. Der Planer arbeitet deshalb ohne Bestandsvorgabe und weist mögliche Materialkonflikte im Entwurf aus."}
+        </p>
       </div>
 
       <div className="mt-5 flex flex-wrap justify-end gap-2">
