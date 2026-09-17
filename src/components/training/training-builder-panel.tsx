@@ -25,6 +25,7 @@ import {
   type SelectedExerciseReference,
 } from "./exercise-autocomplete-picker";
 import { MainPartProgrammingEditor } from "./main-part-programming-editor";
+import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
 import {
   persistTrainingDraft,
@@ -129,6 +130,7 @@ function initialMainPartProgramming(initialState?: TrainingBuilderInitialState):
 
 export function TrainingBuilderPanel({
   equipmentOptions,
+  obstacleOptions = [],
   sourceTrainingOptions = [],
   initialState,
 }: TrainingBuilderPanelProps) {
@@ -161,6 +163,10 @@ export function TrainingBuilderPanel({
       : Object.fromEntries(equipmentOptions.flatMap((option) =>
           option.quantityAvailable == null ? [] : [[option.id, String(option.quantityAvailable)]]
         )),
+  );
+  const [obstacleInventoryDeclared, setObstacleInventoryDeclared] = useState(initialState?.availableObstacleExerciseIds != null);
+  const [availableObstacleExerciseIds, setAvailableObstacleExerciseIds] = useState<readonly string[]>(() =>
+    initialState?.availableObstacleExerciseIds ?? obstacleOptions.map((option) => option.id),
   );
   const [draft, setDraft] = useState<TrainingDraft | null>(null);
   const [title, setTitle] = useState(initialState ? `${initialState.sourceTitle} – angepasst` : "");
@@ -249,6 +255,7 @@ export function TrainingBuilderPanel({
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
         quantity.trim() === "" ? [] : [{ equipmentId, quantityAvailable: Number(quantity) }]
       ),
+      availableObstacleExerciseIds: obstacleInventoryDeclared ? availableObstacleExerciseIds : undefined,
     };
   }
 
@@ -353,7 +360,7 @@ export function TrainingBuilderPanel({
           {builderMode === "ai" ? (
             <div className="mt-3 space-y-3">
               <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--muted)]">
-                AI muss serverseitig konfiguriert sein. Sie darf keine neuen Übungs-IDs erfinden und kann Alters-, Orts-, Ausschluss-, Equipment- oder Sicherheitsfilter nicht umgehen.
+                AI muss serverseitig konfiguriert sein. Sie darf keine neuen Übungs-IDs erfinden und kann Alters-, Orts-, Ausschluss-, Equipment-, Hindernis- oder Sicherheitsfilter nicht umgehen.
               </p>
               {sourceTrainingOptions.length > 0 ? (
                 <details className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
@@ -516,7 +523,7 @@ export function TrainingBuilderPanel({
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <h2 className="text-lg font-black">Wunschübungen & Hindernisse</h2>
-          <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Optional als starke Trainerpräferenz. Beide Engines versuchen diese Übungen einzubauen, solange Phase, Alter, Ausschlüsse und Sicherheitsregeln passen.</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Optional als starke Trainerpräferenz. Beide Engines versuchen diese Übungen einzubauen, solange Phase, Alter, Ausschlüsse, Hindernisbestand und Sicherheitsregeln passen.</p>
           <div className="mt-4">
             <ExerciseAutocompletePicker description="Durchsucht den freigegebenen Übungspool nach Namen, Aliasen und strukturierten Metadaten." label="Bevorzugte Übungen" maxItems={8} onChange={(items) => { setPreferredExercises(items); invalidate(); }} selected={preferredExercises} />
           </div>
@@ -529,6 +536,19 @@ export function TrainingBuilderPanel({
           <details className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
             <summary className="cursor-pointer font-black">Equipment-Bestand</summary>
             <div className="mt-4"><EquipmentAvailabilityPicker onChange={(id, value) => { setAvailableEquipment((current) => ({ ...current, [id]: value })); invalidate(); }} options={equipmentOptions} value={availableEquipment} /></div>
+          </details>
+          <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={obstacleInventoryDeclared}>
+            <summary className="cursor-pointer font-black">OCR-Hindernisbestand</summary>
+            <p className="mt-2 text-xs leading-5 text-[var(--muted)]">Wenn der Vereinsbestand aktiviert ist, werden nicht markierte Hindernisstationen hart aus lokaler und AI-Planung sowie aus späteren Übungsalternativen ausgeschlossen.</p>
+            <div className="mt-4">
+              <ObstacleAvailabilityPicker
+                declared={obstacleInventoryDeclared}
+                onDeclaredChange={(declared) => { setObstacleInventoryDeclared(declared); invalidate(); }}
+                onSelectionChange={(ids) => { setAvailableObstacleExerciseIds(ids); invalidate(); }}
+                options={obstacleOptions}
+                selectedIds={availableObstacleExerciseIds}
+              />
+            </div>
           </details>
         </section>
 
@@ -565,7 +585,7 @@ export function TrainingBuilderPanel({
           <li>Hohe Stoßbelastungen und hohe Risiken werden nicht unnötig direkt hintereinander geplant.</li>
           <li>Drei direkt aufeinanderfolgende Übungen mit derselben lokalen Muskel-/Körperregion werden im Qualitätscheck beanstandet.</li>
           <li>Übungen aus den letzten Trainings erhalten einen weichen Wiederholungs-Malus; Trainer-Wunschübungen können ihn bewusst überstimmen.</li>
-          <li>Alter, Ort, Ausschlussbereiche, Risiko, Equipment und Stationskapazität bleiben harte Grenzen.</li>
+          <li>Alter, Ort, Ausschlussbereiche, Risiko, Equipment, Hindernisbestand und Stationskapazität bleiben harte Grenzen.</li>
           <li>Outdoor-Varianten verwenden bei Outdoor-Planung ihr eigenes geprüftes Ersatz-Equipment statt Studio-Geräten.</li>
           <li>Level-Varianten stammen aus dem freigegebenen Übungskatalog statt aus erfundenen Übungen.</li>
           <li>Phasen und einzelne Übungen können separat neu geplant bzw. leichter/schwerer/materialärmer ersetzt werden.</li>
