@@ -1,0 +1,93 @@
+import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
+import { runOutdoorVariantEnrichmentAction } from "../actions";
+
+export const dynamic = "force-dynamic";
+
+interface PageProps {
+  readonly searchParams: Promise<{
+    scanned?: string;
+    enriched?: string;
+    existing?: string;
+    unmappable?: string;
+    missingDetails?: string;
+    error?: string;
+  }>;
+}
+
+export default async function OutdoorVariantAdminPage({ searchParams }: PageProps) {
+  const result = await searchParams;
+  const hasResult = result.scanned != null;
+
+  return (
+    <AppShell
+      title="Outdoor-Varianten prüfen"
+      subtitle="Prüft importierte Fitnessstudio-Übungen auf portable Outdoor-Alternativen und hinterlegt strukturierte Ersatz-Equipment-Varianten."
+      actions={(
+        <div className="flex flex-wrap gap-2">
+          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/admin">
+            Administration
+          </Link>
+          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/exercises">
+            Übungen
+          </Link>
+        </div>
+      )}
+    >
+      <div className="space-y-6">
+        {result.error ? (
+          <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">
+            Der Outdoor-Varianten-Task konnte nicht abgeschlossen werden. Es wurden keine unvollständigen Varianten übernommen.
+          </div>
+        ) : null}
+
+        {hasResult ? (
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+            <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Letzter Lauf</div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              <Metric label="Geprüft" value={result.scanned ?? "0"} />
+              <Metric label="Neu ergänzt" value={result.enriched ?? "0"} />
+              <Metric label="Schon vorhanden" value={result.existing ?? "0"} />
+              <Metric label="Nicht abbildbar" value={result.unmappable ?? "0"} />
+              <Metric label="Detaildaten fehlen" value={result.missingDetails ?? "0"} />
+            </div>
+          </section>
+        ) : null}
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+          <div className="max-w-4xl">
+            <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität · Import</div>
+            <h2 className="mt-1 text-xl font-black">Gym-Übungen für Outdoor-Training anreichern</h2>
+            <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+              Der Task betrachtet nur importierte bzw. aus Datensätzen stammende aktive Übungen. Portable Geräte bleiben erhalten. Studio-gebundene Geräte wie Cable, Machine, Dumbbell, Barbell oder Bench werden nur dann ersetzt, wenn OCRCraft eine bekannte portable Alternative im Equipment-Katalog besitzt.
+            </p>
+          </div>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-3">
+            <Info title="1. Prüfen" text="Ermittelt Studio-Abhängigkeiten anhand der strukturierten Equipment-Zuordnung – nicht anhand des Übungsnamens." />
+            <Info title="2. Ersetzen" text="Verwendet konservative Zuordnungen wie Cable → Resistance Band, Bench → Box und Barbell/Dumbbell → Sandbag/Kettlebell/Band, sofern vorhanden." />
+            <Info title="3. Planbar machen" text="Speichert eigene Outdoor-Equipment-Anforderungen und eine DE/EN-Variantenbeschreibung. Der Outdoor-Training-Builder verwendet danach diese Ersatzgeräte." />
+          </div>
+
+          <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[var(--muted)]">
+            Eine Übung wird nur als outdoor-geeignet markiert, wenn alle erkannten Studio-Abhängigkeiten vollständig ersetzt werden können. Nicht abbildbare Übungen bleiben unverändert und müssen später manuell geprüft werden.
+          </div>
+
+          <form action={runOutdoorVariantEnrichmentAction} className="mt-5 flex justify-end">
+            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
+              Importierte Übungen jetzt prüfen
+            </button>
+          </form>
+        </section>
+      </div>
+    </AppShell>
+  );
+}
+
+function Metric({ label, value }: { readonly label: string; readonly value: string }) {
+  return <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4"><div className="text-xs font-bold text-[var(--muted)]">{label}</div><div className="mt-1 text-2xl font-black">{value}</div></div>;
+}
+
+function Info({ title, text }: { readonly title: string; readonly text: string }) {
+  return <article className="rounded-xl border border-[var(--border)] p-4"><h3 className="font-black">{title}</h3><p className="mt-2 text-sm leading-6 text-[var(--muted)]">{text}</p></article>;
+}
