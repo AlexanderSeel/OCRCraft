@@ -3,10 +3,13 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ExerciseFacetForm } from "@/components/exercises/exercise-facet-form";
 import { ExerciseForm } from "@/components/exercises/exercise-form";
+import { ExerciseGuidanceListEditor } from "@/components/exercises/exercise-guidance-list-editor";
 import { getExerciseById } from "@/server/exercises/exercise-repository";
 import { getExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
+import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 import { setExerciseArchivedAction, updateExerciseAction } from "../../actions";
 import { updateExerciseFacetsAction } from "../facet-actions";
+import { updateExerciseGuidanceListsAction } from "../guidance-actions";
 
 interface PageProps {
   readonly params: Promise<{ id: string }>;
@@ -15,6 +18,8 @@ interface PageProps {
     restored?: string;
     facetsSaved?: string;
     facetError?: string;
+    guidanceSaved?: string;
+    guidanceError?: string;
   }>;
 }
 
@@ -24,9 +29,16 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const exercise = await getExerciseById(id);
   if (!exercise) notFound();
 
-  const facets = await getExerciseFacetEditorData(exercise.id);
+  const [facets, guidanceDeMap, guidanceEnMap] = await Promise.all([
+    getExerciseFacetEditorData(exercise.id),
+    getTrainingExerciseGuidanceMap([exercise.id], "de"),
+    getTrainingExerciseGuidanceMap([exercise.id], "en"),
+  ]);
+  const guidanceDe = guidanceDeMap[exercise.id];
+  const guidanceEn = guidanceEnMap[exercise.id];
   const updateAction = updateExerciseAction.bind(null, exercise.id);
   const updateFacetsAction = updateExerciseFacetsAction.bind(null, exercise.id);
+  const updateGuidanceAction = updateExerciseGuidanceListsAction.bind(null, exercise.id);
   const toggleArchivedAction = setExerciseArchivedAction.bind(null, exercise.id, !exercise.archived);
 
   return (
@@ -34,24 +46,62 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
       title={exercise.nameDe}
       subtitle={exercise.seedKey ? `Initialkatalog · ${exercise.seedKey}` : "Vereinsübung"}
       actions={(
-        <Link
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold"
-          href="/exercises"
-        >
-          Zur Bibliothek
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold"
+            href={`/exercises/${exercise.id}`}
+          >
+            Detailansicht
+          </Link>
+          <Link
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold"
+            href="/exercises"
+          >
+            Zur Bibliothek
+          </Link>
+        </div>
       )}
     >
       <div className="space-y-5">
         {status.saved ? <Notice>Änderungen gespeichert. Der Suchindex wurde als „dirty“ markiert.</Notice> : null}
         {status.restored ? <Notice>Übung wiederhergestellt.</Notice> : null}
         {status.facetsSaved ? <Notice>Körperregionen, Bewegungsmuster, Tags und Equipment wurden gespeichert.</Notice> : null}
+        {status.guidanceSaved ? <Notice>{status.guidanceSaved === "en" ? "Englische" : "Deutsche"} Ausführung, Coaching-Cues und Fehlerkorrekturen wurden gespeichert.</Notice> : null}
         {status.facetError === "invalid" ? <ErrorNotice>Die Facettenauswahl enthält ungültige Werte.</ErrorNotice> : null}
         {status.facetError === "save" ? <ErrorNotice>Die Facetten konnten nicht gespeichert werden.</ErrorNotice> : null}
+        {status.guidanceError === "invalid" ? <ErrorNotice>Die Coaching-Inhalte enthalten leere, unvollständige oder zu lange Einträge.</ErrorNotice> : null}
+        {status.guidanceError === "save" ? <ErrorNotice>Die Coaching-Inhalte konnten nicht gespeichert werden.</ErrorNotice> : null}
 
         <ExerciseForm action={updateAction} exercise={exercise} submitLabel="Änderungen speichern" />
 
         <ExerciseFacetForm action={updateFacetsAction} data={facets} disabled={exercise.archived} />
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <div className="mb-5">
+            <h2 className="text-lg font-black">Strukturierte Ausführung & Coaching</h2>
+            <p className="mt-1 max-w-4xl text-sm leading-6 text-[var(--muted)]">
+              Pflege die Reihenfolge der Ausführungsschritte, kurze Trainer-Cues sowie typische Fehler mit konkreter Korrektur getrennt für Deutsch und Englisch. Diese Inhalte werden in der Übungsdetailansicht und direkt in Trainings verwendet.
+            </p>
+          </div>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <ExerciseGuidanceListEditor
+              action={updateGuidanceAction}
+              coachingCues={guidanceDe?.coachingCues ?? []}
+              commonMistakes={guidanceDe?.commonMistakes ?? []}
+              disabled={exercise.archived}
+              executionSteps={guidanceDe?.executionSteps ?? []}
+              locale="de"
+            />
+            <ExerciseGuidanceListEditor
+              action={updateGuidanceAction}
+              coachingCues={guidanceEn?.coachingCues ?? []}
+              commonMistakes={guidanceEn?.commonMistakes ?? []}
+              disabled={exercise.archived}
+              executionSteps={guidanceEn?.executionSteps ?? []}
+              locale="en"
+            />
+          </div>
+        </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
