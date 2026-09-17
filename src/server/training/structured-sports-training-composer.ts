@@ -28,6 +28,7 @@ import { composeSportsTrainingDraft } from "./sports-training-composer";
 export interface StructuredSportsTrainingInput extends TrainingDraftInput {
   readonly warmupExerciseCount: number;
   readonly mainExerciseCount: number;
+  readonly mainPartExerciseCounts?: readonly number[];
   readonly cooldownExerciseCount: number;
   readonly mainPartCount: number;
   readonly organizationMode: "solo" | "team";
@@ -83,9 +84,10 @@ export function composeStructuredSportsTrainingDraft(
 
   const mainParts: TrainingDraftExerciseCandidate[][] = [];
   for (let part = 0; part < input.mainPartCount; part += 1) {
+    const requestedCount = mainPartExerciseCount(input, part);
     const selected = selectCandidates(
       "main",
-      input.mainExerciseCount,
+      requestedCount,
       input,
       candidates,
       used,
@@ -162,6 +164,10 @@ export function composeStructuredSportsTrainingDraft(
     validationIssues: validateTrainingSession(session, undefined, input.availableEquipment),
     warnings,
   };
+}
+
+function mainPartExerciseCount(input: StructuredSportsTrainingInput, partIndex: number): number {
+  return input.mainPartExerciseCounts?.[partIndex] ?? input.mainExerciseCount;
 }
 
 function selectCandidates(
@@ -369,8 +375,9 @@ function appendAvailabilityWarnings(
     warnings.push(`Aufwärmen: nur ${warmup.length} von ${input.warmupExerciseCount} gewünschten Übungen verfügbar.`);
   }
   mainParts.forEach((part, index) => {
-    if (part.length < input.mainExerciseCount) {
-      warnings.push(`Hauptteil ${index + 1}: nur ${part.length} von ${input.mainExerciseCount} gewünschten unterschiedlichen Übungen verfügbar.`);
+    const requestedCount = mainPartExerciseCount(input, index);
+    if (part.length < requestedCount) {
+      warnings.push(`Hauptteil ${index + 1}: nur ${part.length} von ${requestedCount} gewünschten unterschiedlichen Übungen verfügbar.`);
     }
   });
   if (cooldown.length < input.cooldownExerciseCount) {
