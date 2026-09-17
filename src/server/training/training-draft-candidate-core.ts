@@ -77,7 +77,8 @@ export async function runTrainingDraftCandidateQuery(
           SELECT string_agg(s.instruction, ' ' ORDER BY s.step_order)
           FROM exercise_execution_steps s
           WHERE s.exercise_id=e.id AND s.locale=$locale
-        ), '')
+        ), ''),
+        CASE WHEN $location='outdoor' THEN COALESCE(d.outdoor_variant, '') ELSE '' END
       )),
       trim(concat_ws(' ',
         COALESCE(t.summary, ''),
@@ -99,6 +100,7 @@ export async function runTrainingDraftCandidateQuery(
         COALESCE(d.child_youth_variant, ''),
         COALESCE(d.prerequisites, ''),
         COALESCE(d.fallback_exercise, ''),
+        CASE WHEN $location='outdoor' THEN COALESCE(d.outdoor_variant, '') ELSE '' END,
         COALESCE((
           SELECT string_agg(s.instruction, ' ' ORDER BY s.step_order)
           FROM exercise_execution_steps s
@@ -150,6 +152,7 @@ export async function runTrainingDraftCandidateQuery(
   const rows = reader.getRows();
   if (rows.length === 0) return [];
 
+  const exerciseIds = rows.map((row) => String(row[0])).join(",");
   const equipmentReader = await connection.runAndReadAll(
     `
     SELECT ee.exercise_id::VARCHAR,eq.id::VARCHAR,
@@ -160,7 +163,7 @@ export async function runTrainingDraftCandidateQuery(
     WHERE list_contains(string_split($exerciseIds, ','), ee.exercise_id::VARCHAR)
     ORDER BY ee.exercise_id::VARCHAR,eq.id::VARCHAR
     `,
-    { locale, exerciseIds: rows.map((row) => String(row[0])).join(",") },
+    { locale, exerciseIds },
   );
   const equipmentByExercise = new Map<string, ExerciseEquipmentRequirement[]>();
   for (const row of equipmentReader.getRows()) {
@@ -174,31 +177,67 @@ export async function runTrainingDraftCandidateQuery(
     equipmentByExercise.set(exerciseId, requirements);
   }
 
-  return rows.map((row) => ({
-    id: String(row[0]),
-    name: String(row[1]),
-    category: String(row[2]) as ExerciseCategory,
-    defaultPhase: row[3] == null ? null : String(row[3]) as TrainingPhaseKind,
-    riskLevel: String(row[4]) as RiskLevel,
-    minAge: row[5] == null ? null : Number(row[5]),
-    exerciseType: row[6] == null ? undefined : String(row[6]) as ExerciseType,
-    difficulty: row[7] == null ? undefined : String(row[7]) as ExerciseDifficulty,
-    impactLevel: row[8] == null ? undefined : String(row[8]) as ExerciseImpactLevel,
-    coordinationComplexity: row[9] == null ? undefined : String(row[9]) as ExerciseCoordinationComplexity,
-    trainingGoals: String(row[10] ?? "").split(" | ").filter(Boolean) as ExerciseTrainingGoal[],
-    bodyRegions: String(row[11] ?? "").split(" | ").filter(Boolean),
-    equipment: String(row[12] ?? "").split(" | ").filter(Boolean),
-    equipmentRequirements: equipmentByExercise.get(String(row[0])) ?? [],
-    tags: String(row[13] ?? "").split(" | ").filter(Boolean),
-    movementPatterns: String(row[14] ?? "").split(" | ").filter(Boolean),
-    defaultDurationSeconds: row[15] == null ? null : Number(row[15]),
-    instructions: row[16] == null ? undefined : String(row[16]),
-    planningText: row[17] == null ? undefined : String(row[17]),
-    level1: row[18] == null ? undefined : String(row[18]),
-    level2: row[19] == null ? undefined : String(row[19]),
-    level3: row[20] == null ? undefined : String(row[20]),
-    stationCapacity: Number(row[21]),
-    setupSeconds: row[22] == null ? null : Number(row[22]),
-    transitionSeconds: row[23] == null ? null : Number(row[23]),
-  }));
+  // A reviewed/enriched outdoor variant has its own equipment requirements.
+  // For outdoor planning those requirements replace the original gym equipment;
+  // for indoor/mixed planning the canonical exercise equipment stays unchanged.
+  if (location === "outdoor") {
+    const outdoorEquipmentReader = await connection.runAndReadAll(
+      `
+      SELECT ove.exercise_id::VARCHAR,eq.id::VARCHAR,
+        CASE WHEN $locale='de' THEN eq.name_de ELSE COALESCE(eq.name_en,eq.name_de) END,
+        ove.quantity_required
+      FROM exercise_outdoor_variant_equipment ove
+      JOIN equipment eq ON eq.id=ove.equipment_id
+      WHERE list_contains(string_split($exerciseIds, ','), ove.exercise_id::VARCHAR)
+      ORDER BY ove.exercise_id::VARCHAR,eq.id::VARCHAR
+      `,
+      { locale, exerciseIds },
+    );
+    const outdoorByExercise = new Map<string, ExerciseEquipmentRequirement[]>();
+    for (const row of outdoorEquipmentReader.getRows()) {
+      const exerciseId = String(row[0]);
+      const requirements = outdoorByExercise.get(exerciseId) ?? [];
+      requirements.push({
+        equipmentId: String(row[1]),
+        name: String(row[2]),
+        quantityPerStation: Number(row[3]),
+      });
+      outdoorByExercise.set(exerciseId, requirements);
+    }
+    for (const [exerciseId, requirements] of outdoorByExercise) {
+      if (requirements.length > 0) equipmentByExercise.set(exerciseId, requirements);
+    }
+  }
+
+  return rows.map((row) => {
+    const id = String(row[0]);
+    const equipmentRequirements = equipmentByExercise.get(id) ?? [];
+    return {
+      id,
+      name: String(row[1]),
+      category: String(row[2]) as ExerciseCategory,
+      defaultPhase: row[3] == null ? null : String(row[3]) as TrainingPhaseKind,
+      riskLevel: String(row[4]) as RiskLevel,
+      minAge: row[5] == null ? null : Number(row[5]),
+      exerciseType: row[6] == null ? undefined : String(row[6]) as ExerciseType,
+      difficulty: row[7] == null ? undefined : String(row[7]) as ExerciseDifficulty,
+      impactLevel: row[8] == null ? undefined : String(row[8]) as ExerciseImpactLevel,
+      coordinationComplexity: row[9] == null ? undefined : String(row[9]) as ExerciseCoordinationComplexity,
+      trainingGoals: String(row[10] ?? "").split(" | ").filter(Boolean) as ExerciseTrainingGoal[],
+      bodyRegions: String(row[11] ?? "").split(" | ").filter(Boolean),
+      equipment: equipmentRequirements.map((requirement) => requirement.name),
+      equipmentRequirements,
+      tags: String(row[13] ?? "").split(" | ").filter(Boolean),
+      movementPatterns: String(row[14] ?? "").split(" | ").filter(Boolean),
+      defaultDurationSeconds: row[15] == null ? null : Number(row[15]),
+      instructions: row[16] == null ? undefined : String(row[16]),
+      planningText: row[17] == null ? undefined : String(row[17]),
+      level1: row[18] == null ? undefined : String(row[18]),
+      level2: row[19] == null ? undefined : String(row[19]),
+      level3: row[20] == null ? undefined : String(row[20]),
+      stationCapacity: Number(row[21]),
+      setupSeconds: row[22] == null ? null : Number(row[22]),
+      transitionSeconds: row[23] == null ? null : Number(row[23]),
+    };
+  });
 }
