@@ -101,6 +101,7 @@ export function composeReviewedAiTrainingDraft(
       throw new Error(`Geprüfter AI-Entwurf hat für ${phase.kind} ${actual} statt ${budgets[phase.kind]} Minuten.`);
     }
   }
+  assertReviewedMainPartStructure(input);
   return buildCanonicalAiDraft(
     input.request,
     approvedExercises,
@@ -108,6 +109,10 @@ export function composeReviewedAiTrainingDraft(
     input.title || "AI Trainingsentwurf",
     ["Geprüfter AI-Vorschlag wurde vor dem Speichern erneut gegen den aktuellen OCRCraft-Katalog validiert."],
   );
+}
+
+function requestedMainPartCount(request: TrainingDraftRequest, zeroBasedIndex: number): number {
+  return request.mainPartExerciseCounts[zeroBasedIndex] ?? request.mainExerciseCount;
 }
 
 function assertRequestedStructure(plan: AiTrainingPlan, request: TrainingDraftRequest): void {
@@ -125,15 +130,18 @@ function assertRequestedStructure(plan: AiTrainingPlan, request: TrainingDraftRe
     throw new Error(`AI-Vorschlag enthält ${cooldown.items.length} statt ${request.cooldownExerciseCount} Cooldown-Übungen.`);
   }
 
-  const expectedMainItems = request.mainPartCount * request.mainExerciseCount;
+  const expectedMainItems = Array.from({ length: request.mainPartCount }, (_, index) =>
+    requestedMainPartCount(request, index),
+  ).reduce((sum, count) => sum + count, 0);
   if (main.items.length !== expectedMainItems) {
     throw new Error(`AI-Vorschlag enthält ${main.items.length} statt ${expectedMainItems} Übungen im Hauptteil.`);
   }
 
   for (let part = 1; part <= request.mainPartCount; part += 1) {
+    const expectedCount = requestedMainPartCount(request, part - 1);
     const blockCount = main.items.filter((item) => (item.mainPart ?? 1) === part).length;
-    if (blockCount !== request.mainExerciseCount) {
-      throw new Error(`AI-Vorschlag enthält in Hauptteil ${part} ${blockCount} statt ${request.mainExerciseCount} Übungen.`);
+    if (blockCount !== expectedCount) {
+      throw new Error(`AI-Vorschlag enthält in Hauptteil ${part} ${blockCount} statt ${expectedCount} Übungen.`);
     }
   }
 
@@ -142,6 +150,19 @@ function assertRequestedStructure(plan: AiTrainingPlan, request: TrainingDraftRe
   }
   if (request.mainPartCount > 1 && main.items.some((item) => item.mainPart == null)) {
     throw new Error("AI-Vorschlag muss bei mehreren Hauptteilen jede Hauptteil-Übung eindeutig einem Block zuordnen.");
+  }
+}
+
+function assertReviewedMainPartStructure(input: ReviewedAiTrainingPersistence): void {
+  const main = input.reviewed.phases.find((phase) => phase.kind === "main");
+  if (!main) throw new Error("Geprüfter AI-Entwurf enthält keinen Hauptteil.");
+
+  for (let part = 1; part <= input.request.mainPartCount; part += 1) {
+    const expectedCount = requestedMainPartCount(input.request, part - 1);
+    const actualCount = main.items.filter((item) => (item.mainPartIndex ?? 1) === part).length;
+    if (actualCount !== expectedCount) {
+      throw new Error(`Geprüfter AI-Entwurf enthält in Hauptteil ${part} ${actualCount} statt ${expectedCount} Übungen.`);
+    }
   }
 }
 
