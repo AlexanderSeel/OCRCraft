@@ -29,7 +29,8 @@ export async function combineTrainingSessionsCore(
 
   const sessionReader = await connection.runAndReadAll(
     `
-    SELECT id::VARCHAR, title, group_id::VARCHAR, locale
+    SELECT id::VARCHAR, title, group_id::VARCHAR, locale,
+      COALESCE(organization_mode,'solo'), team_size
     FROM training_sessions
     WHERE id IN ($firstSessionId::UUID, $secondSessionId::UUID)
     `,
@@ -48,11 +49,18 @@ export async function combineTrainingSessionsCore(
   const groupId = firstGroupId === secondGroupId ? firstGroupId : null;
   const locale = String(first[3]);
   const title = combinedTitle(String(first[1]), String(second[1]), input.title);
+  const firstOrganization = String(first[4] ?? "solo");
+  const secondOrganization = String(second[4] ?? "solo");
+  const firstTeamSize = first[5] == null ? null : Number(first[5]);
+  const secondTeamSize = second[5] == null ? null : Number(second[5]);
+  const organizationMode = firstOrganization === secondOrganization ? firstOrganization : "solo";
+  const teamSize = organizationMode === "team" && firstTeamSize === secondTeamSize ? firstTeamSize : null;
 
   await connection.run(
     `
     INSERT INTO training_sessions (
-      id, title, group_id, status, source, total_duration_minutes, locale, notes
+      id, title, group_id, status, source, total_duration_minutes, locale, notes,
+      organization_mode, team_size
     ) VALUES (
       $targetSessionId::UUID,
       $title,
@@ -61,7 +69,9 @@ export async function combineTrainingSessionsCore(
       'combined',
       0,
       $locale,
-      $notes
+      $notes,
+      $organizationMode,
+      $teamSize
     )
     `,
     {
@@ -70,6 +80,8 @@ export async function combineTrainingSessionsCore(
       groupId,
       locale,
       notes: `Kombiniert aus „${String(first[1])}“ und „${String(second[1])}“.`,
+      organizationMode,
+      teamSize,
     },
   );
 
@@ -116,13 +128,16 @@ export async function combineTrainingSessionsCore(
         i.duration_minutes,
         i.instructions,
         i.level_label,
-        i.sort_order
+        i.sort_order,
+        i.main_part_index,
+        i.main_part_title
       FROM training_phases p
       JOIN training_items i ON i.training_phase_id=p.id
       WHERE p.kind=$kind
         AND p.training_session_id IN ($firstSessionId::UUID, $secondSessionId::UUID)
       ORDER BY
         CASE WHEN p.training_session_id=$firstSessionId::UUID THEN 0 ELSE 1 END,
+        COALESCE(i.main_part_index,1),
         i.sort_order,
         i.id
       `,
@@ -133,15 +148,33 @@ export async function combineTrainingSessionsCore(
       },
     );
 
-    for (const [sortOrder, row] of itemReader.getRows().entries()) {
+    const rows = itemReader.getRows();
+    const firstMainMax = kind === "main"
+      ? Math.max(0, ...rows
+          .filter((row) => String(row[0]) === input.firstSessionId)
+          .map((row) => Number(row[8] ?? 1)))
+      : 0;
+
+    for (const [sortOrder, row] of rows.entries()) {
+      const sourceMainPartIndex = kind === "main" ? Number(row[8] ?? 1) : null;
+      const fromSecond = String(row[0]) === input.secondSessionId;
+      const mainPartIndex = sourceMainPartIndex == null
+        ? null
+        : sourceMainPartIndex + (fromSecond ? firstMainMax : 0);
+      const mainPartTitle = mainPartIndex == null
+        ? null
+        : `Hauptteil ${mainPartIndex}`;
+
       await connection.run(
         `
         INSERT INTO training_items (
           id, training_phase_id, exercise_id, title_override, format,
-          duration_minutes, instructions, level_label, sort_order
+          duration_minutes, instructions, level_label, sort_order,
+          main_part_index, main_part_title
         ) VALUES (
           $id::UUID, $phaseId::UUID, $exerciseId::UUID, $titleOverride, $format,
-          $duration, $instructions, $levelLabel, $sortOrder
+          $duration, $instructions, $levelLabel, $sortOrder,
+          $mainPartIndex, $mainPartTitle
         )
         `,
         {
@@ -154,6 +187,8 @@ export async function combineTrainingSessionsCore(
           instructions: row[5] == null ? null : String(row[5]),
           levelLabel: row[6] == null ? null : String(row[6]),
           sortOrder,
+          mainPartIndex,
+          mainPartTitle,
         },
       );
     }

@@ -22,6 +22,8 @@ async function createFixture() {
       total_duration_minutes INTEGER NOT NULL,
       locale VARCHAR NOT NULL,
       notes VARCHAR,
+      organization_mode VARCHAR DEFAULT 'solo',
+      team_size INTEGER,
       created_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
       updated_at TIMESTAMP NOT NULL DEFAULT current_timestamp
     );
@@ -42,7 +44,9 @@ async function createFixture() {
       duration_minutes INTEGER NOT NULL,
       instructions VARCHAR,
       level_label VARCHAR,
-      sort_order INTEGER NOT NULL
+      sort_order INTEGER NOT NULL,
+      main_part_index INTEGER,
+      main_part_title VARCHAR
     );
 
     INSERT INTO training_sessions
@@ -58,7 +62,9 @@ async function createFixture() {
       ('dddddddd-dddd-4ddd-8ddd-dddddddddddd','${SESSION_B}','main','Hauptteil B',1),
       ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','${SESSION_B}','cooldown','Cooldown B',2);
 
-    INSERT INTO training_items VALUES
+    INSERT INTO training_items
+      (id,training_phase_id,exercise_id,title_override,format,duration_minutes,instructions,level_label,sort_order)
+    VALUES
       ('00000000-0000-4000-8000-000000000001','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','${EXERCISE_A}',NULL,'free',5,'A warmup',NULL,0),
       ('00000000-0000-4000-8000-000000000002','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','${EXERCISE_A}',NULL,'technique',10,'A main','Level 2',0),
       ('00000000-0000-4000-8000-000000000003','cccccccc-cccc-4ccc-8ccc-cccccccccccc','${EXERCISE_B}',NULL,'free',5,'B warmup',NULL,0),
