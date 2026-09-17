@@ -1,13 +1,24 @@
 import "server-only";
 
 import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
+import { SPORTS_PLANNING_PRINCIPLES } from "./sports-planning-principles";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 
 type CandidateWithHistory = TrainingDraftExerciseCandidate & { readonly recentUseCount?: number };
 
+export interface AiTrainingSourceSession {
+  readonly id: string;
+  readonly title: string;
+  readonly phases: readonly {
+    readonly kind: "warmup" | "main" | "cooldown";
+    readonly exerciseIds: readonly string[];
+  }[];
+}
+
 export interface AiTrainingGenerationContext {
   readonly request: TrainingDraftRequest;
   readonly approvedExercises: readonly TrainingDraftExerciseCandidate[];
+  readonly sourceSessions?: readonly AiTrainingSourceSession[];
 }
 
 export interface AiTrainingProvider {
@@ -56,9 +67,10 @@ export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
               "Return JSON only. Do not invent exercises, equipment, safety facts or medical advice.",
               "Create exactly one warmup, one main and one cooldown phase.",
               "Respect audience, ages, goals, body focus/avoidance, requested exercise types, formats, location, intensity and equipment.",
-              "Prefer movement-pattern and body-region variety and avoid unnecessary consecutive high-impact loading.",
+              "If sourceSessions are supplied, use them as inspiration/context for recomposition, not as permission to bypass current constraints or copy every item.",
               "When two exercises are similarly suitable, prefer the one with the lower recentUseCount so recent sessions are not repeated unnecessarily.",
               "Preferred exercise IDs may intentionally override that variety preference.",
+              "Follow the supplied sportsPlanningPrinciples; the same principles are checked deterministically after generation.",
               "The server will assign exact phase durations and run deterministic safety/logistics validation after your proposal.",
             ].join(" "),
           },
@@ -118,6 +130,8 @@ function buildPromptPayload(context: AiTrainingGenerationContext) {
         },
       ],
     },
+    sportsPlanningPrinciples: SPORTS_PLANNING_PRINCIPLES,
+    sourceSessions: context.sourceSessions ?? [],
     request: {
       audience: context.request.audience,
       minAge: context.request.minAge,

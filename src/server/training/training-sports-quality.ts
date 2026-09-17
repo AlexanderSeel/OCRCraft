@@ -154,6 +154,12 @@ export function assessTrainingSportsQuality(
       warnings.push(`Sportqualitätscheck: komplexe Koordinationsaufgabe direkt nach High-Impact-Belastung (${previous.name} → ${current.name}).`);
       score -= 5;
     }
+
+    const fatigueWindow = main.slice(Math.max(0, index - 2), index);
+    if (isHighSkill(current) && fatigueWindow.length >= 2 && fatigueWindow.every(isFatigueHeavy)) {
+      warnings.push(`Sportqualitätscheck: technisch/koordinativ anspruchsvolle Übung erst nach zwei ermüdenden Belastungen (${fatigueWindow.map((item) => item.name).join(" → ")} → ${current.name}).`);
+      score -= 7;
+    }
   }
 
   for (let index = 2; index < main.length; index += 1) {
@@ -161,6 +167,11 @@ export function assessTrainingSportsQuality(
     if (sharesRepeatedMacroLoad(window)) {
       warnings.push(`Sportqualitätscheck: drei aufeinanderfolgende Hauptteil-Übungen belasten denselben Körper-Makrobereich (${window.map((item) => item.name).join(" → ")}).`);
       score -= 5;
+    }
+    const sharedLocalRegions = sharedLocalBodyRegions(window);
+    if (sharedLocalRegions.length > 0) {
+      warnings.push(`Sportqualitätscheck: drei aufeinanderfolgende Hauptteil-Übungen belasten dieselbe lokale Region (${sharedLocalRegions.join(", ")}: ${window.map((item) => item.name).join(" → ")}).`);
+      score -= 6;
     }
   }
 
@@ -199,6 +210,30 @@ function recoversMainDemand(
   if (candidate.exerciseType === "recovery" || candidate.exerciseType === "mobility") return true;
   if (candidate.bodyRegions.includes("full-body")) return true;
   return main.some((item) => candidate.bodyRegions.some((region) => bodyRegionsOverlap([region], item.bodyRegions)));
+}
+
+function isHighSkill(candidate: TrainingDraftExerciseCandidate): boolean {
+  return candidate.exerciseType === "skill"
+    || candidate.exerciseType === "obstacle"
+    || candidate.coordinationComplexity === "complex";
+}
+
+function isFatigueHeavy(candidate: TrainingDraftExerciseCandidate): boolean {
+  return candidate.impactLevel === "high"
+    || candidate.exerciseType === "strength"
+    || candidate.exerciseType === "endurance";
+}
+
+function sharedLocalBodyRegions(candidates: readonly TrainingDraftExerciseCandidate[]): readonly string[] {
+  if (candidates.length < 3) return [];
+  const regionSets = candidates.map((candidate) => new Set(
+    candidate.bodyRegions
+      .map((region) => normalizeBodyRegionId(region))
+      .filter((region): region is NonNullable<typeof region> => region != null)
+      .map(bodyRegionParent)
+      .filter((region) => region !== "full-body"),
+  ));
+  return [...regionSets[0]].filter((region) => regionSets.slice(1).every((regions) => regions.has(region)));
 }
 
 function sharesRepeatedMacroLoad(candidates: readonly TrainingDraftExerciseCandidate[]): boolean {

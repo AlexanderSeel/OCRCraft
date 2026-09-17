@@ -3,6 +3,7 @@ import "server-only";
 import type { TrainingDraft, TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import { composeAiTrainingDraft, composeReviewedAiTrainingDraft } from "./ai-training-composer";
 import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
+import { loadAiTrainingSourceSessions } from "./ai-training-source-context";
 import { composeSportsTrainingDraft } from "./sports-training-composer";
 import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
@@ -43,14 +44,26 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
         "AI Training Builder ist nicht konfiguriert. Nutze den lokalen Sportalgorithmus oder setze OCRCRAFT_AI_BASE_URL und OCRCRAFT_AI_MODEL.",
       );
     }
-    const proposal = await provider.generateTrainingPlan({ request, approvedExercises: candidates });
+    const sourceSessions = await loadAiTrainingSourceSessions(request.sourceTrainingIds, candidates);
+    const proposal = await provider.generateTrainingPlan({
+      request,
+      approvedExercises: candidates,
+      sourceSessions,
+    });
     const draft = composeAiTrainingDraft({
       proposal,
       request,
       approvedExercises: candidates,
       providerId: provider.id,
     });
-    return applySportsQualityAudit(request, draft, candidates);
+    const recompositionWarnings = sourceSessions.length > 0
+      ? [`AI-Rekomposition verwendet ${sourceSessions.length} ausgewählte Quelltrainings als Kontext; aktuelle Trainer-Randbedingungen und der freigegebene Übungspool bleiben maßgeblich.`]
+      : [];
+    return applySportsQualityAudit(
+      request,
+      { ...draft, warnings: [...draft.warnings, ...recompositionWarnings] },
+      candidates,
+    );
   }
 
   const draft = composeSportsTrainingDraft(
