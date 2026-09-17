@@ -53,7 +53,10 @@ afterEach(() => {
 
 describe("OpenAI-compatible training provider", () => {
   it("sends multiple previous sessions as bounded recomposition context", async () => {
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+    const fetchMock = vi.fn(async (
+      _input: RequestInfo | URL,
+      _init?: RequestInit,
+    ): Promise<Response> => new Response(JSON.stringify({
       choices: [{
         message: {
           content: JSON.stringify({
