@@ -12,11 +12,12 @@ const request = {
   preferredExerciseIds: [],
 };
 
-describe("training draft request equipment, obstacles and location", () => {
-  it("defaults omitted inventory and location safely", () => {
+describe("training draft request equipment, obstacles, groups and location", () => {
+  it("defaults omitted inventory, rotation groups and location safely", () => {
     const parsed = trainingDraftRequestSchema.parse(request);
     expect(parsed.availableEquipment).toEqual([]);
     expect(parsed.availableObstacleExerciseIds).toBeUndefined();
+    expect(parsed.groupSplitCount).toBeUndefined();
     expect(parsed.location).toBe("mixed");
   });
 
@@ -24,6 +25,27 @@ describe("training draft request equipment, obstacles and location", () => {
     expect(trainingDraftRequestSchema.safeParse({ ...request, location: "indoor" }).success).toBe(true);
     expect(trainingDraftRequestSchema.safeParse({ ...request, location: "outdoor" }).success).toBe(true);
     expect(trainingDraftRequestSchema.safeParse({ ...request, location: "parking-lot" }).success).toBe(false);
+  });
+
+  it("accepts solo rotation groups and rejects impossible or team-mode splits", () => {
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      organizationMode: "solo",
+      groupSplitCount: 4,
+    }).success).toBe(true);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      organizationMode: "solo",
+      groupSplitCount: 17,
+    }).success).toBe(false);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      organizationMode: "team",
+      teamSize: 4,
+      groupSplitCount: 4,
+    }).success).toBe(false);
   });
 
   it("accepts explicit zero stock and rejects duplicate or invalid stock entries", () => {
