@@ -9,6 +9,7 @@ import {
   type TrainingEquipmentAvailability,
   type TrainingFormat,
   type TrainingLocation,
+  type TrainingPhaseKind,
 } from "../../domain/training/model";
 import type { DraftIntensity, TrainingDraft } from "../../domain/training/draft";
 
@@ -179,6 +180,45 @@ export async function requestTrainingDraft(
       await readErrorMessage(
         response,
         `Trainingsentwurf konnte nicht erstellt werden (${response.status}).`,
+      ),
+    );
+  }
+
+  return (await response.json()) as TrainingDraft;
+}
+
+export async function regenerateTrainingDraftPhase(
+  input: QuickCreateDraftClientInput,
+  currentDraft: TrainingDraft,
+  phase: TrainingPhaseKind,
+): Promise<TrainingDraft> {
+  const response = await fetch("/api/training/draft/regenerate-phase", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      request: normalizeTrainingDraftRequest(input),
+      phase,
+      current: {
+        title: currentDraft.session.title,
+        phases: currentDraft.session.phases.map((currentPhase) => ({
+          kind: currentPhase.kind,
+          items: currentPhase.items.map((item) => ({
+            exerciseId: item.exercise.id,
+            durationMinutes: item.durationMinutes,
+            format: item.format,
+            instructions: item.instructions,
+            levelLabel: item.levelLabel,
+          })),
+        })),
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await readErrorMessage(
+        response,
+        `Phase konnte nicht neu erstellt werden (${response.status}).`,
       ),
     );
   }
