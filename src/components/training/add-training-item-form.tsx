@@ -76,6 +76,35 @@ export function AddTrainingItemForm({ sessionId, phaseId }: AddTrainingItemFormP
           </label>
         </div>
 
+        <details className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+          <summary className="cursor-pointer text-sm font-black">Hauptteil-Zuordnung</summary>
+          <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+            Wird nur ausgewertet, wenn diese Übung in der Hauptphase hinzugefügt wird. Leer lassen übernimmt den letzten vorhandenen Hauptteil bzw. Hauptteil 1.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-bold">
+              Hauptteil Nr.
+              <input
+                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+                max={12}
+                min={1}
+                name="mainPartIndex"
+                placeholder="z. B. 2"
+                type="number"
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-bold">
+              Bezeichnung
+              <input
+                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+                maxLength={120}
+                name="mainPartTitle"
+                placeholder="z. B. Hauptteil 2 · Griff & Rig"
+              />
+            </label>
+          </div>
+        </details>
+
         <label className="grid gap-2 text-sm font-bold">
           Trainingshinweis
           <textarea
