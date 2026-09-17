@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TRAINING_FORMATS, TRAINING_PHASES } from "@/domain/training/model";
+import { TRAINING_FORMATS, TRAINING_PHASES } from "../../domain/training/model";
 import { trainingDraftRequestSchema } from "./training-draft-schema";
 
 const reviewedItemSchema = z.object({
