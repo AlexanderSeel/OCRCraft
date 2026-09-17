@@ -4,7 +4,10 @@ import {
   listOutdoorVariantCandidates,
   type OutdoorVariantCandidatePreview,
 } from "@/server/exercises/outdoor-variant-enrichment-service";
-import { runOutdoorVariantEnrichmentAction } from "../actions";
+import {
+  approveOutdoorVariantCandidateAction,
+  runOutdoorVariantEnrichmentAction,
+} from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +18,7 @@ interface PageProps {
     existing?: string;
     unmappable?: string;
     missingDetails?: string;
+    candidate?: string;
     error?: string;
   }>;
 }
@@ -28,6 +32,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
   const ready = candidates.filter((candidate) => candidate.status === "ready");
   const existing = candidates.filter((candidate) => candidate.status === "existing");
   const needsReview = candidates.filter((candidate) => candidate.status === "unmappable" || candidate.status === "missing-details");
+  const candidateFeedback = outdoorCandidateFeedback(result.candidate);
 
   return (
     <AppShell
@@ -48,6 +53,12 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
         {result.error ? (
           <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">
             Der Outdoor-Varianten-Task konnte nicht abgeschlossen werden. Es wurden keine unvollständigen Varianten übernommen.
+          </div>
+        ) : null}
+
+        {candidateFeedback ? (
+          <div className={`rounded-xl border p-4 text-sm font-bold ${candidateFeedback.success ? "border-[var(--success-border)] bg-[var(--success-bg)] text-[var(--success-foreground)]" : "border-[var(--warning)] bg-[var(--warning-bg)]"}`}>
+            {candidateFeedback.message}
           </div>
         ) : null}
 
@@ -87,12 +98,12 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
           </div>
 
           <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[var(--muted)]">
-            Eine Übung wird nur als outdoor-geeignet markiert, wenn alle erkannten Studio-Abhängigkeiten vollständig ersetzt werden können. Nicht abbildbare Übungen bleiben unverändert und müssen später manuell geprüft werden. Die Liste unten ist eine reine Vorschau; erst der Task übernimmt alle Einträge mit Status „Bereit“.
+            Eine Übung wird nur als outdoor-geeignet markiert, wenn alle erkannten Studio-Abhängigkeiten vollständig ersetzt werden können. Nicht abbildbare Übungen bleiben unverändert und müssen später manuell geprüft werden. Du kannst Varianten einzeln prüfen und übernehmen oder alle aktuell sicheren Vorschläge gesammelt anwenden.
           </div>
 
           <form action={runOutdoorVariantEnrichmentAction} className="mt-5 flex justify-end">
             <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
-              {ready.length > 0 ? `${ready.length} Outdoor-Varianten übernehmen` : "Importierte Übungen erneut prüfen"}
+              {ready.length > 0 ? `${ready.length} sichere Outdoor-Varianten gesammelt übernehmen` : "Importierte Übungen erneut prüfen"}
             </button>
           </form>
         </section>
@@ -127,9 +138,19 @@ function CandidateCard({ candidate }: { readonly candidate: OutdoorVariantCandid
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="font-black">{candidate.name}</div>
-          <Link className="mt-1 inline-block text-xs font-black underline underline-offset-4" href={`/exercises/${candidate.exerciseId}/edit`}>
-            Übung öffnen
-          </Link>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Link className="inline-flex min-h-9 items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black hover:bg-[var(--surface-elevated)]" href={`/exercises/${candidate.exerciseId}/edit`}>
+              Übung öffnen
+            </Link>
+            {candidate.status === "ready" ? (
+              <form action={approveOutdoorVariantCandidateAction}>
+                <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
+                <button className="min-h-9 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
+                  Diese Variante übernehmen
+                </button>
+              </form>
+            ) : null}
+          </div>
         </div>
         <StatusBadge status={candidate.status} />
       </div>
@@ -152,8 +173,24 @@ function CandidateCard({ candidate }: { readonly candidate: OutdoorVariantCandid
           {candidate.variantText}
         </div>
       ) : null}
+
+      {candidate.status === "unmappable" || candidate.status === "missing-details" ? (
+        <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
+          Keine automatische Übernahme. Öffne die Übung und hinterlege die Outdoor-Variante sowie das tatsächlich verfügbare Ersatz-Equipment manuell.
+        </p>
+      ) : null}
     </article>
   );
+}
+
+function outdoorCandidateFeedback(status?: string): { readonly success: boolean; readonly message: string } | null {
+  if (!status) return null;
+  if (status === "enriched") return { success: true, message: "Outdoor-Variante wurde strukturiert übernommen und steht dem Outdoor-Training-Builder zur Verfügung." };
+  if (status === "existing") return { success: true, message: "Eine bestehende Outdoor-Variante wurde beibehalten und nicht überschrieben." };
+  if (status === "unmappable") return { success: false, message: "Diese Übung lässt sich mit den bekannten Ersatzgeräten nicht vollständig automatisch abbilden. Bitte manuell prüfen." };
+  if (status === "missing-details") return { success: false, message: "Für diese Übung fehlen strukturierte Übungsdetails. Ergänze diese zuerst im Übungseditor." };
+  if (status === "not-found") return { success: false, message: "Die ausgewählte Übung ist nicht mehr als übernahmebereiter Import-Kandidat verfügbar." };
+  return { success: false, message: "Die Outdoor-Variante konnte nicht übernommen werden." };
 }
 
 function DataBlock({ title, values, empty }: { readonly title: string; readonly values: readonly string[]; readonly empty: string }) {
