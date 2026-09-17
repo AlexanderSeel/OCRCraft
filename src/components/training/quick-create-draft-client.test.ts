@@ -42,6 +42,12 @@ describe("normalizeTrainingDraftRequest", () => {
         location: "indoor",
         intensity: "technique",
         builderMode: "ai",
+        sourceTrainingIds: [
+          "11111111-1111-4111-8111-111111111111",
+          "11111111-1111-4111-8111-111111111111",
+          "not-a-training-id",
+          "22222222-2222-4222-8222-222222222222",
+        ],
         preferredExerciseIds: ["exercise-1"],
         availableEquipment: [
           { equipmentId: "sandbag", quantityAvailable: 6 },
@@ -60,6 +66,10 @@ describe("normalizeTrainingDraftRequest", () => {
       location: "indoor",
       intensity: "technique",
       builderMode: "ai",
+      sourceTrainingIds: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+      ],
       preferredExerciseIds: ["exercise-1"],
       sourceTrainingIds: [],
       availableEquipment: [
@@ -93,6 +103,7 @@ describe("normalizeTrainingDraftRequest", () => {
     expect(request.intensity).toBe("balanced");
     expect(request.builderMode).toBe("local");
     expect(request.exerciseTypes).toEqual([]);
+    expect(request.sourceTrainingIds).toEqual([]);
     expect(request.minAge).toBeUndefined();
     expect(request.maxAge).toBeUndefined();
     expect(request.availableEquipment).toEqual([]);

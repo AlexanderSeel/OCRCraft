@@ -10,6 +10,7 @@ import { listTrainingDraftCandidates } from "./training-draft-repository";
 import type { TrainingDraftPersistenceRequest } from "./training-draft-persistence-schema";
 import type { ReviewedAiTrainingPersistence } from "./reviewed-training-draft-schema";
 import type { TrainingDraftRequest } from "./training-draft-schema";
+import { assessStructuredTrainingGoalCoverage } from "./training-goal-coverage";
 import { assessTrainingSportsQuality } from "./training-sports-quality";
 import { persistTrainingDraft } from "./training-session-repository";
 
@@ -29,9 +30,10 @@ function applySportsQualityAudit(
   candidates: readonly TrainingDraftExerciseCandidate[],
 ): TrainingDraft {
   const quality = assessTrainingSportsQuality(request, draft, candidates);
+  const goalWarnings = assessStructuredTrainingGoalCoverage(request, draft, candidates);
   return {
     ...draft,
-    warnings: [...draft.warnings, ...quality.warnings],
+    warnings: [...draft.warnings, ...quality.warnings, ...goalWarnings],
   };
 }
 
