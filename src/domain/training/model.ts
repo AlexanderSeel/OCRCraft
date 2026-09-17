@@ -25,6 +25,9 @@ export const TRAINING_FORMATS = [
 ] as const;
 export type TrainingFormat = (typeof TRAINING_FORMATS)[number];
 
+export const TRAINING_ORGANIZATION_MODES = ["solo", "team"] as const;
+export type TrainingOrganizationMode = (typeof TRAINING_ORGANIZATION_MODES)[number];
+
 export const BODY_REGIONS = BODY_REGION_IDS;
 export type { BodyRegion } from "../body-regions";
 
@@ -35,6 +38,10 @@ export interface TrainingGroup {
   readonly minAge?: number;
   readonly maxAge?: number;
   readonly participantCount: number;
+  /** How athletes are expected to work through the main part. */
+  readonly organizationMode?: TrainingOrganizationMode;
+  /** Target team size when organizationMode is team. */
+  readonly teamSize?: number;
 }
 
 export interface TrainingEquipmentAvailability {
@@ -75,6 +82,10 @@ export interface TrainingItem {
   readonly format?: TrainingFormat;
   readonly instructions?: string;
   readonly levelLabel?: string;
+  /** 1-based main-part block. Omitted outside the main phase. */
+  readonly mainPartIndex?: number;
+  /** Optional trainer-facing title for the block, e.g. "Hauptteil 2". */
+  readonly mainPartTitle?: string;
 }
 
 export interface TrainingPhase {
