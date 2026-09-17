@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ActionProgressButton } from "./action-progress-button";
+import { Dialog } from "../ui/dialog";
 
 interface DuplicateReviewTask {
   readonly id: string;
@@ -99,13 +100,8 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
         ))}
       </div>
       {comparison ? (
-        <div aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
-            <div className="flex items-start justify-between gap-3">
-              <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Dublettenprüfung</div><h3 className="mt-1 text-xl font-black">Side-by-Side-Vergleich</h3></div>
-              <button aria-label="Vergleich schließen" className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold" onClick={() => setComparison(null)} type="button">Schließen</button>
-            </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <Dialog eyebrow="Dublettenprüfung" onClose={() => setComparison(null)} title="Side-by-Side-Vergleich">
+            <div className="grid gap-3 md:grid-cols-2">
               {[{ name: comparison.leftName, id: comparison.leftExerciseId, primary: true }, { name: comparison.rightName, id: comparison.rightExerciseId, primary: false }].map((side) => (
                 <section className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={side.id}>
                   {(() => {
@@ -138,8 +134,7 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
               <input name="taskId" type="hidden" value={comparison.id} /><input name="keepExerciseId" type="hidden" value={comparison.leftExerciseId} /><input name="status" type="hidden" value="ignored" />
               <button className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-bold text-[var(--muted)]" type="submit">Keine Dublette – ignorieren</button>
             </form>
-          </div>
-        </div>
+        </Dialog>
       ) : null}
     </>
   );
