@@ -62,6 +62,8 @@ export async function replaceDraftExerciseWithAlternative(
         item.format,
         item.exerciseId === exerciseId ? candidate.instructions : item.instructions,
         item.exerciseId === exerciseId ? candidate.level2 : item.levelLabel,
+        item.mainPartIndex,
+        item.mainPartTitle,
       );
     }),
   }));
@@ -76,6 +78,8 @@ export async function replaceDraftExerciseWithAlternative(
       minAge: request.minAge,
       maxAge: request.maxAge,
       participantCount: request.participantCount,
+      organizationMode: request.organizationMode,
+      teamSize: request.organizationMode === "team" ? request.teamSize : undefined,
     },
     totalDurationMinutes: request.durationMinutes,
     focus: request.goals,
@@ -99,6 +103,8 @@ function hydrateItem(
   format: TrainingPhase["items"][number]["format"],
   instructions?: string,
   levelLabel?: string,
+  mainPartIndex?: number,
+  mainPartTitle?: string,
 ): TrainingPhase["items"][number] {
   return {
     id: `adjusted-${phase}-${candidate.id}`,
@@ -117,5 +123,11 @@ function hydrateItem(
     format,
     instructions,
     levelLabel,
+    ...(phase === "main"
+      ? {
+          mainPartIndex: mainPartIndex ?? 1,
+          mainPartTitle: mainPartTitle || `Hauptteil ${mainPartIndex ?? 1}`,
+        }
+      : {}),
   };
 }
