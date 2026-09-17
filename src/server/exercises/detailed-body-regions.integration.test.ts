@@ -12,6 +12,13 @@ it("migrates all details and persists primary/secondary selections with valid fo
       CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY,name VARCHAR);
       CREATE TABLE body_regions (id VARCHAR PRIMARY KEY,label_de VARCHAR,label_en VARCHAR);
       CREATE TABLE exercise_body_regions (exercise_id UUID,body_region_id VARCHAR REFERENCES body_regions(id),emphasis VARCHAR);
+      CREATE TABLE exercise_muscle_oppositions (
+        exercise_id UUID,
+        primary_region_id VARCHAR REFERENCES body_regions(id),
+        opposing_region_id VARCHAR REFERENCES body_regions(id),
+        relationship VARCHAR,
+        PRIMARY KEY (exercise_id,primary_region_id,opposing_region_id)
+      );
       CREATE TABLE exercise_movement_patterns (exercise_id UUID,movement_pattern_id VARCHAR);
       CREATE TABLE exercise_tags (exercise_id UUID,tag_id VARCHAR);
       CREATE TABLE exercise_equipment (exercise_id UUID,equipment_id UUID,quantity_required INTEGER);
@@ -26,10 +33,14 @@ it("migrates all details and persists primary/secondary selections with valid fo
     const id = "11111111-1111-4111-8111-111111111111";
     await replaceExerciseFacetMappings(connection, id, {
       bodyRegions: [{ id: "detail:biceps-left", emphasis: "primary" }, { id: "detail:forearm-right", emphasis: "secondary" }],
+      muscleOppositions: [{ primaryRegionId: "detail:biceps-left", opposingRegionId: "triceps" }],
       movementPatternIds: [], tagIds: [], equipment: [],
     });
     expect((await connection.runAndReadAll("SELECT body_region_id,emphasis FROM exercise_body_regions ORDER BY body_region_id")).getRows()).toEqual([
       ["detail:biceps-left", "primary"], ["detail:forearm-right", "secondary"],
+    ]);
+    expect((await connection.runAndReadAll("SELECT primary_region_id,opposing_region_id FROM exercise_muscle_oppositions")).getRows()).toEqual([
+      ["detail:biceps-left", "triceps"],
     ]);
     for (const [filter, expected] of [["biceps", 1], ["detail:biceps-right", 0]] as const) {
       const result = await connection.runAndReadAll("SELECT count(*)::INTEGER FROM exercise_body_regions WHERE list_contains(string_split($regions, ','),body_region_id)", { regions: expandBodyRegionIds([filter]).join(",") });
