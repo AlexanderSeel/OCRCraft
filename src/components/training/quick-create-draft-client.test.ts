@@ -61,6 +61,7 @@ describe("normalizeTrainingDraftRequest", () => {
       intensity: "technique",
       builderMode: "ai",
       preferredExerciseIds: ["exercise-1"],
+      sourceTrainingIds: [],
       availableEquipment: [
         { equipmentId: "sandbag", quantityAvailable: 6 },
         { equipmentId: "cones", quantityAvailable: 0 },

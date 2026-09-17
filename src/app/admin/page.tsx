@@ -5,7 +5,7 @@ import { DuplicateReviewPanel } from "@/components/admin/duplicate-review-panel"
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, scanDuplicateExercisesAction } from "./actions";
-import { listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
+import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +22,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     getSeedCompletenessReport(),
     listDuplicateReviewTasks(),
   ]);
+  const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
   const { reseeded, reseedError } = await searchParams;
 
   return (
@@ -36,7 +37,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität</div><h2 className="mt-1 text-xl font-black">Doppelungen prüfen</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Die Engine vergleicht normalisierte Namen, Aliase, Equipment, Körperregionen und externe IDs. Zusammenführen archiviert den überzähligen Datensatz und erhält die Trainingshistorie.</p></div>
             <form action={scanDuplicateExercisesAction}><button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Jetzt prüfen</button></form>
           </div>
-          {duplicateTasks.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Keine offenen Doppelungsaufgaben.</p> : <DuplicateReviewPanel bulkAction={resolveDuplicateExercisesBulkAction} resolveAction={resolveDuplicateExerciseAction} tasks={duplicateTasks} />}
+          {duplicateTasks.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Keine offenen Doppelungsaufgaben.</p> : <DuplicateReviewPanel bulkAction={resolveDuplicateExercisesBulkAction} comparisonRecords={Object.fromEntries(comparisonRecords)} resolveAction={resolveDuplicateExerciseAction} tasks={duplicateTasks} />}
         </section>
         <section id="database-settings" className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="max-w-3xl">

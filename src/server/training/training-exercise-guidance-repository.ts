@@ -35,6 +35,10 @@ export interface TrainingExerciseGuidance {
   readonly setupSeconds: number | null;
   readonly transitionSeconds: number | null;
   readonly stationCapacity: number | null;
+  readonly maxSimultaneousParticipants: number | null;
+  readonly surfaceRequirements: string | null;
+  readonly weatherTerrain: string | null;
+  readonly obstacleConfiguration: string | null;
   readonly executionSteps: readonly string[];
   readonly coachingCues: readonly string[];
   readonly commonMistakes: readonly TrainingExerciseMistake[];
@@ -92,7 +96,11 @@ export async function getTrainingExerciseGuidanceMap(
         d.space_requirement,
         d.setup_seconds,
         d.transition_seconds,
-        d.station_capacity
+        d.station_capacity,
+        e.max_simultaneous_participants,
+        e.surface_requirements,
+        e.weather_terrain,
+        e.obstacle_configuration
       FROM exercises e
       LEFT JOIN exercise_translations t
         ON t.exercise_id=e.id AND t.locale=$locale
@@ -138,6 +146,10 @@ export async function getTrainingExerciseGuidanceMap(
         setupSeconds: numberOrNull(row[23]),
         transitionSeconds: numberOrNull(row[24]),
         stationCapacity: numberOrNull(row[25]),
+        maxSimultaneousParticipants: numberOrNull(row[26]),
+        surfaceRequirements: textOrNull(row[27]),
+        weatherTerrain: textOrNull(row[28]),
+        obstacleConfiguration: textOrNull(row[29]),
         executionSteps: [],
         coachingCues: [],
         commonMistakes: [],

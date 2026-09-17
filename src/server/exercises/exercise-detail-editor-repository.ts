@@ -33,6 +33,10 @@ export interface ExerciseLogisticsInput {
   readonly setupSeconds: number;
   readonly transitionSeconds: number;
   readonly stationCapacity: number;
+  readonly maxSimultaneousParticipants: number;
+  readonly surfaceRequirements: string;
+  readonly weatherTerrain: string;
+  readonly obstacleConfiguration: string;
 }
 
 interface LogisticsRow {
@@ -42,6 +46,10 @@ interface LogisticsRow {
   readonly setupSeconds: number;
   readonly transitionSeconds: number;
   readonly stationCapacity: number;
+  readonly maxSimultaneousParticipants: number;
+  readonly surfaceRequirements: string;
+  readonly weatherTerrain: string;
+  readonly obstacleConfiguration: string;
 }
 
 async function readLogistics(exerciseId: string): Promise<LogisticsRow | null> {
@@ -55,6 +63,10 @@ async function readLogistics(exerciseId: string): Promise<LogisticsRow | null> {
         COALESCE(setup_seconds, 60),
         COALESCE(transition_seconds, 20),
         COALESCE(station_capacity, 1)
+        ,COALESCE(max_simultaneous_participants, 1)
+        ,COALESCE(surface_requirements, '')
+        ,COALESCE(weather_terrain, '')
+        ,COALESCE(obstacle_configuration, '')
       FROM exercises
       WHERE id=$exerciseId::UUID
       `,
@@ -69,6 +81,10 @@ async function readLogistics(exerciseId: string): Promise<LogisticsRow | null> {
       setupSeconds: Number(row[3]),
       transitionSeconds: Number(row[4]),
       stationCapacity: Number(row[5]),
+      maxSimultaneousParticipants: Number(row[6]),
+      surfaceRequirements: String(row[7]),
+      weatherTerrain: String(row[8]),
+      obstacleConfiguration: String(row[9]),
     };
   });
 }
@@ -144,6 +160,10 @@ export async function updateExerciseLogistics(
           setup_seconds=$setupSeconds,
           transition_seconds=$transitionSeconds,
           station_capacity=$stationCapacity,
+          max_simultaneous_participants=$maxSimultaneousParticipants,
+          surface_requirements=$surfaceRequirements,
+          weather_terrain=$weatherTerrain,
+          obstacle_configuration=$obstacleConfiguration,
           updated_at=current_timestamp
         WHERE id=$exerciseId::UUID
         RETURNING id::VARCHAR

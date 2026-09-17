@@ -173,13 +173,13 @@ The database should describe training suitability, not provide medical diagnosis
 
 #### Logistics & equipment
 
-- [ ] required equipment
-- [ ] optional equipment
-- [ ] equipment quantity per station
-- [ ] obstacle dimensions/configuration where relevant
-- [ ] maximum simultaneous participants
-- [ ] surface requirements where relevant
-- [ ] weather/terrain considerations for running/OCR where relevant
+- [x] required equipment
+- [x] optional equipment
+- [x] equipment quantity per station
+- [x] obstacle dimensions/configuration where relevant
+- [x] maximum simultaneous participants
+- [x] surface requirements where relevant
+- [x] weather/terrain considerations for running/OCR where relevant
 
 ### 4.3 Category model
 
@@ -330,7 +330,7 @@ Reference entry points:
 - [x] replace generic summaries/instructions/cues/corrections for the complete 10-exercise warm-up cohort
 - [x] enrich all 25+ running exercises with bilingual technique, dosage, correction and RPE details
 - [x] add missing categories/facets
-- [ ] add richer equipment + station logistics
+- [x] add richer equipment + station logistics
 - [ ] add progression/regression relations
 - [x] update DE/EN search documents to include every newly structured detail field
 - [x] autocomplete uses aliases, categories, tags, equipment, movement patterns and body regions

@@ -39,6 +39,10 @@ const logisticsSchema = z.object({
   setupSeconds: z.coerce.number().int().min(0).max(3600),
   transitionSeconds: z.coerce.number().int().min(0).max(1800),
   stationCapacity: z.coerce.number().int().min(1).max(100),
+  maxSimultaneousParticipants: z.coerce.number().int().min(1).max(1000),
+  surfaceRequirements: z.string().trim().min(1).max(1000),
+  weatherTerrain: z.string().trim().min(1).max(1000),
+  obstacleConfiguration: z.string().trim().max(1000),
 });
 
 function stringField(formData: FormData, name: string): string {
@@ -100,6 +104,10 @@ export async function updateExerciseLogisticsAction(
     setupSeconds: stringField(formData, "setupSeconds"),
     transitionSeconds: stringField(formData, "transitionSeconds"),
     stationCapacity: stringField(formData, "stationCapacity"),
+    maxSimultaneousParticipants: stringField(formData, "maxSimultaneousParticipants"),
+    surfaceRequirements: stringField(formData, "surfaceRequirements"),
+    weatherTerrain: stringField(formData, "weatherTerrain"),
+    obstacleConfiguration: stringField(formData, "obstacleConfiguration"),
   });
 
   if (!parsed.success) {

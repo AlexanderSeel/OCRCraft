@@ -16,6 +16,21 @@ export interface DuplicateReviewTask {
   readonly status: "open" | "merged" | "ignored";
 }
 
+export interface DuplicateComparisonRecord {
+  readonly id: string;
+  readonly name: string;
+  readonly summary: string;
+  readonly category: string;
+  readonly phase: string;
+  readonly riskLevel: string;
+  readonly minAge: number | null;
+  readonly equipment: readonly string[];
+  readonly bodyRegions: readonly string[];
+  readonly purpose: string;
+  readonly setup: string;
+  readonly safetyNotes: string;
+}
+
 interface DuplicateRow extends DuplicateExerciseRecord { readonly name: string; }
 
 async function loadRecords(connection: DuckDBConnection): Promise<DuplicateRow[]> {
@@ -70,6 +85,40 @@ export async function listDuplicateReviewTasks(limit = 100): Promise<readonly Du
       WHERE d.status='open' ORDER BY d.similarity_score DESC LIMIT $limit
     `, { limit });
     return reader.getRows().map((row) => ({ id: String(row[0]), leftExerciseId: String(row[1]), rightExerciseId: String(row[2]), leftName: String(row[3]), rightName: String(row[4]), score: Number(row[5]), reasons: String(row[6]).split("; "), status: String(row[7]) as DuplicateReviewTask["status"] }));
+  });
+}
+
+export async function getDuplicateComparisonRecords(
+  exerciseIds: readonly string[],
+): Promise<ReadonlyMap<string, DuplicateComparisonRecord>> {
+  const ids = [...new Set(exerciseIds.map((id) => id.trim()).filter(Boolean))];
+  if (ids.length === 0) return new Map();
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      SELECT e.id::VARCHAR,
+        COALESCE(t.name, ''), COALESCE(t.summary, ''), COALESCE(e.category, ''),
+        COALESCE(e.default_phase, ''), COALESCE(e.risk_level, ''), e.min_age,
+        COALESCE((SELECT string_agg(DISTINCT COALESCE(eq.name_de, eq.name_en), ' | ')
+          FROM exercise_equipment ee JOIN equipment eq ON eq.id=ee.equipment_id WHERE ee.exercise_id=e.id), ''),
+        COALESCE((SELECT string_agg(DISTINCT ebr.body_region_id, ' | ')
+          FROM exercise_body_regions ebr WHERE ebr.exercise_id=e.id), ''),
+        COALESCE(d.purpose, ''), COALESCE(d.setup, ''), COALESCE(d.safety_notes, '')
+      FROM exercises e
+      LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
+      LEFT JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de'
+      WHERE list_contains(string_split($exerciseIds, ','), e.id::VARCHAR)
+    `, { exerciseIds: ids.join(",") });
+    const result = new Map<string, DuplicateComparisonRecord>();
+    for (const row of reader.getRows()) {
+      result.set(String(row[0]), {
+        id: String(row[0]), name: String(row[1]), summary: String(row[2]), category: String(row[3]),
+        phase: String(row[4]), riskLevel: String(row[5]), minAge: row[6] == null ? null : Number(row[6]),
+        equipment: String(row[7]).split(" | ").filter(Boolean), bodyRegions: String(row[8]).split(" | ").filter(Boolean),
+        purpose: String(row[9]), setup: String(row[10]), safetyNotes: String(row[11]),
+      });
+    }
+    return result;
   });
 }
 

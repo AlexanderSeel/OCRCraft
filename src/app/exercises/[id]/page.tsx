@@ -141,7 +141,11 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
                   <InfoValue label="Aufbau" value={secondsLabel(guidance?.setupSeconds)} />
                   <InfoValue label="Wechsel" value={secondsLabel(guidance?.transitionSeconds)} />
                   <InfoValue label="Stationskapazität" value={guidance?.stationCapacity == null ? "–" : `${guidance.stationCapacity} Pers.`} />
+                  <InfoValue label="Max. gleichzeitig" value={guidance?.maxSimultaneousParticipants == null ? "–" : `${guidance.maxSimultaneousParticipants} Pers.`} />
                   <InfoValue label="Schwierigkeit" value={difficultyLabel(guidance?.difficulty)} />
+                  <InfoValue label="Untergrund" value={guidance?.surfaceRequirements ?? "–"} />
+                  <InfoValue label="Wetter / Gelände" value={guidance?.weatherTerrain ?? "–"} />
+                  {guidance?.obstacleConfiguration ? <InfoValue label="Hindernis-Konfiguration" value={guidance.obstacleConfiguration} /> : null}
                 </dl>
               </div>
             </Card>

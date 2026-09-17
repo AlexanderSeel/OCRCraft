@@ -12,13 +12,29 @@ interface DuplicateReviewTask {
   readonly reasons: readonly string[];
 }
 
+interface DuplicateComparisonRecord {
+  readonly id: string;
+  readonly name: string;
+  readonly summary: string;
+  readonly category: string;
+  readonly phase: string;
+  readonly riskLevel: string;
+  readonly minAge: number | null;
+  readonly equipment: readonly string[];
+  readonly bodyRegions: readonly string[];
+  readonly purpose: string;
+  readonly setup: string;
+  readonly safetyNotes: string;
+}
+
 interface DuplicateReviewPanelProps {
   readonly tasks: readonly DuplicateReviewTask[];
+  readonly comparisonRecords: Readonly<Record<string, DuplicateComparisonRecord>>;
   readonly resolveAction: (formData: FormData) => Promise<void>;
   readonly bulkAction: (formData: FormData) => Promise<void>;
 }
 
-export function DuplicateReviewPanel({ tasks, resolveAction, bulkAction }: DuplicateReviewPanelProps) {
+export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, bulkAction }: DuplicateReviewPanelProps) {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [comparison, setComparison] = useState<DuplicateReviewTask | null>(null);
 
@@ -83,14 +99,29 @@ export function DuplicateReviewPanel({ tasks, resolveAction, bulkAction }: Dupli
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {[{ name: comparison.leftName, id: comparison.leftExerciseId, primary: true }, { name: comparison.rightName, id: comparison.rightExerciseId, primary: false }].map((side) => (
                 <section className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={side.id}>
-                  <h4 className="text-lg font-black">{side.name}</h4>
+                  {(() => {
+                    const record = comparisonRecords[side.id];
+                    return <>
+                  <h4 className="text-lg font-black">{record?.name ?? side.name}</h4>
                   <p className="mt-1 break-all text-xs text-[var(--muted)]">ID: {side.id}</p>
-                  <p className="mt-4 text-sm text-[var(--muted)]">{comparison.reasons.join(" · ")}</p>
+                  {record ? (
+                    <div className="mt-4 space-y-3 text-sm">
+                      <p className="text-[var(--muted)]">{record.summary || "Keine Kurzbeschreibung hinterlegt."}</p>
+                      <dl className="grid grid-cols-2 gap-2 text-xs"><div><dt className="text-[var(--muted)]">Bereich</dt><dd className="font-bold">{record.category}</dd></div><div><dt className="text-[var(--muted)]">Phase</dt><dd className="font-bold">{record.phase}</dd></div><div><dt className="text-[var(--muted)]">Risiko</dt><dd className="font-bold">{record.riskLevel}</dd></div><div><dt className="text-[var(--muted)]">Mindestalter</dt><dd className="font-bold">{record.minAge == null ? "–" : `${record.minAge} Jahre`}</dd></div></dl>
+                      <Info label="Equipment" value={record.equipment.join(" · ") || "Keines hinterlegt"} />
+                      <Info label="Körperregionen" value={record.bodyRegions.join(" · ") || "Keine hinterlegt"} />
+                      <Info label="Zweck" value={record.purpose || "Nicht hinterlegt"} />
+                      <Info label="Setup" value={record.setup || "Nicht hinterlegt"} />
+                      <Info label="Sicherheit" value={record.safetyNotes || "Nicht hinterlegt"} />
+                    </div>
+                  ) : <p className="mt-4 text-sm text-[var(--muted)]">Inhalte konnten nicht geladen werden.</p>}
                   <form action={resolveAction} className="mt-4">
                     <input name="taskId" type="hidden" value={comparison.id} />
                     <input name="keepExerciseId" type="hidden" value={side.id} />
                     <button className={side.primary ? "rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" : "rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black"} type="submit">{side.primary ? "Linke behalten" : "Rechte behalten"}</button>
                   </form>
+                    </>;
+                  })()}
                 </section>
               ))}
             </div>
@@ -103,4 +134,8 @@ export function DuplicateReviewPanel({ tasks, resolveAction, bulkAction }: Dupli
       ) : null}
     </>
   );
+}
+
+function Info({ label, value }: { readonly label: string; readonly value: string }) {
+  return <div><div className="text-[11px] font-black uppercase tracking-wide text-[var(--muted)]">{label}</div><p className="mt-0.5 leading-5">{value}</p></div>;
 }
