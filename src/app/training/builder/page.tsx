@@ -88,7 +88,7 @@ export default async function TrainingBuilderPage({ searchParams }: PageProps) {
             ) : null}
           </form>
           <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-            Es werden die beim Erzeugen gespeicherten Builder-Parameter geladen. Das bestehende Training wird nicht überschrieben; Speichern erzeugt immer einen neuen Entwurf.
+            Die ursprünglichen Builder-Parameter werden mit der aktuell gespeicherten Hauptteil-/Teamstruktur kombiniert. Das bestehende Training wird nicht überschrieben; Speichern erzeugt immer einen neuen Entwurf.
           </p>
           {source && !initialState ? (
             <p className="mt-2 text-xs font-bold text-[var(--danger)]">
@@ -122,6 +122,22 @@ async function buildInitialState(trainingId: string): Promise<TrainingBuilderIni
     session.phases.flatMap((phase) => phase.items)
       .flatMap((item) => item.exerciseId ? [[item.exerciseId, item.exerciseName] as const] : []),
   );
+  const mainItems = session.phases
+    .filter((phase) => phase.kind === "main")
+    .flatMap((phase) => phase.items);
+  const actualMainPartCount = Math.max(
+    1,
+    ...mainItems.map((item) => item.mainPartIndex ?? 1),
+  );
+  const actualMainPartExerciseCounts = Array.from(
+    { length: actualMainPartCount },
+    (_, zeroBasedIndex) => mainItems.filter((item) => (item.mainPartIndex ?? 1) === zeroBasedIndex + 1).length,
+  );
+  const hasUsefulStoredStructure = actualMainPartExerciseCounts.every((count) => count > 0);
+  const mainPartCount = hasUsefulStoredStructure ? actualMainPartCount : request.mainPartCount;
+  const mainPartExerciseCounts = hasUsefulStoredStructure
+    ? actualMainPartExerciseCounts
+    : request.mainPartExerciseCounts;
 
   return {
     sourceTrainingId: session.id,
@@ -131,7 +147,7 @@ async function buildInitialState(trainingId: string): Promise<TrainingBuilderIni
     minAge: request.minAge,
     maxAge: request.maxAge,
     participantCount: request.participantCount,
-    durationMinutes: request.durationMinutes,
+    durationMinutes: session.totalDurationMinutes,
     goals: request.goals,
     bodyRegions: request.bodyRegions,
     avoidBodyRegions: request.avoidBodyRegions,
@@ -139,13 +155,17 @@ async function buildInitialState(trainingId: string): Promise<TrainingBuilderIni
     formats: request.formats,
     location: request.location,
     intensity: request.intensity,
-    warmupExerciseCount: request.warmupExerciseCount,
-    mainExerciseCount: request.mainExerciseCount,
-    mainPartExerciseCounts: request.mainPartExerciseCounts,
-    cooldownExerciseCount: request.cooldownExerciseCount,
-    mainPartCount: request.mainPartCount,
-    organizationMode: request.organizationMode,
-    teamSize: request.teamSize,
+    warmupExerciseCount: session.phases.find((phase) => phase.kind === "warmup")?.items.length
+      || request.warmupExerciseCount,
+    mainExerciseCount: mainPartExerciseCounts?.[0] ?? request.mainExerciseCount,
+    mainPartExerciseCounts,
+    cooldownExerciseCount: session.phases.find((phase) => phase.kind === "cooldown")?.items.length
+      || request.cooldownExerciseCount,
+    mainPartCount,
+    organizationMode: session.organizationMode ?? request.organizationMode,
+    teamSize: session.organizationMode === "team"
+      ? session.teamSize ?? request.teamSize
+      : undefined,
     sourceTrainingIds: request.sourceTrainingIds,
     preferredExercises: request.preferredExerciseIds.map((id) => ({
       id,
