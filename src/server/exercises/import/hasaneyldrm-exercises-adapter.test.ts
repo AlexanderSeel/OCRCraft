@@ -16,6 +16,8 @@ describe("hasaneyldrm exercise adapter", () => {
     expect(draft.reviewStatus).toBe("draft");
     expect(draft.mediaReference.licenseLabel).toBe("Gym-Visual-Lizenz");
     expect(draft.mediaReference.usage).toBe("template_only");
+    expect(draft.sourceMetadata.sourceType).toBe("dataset");
+    expect(draft.sourceMetadata.provider).toBe("hasaneyldrm/exercises-dataset");
     expect(draft.warnings.join(" ")).toContain("Gym-Visual-Lizenz");
   });
 

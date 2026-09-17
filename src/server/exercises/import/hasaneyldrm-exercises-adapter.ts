@@ -34,6 +34,12 @@ export interface ExerciseImportDraft {
   readonly translationStatus: "required";
   readonly reviewStatus: "draft";
   readonly sourceReference: string;
+  readonly sourceMetadata: {
+    readonly provider: "hasaneyldrm/exercises-dataset";
+    readonly title: "hasaneyldrm exercises dataset";
+    readonly sourceType: "dataset";
+    readonly retrievedAt: string;
+  };
   readonly mediaReference: {
     readonly image?: string;
     readonly gif?: string;
@@ -89,6 +95,12 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
     translationStatus: "required",
     reviewStatus: "draft",
     sourceReference: `https://github.com/hasaneyldrm/exercises-dataset#${String(record.id)}`,
+    sourceMetadata: {
+      provider: "hasaneyldrm/exercises-dataset",
+      title: "hasaneyldrm exercises dataset",
+      sourceType: "dataset",
+      retrievedAt: new Date().toISOString(),
+    },
     mediaReference: {
       image: record.image,
       gif: record.gif_url,

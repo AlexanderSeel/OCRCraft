@@ -64,7 +64,7 @@
 - [ ] training version snapshots
 - [ ] favorites/recent use
 - [ ] templates
-- [ ] external source/provenance records
+- [x] external source/provenance records
 - [x] external media licensing metadata with source reference and template-only usage label
 - [ ] users/roles
 - [ ] audit log
