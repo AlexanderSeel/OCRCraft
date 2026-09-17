@@ -6,7 +6,7 @@ import { TRAINING_PHASE_LABELS, type TrainingPhase, type TrainingSession } from 
 import { validateTrainingSession } from "../../domain/training/validation";
 import { composeAiTrainingDraft } from "./ai-training-composer";
 import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
-import { composeSportsTrainingDraft } from "./sports-training-composer";
+import { composeStructuredSportsTrainingDraft } from "./structured-sports-training-composer";
 import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
 import type { TrainingPhaseRegenerationRequest } from "./training-phase-regeneration-schema";
@@ -68,6 +68,8 @@ export async function regenerateTrainingDraftPhase(
       minAge: request.minAge,
       maxAge: request.maxAge,
       participantCount: request.participantCount,
+      organizationMode: request.organizationMode,
+      teamSize: request.organizationMode === "team" ? request.teamSize : undefined,
     },
     totalDurationMinutes: request.durationMinutes,
     focus: request.goals,
@@ -100,7 +102,7 @@ async function generateReplacementDraft(
     return composeAiTrainingDraft({ proposal, request, approvedExercises: candidates, providerId: provider.id });
   }
 
-  return composeSportsTrainingDraft(
+  return composeStructuredSportsTrainingDraft(
     {
       audience: request.audience,
       participantCount: request.participantCount,
@@ -115,6 +117,12 @@ async function generateReplacementDraft(
       availableEquipment: request.availableEquipment,
       minAge: request.minAge,
       maxAge: request.maxAge,
+      warmupExerciseCount: request.warmupExerciseCount,
+      mainExerciseCount: request.mainExerciseCount,
+      cooldownExerciseCount: request.cooldownExerciseCount,
+      mainPartCount: request.mainPartCount,
+      organizationMode: request.organizationMode,
+      teamSize: request.teamSize,
     },
     candidates,
   );
@@ -150,6 +158,12 @@ function rehydratePreservedPhase(
         format: item.format,
         instructions: item.instructions || candidate.instructions,
         levelLabel: item.levelLabel || candidate.level2,
+        ...(phase.kind === "main"
+          ? {
+              mainPartIndex: item.mainPartIndex ?? 1,
+              mainPartTitle: item.mainPartTitle || `Hauptteil ${item.mainPartIndex ?? 1}`,
+            }
+          : {}),
       };
     }),
   };

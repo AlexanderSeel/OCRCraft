@@ -6,11 +6,21 @@ const aiTrainingItemSchema = z.object({
   format: z.enum(TRAINING_FORMATS).optional(),
   level: z.enum(["level1", "level2", "level3"]).optional(),
   trainerNote: z.string().trim().max(500).optional(),
+  /** 1-based block within the canonical main phase. */
+  mainPart: z.number().int().min(1).max(4).optional(),
 });
 
 const aiTrainingPhaseSchema = z.object({
   kind: z.enum(TRAINING_PHASES),
-  items: z.array(aiTrainingItemSchema).min(1).max(8),
+  items: z.array(aiTrainingItemSchema).min(1).max(32),
+}).superRefine((phase, context) => {
+  if (phase.kind !== "main" && phase.items.some((item) => item.mainPart != null)) {
+    context.addIssue({
+      code: "custom",
+      path: ["items"],
+      message: "mainPart darf nur für Übungen im Hauptteil gesetzt werden.",
+    });
+  }
 });
 
 export const aiTrainingPlanSchema = z.object({

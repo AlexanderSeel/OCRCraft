@@ -9,9 +9,11 @@ import {
 import { ExerciseFacetForm } from "@/components/exercises/exercise-facet-form";
 import { ExerciseForm } from "@/components/exercises/exercise-form";
 import { ExerciseGuidanceListEditor } from "@/components/exercises/exercise-guidance-list-editor";
+import { ExerciseOutdoorVariantEditor } from "@/components/exercises/exercise-outdoor-variant-editor";
 import { getExerciseClassificationEditorData } from "@/server/exercises/exercise-classification-repository";
 import { getExerciseById } from "@/server/exercises/exercise-repository";
 import { getExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
+import { getExerciseOutdoorVariantEditorData } from "@/server/exercises/exercise-outdoor-variant-repository";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 import { setExerciseArchivedAction, updateExerciseAction } from "../../actions";
 import { updateExerciseClassificationAction } from "../classification-actions";
@@ -21,6 +23,7 @@ import {
 } from "../detail-actions";
 import { updateExerciseFacetsAction } from "../facet-actions";
 import { updateExerciseGuidanceListsAction } from "../guidance-actions";
+import { updateExerciseOutdoorVariantAction } from "../outdoor-variant-actions";
 
 interface PageProps {
   readonly params: Promise<{ id: string }>;
@@ -38,6 +41,8 @@ interface PageProps {
     detailError?: string;
     logisticsSaved?: string;
     logisticsError?: string;
+    outdoorSaved?: string;
+    outdoorError?: string;
   }>;
 }
 
@@ -47,9 +52,10 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const exercise = await getExerciseById(id);
   if (!exercise) notFound();
 
-  const [classification, facets, guidanceDeMap, guidanceEnMap] = await Promise.all([
+  const [classification, facets, outdoorVariant, guidanceDeMap, guidanceEnMap] = await Promise.all([
     getExerciseClassificationEditorData(exercise.id),
     getExerciseFacetEditorData(exercise.id),
+    getExerciseOutdoorVariantEditorData(exercise.id),
     getTrainingExerciseGuidanceMap([exercise.id], "de"),
     getTrainingExerciseGuidanceMap([exercise.id], "en"),
   ]);
@@ -60,6 +66,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const updateAction = updateExerciseAction.bind(null, exercise.id);
   const updateClassificationAction = updateExerciseClassificationAction.bind(null, exercise.id);
   const updateFacetsAction = updateExerciseFacetsAction.bind(null, exercise.id);
+  const updateOutdoorVariantAction = updateExerciseOutdoorVariantAction.bind(null, exercise.id);
   const updateGuidanceAction = updateExerciseGuidanceListsAction.bind(null, exercise.id);
   const updateDetailAction = updateLocalizedExerciseDetailsAction.bind(null, exercise.id);
   const updateLogisticsAction = updateExerciseLogisticsAction.bind(null, exercise.id);
@@ -74,7 +81,9 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
     || status.detailSaved
     || status.logisticsSaved
     || status.guidanceError
-    || status.guidanceSaved,
+    || status.guidanceSaved
+    || status.outdoorError
+    || status.outdoorSaved,
   );
 
   return (
@@ -111,6 +120,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         {status.guidanceSaved ? <Notice>{status.guidanceSaved === "en" ? "Englische" : "Deutsche"} Ausführung, Coaching-Cues und Fehlerkorrekturen wurden gespeichert.</Notice> : null}
         {status.detailSaved ? <Notice>{status.detailSaved === "en" ? "Englische" : "Deutsche"} Planungs-, Sicherheits- und Skalierungsdetails wurden gespeichert.</Notice> : null}
         {status.logisticsSaved ? <Notice>Schwierigkeit, Aufsicht und Stationslogistik wurden gespeichert.</Notice> : null}
+        {status.outdoorSaved ? <Notice>Outdoor-Variante und alternatives Equipment wurden gespeichert und stehen der Outdoor-Trainingsplanung zur Verfügung.</Notice> : null}
         {status.classificationError === "invalid" ? <ErrorNotice>Die Klassifikation ist unvollständig oder ungültig. Wähle mindestens ein Trainingsziel.</ErrorNotice> : null}
         {status.classificationError === "save" ? <ErrorNotice>Die Klassifikation konnte nicht gespeichert werden.</ErrorNotice> : null}
         {status.facetError === "invalid" ? <ErrorNotice>Die Facetten- oder Gegenmuskel-Auswahl enthält ungültige Werte.</ErrorNotice> : null}
@@ -121,6 +131,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         {status.detailError === "save" ? <ErrorNotice>Die Planungs- und Sicherheitsdetails konnten nicht gespeichert werden.</ErrorNotice> : null}
         {status.logisticsError === "invalid" ? <ErrorNotice>Die Logistikwerte sind ungültig. Prüfe Zeiten, Kapazität und Pflichtfelder.</ErrorNotice> : null}
         {status.logisticsError === "save" ? <ErrorNotice>Die Logistikwerte konnten nicht gespeichert werden.</ErrorNotice> : null}
+        {status.outdoorError === "save" ? <ErrorNotice>Die Outdoor-Variante konnte nicht gespeichert werden. Prüfe Texte und Equipment-Auswahl.</ErrorNotice> : null}
 
         <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" open={Boolean(status.created || status.saved)}>
           <summary className="min-h-8 cursor-pointer font-bold">Stammdaten bearbeiten</summary>
@@ -135,6 +146,22 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         </details>
 
         <ExerciseFacetForm action={updateFacetsAction} data={facets} disabled={exercise.archived} />
+
+        <details
+          className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
+          id="outdoor-variant"
+          open={Boolean(status.outdoorSaved || status.outdoorError || outdoorVariant.textDe || outdoorVariant.textEn)}
+        >
+          <summary className="min-h-8 cursor-pointer font-bold">Outdoor-Variante & alternatives Equipment</summary>
+          <p className="mt-3 max-w-4xl text-sm leading-6 text-[var(--muted)]">
+            Für importierte Studioübungen kann der automatische Gym→Outdoor-Task eine portable Variante erzeugen. Hier bleibt sie vollständig trainerkontrolliert: Originalausführung und Studio-Equipment werden nicht verändert.
+          </p>
+          <ExerciseOutdoorVariantEditor
+            action={updateOutdoorVariantAction}
+            data={outdoorVariant}
+            disabled={exercise.archived}
+          />
+        </details>
 
         <details open={fullEditorOpen} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <summary className="min-h-8 cursor-pointer font-bold">Programmierung, Sicherheit & Stationslogistik</summary>

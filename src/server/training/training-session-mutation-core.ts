@@ -5,6 +5,8 @@ export interface TrainingItemMutationInput {
   readonly format: string | null;
   readonly instructions: string | null;
   readonly levelLabel: string | null;
+  readonly mainPartIndex?: number | null;
+  readonly mainPartTitle?: string | null;
 }
 
 export interface AddTrainingItemCoreInput extends TrainingItemMutationInput {
@@ -51,7 +53,8 @@ export async function addTrainingItemCore(
     `
     INSERT INTO training_items (
       id, training_phase_id, exercise_id, title_override, format,
-      duration_minutes, instructions, level_label, sort_order
+      duration_minutes, instructions, level_label, sort_order,
+      main_part_index, main_part_title
     )
     SELECT
       $itemId::UUID,
@@ -66,7 +69,20 @@ export async function addTrainingItemCore(
         SELECT max(existing.sort_order) + 1
         FROM training_items existing
         WHERE existing.training_phase_id=p.id
-      ), 0)
+      ), 0),
+      CASE WHEN p.kind='main' THEN COALESCE(
+        $mainPartIndex,
+        (SELECT max(existing.main_part_index) FROM training_items existing WHERE existing.training_phase_id=p.id),
+        1
+      ) ELSE NULL END,
+      CASE WHEN p.kind='main' THEN COALESCE(
+        NULLIF($mainPartTitle,''),
+        'Hauptteil ' || COALESCE(
+          $mainPartIndex,
+          (SELECT max(existing.main_part_index) FROM training_items existing WHERE existing.training_phase_id=p.id),
+          1
+        )::VARCHAR
+      ) ELSE NULL END
     FROM training_phases p
     JOIN exercises e ON e.id=$exerciseId::UUID AND e.archived=false
     WHERE p.id=$phaseId::UUID
@@ -82,6 +98,8 @@ export async function addTrainingItemCore(
       durationMinutes: input.durationMinutes,
       instructions: input.instructions,
       levelLabel: input.levelLabel,
+      mainPartIndex: input.mainPartIndex ?? null,
+      mainPartTitle: input.mainPartTitle?.trim() ?? "",
     },
   );
 
@@ -101,7 +119,21 @@ export async function updateTrainingItemCore(
       format=$format,
       duration_minutes=$durationMinutes,
       instructions=$instructions,
-      level_label=$levelLabel
+      level_label=$levelLabel,
+      main_part_index=CASE
+        WHEN EXISTS (
+          SELECT 1 FROM training_phases p
+          WHERE p.id=training_items.training_phase_id AND p.kind='main'
+        ) THEN COALESCE($mainPartIndex,main_part_index,1)
+        ELSE NULL
+      END,
+      main_part_title=CASE
+        WHEN EXISTS (
+          SELECT 1 FROM training_phases p
+          WHERE p.id=training_items.training_phase_id AND p.kind='main'
+        ) THEN COALESCE(NULLIF($mainPartTitle,''),main_part_title,'Hauptteil')
+        ELSE NULL
+      END
     WHERE id=$itemId::UUID
       AND training_phase_id IN (
         SELECT id FROM training_phases WHERE training_session_id=$sessionId::UUID
@@ -115,6 +147,8 @@ export async function updateTrainingItemCore(
       durationMinutes: input.durationMinutes,
       instructions: input.instructions,
       levelLabel: input.levelLabel,
+      mainPartIndex: input.mainPartIndex ?? null,
+      mainPartTitle: input.mainPartTitle?.trim() ?? "",
     },
   );
 
