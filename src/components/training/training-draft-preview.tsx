@@ -1,16 +1,22 @@
 import type { TrainingDraft } from "@/domain/training/draft";
 import type { TrainingPhaseKind } from "@/domain/training/model";
 
+export type DraftPreviewAlternativeMode = "easier" | "harder" | "equipment";
+
 interface TrainingDraftPreviewProps {
   readonly draft: TrainingDraft;
   readonly onRegeneratePhase?: (phase: TrainingPhaseKind) => void;
   readonly regeneratingPhase?: TrainingPhaseKind | null;
+  readonly onReplaceExercise?: (exerciseId: string, mode: DraftPreviewAlternativeMode) => void;
+  readonly replacingExerciseId?: string | null;
 }
 
 export function TrainingDraftPreview({
   draft,
   onRegeneratePhase,
   regeneratingPhase = null,
+  onReplaceExercise,
+  replacingExerciseId = null,
 }: TrainingDraftPreviewProps) {
   return (
     <div className="mt-6 space-y-4">
@@ -42,7 +48,7 @@ export function TrainingDraftPreview({
               {onRegeneratePhase ? (
                 <button
                   className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[11px] font-black hover:bg-[var(--surface-elevated)] disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={regeneratingPhase != null}
+                  disabled={regeneratingPhase != null || replacingExerciseId != null}
                   onClick={() => onRegeneratePhase(phase.kind)}
                   type="button"
                 >
@@ -58,6 +64,7 @@ export function TrainingDraftPreview({
                   : draft.session.group.participantCount;
                 const capacityExceeded = item.exercise.stationCapacity != null &&
                   participantsAtExercise > item.exercise.stationCapacity;
+                const replacing = replacingExerciseId === item.exercise.id;
 
                 return (
                   <li
@@ -81,13 +88,33 @@ export function TrainingDraftPreview({
                         role={capacityExceeded ? "note" : undefined}
                       >
                         Max. {item.exercise.stationCapacity} gleichzeitig pro Station
-                        {capacityExceeded
-                          ? " · Gruppenrotation oder parallele Stationen einplanen"
-                          : ""}
+                        {capacityExceeded ? " · Gruppenrotation oder parallele Stationen einplanen" : ""}
                       </p>
                     ) : null}
                     {item.levelLabel ? (
                       <p className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--muted)]">{item.levelLabel}</p>
+                    ) : null}
+                    {onReplaceExercise ? (
+                      <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[var(--border)] pt-2">
+                        <span className="mr-1 self-center text-[10px] font-black uppercase tracking-[0.08em] text-[var(--muted)]">
+                          Alternative
+                        </span>
+                        {([
+                          ["easier", "Leichter"],
+                          ["harder", "Schwerer"],
+                          ["equipment", "Weniger Equipment"],
+                        ] as const).map(([mode, label]) => (
+                          <button
+                            className="rounded-md border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1 text-[10px] font-black hover:bg-[var(--surface-elevated)] disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={replacingExerciseId != null || regeneratingPhase != null}
+                            key={mode}
+                            onClick={() => onReplaceExercise(item.exercise.id, mode)}
+                            type="button"
+                          >
+                            {replacing ? "Suche …" : label}
+                          </button>
+                        ))}
+                      </div>
                     ) : null}
                   </li>
                 );
