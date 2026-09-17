@@ -16,6 +16,23 @@ const GOAL_TERMS: Readonly<Record<ExerciseTrainingGoal, readonly string[]>> = {
   teamwork: ["team", "teamwork", "partner"],
 };
 
+function mapRequestedGoal(value: string, locale: "de" | "en"): readonly ExerciseTrainingGoal[] {
+  const normalized = value.trim().toLocaleLowerCase(locale === "en" ? "en-US" : "de-DE");
+  const matches = (Object.entries(GOAL_TERMS) as [ExerciseTrainingGoal, readonly string[]][])
+    .map(([goal, terms]) => ({
+      goal,
+      specificity: Math.max(0, ...terms.filter((term) => normalized.includes(term)).map((term) => term.length)),
+    }))
+    .filter((match) => match.specificity > 0);
+  if (matches.length === 0) return [];
+
+  // Compound goals such as "Kraftausdauer" also contain the broader term
+  // "Kraft". Prefer the longest matching taxonomy term so a strength-only
+  // exercise cannot accidentally satisfy strength-endurance.
+  const mostSpecific = Math.max(...matches.map((match) => match.specificity));
+  return matches.filter((match) => match.specificity === mostSpecific).map((match) => match.goal);
+}
+
 /**
  * Reports only goals that can be mapped to OCRCraft's structured training-goal
  * taxonomy. Free-form goals such as "Ganzkörper" are handled by the broader
@@ -33,11 +50,7 @@ export function assessStructuredTrainingGoalCoverage(
   const warnings: string[] = [];
 
   for (const requestedGoal of request.goals) {
-    const normalized = requestedGoal.trim().toLocaleLowerCase(request.locale === "en" ? "en-US" : "de-DE");
-    const mappedGoals = (Object.entries(GOAL_TERMS) as [ExerciseTrainingGoal, readonly string[]][])
-      .filter(([, terms]) => terms.some((term) => normalized.includes(term)))
-      .map(([goal]) => goal);
-
+    const mappedGoals = mapRequestedGoal(requestedGoal, request.locale);
     if (mappedGoals.length === 0) continue;
     if (selected.some((candidate) => candidate.trainingGoals?.some((goal) => mappedGoals.includes(goal)))) continue;
 
