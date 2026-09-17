@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
-import { getTrainingPhaseBudgets } from "@/domain/training/draft";
+import type { TrainingDraftExerciseCandidate } from "../../domain/training/draft";
+import { getTrainingPhaseBudgets } from "../../domain/training/draft";
 import { composeAiTrainingDraft } from "./ai-training-composer";
 import { trainingDraftRequestSchema } from "./training-draft-schema";
 
