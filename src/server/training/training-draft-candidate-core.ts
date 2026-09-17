@@ -46,6 +46,11 @@ export async function runTrainingDraftCandidateQuery(
         FROM exercise_tags et
         WHERE et.exercise_id=e.id
       ), ''),
+      COALESCE((
+        SELECT string_agg(emp.movement_pattern_id, ' | ')
+        FROM exercise_movement_patterns emp
+        WHERE emp.exercise_id=e.id
+      ), ''),
       e.default_duration_seconds,
       trim(concat_ws(' ',
         COALESCE(d.purpose, ''),
@@ -54,6 +59,42 @@ export async function runTrainingDraftCandidateQuery(
           SELECT string_agg(s.instruction, ' ' ORDER BY s.step_order)
           FROM exercise_execution_steps s
           WHERE s.exercise_id=e.id AND s.locale=$locale
+        ), '')
+      )),
+      trim(concat_ws(' ',
+        COALESCE(t.summary, ''),
+        COALESCE(d.purpose, ''),
+        COALESCE(d.setup, ''),
+        COALESCE(d.start_position, ''),
+        COALESCE(d.finish_reset, ''),
+        COALESCE(d.breathing_cue, ''),
+        COALESCE(d.tempo_cue, ''),
+        COALESCE(d.safety_notes, ''),
+        COALESCE(d.quality_criteria, ''),
+        COALESCE(d.beginner_prescription, ''),
+        COALESCE(d.standard_prescription, ''),
+        COALESCE(d.advanced_prescription, ''),
+        COALESCE(d.work_rest_guidance, ''),
+        COALESCE(d.level_1, ''),
+        COALESCE(d.level_2, ''),
+        COALESCE(d.level_3, ''),
+        COALESCE(d.child_youth_variant, ''),
+        COALESCE(d.prerequisites, ''),
+        COALESCE(d.fallback_exercise, ''),
+        COALESCE((
+          SELECT string_agg(s.instruction, ' ' ORDER BY s.step_order)
+          FROM exercise_execution_steps s
+          WHERE s.exercise_id=e.id AND s.locale=$locale
+        ), ''),
+        COALESCE((
+          SELECT string_agg(c.cue, ' ' ORDER BY c.cue_order)
+          FROM exercise_coaching_cues c
+          WHERE c.exercise_id=e.id AND c.locale=$locale
+        ), ''),
+        COALESCE((
+          SELECT string_agg(concat_ws(' ', m.mistake, m.correction), ' ' ORDER BY m.mistake_order)
+          FROM exercise_common_mistakes m
+          WHERE m.exercise_id=e.id AND m.locale=$locale
         ), '')
       )),
       d.level_1,
@@ -120,13 +161,15 @@ export async function runTrainingDraftCandidateQuery(
     equipment: String(row[7] ?? "").split(" | ").filter(Boolean),
     equipmentRequirements: equipmentByExercise.get(String(row[0])) ?? [],
     tags: String(row[8] ?? "").split(" | ").filter(Boolean),
-    defaultDurationSeconds: row[9] == null ? null : Number(row[9]),
-    instructions: row[10] == null ? undefined : String(row[10]),
-    level1: row[11] == null ? undefined : String(row[11]),
-    level2: row[12] == null ? undefined : String(row[12]),
-    level3: row[13] == null ? undefined : String(row[13]),
-    stationCapacity: Number(row[14]),
-    setupSeconds: row[15] == null ? null : Number(row[15]),
-    transitionSeconds: row[16] == null ? null : Number(row[16]),
+    movementPatterns: String(row[9] ?? "").split(" | ").filter(Boolean),
+    defaultDurationSeconds: row[10] == null ? null : Number(row[10]),
+    instructions: row[11] == null ? undefined : String(row[11]),
+    planningText: row[12] == null ? undefined : String(row[12]),
+    level1: row[13] == null ? undefined : String(row[13]),
+    level2: row[14] == null ? undefined : String(row[14]),
+    level3: row[15] == null ? undefined : String(row[15]),
+    stationCapacity: Number(row[16]),
+    setupSeconds: row[17] == null ? null : Number(row[17]),
+    transitionSeconds: row[18] == null ? null : Number(row[18]),
   }));
 }
