@@ -4,6 +4,7 @@ import type { TrainingDraft } from "@/domain/training/draft";
 import { composeAiTrainingDraft, composeReviewedAiTrainingDraft } from "./ai-training-composer";
 import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
 import { composeSportsTrainingDraft } from "./sports-training-composer";
+import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
 import type { TrainingDraftPersistenceRequest } from "./training-draft-persistence-schema";
 import type { ReviewedAiTrainingPersistence } from "./reviewed-training-draft-schema";
@@ -11,12 +12,13 @@ import type { TrainingDraftRequest } from "./training-draft-schema";
 import { persistTrainingDraft } from "./training-session-repository";
 
 async function approvedCandidatesFor(request: TrainingDraftRequest) {
-  return listTrainingDraftCandidates({
+  const candidates = await listTrainingDraftCandidates({
     audience: request.audience,
     minAge: request.minAge,
     locale: request.locale,
     location: request.location,
   });
+  return filterCandidatesForDeclaredEquipment(candidates, request.availableEquipment);
 }
 
 export async function createTrainingDraft(request: TrainingDraftRequest): Promise<TrainingDraft> {
