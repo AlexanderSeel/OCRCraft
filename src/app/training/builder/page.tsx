@@ -25,7 +25,7 @@ export default async function TrainingBuilderPage() {
       )}
     >
       <div className="space-y-6">
-        <TrainingQuickPlanner />
+        <TrainingQuickPlanner equipmentOptions={equipmentOptions} />
         <details className="group" open>
           <summary className="mb-4 cursor-pointer text-sm font-black text-[var(--muted)]">Detaillierten Builder anzeigen</summary>
           <TrainingBuilderPanel equipmentOptions={equipmentOptions} />
