@@ -8,11 +8,13 @@ const preservedItemSchema = z.object({
   format: z.enum(TRAINING_FORMATS).optional(),
   instructions: z.string().trim().max(4000).optional(),
   levelLabel: z.string().trim().max(1000).optional(),
+  mainPartIndex: z.number().int().min(1).max(4).optional(),
+  mainPartTitle: z.string().trim().min(1).max(120).optional(),
 });
 
 const preservedPhaseSchema = z.object({
   kind: z.enum(TRAINING_PHASES),
-  items: z.array(preservedItemSchema).min(1).max(8),
+  items: z.array(preservedItemSchema).min(1).max(32),
 });
 
 export const trainingPhaseRegenerationSchema = z.object({
@@ -31,6 +33,11 @@ export const trainingPhaseRegenerationSchema = z.object({
     const ids = value.phases.flatMap((phase) => phase.items.map((item) => item.exerciseId));
     if (new Set(ids).size !== ids.length) {
       context.addIssue({ code: "custom", path: ["phases"], message: "Der aktuelle Entwurf darf keine Übung doppelt enthalten." });
+    }
+    for (const phase of value.phases.filter((candidate) => candidate.kind !== "main")) {
+      if (phase.items.some((item) => item.mainPartIndex != null || item.mainPartTitle != null)) {
+        context.addIssue({ code: "custom", path: ["phases"], message: "Hauptteil-Metadaten dürfen nur im Hauptteil vorkommen." });
+      }
     }
   }),
 });
