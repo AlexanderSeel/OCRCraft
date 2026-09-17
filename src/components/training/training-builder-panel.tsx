@@ -42,35 +42,70 @@ const formatLabels: Readonly<Record<TrainingFormat, string>> = {
   relay: "Team / Relay",
 };
 
+export interface TrainingBuilderInitialState {
+  readonly sourceTrainingId: string;
+  readonly sourceTitle: string;
+  readonly builderMode: QuickCreateBuilderMode;
+  readonly audience: string;
+  readonly minAge?: number;
+  readonly maxAge?: number;
+  readonly participantCount: number;
+  readonly durationMinutes: number;
+  readonly goals: readonly string[];
+  readonly bodyRegions: readonly string[];
+  readonly avoidBodyRegions: readonly string[];
+  readonly exerciseTypes: readonly string[];
+  readonly formats: readonly string[];
+  readonly location: string;
+  readonly intensity: string;
+  readonly preferredExercises: readonly SelectedExerciseReference[];
+  readonly availableEquipment: readonly {
+    readonly equipmentId: string;
+    readonly quantityAvailable: number;
+  }[];
+}
+
 interface TrainingBuilderPanelProps {
   readonly equipmentOptions: readonly EquipmentAvailabilityOption[];
+  readonly initialState?: TrainingBuilderInitialState;
 }
 
 function toggle(values: readonly string[], value: string): string[] {
   return values.includes(value) ? values.filter((entry) => entry !== value) : [...values, value];
 }
 
-export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelProps) {
-  const [builderMode, setBuilderMode] = useState<QuickCreateBuilderMode>("local");
-  const [audience, setAudience] = useState("mixed");
-  const [ageRange, setAgeRange] = useState("16+");
-  const [participants, setParticipants] = useState(16);
-  const [duration, setDuration] = useState(75);
-  const [goals, setGoals] = useState<readonly string[]>(["OCR-Technik", "Kraftausdauer"]);
-  const [bodyRegions, setBodyRegions] = useState<readonly string[]>(["forearms-grip", "core"]);
-  const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>([]);
-  const [selectedTypes, setSelectedTypes] = useState<readonly string[]>(["skill", "strength"]);
-  const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>([]);
-  const [formats, setFormats] = useState<readonly string[]>(["circuit"]);
-  const [location, setLocation] = useState("mixed");
-  const [intensity, setIntensity] = useState("balanced");
+function formatAgeRange(minAge?: number, maxAge?: number): string {
+  if (minAge != null && maxAge != null) return minAge === maxAge ? String(minAge) : `${minAge}–${maxAge}`;
+  if (minAge != null) return `${minAge}+`;
+  if (maxAge != null) return `bis ${maxAge}`;
+  return "Offen";
+}
+
+export function TrainingBuilderPanel({ equipmentOptions, initialState }: TrainingBuilderPanelProps) {
+  const [builderMode, setBuilderMode] = useState<QuickCreateBuilderMode>(initialState?.builderMode ?? "local");
+  const [audience, setAudience] = useState(initialState?.audience ?? "mixed");
+  const [ageRange, setAgeRange] = useState(
+    initialState ? formatAgeRange(initialState.minAge, initialState.maxAge) : "16+",
+  );
+  const [participants, setParticipants] = useState(initialState?.participantCount ?? 16);
+  const [duration, setDuration] = useState(initialState?.durationMinutes ?? 75);
+  const [goals, setGoals] = useState<readonly string[]>(initialState?.goals ?? ["OCR-Technik", "Kraftausdauer"]);
+  const [bodyRegions, setBodyRegions] = useState<readonly string[]>(initialState?.bodyRegions ?? ["forearms-grip", "core"]);
+  const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>(initialState?.avoidBodyRegions ?? []);
+  const [selectedTypes, setSelectedTypes] = useState<readonly string[]>(initialState?.exerciseTypes ?? ["skill", "strength"]);
+  const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>(initialState?.preferredExercises ?? []);
+  const [formats, setFormats] = useState<readonly string[]>(initialState?.formats ?? ["circuit"]);
+  const [location, setLocation] = useState(initialState?.location ?? "mixed");
+  const [intensity, setIntensity] = useState(initialState?.intensity ?? "balanced");
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
-    Object.fromEntries(equipmentOptions.flatMap((option) =>
-      option.quantityAvailable == null ? [] : [[option.id, String(option.quantityAvailable)]]
-    )),
+    initialState
+      ? Object.fromEntries(initialState.availableEquipment.map((item) => [item.equipmentId, String(item.quantityAvailable)]))
+      : Object.fromEntries(equipmentOptions.flatMap((option) =>
+          option.quantityAvailable == null ? [] : [[option.id, String(option.quantityAvailable)]]
+        )),
   );
   const [draft, setDraft] = useState<TrainingDraft | null>(null);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initialState ? `${initialState.sourceTitle} – angepasst` : "");
   const [error, setError] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -169,6 +204,23 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
       <div className="space-y-5">
+        {initialState ? (
+          <section className="rounded-2xl border border-[var(--accent-strong)] bg-[var(--accent-soft)] p-5">
+            <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Training anpassen / neu erzeugen</div>
+            <div className="mt-1 flex flex-wrap items-baseline justify-between gap-2">
+              <div>
+                <h2 className="text-lg font-black">Basis: {initialState.sourceTitle}</h2>
+                <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+                  Die gespeicherten Builder-Parameter wurden geladen. Änderungen erzeugen einen neuen Entwurf; das Ursprungstraining bleibt unverändert.
+                </p>
+              </div>
+              <Link className="text-sm font-black underline underline-offset-4" href={`/training/${initialState.sourceTrainingId}`}>
+                Ursprung öffnen
+              </Link>
+            </div>
+          </section>
+        ) : null}
+
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <h2 className="text-lg font-black">Planungsengine</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
