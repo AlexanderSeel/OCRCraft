@@ -75,6 +75,10 @@ type CandidateWithHistory = TrainingDraftExerciseCandidate & { readonly recentUs
  * phase suitability, requested goals/types/muscles, movement and muscle balance,
  * impact spacing, fatigue sequencing, audience suitability, equipment reality
  * and recent-session variety.
+ *
+ * The main part is selected first because it expresses the training objective.
+ * Warm-up and cooldown are then chosen against the actual demands of that main
+ * part instead of being unrelated catalogue picks.
  */
 export function composeSportsTrainingDraft(
   input: TrainingDraftInput,
@@ -83,17 +87,42 @@ export function composeSportsTrainingDraft(
   const budgets = getTrainingPhaseBudgets(input.durationMinutes);
   const phaseKinds: readonly TrainingPhaseKind[] = ["warmup", "main", "cooldown"];
   const warnings: string[] = [
-    "Lokaler Sportalgorithmus: deterministische Auswahl ohne AI; Fokus auf Phasenlogik, Bewegungsvielfalt, Muskelbalance, Belastungsreihenfolge, letzte Trainings und Sicherheitsmetadaten.",
+    "Lokaler Sportalgorithmus: deterministische Auswahl ohne AI; der Hauptteil definiert das Trainingsziel, Aufwärmen und Cooldown werden passend zu dessen Bewegungs- und Belastungsprofil gewählt.",
   ];
 
+  const main = selectForPhase(
+    candidates,
+    "main",
+    getTrainingPhaseItemCount("main", budgets.main),
+    input,
+  );
+  const warmup = selectForPhase(
+    candidates,
+    "warmup",
+    getTrainingPhaseItemCount("warmup", budgets.warmup),
+    input,
+    main,
+  );
+  const cooldown = selectForPhase(
+    candidates,
+    "cooldown",
+    getTrainingPhaseItemCount("cooldown", budgets.cooldown),
+    input,
+    main,
+  );
+
+  const selectedByPhase: Readonly<Record<TrainingPhaseKind, readonly TrainingDraftExerciseCandidate[]>> = {
+    warmup,
+    main,
+    cooldown,
+  };
+
   const phases = phaseKinds.map((kind) => {
-    const budget = budgets[kind];
-    const count = getTrainingPhaseItemCount(kind, budget);
-    const selected = selectForPhase(candidates, kind, count, input);
+    const selected = selectedByPhase[kind];
     if (selected.length === 0) {
       warnings.push(`Keine passende Übung für ${TRAINING_PHASE_LABELS[kind]} gefunden.`);
     }
-    const durations = distributeTrainingMinutes(budget, selected.length);
+    const durations = distributeTrainingMinutes(budgets[kind], selected.length);
     return {
       id: `sports-${kind}`,
       kind,
@@ -114,7 +143,7 @@ export function composeSportsTrainingDraft(
         durationMinutes: durations[index] ?? 0,
         format: formatForPhase(kind, input),
         instructions: candidate.instructions,
-        levelLabel: candidate.level2,
+        levelLabel: chooseTrainingLevel(candidate, kind, input),
       })),
     };
   });
@@ -153,10 +182,14 @@ function selectForPhase(
   phase: TrainingPhaseKind,
   count: number,
   input: TrainingDraftInput,
+  mainDemands: readonly TrainingDraftExerciseCandidate[] = [],
 ): readonly TrainingDraftExerciseCandidate[] {
   const pool = candidates
     .filter((candidate) => isEligible(candidate, phase, input))
-    .map((candidate) => ({ candidate, baseScore: baseScore(candidate, phase, input) }));
+    .map((candidate) => ({
+      candidate,
+      baseScore: baseScore(candidate, phase, input) + mainDemandScore(candidate, phase, mainDemands),
+    }));
 
   const selected: TrainingDraftExerciseCandidate[] = [];
   const remaining = [...pool];
@@ -228,6 +261,35 @@ function baseScore(
   score += phaseSuitabilityScore(candidate, phase, input);
   score += equipmentScore(candidate, input);
   score -= recentUsePenalty(candidate);
+  return score;
+}
+
+function mainDemandScore(
+  candidate: TrainingDraftExerciseCandidate,
+  phase: TrainingPhaseKind,
+  main: readonly TrainingDraftExerciseCandidate[],
+): number {
+  if (phase === "main" || main.length === 0) return 0;
+
+  const mainPatterns = new Set(main.flatMap((item) => item.movementPatterns ?? []));
+  const mainParents = new Set(main.flatMap((item) => item.bodyRegions.map(parentRegion)));
+  const mainMacros = new Set(main.flatMap(macroRegions));
+  const candidateParents = candidate.bodyRegions.map(parentRegion);
+  const candidatePatterns = candidate.movementPatterns ?? [];
+
+  let score = 0;
+  if (candidatePatterns.some((pattern) => mainPatterns.has(pattern))) score += phase === "warmup" ? 24 : 8;
+  if (candidateParents.some((region) => mainParents.has(region))) score += phase === "warmup" ? 22 : 18;
+  if (macroRegions(candidate).some((macro) => mainMacros.has(macro))) score += 8;
+  if (candidateParents.includes("full-body")) score += 5;
+
+  if (phase === "warmup") {
+    if (candidate.exerciseType === "mobility" || candidate.exerciseType === "drill") score += 8;
+    if (candidate.coordinationComplexity === "complex") score -= 8;
+  } else {
+    if (candidate.exerciseType === "recovery" || candidate.exerciseType === "mobility") score += 12;
+    if (candidate.impactLevel === "high" || candidate.riskLevel === "high") score -= 30;
+  }
   return score;
 }
 
@@ -346,6 +408,34 @@ function dynamicScore(
     if (!early && candidate.coordinationComplexity === "complex" && candidate.impactLevel === "high") score -= 12;
   }
   return score;
+}
+
+function chooseTrainingLevel(
+  candidate: TrainingDraftExerciseCandidate,
+  phase: TrainingPhaseKind,
+  input: TrainingDraftInput,
+): string | undefined {
+  const standard = candidate.level2 ?? candidate.level1 ?? candidate.level3;
+  if (phase !== "main") return standard;
+
+  if (input.audience === "kids") {
+    return candidate.level1 ?? standard;
+  }
+  if (input.audience === "youth") {
+    const conservative = candidate.difficulty === "advanced"
+      || candidate.riskLevel === "high"
+      || candidate.impactLevel === "high"
+      || candidate.coordinationComplexity === "complex";
+    return conservative ? candidate.level1 ?? standard : standard;
+  }
+
+  if (input.intensity === "conditioning") {
+    const progressionIsConservative = candidate.riskLevel === "low"
+      && candidate.impactLevel !== "high"
+      && candidate.coordinationComplexity !== "complex";
+    if (progressionIsConservative) return candidate.level3 ?? standard;
+  }
+  return standard;
 }
 
 function shareBodyLoad(left: TrainingDraftExerciseCandidate, right: TrainingDraftExerciseCandidate): boolean {
