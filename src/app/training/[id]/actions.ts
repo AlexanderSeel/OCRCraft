@@ -27,6 +27,11 @@ const nullableText = (max: number) =>
     z.string().trim().max(max).nullable(),
   );
 
+const optionalMainPartIndex = z.preprocess(
+  (value) => value === "" || value == null ? null : value,
+  z.coerce.number().int().min(1).max(12).nullable(),
+);
+
 const formatSchema = z.preprocess(
   (value) => typeof value === "string" && value.trim() === "" ? null : value,
   z.enum(["free", "circuit", "tabata", "amrap", "emom", "rig-run", "run-exercise", "technique", "relay"]).nullable(),
@@ -37,6 +42,8 @@ const itemFieldsSchema = z.object({
   format: formatSchema,
   instructions: nullableText(4000),
   levelLabel: nullableText(120),
+  mainPartIndex: optionalMainPartIndex.optional(),
+  mainPartTitle: nullableText(120).optional(),
 });
 
 const addItemSchema = itemFieldsSchema.extend({
@@ -70,6 +77,8 @@ function itemFields(formData: FormData) {
     format: formData.get("format"),
     instructions: formData.get("instructions"),
     levelLabel: formData.get("levelLabel"),
+    mainPartIndex: formData.get("mainPartIndex"),
+    mainPartTitle: formData.get("mainPartTitle"),
   };
 }
 
@@ -113,6 +122,8 @@ export async function addTrainingItemAction(formData: FormData): Promise<void> {
       format: parsed.data.format,
       instructions: parsed.data.instructions,
       levelLabel: parsed.data.levelLabel,
+      mainPartIndex: parsed.data.mainPartIndex,
+      mainPartTitle: parsed.data.mainPartTitle,
     });
   } catch {
     redirect(`/training/${parsed.data.sessionId}?error=add-item`);
@@ -137,6 +148,8 @@ export async function updateTrainingItemAction(formData: FormData): Promise<void
       format: parsed.data.format,
       instructions: parsed.data.instructions,
       levelLabel: parsed.data.levelLabel,
+      mainPartIndex: parsed.data.mainPartIndex,
+      mainPartTitle: parsed.data.mainPartTitle,
     });
   } catch {
     redirect(`/training/${parsed.data.sessionId}?error=update-item`);
