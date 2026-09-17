@@ -1,8 +1,9 @@
 import "server-only";
 
-import { composeTrainingDraft, type TrainingDraft } from "@/domain/training/draft";
+import type { TrainingDraft } from "@/domain/training/draft";
 import { composeAiTrainingDraft, composeReviewedAiTrainingDraft } from "./ai-training-composer";
 import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
+import { composeSportsTrainingDraft } from "./sports-training-composer";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
 import type { TrainingDraftPersistenceRequest } from "./training-draft-persistence-schema";
 import type { ReviewedAiTrainingPersistence } from "./reviewed-training-draft-schema";
@@ -36,7 +37,7 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
     });
   }
 
-  return composeTrainingDraft(
+  return composeSportsTrainingDraft(
     {
       audience: request.audience,
       participantCount: request.participantCount,
