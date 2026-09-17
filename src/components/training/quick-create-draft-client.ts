@@ -30,6 +30,7 @@ export interface QuickCreateDraftClientInput {
   readonly location?: string;
   readonly intensity: string;
   readonly builderMode?: string;
+  readonly sourceTrainingIds?: readonly string[];
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment?: readonly TrainingEquipmentAvailability[];
 }
@@ -51,6 +52,7 @@ export interface NormalizedTrainingDraftRequest {
   readonly location: TrainingLocation;
   readonly intensity: DraftIntensity;
   readonly builderMode: QuickCreateBuilderMode;
+  readonly sourceTrainingIds: readonly string[];
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment: readonly TrainingEquipmentAvailability[];
   readonly minAge?: number;
@@ -70,6 +72,7 @@ const FORMAT_SET = new Set<string>(TRAINING_FORMATS);
 const LOCATION_SET = new Set<string>(TRAINING_LOCATIONS);
 const INTENSITIES = new Set<string>(["technique", "balanced", "conditioning"]);
 const BUILDER_MODES = new Set<string>(["local", "ai"]);
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function isAudience(value: string): value is Audience {
   return AUDIENCE_SET.has(value);
@@ -133,6 +136,7 @@ export function normalizeTrainingDraftRequest(
   const builderMode: QuickCreateBuilderMode = input.builderMode && isBuilderMode(input.builderMode)
     ? input.builderMode
     : "local";
+  const sourceTrainingIds = [...new Set((input.sourceTrainingIds ?? []).filter((id) => UUID_PATTERN.test(id)))].slice(0, 6);
   const ages = parseAgeRange(input.ageRange);
   const availableEquipment = new Map<string, number>();
   for (const item of input.availableEquipment ?? []) {
@@ -152,6 +156,7 @@ export function normalizeTrainingDraftRequest(
     location,
     intensity,
     builderMode,
+    sourceTrainingIds,
     preferredExerciseIds: input.preferredExerciseIds,
     availableEquipment: [...availableEquipment].map(([equipmentId, quantityAvailable]) => ({
       equipmentId,
