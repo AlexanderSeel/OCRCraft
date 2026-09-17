@@ -9,7 +9,12 @@ import {
   exerciseTypeLabels,
   exerciseTypes,
 } from "@/domain/exercise/classification";
-import { TRAINING_FORMATS, type TrainingFormat, type TrainingPhaseKind } from "@/domain/training/model";
+import {
+  TRAINING_FORMATS,
+  type MainPartProgramming,
+  type TrainingFormat,
+  type TrainingPhaseKind,
+} from "@/domain/training/model";
 import { BodyFocusSelector } from "./body-focus-selector";
 import {
   EquipmentAvailabilityPicker,
@@ -19,6 +24,7 @@ import {
   ExerciseAutocompletePicker,
   type SelectedExerciseReference,
 } from "./exercise-autocomplete-picker";
+import { MainPartProgrammingEditor } from "./main-part-programming-editor";
 import {
   persistTrainingDraft,
   regenerateTrainingDraftPhase,
@@ -68,6 +74,7 @@ export interface TrainingBuilderInitialState {
   readonly warmupExerciseCount?: number;
   readonly mainExerciseCount?: number;
   readonly mainPartExerciseCounts?: readonly number[];
+  readonly mainPartProgramming?: readonly MainPartProgramming[];
   readonly cooldownExerciseCount?: number;
   readonly mainPartCount?: number;
   readonly organizationMode?: "solo" | "team";
@@ -111,6 +118,12 @@ function initialMainPartCounts(initialState?: TrainingBuilderInitialState): read
   return Array.from({ length: count }, () => fallback);
 }
 
+function initialMainPartProgramming(initialState?: TrainingBuilderInitialState): readonly MainPartProgramming[] {
+  const count = clampInteger(initialState?.mainPartCount ?? 1, 1, 4);
+  if (initialState?.mainPartProgramming?.length === count) return initialState.mainPartProgramming;
+  return Array.from({ length: count }, () => ({ mode: "standard" as const }));
+}
+
 export function TrainingBuilderPanel({
   equipmentOptions,
   sourceTrainingOptions = [],
@@ -134,6 +147,7 @@ export function TrainingBuilderPanel({
   const [intensity, setIntensity] = useState(initialState?.intensity ?? "balanced");
   const [warmupExerciseCount, setWarmupExerciseCount] = useState(initialState?.warmupExerciseCount ?? 2);
   const [mainPartExerciseCounts, setMainPartExerciseCounts] = useState<readonly number[]>(() => initialMainPartCounts(initialState));
+  const [mainPartProgramming, setMainPartProgramming] = useState<readonly MainPartProgramming[]>(() => initialMainPartProgramming(initialState));
   const [cooldownExerciseCount, setCooldownExerciseCount] = useState(initialState?.cooldownExerciseCount ?? 2);
   const [mainPartCount, setMainPartCountState] = useState(initialState?.mainPartCount ?? 1);
   const [organizationMode, setOrganizationMode] = useState<"solo" | "team">(initialState?.organizationMode ?? "solo");
@@ -175,12 +189,23 @@ export function TrainingBuilderPanel({
       { length: nextCount },
       (_, index) => current[index] ?? current.at(-1) ?? 4,
     ));
+    setMainPartProgramming((current) => Array.from(
+      { length: nextCount },
+      (_, index) => current[index] ?? { mode: "standard" },
+    ));
     invalidate();
   }
 
   function updateMainPartExerciseCount(index: number, value: number) {
     setMainPartExerciseCounts((current) => current.map((count, candidateIndex) =>
       candidateIndex === index ? clampInteger(value, 1, 8) : count
+    ));
+    invalidate();
+  }
+
+  function updateMainPartProgramming(index: number, value: MainPartProgramming) {
+    setMainPartProgramming((current) => current.map((programming, candidateIndex) =>
+      candidateIndex === index ? value : programming
     ));
     invalidate();
   }
@@ -211,6 +236,7 @@ export function TrainingBuilderPanel({
       warmupExerciseCount,
       mainExerciseCount: mainPartExerciseCounts[0] ?? 4,
       mainPartExerciseCounts,
+      mainPartProgramming,
       cooldownExerciseCount,
       mainPartCount,
       organizationMode,
@@ -382,7 +408,7 @@ export function TrainingBuilderPanel({
             <div>
               <h2 className="text-lg font-black">Trainingsstruktur & Organisation</h2>
               <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                Steuert die exakte Anzahl der Übungen je Abschnitt. Mehrere Hauptteile werden als getrennte Blöcke geplant und gespeichert.
+                Steuert die exakte Anzahl der Übungen und die konkrete Programmierung je Hauptteil. Mehrere Hauptteile werden als getrennte Blöcke geplant und gespeichert.
               </p>
             </div>
             <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5 text-xs font-black">
@@ -408,6 +434,23 @@ export function TrainingBuilderPanel({
               />
             ))}
           </div>
+
+          <details className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4" open={mainPartProgramming.some((item) => item.mode !== "standard")}>
+            <summary className="cursor-pointer font-black">Programmierung je Hauptteil</summary>
+            <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+              Optional. Intervall, feste Runden, Ladder, Pyramide, Chipper und Every-X werden als strukturierte Prescription gespeichert und bleiben bei AI-Neuplanung oder Übungsersatz erhalten.
+            </p>
+            <div className="mt-4 grid gap-3 lg:grid-cols-2">
+              {mainPartProgramming.map((programming, index) => (
+                <MainPartProgrammingEditor
+                  index={index}
+                  key={index}
+                  onChange={(value) => updateMainPartProgramming(index, value)}
+                  value={programming}
+                />
+              ))}
+            </div>
+          </details>
 
           <div className="mt-5 grid gap-4 border-t border-[var(--border)] pt-4 sm:grid-cols-2">
             <Field label="Organisation im Hauptteil">
@@ -510,6 +553,7 @@ export function TrainingBuilderPanel({
         <h2 className="font-black">Sportlogik</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-[var(--muted)]">
           <li>Warm-up, ein bis vier Hauptteile und Cooldown mit exakter Zeit- und Übungsanzahl.</li>
+          <li>Jeder Hauptteil kann unabhängig als Intervall, Rundenblock, Ladder/Pyramide, Chipper oder Every-X programmiert werden.</li>
           <li>Bei mehreren Hauptteilen werden Übungen blockübergreifend variiert und nicht unnötig wiederholt.</li>
           <li>Teamgröße fließt in Stationskapazität, Teamwork-Gewichtung und gleichzeitigen Equipmentbedarf ein.</li>
           <li>Technik und Koordination vor unnötiger Ermüdung; Conditioning danach, wenn gewählt.</li>
