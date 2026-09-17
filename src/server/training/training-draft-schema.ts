@@ -64,9 +64,7 @@ export const trainingDraftRequestSchema = z.object({
   builderMode: z.enum(TRAINING_BUILDER_MODES).default("local"),
   warmupExerciseCount: z.number().int().min(1).max(6).default(2),
   mainExerciseCount: z.number().int().min(1).max(8).default(4),
-  /** Optional exact count for every numbered main-part block. */
   mainPartExerciseCounts: z.array(z.number().int().min(1).max(8)).max(4).default([]),
-  /** Optional structured programming for every numbered main-part block. */
   mainPartProgramming: z.array(mainPartProgrammingSchema).max(4).default([]),
   cooldownExerciseCount: z.number().int().min(1).max(6).default(2),
   mainPartCount: z.number().int().min(1).max(4).default(1),
@@ -78,12 +76,17 @@ export const trainingDraftRequestSchema = z.object({
     equipmentId: z.string().trim().min(1).max(100),
     quantityAvailable: z.number().int().min(0).max(500),
   })).max(100).default([]),
+  /** Omitted = do not constrain club obstacles; present [] = explicitly no obstacle stations available. */
+  availableObstacleExerciseIds: z.array(z.string().uuid()).max(100).optional(),
   minAge: z.number().int().min(3).max(99).optional(),
   maxAge: z.number().int().min(3).max(99).optional(),
   locale: z.enum(["de", "en"]).default("de"),
 }).refine(
   (value) => new Set(value.availableEquipment.map((item) => item.equipmentId)).size === value.availableEquipment.length,
   { message: "Jede Ausrüstungsart darf nur einmal angegeben werden.", path: ["availableEquipment"] },
+).refine(
+  (value) => value.availableObstacleExerciseIds == null || new Set(value.availableObstacleExerciseIds).size === value.availableObstacleExerciseIds.length,
+  { message: "Jede Hindernisstation darf nur einmal angegeben werden.", path: ["availableObstacleExerciseIds"] },
 ).refine(
   (value) => new Set(value.sourceTrainingIds).size === value.sourceTrainingIds.length,
   { message: "Ein Quelltraining darf nur einmal ausgewählt werden.", path: ["sourceTrainingIds"] },
@@ -109,11 +112,6 @@ export const trainingDraftRequestSchema = z.object({
 
 type ParsedTrainingDraftRequest = z.infer<typeof trainingDraftRequestSchema>;
 
-/**
- * Type-level compatibility for callers constructing requests in code. Runtime
- * parsing always supplies arrays; callers may omit them to retain historic
- * uniform mainExerciseCount/standard-programming behavior.
- */
 export type TrainingDraftRequest = Omit<ParsedTrainingDraftRequest, "mainPartExerciseCounts" | "mainPartProgramming"> & {
   readonly mainPartExerciseCounts?: readonly number[];
   readonly mainPartProgramming?: readonly z.infer<typeof mainPartProgrammingSchema>[];
