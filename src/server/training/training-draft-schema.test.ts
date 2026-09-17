@@ -12,10 +12,17 @@ const request = {
   preferredExerciseIds: [],
 };
 
-describe("training draft request equipment inventory", () => {
-  it("defaults an omitted inventory to unknown equipment quantities", () => {
+describe("training draft request equipment inventory and location", () => {
+  it("defaults omitted inventory and location safely", () => {
     const parsed = trainingDraftRequestSchema.parse(request);
     expect(parsed.availableEquipment).toEqual([]);
+    expect(parsed.location).toBe("mixed");
+  });
+
+  it("accepts explicit indoor/outdoor location and rejects unknown values", () => {
+    expect(trainingDraftRequestSchema.safeParse({ ...request, location: "indoor" }).success).toBe(true);
+    expect(trainingDraftRequestSchema.safeParse({ ...request, location: "outdoor" }).success).toBe(true);
+    expect(trainingDraftRequestSchema.safeParse({ ...request, location: "parking-lot" }).success).toBe(false);
   });
 
   it("accepts explicit zero stock and rejects duplicate or invalid stock entries", () => {
