@@ -85,7 +85,7 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
         const itemReader = await connection.runAndReadAll(
           `
           SELECT exercise_id::VARCHAR, title_override, format, duration_minutes, instructions,
-            level_label, sort_order, main_part_index, main_part_title
+            level_label, sort_order, main_part_index, main_part_title, programming_json
           FROM training_items
           WHERE training_phase_id=$sourcePhaseId::UUID
           ORDER BY sort_order
@@ -99,11 +99,11 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
             INSERT INTO training_items (
               id, training_phase_id, exercise_id, title_override, format,
               duration_minutes, instructions, level_label, sort_order,
-              main_part_index, main_part_title
+              main_part_index, main_part_title, programming_json
             ) VALUES (
               $id::UUID, $phaseId::UUID, $exerciseId::UUID, $titleOverride, $format,
               $duration, $instructions, $levelLabel, $sortOrder,
-              $mainPartIndex, $mainPartTitle
+              $mainPartIndex, $mainPartTitle, $programmingJson
             )
             `,
             {
@@ -118,6 +118,7 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
               sortOrder: Number(itemRow[6]),
               mainPartIndex: itemRow[7] == null ? null : Number(itemRow[7]),
               mainPartTitle: itemRow[8] == null ? null : String(itemRow[8]),
+              programmingJson: itemRow[9] == null ? null : String(itemRow[9]),
             },
           );
         }
