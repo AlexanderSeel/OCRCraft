@@ -112,7 +112,7 @@ export function composeReviewedAiTrainingDraft(
 }
 
 function requestedMainPartCount(request: TrainingDraftRequest, zeroBasedIndex: number): number {
-  return request.mainPartExerciseCounts[zeroBasedIndex] ?? request.mainExerciseCount;
+  return request.mainPartExerciseCounts?.[zeroBasedIndex] ?? request.mainExerciseCount;
 }
 
 function assertRequestedStructure(plan: AiTrainingPlan, request: TrainingDraftRequest): void {
