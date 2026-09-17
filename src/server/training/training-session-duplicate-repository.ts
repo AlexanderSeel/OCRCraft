@@ -23,7 +23,8 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
     try {
       const sessionReader = await connection.runAndReadAll(
         `
-        SELECT title, group_id::VARCHAR, total_duration_minutes, locale, notes
+        SELECT title, group_id::VARCHAR, total_duration_minutes, locale, notes,
+          COALESCE(organization_mode,'solo'), team_size
         FROM training_sessions
         WHERE id=$sourceSessionId::UUID
         `,
@@ -35,9 +36,11 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
       await connection.run(
         `
         INSERT INTO training_sessions (
-          id, title, group_id, status, source, total_duration_minutes, locale, notes
+          id, title, group_id, status, source, total_duration_minutes, locale, notes,
+          organization_mode, team_size
         ) VALUES (
-          $id::UUID, $title, $groupId::UUID, 'draft', 'copied', $duration, $locale, $notes
+          $id::UUID, $title, $groupId::UUID, 'draft', 'copied', $duration, $locale, $notes,
+          $organizationMode, $teamSize
         )
         `,
         {
@@ -47,6 +50,8 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
           duration: Number(sourceSession[2]),
           locale: String(sourceSession[3]),
           notes: sourceSession[4] == null ? null : String(sourceSession[4]),
+          organizationMode: String(sourceSession[5] ?? "solo"),
+          teamSize: sourceSession[6] == null ? null : Number(sourceSession[6]),
         },
       );
 
@@ -79,7 +84,8 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
 
         const itemReader = await connection.runAndReadAll(
           `
-          SELECT exercise_id::VARCHAR, title_override, format, duration_minutes, instructions, level_label, sort_order
+          SELECT exercise_id::VARCHAR, title_override, format, duration_minutes, instructions,
+            level_label, sort_order, main_part_index, main_part_title
           FROM training_items
           WHERE training_phase_id=$sourcePhaseId::UUID
           ORDER BY sort_order
@@ -92,10 +98,12 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
             `
             INSERT INTO training_items (
               id, training_phase_id, exercise_id, title_override, format,
-              duration_minutes, instructions, level_label, sort_order
+              duration_minutes, instructions, level_label, sort_order,
+              main_part_index, main_part_title
             ) VALUES (
               $id::UUID, $phaseId::UUID, $exerciseId::UUID, $titleOverride, $format,
-              $duration, $instructions, $levelLabel, $sortOrder
+              $duration, $instructions, $levelLabel, $sortOrder,
+              $mainPartIndex, $mainPartTitle
             )
             `,
             {
@@ -108,6 +116,8 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
               instructions: itemRow[4] == null ? null : String(itemRow[4]),
               levelLabel: itemRow[5] == null ? null : String(itemRow[5]),
               sortOrder: Number(itemRow[6]),
+              mainPartIndex: itemRow[7] == null ? null : Number(itemRow[7]),
+              mainPartTitle: itemRow[8] == null ? null : String(itemRow[8]),
             },
           );
         }
