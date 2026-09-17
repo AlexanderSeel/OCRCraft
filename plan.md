@@ -60,6 +60,7 @@
 - [x] expanded exercise-detail schema foundation from section 4
 - [x] media source/generation metadata schema and migration
 - [x] granular muscle-region extension migration; existing coarse mappings remain unchanged and valid
+- [x] explicit exercise muscle-opposition relation persistence, separate from secondary muscles
 - [ ] training version snapshots
 - [ ] favorites/recent use
 - [ ] templates
@@ -325,9 +326,9 @@ Reference entry points:
 - [ ] add missing categories/facets
 - [ ] add richer equipment + station logistics
 - [ ] add progression/regression relations
-- [ ] update DE/EN search documents to include every newly structured detail field
+- [x] update DE/EN search documents to include every newly structured detail field
 - [x] autocomplete uses aliases, categories, tags, equipment, movement patterns and body regions
-- [ ] extend autocomplete with explicit training goals and OCR transfer-tag taxonomy
+- [x] extend autocomplete with explicit training goals and OCR transfer-tag taxonomy
 
 ## 5. Exercise library & CRUD
 
@@ -337,6 +338,7 @@ Reference entry points:
 - [x] active/archive filter
 - [x] counts, equipment, risk, min-age display
 - [x] create exercise
+- [x] new manual exercises continue directly into the same full editor used by existing exercises
 - [x] edit exercise
 - [x] archive + restore
 - [x] edit DE/EN name/summary
@@ -345,20 +347,22 @@ Reference entry points:
 - [x] mutations refresh DE/EN search documents
 - [x] mutations mark FTS `dirty`
 - [x] edit body regions with primary/secondary muscle emphasis
+- [x] edit and persist explicit opposing/antagonist muscle pairs separately from secondary muscles
 - [x] edit movement patterns
 - [x] edit equipment requirements
 - [x] edit tags
+- [x] edit explicit training goals and rich movement/audience/prescription classification
+- [ ] edit additional categories/facets
 - [x] muscle-map filtering with safe coarse/fine compatibility
 - [x] read-only muscle preview/highlighting on exercise cards
-- [ ] edit explicit goals/additional categories
-- [ ] show primary and opposing/antagonist muscle groups together in exercise details so trainers can deliberately target or balance them
-- [ ] detail page that explains the exercise without assumed expert knowledge
-- [ ] structured execution-step editor
-- [ ] coaching-cue editor
-- [ ] common-mistake/correction editor
-- [ ] dosage/programming editor
-- [ ] Level 1/2/3 editor
-- [ ] safety/logistics editor
+- [x] show primary and opposing/antagonist muscle groups together in exercise details so trainers can deliberately target or balance them
+- [x] detail page that explains the exercise without assumed expert knowledge
+- [x] structured execution-step editor
+- [x] coaching-cue editor
+- [x] common-mistake/correction editor
+- [x] dosage/programming editor
+- [x] Level 1/2/3 editor
+- [x] safety/logistics editor
 - [ ] source/provenance display
 - [ ] protected hard delete
 - [ ] progressions/regressions
@@ -381,8 +385,9 @@ Reference entry points:
 - [x] autocomplete from equipment
 - [x] autocomplete from body regions
 - [x] autocomplete from movement patterns
-- [ ] explicitly index every purpose/execution/coaching-cue/common-mistake field separately
-- [ ] autocomplete from explicit goals/OCR transfer tags
+- [x] explicit training goals and OCR transfer tags participate in search/autocomplete
+- [x] structured purpose/execution/coaching/common-mistake content participates in the DE/EN search documents
+- [ ] expose separate configurable weights for each structured detail field
 - [ ] autocomplete from existing trainings/blocks
 - [ ] configurable search profiles + field weights
 - [ ] favorite/recent boosts
@@ -399,7 +404,7 @@ Reference entry points:
 - [x] visual front/back body selector
 - [x] reusable `MuscleMap` component with select/emphasis/display modes
 - [x] OCRCraft-owned anatomical front/back asset with semantic muscle overlays
-- [x] integrate all 89 pinned `body-muscles` regions with German/English labels under the existing 24 selectable groups; distinguish muscles from other body areas
+- [x] integrate all 89 pinned `body-muscles` regions with German/English labels under 25 semantic selectable groups; distinguish muscles from other body areas
 - [x] calibrate SVG-derived regions to the 376 × 504 WebP; share adapted outer contours between highlighting and hit testing; retain source paths, transforms, Apache license and NOTICE
 - [x] support coarse/detail selection in exercise filters, editing and Quick Create; preserve existing IDs and primary/secondary state
 - [x] migrate 89 detail IDs into DuckDB and validate persistence, filter compatibility, pointer reachability, reported missing points and desktop/mobile form behavior
@@ -440,13 +445,13 @@ Reference entry points:
 - [x] audience/age filtering of candidate exercises
 - [x] use goals/body regions/format/intensity/preferred exercises for deterministic ranking
 - [x] persist generated draft as a real training session
-- [ ] location
+- [x] location selection with real indoor/outdoor candidate filtering
 - [x] Quick Create equipment inventory input with inventory-aware circuit warnings
 - [ ] Quick Create obstacle availability
-- [ ] group split / station capacity
-- [ ] avoid-region selection
-- [ ] optionally select a target muscle together with its opposing/antagonist group for deliberate balanced session planning
-- [ ] use full enriched exercise detail payload for ranking beyond current tags/body/category guidance
+- [ ] group split / station capacity input
+- [x] avoid-region selection
+- [x] optionally select a target muscle together with its opposing/antagonist group for deliberate balanced session planning
+- [x] use enriched structured exercise detail payload for deterministic ranking beyond current tags/body/category guidance
 
 ## 9. Training formats
 
@@ -477,13 +482,14 @@ Reference entry points:
 - [x] replace stored exercise through autocomplete while preserving programming metadata
 - [x] duration recalculation after item mutations
 - [x] content mutations return a published session to `draft`
-- [ ] show concise exercise instructions directly inside a training item
-- [ ] expand item to full execution/coaching/safety details
-- [ ] drag/drop ordering UI
-- [ ] easier/harder/equipment alternative actions
-- [ ] Level 1/2/3 editor beyond the current stored level field
-- [ ] duplicate session
-- [ ] combine/recreate
+- [x] show concise exercise instructions directly inside a training item
+- [x] expand item to full execution/coaching/safety details
+- [x] drag/drop ordering UI
+- [x] easier/harder/equipment alternative actions
+- [x] Level 1/2/3 selection/editor backed by structured exercise levels
+- [x] duplicate session
+- [x] combine sessions
+- [ ] recreate/regenerate an existing session from editable constraints
 - [ ] version history/restore
 - [ ] templates
 
@@ -521,8 +527,8 @@ Principle: **retrieve approved data → compose → deterministic validation →
 ## 13. Groups
 
 - [x] DB foundation
-- [ ] Group CRUD UI
-- [ ] age/participant/duration defaults
+- [x] Group CRUD UI with archive/restore
+- [x] age/participant/duration defaults
 - [ ] location/equipment defaults
 - [ ] skill distribution + preferred formats
 - [ ] club-rule profile
@@ -654,13 +660,15 @@ Each sequence illustration uses one adult athlete, selected randomly as a woman 
 - [x] warm-up seed quality integration gate rejects the original generic scaffolding and checks DE/EN search documents
 - [x] BM25 integration test with real in-memory DuckDB FTS
 - [x] structured fallback-search ranking test
-- [x] structured autocomplete integration tests for aliases/tags/equipment/body regions/categories/movement patterns
+- [x] structured autocomplete integration tests for aliases/tags/equipment/body regions/categories/movement patterns/training goals
 - [x] deterministic TrainingDraft domain tests
 - [x] TrainingDraft candidate retrieval integration test
 - [x] granular/coarse body-region compatibility unit tests
-- [x] Quick Create request normalization tests include granular muscle regions
+- [x] Quick Create request normalization tests include granular muscle regions, avoid-regions and location
 - [x] persisted Training Session integration test
 - [x] persisted Training item mutation integration tests for add/edit/remove/reorder/replace
+- [x] exercise antagonist-pair persistence integration tests
+- [x] rich exercise classification persistence tests
 - [ ] Quick Create E2E
 - [ ] Training Editor E2E
 - [ ] Kids/Youth E2E
@@ -693,21 +701,27 @@ No athlete surveillance or unnecessary personal data.
 - [x] CI-quality foundation
 - [x] training-domain foundation
 - [x] DuckDB schema/migrations
-- [x] validated 140+ exercise pool + 25+ running pool
+- [x] validated 157-exercise pool + 25+ running pool
 - [x] OCR-specific seed pool
 - [x] DE/EN exercise/search content
 - [x] Exercise Library + Create/Edit/Archive/Restore
+- [x] same full editor flow for newly created and existing exercises
+- [x] rich exercise goal/classification editor
+- [x] persisted antagonist muscle-pair editing and display
 - [x] search documents + FTS dirty-state handling
 - [x] BM25 live search + structured fallback
-- [x] enriched autocomplete API
+- [x] enriched autocomplete API including explicit training goals
 - [x] read-only Admin search status
 - [x] reusable anatomical MuscleMap across Quick Create, exercise editing, filtering and previews
 - [x] granular muscle taxonomy with safe compatibility for legacy coarse mappings
 - [x] Quick Create UI + body selector + live exercise retrieval
+- [x] Quick Create avoid-regions, antagonist suggestions and indoor/outdoor location filtering
 - [x] deterministic real-exercise TrainingDraft preview
 - [x] Quick Create persistence to real training sessions
 - [x] Training list/detail + metadata/archive/restore
-- [x] stored Training item add/edit/remove/reorder/replace
+- [x] stored Training item add/edit/remove/reorder/replace + drag/drop + Level 1–3 + alternatives
+- [x] session duplicate and combine flows
+- [x] Group CRUD + basic age/participant/duration/risk defaults
 - [x] semantic UI tokens + Light/Dark/System theme foundation
 - [x] media schema + AI exercise-image pipeline foundation
 
@@ -720,7 +734,8 @@ No athlete surveillance or unnecessary personal data.
 - [x] enrich all carry/drag/flip seeds with load selection, RPE, safe lifting, route/turn, set-down and regression guidance
 - [x] add seed completeness CI rules for populated detail fields and running/OCR safety fields
 - [x] author and validate a complete exercise-specific bilingual warm-up cohort
-- [ ] add richer categories/goals/facets
+- [x] add rich editable training goals and movement/audience/prescription classification
+- [ ] add richer categories/facets
 - [ ] add VIBSS-inspired training-template/source model
 - [x] central UI tokens + Light/Dark/System theme
 - [x] BM25 exercise search over enriched content
@@ -749,8 +764,9 @@ No athlete surveillance or unnecessary personal data.
 - [ ] group/level splitting
 - [ ] editable Circuit/Tabata/AMRAP/EMOM/Rig & Run
 - [ ] persisted running rules such as every 100 m
-- [ ] Level 1/2/3 variants
-- [ ] duplicate/combine/recreate sessions
+- [x] Level 1/2/3 variants can be edited on exercises and selected in stored training items
+- [x] duplicate/combine sessions
+- [ ] recreate/regenerate existing sessions from constraints
 - [ ] portable selectable JSON import/export including optional images
 - [ ] duplicate/conflict compare screen with left/right/both resolution
 - [ ] AI composition from approved pool
