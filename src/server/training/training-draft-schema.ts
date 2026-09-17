@@ -70,6 +70,8 @@ export const trainingDraftRequestSchema = z.object({
   mainPartCount: z.number().int().min(1).max(4).default(1),
   organizationMode: z.enum(["solo", "team"]).default("solo"),
   teamSize: z.number().int().min(2).max(20).optional(),
+  /** Explicit number of parallel rotation groups in solo/rotation mode. */
+  groupSplitCount: z.number().int().min(1).max(20).optional(),
   sourceTrainingIds: z.array(z.string().uuid()).max(6).default([]),
   preferredExerciseIds: z.array(z.string().trim().min(1).max(100)).max(12),
   availableEquipment: z.array(z.object({
@@ -102,6 +104,12 @@ export const trainingDraftRequestSchema = z.object({
 ).refine(
   (value) => value.teamSize == null || value.teamSize <= value.participantCount,
   { message: "Die Teamgröße darf die Teilnehmerzahl nicht überschreiten.", path: ["teamSize"] },
+).refine(
+  (value) => value.organizationMode !== "team" || value.groupSplitCount == null,
+  { message: "Rotationsgruppen werden nur im Solo-/Rotationsmodus verwendet.", path: ["groupSplitCount"] },
+).refine(
+  (value) => value.groupSplitCount == null || value.groupSplitCount <= value.participantCount,
+  { message: "Es kann nicht mehr Rotationsgruppen als Teilnehmende geben.", path: ["groupSplitCount"] },
 ).refine(
   (value) => value.mainPartExerciseCounts.length === 0 || value.mainPartExerciseCounts.length === value.mainPartCount,
   { message: "Für jeden Hauptteil muss genau eine Übungsanzahl angegeben werden.", path: ["mainPartExerciseCounts"] },
