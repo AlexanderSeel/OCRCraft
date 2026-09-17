@@ -146,6 +146,9 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
                   <InfoValue label="Untergrund" value={guidance?.surfaceRequirements ?? "–"} />
                   <InfoValue label="Wetter / Gelände" value={guidance?.weatherTerrain ?? "–"} />
                   {guidance?.obstacleConfiguration ? <InfoValue label="Hindernis-Konfiguration" value={guidance.obstacleConfiguration} /> : null}
+                  {guidance?.clubObstacleHeightCm != null || guidance?.clubObstacleSpanCm != null || guidance?.clubObstacleReachCm != null ? (
+                    <InfoValue label="Vereinsmaße" value={[guidance.clubObstacleHeightCm != null ? `Höhe ${guidance.clubObstacleHeightCm} cm` : null, guidance.clubObstacleSpanCm != null ? `Spannweite ${guidance.clubObstacleSpanCm} cm` : null, guidance.clubObstacleReachCm != null ? `Reichweite ${guidance.clubObstacleReachCm} cm` : null].filter(Boolean).join(" · ")} />
+                  ) : null}
                 </dl>
               </div>
             </Card>

@@ -147,6 +147,9 @@ export function ExerciseLogisticsEditor({
       <TextField disabled={disabled} label="Untergrund" name="surfaceRequirements" value={guidance?.surfaceRequirements} />
       <TextField disabled={disabled} label="Wetter / Gelände" name="weatherTerrain" value={guidance?.weatherTerrain} />
       <TextField disabled={disabled} label="Hindernis-Konfiguration" name="obstacleConfiguration" value={guidance?.obstacleConfiguration} />
+      <NumberField optional disabled={disabled} label="Vereinsmaß Höhe (cm)" max={1000} min={0.1} name="clubObstacleHeightCm" value={guidance?.clubObstacleHeightCm ?? undefined} />
+      <NumberField optional disabled={disabled} label="Vereinsmaß Spannweite (cm)" max={1000} min={0.1} name="clubObstacleSpanCm" value={guidance?.clubObstacleSpanCm ?? undefined} />
+      <NumberField optional disabled={disabled} label="Vereinsmaß Reichweite (cm)" max={1000} min={0.1} name="clubObstacleReachCm" value={guidance?.clubObstacleReachCm ?? undefined} />
       <div className="flex items-end justify-end md:col-span-2 xl:col-span-3">
         <button
           className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)] disabled:cursor-not-allowed disabled:opacity-40"
@@ -192,25 +195,27 @@ function NumberField({
   min,
   max,
   disabled,
+  optional = false,
 }: {
   readonly label: string;
   readonly name: string;
-  readonly value: number;
+  readonly value?: number;
   readonly min: number;
   readonly max: number;
   readonly disabled: boolean;
+  readonly optional?: boolean;
 }) {
   return (
     <label className="grid gap-2 text-sm font-bold">
       {label}
       <input
         className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-        defaultValue={value}
+        defaultValue={value ?? ""}
         disabled={disabled}
         max={max}
         min={min}
         name={name}
-        required
+        required={!optional}
         type="number"
       />
     </label>

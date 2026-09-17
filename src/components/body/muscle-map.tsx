@@ -306,8 +306,8 @@ export function MuscleMap({
           <span className="text-xs text-[var(--muted)]">{detailed ? "Detailauswahl · links/rechts aus Sicht der dargestellten Person" : "Auswahl ganzer Muskelgruppen"}</span>
         </div>
       ) : null}
-      <div className={compact ? "mx-auto w-full max-w-56" : "muscle-workspace grid items-start gap-4"}>
-        <div className={compact ? "w-full" : visualCompact ? "muscle-figure mx-auto w-full max-w-[300px]" : "muscle-figure mx-auto w-full max-w-[360px]"}>
+      <div className={compact && mode !== "display" ? "muscle-workspace grid items-start gap-3" : compact ? "mx-auto w-full max-w-56" : "muscle-workspace grid items-start gap-4"}>
+        <div className={compact ? "muscle-figure mx-auto w-full max-w-[220px]" : visualCompact ? "muscle-figure mx-auto w-full max-w-[300px]" : "muscle-figure mx-auto w-full max-w-[360px]"}>
           <div
             className={`relative mx-auto aspect-[376/504] w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)] ${interactive ? "cursor-pointer" : ""}`}
             onClick={handleMapClick}
@@ -361,7 +361,7 @@ export function MuscleMap({
           ) : null}
         </div>
 
-        {!compact ? (
+        {mode !== "display" ? (
           <details
             className="muscle-tree min-w-0 w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] shadow-[var(--shadow-card)]"
             onToggle={(event) => setListOpen(event.currentTarget.open)}
@@ -534,7 +534,7 @@ export function MuscleMap({
         </div>
       ) : null}
 
-      {!compact && selection.length > 0 ? (
+      {mode !== "display" && selection.length > 0 ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
           <div className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Ausgewählte Muskeln</div>
           <div className="flex flex-wrap gap-2">

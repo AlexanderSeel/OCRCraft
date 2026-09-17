@@ -44,12 +44,12 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
         {hasResult ? (
           <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
             <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Letzter Lauf</div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              <Metric label="Geprüft" value={result.scanned ?? "0"} />
-              <Metric label="Neu ergänzt" value={result.enriched ?? "0"} />
-              <Metric label="Schon vorhanden" value={result.existing ?? "0"} />
-              <Metric label="Nicht abbildbar" value={result.unmappable ?? "0"} />
-              <Metric label="Detaildaten fehlen" value={result.missingDetails ?? "0"} />
+            <div aria-label="Ergebnis-Metadaten" className="mt-4 flex flex-wrap gap-2">
+              <MetaTag label="Geprüft" value={result.scanned ?? "0"} />
+              <MetaTag label="Neu ergänzt" value={result.enriched ?? "0"} />
+              <MetaTag label="Schon vorhanden" value={result.existing ?? "0"} />
+              <MetaTag label="Nicht abbildbar" value={result.unmappable ?? "0"} />
+              <MetaTag label="Details fehlen" value={result.missingDetails ?? "0"} />
             </div>
           </section>
         ) : null}
@@ -84,8 +84,8 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
   );
 }
 
-function Metric({ label, value }: { readonly label: string; readonly value: string }) {
-  return <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4"><div className="text-xs font-bold text-[var(--muted)]">{label}</div><div className="mt-1 text-2xl font-black">{value}</div></div>;
+function MetaTag({ label, value }: { readonly label: string; readonly value: string }) {
+  return <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5 text-xs font-bold"><span className="text-[var(--muted)]">{label}:</span><span>{value}</span></span>;
 }
 
 function Info({ title, text }: { readonly title: string; readonly text: string }) {

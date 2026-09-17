@@ -271,7 +271,7 @@ The database should describe training suitability, not provide medical diagnosis
 - [x] medicine-ball/sandbag/target/spear throws
 - [x] richer obstacle prerequisites for every seeded OCR / Grip & Rig obstacle, traverse and transition
 - [x] obstacle configuration/setup, clear-zone and station-capacity guidance for all seeded OCR / Grip & Rig stations
-- [ ] record club-specific obstacle dimensions when configured; no universal height/span values are assumed
+- [x] record club-specific obstacle dimensions when configured; no universal height/span values are assumed
 - [x] detailed approach / execution / exit sequence for every seeded OCR / Grip & Rig obstacle task
 - [x] explicit failed-attempt fallback/regression for every seeded OCR / Grip & Rig task
 - [x] transition technique between running and obstacle work
@@ -348,7 +348,7 @@ Reference entry points:
 - [x] compact muscle/facet filter popovers stay bounded to the viewport and do not dominate the overview
 - [x] overview metrics are reduced to compact metadata tags beside the result count
 - [x] counts, equipment, risk, min-age display
-- [x] compact metadata treatment is consistent between overview and exercise detail pages
+- [x] compact metadata treatment is consistent between overview, detail and admin result pages
 - [x] create exercise
 - [x] new manual exercises continue directly into the same full editor used by existing exercises
 - [x] edit exercise

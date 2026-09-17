@@ -39,6 +39,9 @@ export interface ExerciseLogisticsInput {
   readonly surfaceRequirements: string;
   readonly weatherTerrain: string;
   readonly obstacleConfiguration: string;
+  readonly clubObstacleHeightCm: number | null;
+  readonly clubObstacleSpanCm: number | null;
+  readonly clubObstacleReachCm: number | null;
 }
 
 interface LogisticsRow {
@@ -52,6 +55,9 @@ interface LogisticsRow {
   readonly surfaceRequirements: string;
   readonly weatherTerrain: string;
   readonly obstacleConfiguration: string;
+  readonly clubObstacleHeightCm: number | null;
+  readonly clubObstacleSpanCm: number | null;
+  readonly clubObstacleReachCm: number | null;
 }
 
 async function readLogistics(exerciseId: string): Promise<LogisticsRow | null> {
@@ -69,6 +75,7 @@ async function readLogistics(exerciseId: string): Promise<LogisticsRow | null> {
         ,COALESCE(surface_requirements, '')
         ,COALESCE(weather_terrain, '')
         ,COALESCE(obstacle_configuration, '')
+        ,club_obstacle_height_cm, club_obstacle_span_cm, club_obstacle_reach_cm
       FROM exercises
       WHERE id=$exerciseId::UUID
       `,
@@ -87,6 +94,9 @@ async function readLogistics(exerciseId: string): Promise<LogisticsRow | null> {
       surfaceRequirements: String(row[7]),
       weatherTerrain: String(row[8]),
       obstacleConfiguration: String(row[9]),
+      clubObstacleHeightCm: row[10] == null ? null : Number(row[10]),
+      clubObstacleSpanCm: row[11] == null ? null : Number(row[11]),
+      clubObstacleReachCm: row[12] == null ? null : Number(row[12]),
     };
   });
 }
@@ -166,6 +176,9 @@ export async function updateExerciseLogistics(
           surface_requirements=$surfaceRequirements,
           weather_terrain=$weatherTerrain,
           obstacle_configuration=$obstacleConfiguration,
+          club_obstacle_height_cm=$clubObstacleHeightCm,
+          club_obstacle_span_cm=$clubObstacleSpanCm,
+          club_obstacle_reach_cm=$clubObstacleReachCm,
           updated_at=current_timestamp
         WHERE id=$exerciseId::UUID
         RETURNING id::VARCHAR

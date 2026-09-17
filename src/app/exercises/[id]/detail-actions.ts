@@ -45,10 +45,18 @@ const logisticsSchema = z.object({
   surfaceRequirements: z.string().trim().min(1).max(1000),
   weatherTerrain: z.string().trim().min(1).max(1000),
   obstacleConfiguration: z.string().trim().max(1000),
+  clubObstacleHeightCm: z.coerce.number().positive().max(1000).nullable(),
+  clubObstacleSpanCm: z.coerce.number().positive().max(1000).nullable(),
+  clubObstacleReachCm: z.coerce.number().positive().max(1000).nullable(),
 });
 
 function stringField(formData: FormData, name: string): string {
   return String(formData.get(name) ?? "");
+}
+
+function nullableNumberField(formData: FormData, name: string): string | null {
+  const value = String(formData.get(name) ?? "").trim();
+  return value === "" ? null : value;
 }
 
 export async function updateLocalizedExerciseDetailsAction(
@@ -112,6 +120,9 @@ export async function updateExerciseLogisticsAction(
     surfaceRequirements: stringField(formData, "surfaceRequirements"),
     weatherTerrain: stringField(formData, "weatherTerrain"),
     obstacleConfiguration: stringField(formData, "obstacleConfiguration"),
+    clubObstacleHeightCm: nullableNumberField(formData, "clubObstacleHeightCm"),
+    clubObstacleSpanCm: nullableNumberField(formData, "clubObstacleSpanCm"),
+    clubObstacleReachCm: nullableNumberField(formData, "clubObstacleReachCm"),
   });
 
   if (!parsed.success) {
