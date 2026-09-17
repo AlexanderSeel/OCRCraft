@@ -12,10 +12,11 @@ const request = {
   preferredExerciseIds: [],
 };
 
-describe("training draft request equipment inventory and location", () => {
+describe("training draft request equipment, obstacles and location", () => {
   it("defaults omitted inventory and location safely", () => {
     const parsed = trainingDraftRequestSchema.parse(request);
     expect(parsed.availableEquipment).toEqual([]);
+    expect(parsed.availableObstacleExerciseIds).toBeUndefined();
     expect(parsed.location).toBe("mixed");
   });
 
@@ -42,6 +43,34 @@ describe("training draft request equipment inventory and location", () => {
     expect(trainingDraftRequestSchema.safeParse({
       ...request,
       availableEquipment: [{ equipmentId: "rig-id", quantityAvailable: -1 }],
+    }).success).toBe(false);
+  });
+
+  it("treats an empty obstacle inventory as an explicit valid constraint", () => {
+    const parsed = trainingDraftRequestSchema.parse({
+      ...request,
+      availableObstacleExerciseIds: [],
+    });
+    expect(parsed.availableObstacleExerciseIds).toEqual([]);
+  });
+
+  it("accepts unique obstacle exercise ids and rejects duplicates or invalid ids", () => {
+    const wall = "11111111-1111-4111-8111-111111111111";
+    const rig = "22222222-2222-4222-8222-222222222222";
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      availableObstacleExerciseIds: [wall, rig],
+    }).success).toBe(true);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      availableObstacleExerciseIds: [wall, wall],
+    }).success).toBe(false);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      availableObstacleExerciseIds: ["wall"],
     }).success).toBe(false);
   });
 });
