@@ -49,6 +49,12 @@ const formatOptions = [
   ["relay", "Team / Relay", "Gruppen- und Staffelvarianten"],
 ] as const;
 
+const locationOptions = [
+  ["mixed", "Flexibel", "Indoor- und Outdoor-geeignete Übungen zulassen"],
+  ["indoor", "Indoor", "Nur Übungen verwenden, die für Indoor-Training geeignet sind"],
+  ["outdoor", "Outdoor", "Nur Übungen verwenden, die für Outdoor-Training geeignet sind"],
+] as const;
+
 export interface QuickCreateGroupPreset {
   readonly id: string;
   readonly name: string;
@@ -93,6 +99,7 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
   const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>([]);
   const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>([]);
   const [formats, setFormats] = useState<readonly string[]>(["rig-run"]);
+  const [location, setLocation] = useState("mixed");
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
     Object.fromEntries(equipmentOptions.flatMap((option) =>
       option.quantityAvailable == null ? [] : [[option.id, String(option.quantityAvailable)]]
@@ -109,6 +116,7 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
 
   const selectedGroup = groupOptions.find(([id]) => id === groupType);
   const selectedPreset = groupPresets.find((preset) => preset.id === selectedGroupId);
+  const selectedLocation = locationOptions.find(([id]) => id === location);
   const durationOptions = useMemo(
     () => [...new Set([45, 60, 75, 90, 120, duration])].sort((a, b) => a - b),
     [duration],
@@ -170,6 +178,7 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
       bodyRegions,
       avoidBodyRegions,
       formats,
+      location,
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
         quantity.trim() === "" ? [] : [{ equipmentId, quantityAvailable: Number(quantity) }]
       ),
@@ -276,7 +285,10 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                         : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-subtle)]"
                     }`}
                     key={id}
-                    onClick={() => setGroupType(id)}
+                    onClick={() => {
+                      setGroupType(id);
+                      invalidateDraft();
+                    }}
                     type="button"
                   >
                     <span className="block font-black">{label}</span>
@@ -292,7 +304,10 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                   Alter / Bereich
                   <input
                     className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
-                    onChange={(event) => setAgeRange(event.target.value)}
+                    onChange={(event) => {
+                      setAgeRange(event.target.value);
+                      invalidateDraft();
+                    }}
                     value={ageRange}
                   />
                 </label>
@@ -301,7 +316,10 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                   <input
                     className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
                     min={1}
-                    onChange={(event) => setParticipantCount(Number(event.target.value))}
+                    onChange={(event) => {
+                      setParticipantCount(Number(event.target.value));
+                      invalidateDraft();
+                    }}
                     type="number"
                     value={participantCount}
                   />
@@ -310,7 +328,10 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                   Dauer
                   <select
                     className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
-                    onChange={(event) => setDuration(Number(event.target.value))}
+                    onChange={(event) => {
+                      setDuration(Number(event.target.value));
+                      invalidateDraft();
+                    }}
                     value={duration}
                   >
                     {durationOptions.map((minutes) => (
@@ -336,7 +357,10 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                         : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
                     }`}
                     key={goal}
-                    onClick={() => setGoals(toggleValue(goals, goal))}
+                    onClick={() => {
+                      setGoals(toggleValue(goals, goal));
+                      invalidateDraft();
+                    }}
                     type="button"
                   >
                     {goal}
@@ -383,7 +407,10 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                 <ExerciseAutocompletePicker
                   description="Optional: echte Übungen oder Hindernisse aus der Bibliothek vormerken. Namen, Aliase, Tags, Equipment und Körperregionen werden durchsucht."
                   label="Wunschübungen / Hindernisse"
-                  onChange={setPreferredExercises}
+                  onChange={(items) => {
+                    setPreferredExercises(items);
+                    invalidateDraft();
+                  }}
                   selected={preferredExercises}
                 />
               </div>
@@ -392,25 +419,59 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
 
           {step === 3 ? (
             <div>
-              <h3 className="text-lg font-black">Wie soll trainiert werden?</h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">Formate lassen sich kombinieren und später einzelnen Trainingsblöcken zuweisen.</p>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {formatOptions.map(([id, label, description]) => (
-                  <button
-                    aria-pressed={formats.includes(id)}
-                    className={`rounded-xl border p-4 text-left ${
-                      formats.includes(id)
-                        ? "border-[var(--accent-strong)] bg-[var(--accent-soft)]"
-                        : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
-                    }`}
-                    key={id}
-                    onClick={() => setFormats(toggleValue(formats, id))}
-                    type="button"
-                  >
-                    <span className="block font-black">{label}</span>
-                    <span className="mt-1 block text-sm leading-5 text-[var(--muted)]">{description}</span>
-                  </button>
-                ))}
+              <h3 className="text-lg font-black">Wie und wo soll trainiert werden?</h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">Formate lassen sich kombinieren. Der Ort filtert den realen Übungspool nach seiner hinterlegten Eignung.</p>
+
+              <div className="mt-5">
+                <div className="text-sm font-black">Trainingsort</div>
+                <div className="mt-2 grid gap-3 sm:grid-cols-3">
+                  {locationOptions.map(([id, label, description]) => (
+                    <button
+                      aria-pressed={location === id}
+                      className={`rounded-xl border p-4 text-left ${
+                        location === id
+                          ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"
+                          : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
+                      }`}
+                      key={id}
+                      onClick={() => {
+                        setLocation(id);
+                        invalidateDraft();
+                      }}
+                      type="button"
+                    >
+                      <span className="block font-black">{label}</span>
+                      <span className={`mt-1 block text-sm leading-5 ${location === id ? "opacity-70" : "text-[var(--muted)]"}`}>
+                        {description}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-7 border-t border-[var(--border)] pt-6">
+                <div className="text-sm font-black">Trainingsformat</div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {formatOptions.map(([id, label, description]) => (
+                    <button
+                      aria-pressed={formats.includes(id)}
+                      className={`rounded-xl border p-4 text-left ${
+                        formats.includes(id)
+                          ? "border-[var(--accent-strong)] bg-[var(--accent-soft)]"
+                          : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
+                      }`}
+                      key={id}
+                      onClick={() => {
+                        setFormats(toggleValue(formats, id));
+                        invalidateDraft();
+                      }}
+                      type="button"
+                    >
+                      <span className="block font-black">{label}</span>
+                      <span className="mt-1 block text-sm leading-5 text-[var(--muted)]">{description}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <details className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
@@ -422,10 +483,13 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                 </p>
                 <div className="mt-4">
                   <EquipmentAvailabilityPicker
-                    onChange={(equipmentId, quantity) => setAvailableEquipment((current) => ({
-                      ...current,
-                      [equipmentId]: quantity,
-                    }))}
+                    onChange={(equipmentId, quantity) => {
+                      setAvailableEquipment((current) => ({
+                        ...current,
+                        [equipmentId]: quantity,
+                      }));
+                      invalidateDraft();
+                    }}
                     options={equipmentOptions}
                     value={availableEquipment}
                   />
@@ -451,7 +515,10 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                         : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
                     }`}
                     key={id}
-                    onClick={() => setIntensity(id)}
+                    onClick={() => {
+                      setIntensity(id);
+                      invalidateDraft();
+                    }}
                     type="button"
                   >
                     <span className="block font-black">{label}</span>
@@ -485,6 +552,7 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                   ["Körperregionen", bodyRegions.length ? bodyRegions.join(", ") : "Keine Vorgabe"],
                   ["Nicht belasten", avoidBodyRegions.length ? avoidBodyRegions.join(", ") : "Keine Ausschlüsse"],
                   ["Wunschübungen", preferredExercises.length ? preferredExercises.map((item) => item.label).join(", ") : "Keine Vorgabe"],
+                  ["Ort", selectedLocation?.[1] ?? location],
                   ["Formate", formats.join(", ")],
                   ["Ausrichtung", intensity],
                 ].map(([label, value]) => (
@@ -593,6 +661,10 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
             <div>
               <div className="text-xs text-[var(--sidebar-muted)]">Zeit</div>
               <div className="mt-1 font-black">{duration} Minuten</div>
+            </div>
+            <div>
+              <div className="text-xs text-[var(--sidebar-muted)]">Ort</div>
+              <div className="mt-1 font-black">{selectedLocation?.[1] ?? location}</div>
             </div>
             <div>
               <div className="text-xs text-[var(--sidebar-muted)]">Fokus</div>
