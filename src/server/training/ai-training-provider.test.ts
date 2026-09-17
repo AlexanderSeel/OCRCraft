@@ -3,6 +3,8 @@ import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import { OpenAiCompatibleTrainingProvider } from "./ai-training-provider";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 
+vi.mock("server-only", () => ({}));
+
 const request: TrainingDraftRequest = {
   audience: "adults",
   participantCount: 14,
@@ -54,21 +56,25 @@ afterEach(() => {
 describe("OpenAI-compatible training provider", () => {
   it("sends multiple previous sessions as bounded recomposition context", async () => {
     const fetchMock = vi.fn(async (
-      _input: RequestInfo | URL,
-      _init?: RequestInit,
-    ): Promise<Response> => new Response(JSON.stringify({
-      choices: [{
-        message: {
-          content: JSON.stringify({
-            phases: [
-              { kind: "warmup", items: [] },
-              { kind: "main", items: [{ exerciseId: exercise.id }] },
-              { kind: "cooldown", items: [] },
-            ],
-          }),
-        },
-      }],
-    }), { status: 200, headers: { "content-type": "application/json" } }));
+      input: RequestInfo | URL,
+      init?: RequestInit,
+    ): Promise<Response> => {
+      void input;
+      void init;
+      return new Response(JSON.stringify({
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              phases: [
+                { kind: "warmup", items: [] },
+                { kind: "main", items: [{ exerciseId: exercise.id }] },
+                { kind: "cooldown", items: [] },
+              ],
+            }),
+          },
+        }],
+      }), { status: 200, headers: { "content-type": "application/json" } });
+    });
     vi.stubGlobal("fetch", fetchMock);
 
     const provider = new OpenAiCompatibleTrainingProvider("http://localhost:11434/v1", "local-model", "secret");
