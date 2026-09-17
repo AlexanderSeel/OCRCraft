@@ -17,6 +17,7 @@ export interface QuickCreateDraftClientInput {
   readonly durationMinutes: number;
   readonly goals: readonly string[];
   readonly bodyRegions: readonly string[];
+  readonly avoidBodyRegions?: readonly string[];
   readonly formats: readonly string[];
   readonly intensity: string;
   readonly preferredExerciseIds: readonly string[];
@@ -34,6 +35,7 @@ export interface NormalizedTrainingDraftRequest {
   readonly durationMinutes: number;
   readonly goals: readonly string[];
   readonly bodyRegions: readonly BodyRegion[];
+  readonly avoidBodyRegions: readonly BodyRegion[];
   readonly formats: readonly TrainingFormat[];
   readonly intensity: DraftIntensity;
   readonly preferredExerciseIds: readonly string[];
@@ -92,7 +94,10 @@ export function normalizeTrainingDraftRequest(
   input: QuickCreateDraftClientInput,
 ): NormalizedTrainingDraftRequest {
   const audience: Audience = isAudience(input.groupType) ? input.groupType : "mixed";
-  const bodyRegions = input.bodyRegions.filter(isBodyRegion);
+  const bodyRegions = [...new Set(input.bodyRegions.filter(isBodyRegion))];
+  const focusRegionSet = new Set(bodyRegions);
+  const avoidBodyRegions = [...new Set((input.avoidBodyRegions ?? []).filter(isBodyRegion))]
+    .filter((region) => !focusRegionSet.has(region));
   const formats = input.formats.filter(isTrainingFormat);
   const intensity: DraftIntensity = isDraftIntensity(input.intensity) ? input.intensity : "balanced";
   const ages = parseAgeRange(input.ageRange);
@@ -108,6 +113,7 @@ export function normalizeTrainingDraftRequest(
     durationMinutes: input.durationMinutes,
     goals: input.goals,
     bodyRegions,
+    avoidBodyRegions,
     formats,
     intensity,
     preferredExerciseIds: input.preferredExerciseIds,

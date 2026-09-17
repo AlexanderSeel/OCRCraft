@@ -21,6 +21,7 @@ export interface TrainingDraftInput {
   readonly durationMinutes: number;
   readonly goals: readonly string[];
   readonly bodyRegions: readonly BodyRegion[];
+  readonly avoidBodyRegions?: readonly BodyRegion[];
   readonly formats: readonly TrainingFormat[];
   readonly intensity: DraftIntensity;
   readonly preferredExerciseIds: readonly string[];
@@ -120,6 +121,7 @@ function inferredPhase(candidate: TrainingDraftExerciseCandidate): TrainingPhase
 
 function isEligible(candidate: TrainingDraftExerciseCandidate, input: TrainingDraftInput): boolean {
   if (input.minAge != null && candidate.minAge != null && candidate.minAge > input.minAge) return false;
+  if ((input.avoidBodyRegions ?? []).some((region) => bodyRegionsOverlap([region], candidate.bodyRegions))) return false;
   return true;
 }
 

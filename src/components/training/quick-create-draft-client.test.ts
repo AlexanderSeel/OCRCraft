@@ -50,6 +50,7 @@ describe("normalizeTrainingDraftRequest", () => {
       durationMinutes: 60,
       goals: ["OCR-Technik"],
       bodyRegions: ["core", "biceps", "rear-delts", "abs"],
+      avoidBodyRegions: [],
       formats: ["rig-run"],
       intensity: "technique",
       preferredExerciseIds: ["exercise-1"],
@@ -81,5 +82,6 @@ describe("normalizeTrainingDraftRequest", () => {
     expect(request.minAge).toBeUndefined();
     expect(request.maxAge).toBeUndefined();
     expect(request.availableEquipment).toEqual([]);
+    expect(request.avoidBodyRegions).toEqual([]);
   });
 });

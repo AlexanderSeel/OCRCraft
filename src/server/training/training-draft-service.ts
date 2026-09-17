@@ -22,6 +22,7 @@ export async function createDeterministicTrainingDraft(
       durationMinutes: request.durationMinutes,
       goals: request.goals,
       bodyRegions: request.bodyRegions,
+      avoidBodyRegions: request.avoidBodyRegions,
       formats: request.formats,
       intensity: request.intensity,
       preferredExerciseIds: request.preferredExerciseIds,

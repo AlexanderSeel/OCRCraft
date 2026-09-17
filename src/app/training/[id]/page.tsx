@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { AddTrainingItemForm } from "@/components/training/add-training-item-form";
 import { ReplaceTrainingItemForm } from "@/components/training/replace-training-item-form";
+import { TrainingItemAlternatives } from "@/components/training/training-item-alternatives";
 import { TrainingItemGuidance } from "@/components/training/training-item-guidance";
 import { TrainingItemReorderZone } from "@/components/training/training-item-reorder-zone";
 import { TRAINING_PHASE_LABELS } from "@/domain/training/model";
@@ -21,7 +22,12 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   readonly params: Promise<{ id: string }>;
-  readonly searchParams: Promise<{ saved?: string; error?: string }>;
+  readonly searchParams: Promise<{
+    saved?: string;
+    error?: string;
+    alternativeItem?: string;
+    alternativeMode?: string;
+  }>;
 }
 
 export default async function TrainingDetailPage({ params, searchParams }: PageProps) {
@@ -43,6 +49,14 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
       subtitle={`${session.totalDurationMinutes} Minuten · ${session.itemCount} Übungen · ${session.locale.toUpperCase()}`}
       actions={
         <div className="flex flex-wrap gap-2">
+          {editable ? (
+            <Link
+              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+              href={`/training/${session.id}/combine`}
+            >
+              Kombinieren
+            </Link>
+          ) : null}
           <form action={duplicateAction}>
             <button
               className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
@@ -70,7 +84,9 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">
             {query.error === "duplicate"
               ? "Training konnte nicht dupliziert werden. Bitte erneut versuchen."
-              : "Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen."}
+              : query.error === "item-level"
+                ? "Level konnte nicht gespeichert werden. Bitte erneut versuchen."
+                : "Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen."}
           </div>
         ) : null}
 
@@ -152,6 +168,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                       <div
                         className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4"
                         data-training-drop-id={item.id}
+                        id={`item-${item.id}`}
                         key={item.id}
                       >
                         <div className="grid gap-3 sm:grid-cols-[42px_minmax(0,1fr)_auto]">
@@ -179,7 +196,11 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                               {item.levelLabel ? <span>· {item.levelLabel}</span> : null}
                             </div>
                             <TrainingItemGuidance
+                              editable={editable}
                               guidance={item.exerciseId ? guidanceByExerciseId[item.exerciseId] : undefined}
+                              itemId={item.id}
+                              selectedLevel={item.levelLabel}
+                              sessionId={session.id}
                               trainerInstructions={item.instructions}
                             />
                           </div>
@@ -253,7 +274,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                         </select>
                                       </label>
                                       <label className="grid gap-1 text-xs font-bold">
-                                        Level / Variante
+                                        Level / freie Variante
                                         <input
                                           className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
                                           defaultValue={item.levelLabel ?? ""}
@@ -282,6 +303,13 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                   </form>
                                 </details>
                                 <ReplaceTrainingItemForm
+                                  currentExerciseName={item.exerciseName}
+                                  itemId={item.id}
+                                  sessionId={session.id}
+                                />
+                                <TrainingItemAlternatives
+                                  activeItemId={query.alternativeItem}
+                                  activeMode={query.alternativeMode}
                                   currentExerciseName={item.exerciseName}
                                   itemId={item.id}
                                   sessionId={session.id}
@@ -329,13 +357,16 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
 
 function savedMessage(saved: string): string {
   if (saved === "item") return "Trainingsinhalt wurde aktualisiert.";
+  if (saved === "item-level") return "Level-Zuordnung wurde aktualisiert.";
   if (saved === "duplicated") return "Training wurde als neue Kopie angelegt.";
+  if (saved === "combined") return "Kombiniertes Training wurde als neuer Entwurf angelegt.";
   return "Training wurde aktualisiert.";
 }
 
 function sourceLabel(source: string): string {
   if (source === "manual") return "Quick Create";
   if (source === "copied") return "Kopie";
+  if (source === "combined") return "Kombiniert";
   return source;
 }
 

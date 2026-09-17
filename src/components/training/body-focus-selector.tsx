@@ -6,12 +6,19 @@ import { BODY_REGION_OPTIONS } from "@/domain/body-regions";
 interface BodyFocusSelectorProps {
   readonly selected: readonly string[];
   readonly onToggle: (regionId: string) => void;
+  readonly title?: string;
+  readonly description?: string;
 }
 
-export function BodyFocusSelector({ selected, onToggle }: BodyFocusSelectorProps) {
+export function BodyFocusSelector({
+  selected,
+  onToggle,
+  title = "Körper- und Muskelfokus",
+  description = "Wähle die Muskel- und Körperregionen, die im Training gezielt berücksichtigt werden sollen. Die Karte dient der Trainingsplanung, nicht der medizinischen Anatomie.",
+}: BodyFocusSelectorProps) {
   return (
     <MuscleMap
-      description="Wähle die Muskel- und Körperregionen, die im Training gezielt berücksichtigt werden sollen. Die Karte dient der Trainingsplanung, nicht der medizinischen Anatomie."
+      description={description}
       mode="select"
       onChange={(next) => {
         const current = new Set(selected);
@@ -20,7 +27,7 @@ export function BodyFocusSelector({ selected, onToggle }: BodyFocusSelectorProps
         if (changed) onToggle(changed.id);
       }}
       options={BODY_REGION_OPTIONS}
-      title="Körper- und Muskelfokus"
+      title={title}
       value={selected.map((id) => ({ id }))}
     />
   );
