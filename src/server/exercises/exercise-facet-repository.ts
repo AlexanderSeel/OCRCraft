@@ -90,6 +90,27 @@ export async function listExerciseIdsForBodyRegions(
   });
 }
 
+export async function listTagOptions(): Promise<readonly ExerciseFacetOption[]> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll("SELECT id,label_de,label_en FROM tags ORDER BY label_de");
+    return rowsToOptions(reader.getRows());
+  });
+}
+
+export async function listExerciseIdsForTags(tagIds: readonly string[]): Promise<readonly string[]> {
+  const uniqueIds = [...new Set(tagIds.map((id) => id.trim()).filter(Boolean))];
+  if (uniqueIds.length === 0) return [];
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      "SELECT exercise_id::VARCHAR FROM exercise_tags WHERE list_contains(string_split($tags, ','), tag_id) GROUP BY exercise_id HAVING count(DISTINCT tag_id)=$count ORDER BY exercise_id::VARCHAR",
+      { tags: uniqueIds.join(","), count: uniqueIds.length },
+    );
+    return reader.getRows().map((row) => String(row[0]));
+  });
+}
+
 export async function getExerciseBodyRegionMap(
   exerciseIds: readonly string[],
 ): Promise<ExerciseBodyRegionMap> {

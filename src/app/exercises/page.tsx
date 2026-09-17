@@ -11,6 +11,8 @@ import {
 import {
   getExerciseBodyRegionMap,
   listBodyRegionOptions,
+  listExerciseIdsForTags,
+  listTagOptions,
   listExerciseIdsForBodyRegions,
 } from "@/server/exercises/exercise-facet-repository";
 import { countExercises, getExerciseCategoryCounts } from "@/server/exercises/exercise-repository";
@@ -26,6 +28,7 @@ interface PageProps {
     muscle?: string | string[];
     page?: string;
     size?: string;
+    facet?: string | string[];
   }>;
 }
 
@@ -35,29 +38,33 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   const category = params.category?.trim() || undefined;
   const archived = params.status === "archived";
   const selectedMuscles = parameterList(params.muscle);
+  const selectedFacets = parameterList(params.facet);
   const requestedSize = Number.parseInt(params.size ?? "80", 10) || 80;
   const pageSize = [20, 40, 80, 120].includes(requestedSize) ? requestedSize : 80;
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
 
-  const [searchResult, categoryCounts, baseFilteredTotal, bodyRegionOptions] = await Promise.all([
-    searchExercises({ query, category, archived, limit: selectedMuscles.length ? 200 : pageSize + 1, offset: selectedMuscles.length ? 0 : (page - 1) * pageSize }),
+  const [searchResult, categoryCounts, baseFilteredTotal, bodyRegionOptions, tagOptions] = await Promise.all([
+    searchExercises({ query, category, archived, limit: selectedMuscles.length || selectedFacets.length ? 200 : pageSize + 1, offset: selectedMuscles.length || selectedFacets.length ? 0 : (page - 1) * pageSize }),
     getExerciseCategoryCounts(),
     countExercises({ query, category, archived }),
     listBodyRegionOptions(),
+    listTagOptions(),
   ]);
 
   const matchingMuscleIds = selectedMuscles.length > 0
     ? new Set(await listExerciseIdsForBodyRegions(expandBodyRegionIds(selectedMuscles)))
     : null;
-  const filteredTotal = matchingMuscleIds && !query && !category && !archived ? matchingMuscleIds.size : baseFilteredTotal;
-  const muscleFilteredResults = matchingMuscleIds ? searchResult.filter((exercise) => matchingMuscleIds.has(exercise.id)) : null;
-  const hasNextPage = matchingMuscleIds
+  const matchingFacetIds = selectedFacets.length > 0 ? new Set(await listExerciseIdsForTags(selectedFacets)) : null;
+  const matchingIds = matchingMuscleIds || matchingFacetIds
+    ? new Set(searchResult.filter((exercise) => (!matchingMuscleIds || matchingMuscleIds.has(exercise.id)) && (!matchingFacetIds || matchingFacetIds.has(exercise.id))).map((exercise) => exercise.id))
+    : null;
+  const filteredTotal = matchingIds && !query && !category && !archived ? matchingIds.size : baseFilteredTotal;
+  const filteredResults = matchingIds ? searchResult.filter((exercise) => matchingIds.has(exercise.id)) : null;
+  const hasNextPage = matchingIds
     ? page * pageSize < filteredTotal
     : searchResult.length > pageSize;
-  const pagedResults = (muscleFilteredResults ?? searchResult).slice((matchingMuscleIds ? page - 1 : 0) * pageSize, (matchingMuscleIds ? page : 1) * pageSize);
-  const exercises = matchingMuscleIds
-    ? pagedResults
-    : pagedResults;
+  const pagedResults = (filteredResults ?? searchResult).slice((matchingIds ? page - 1 : 0) * pageSize, (matchingIds ? page : 1) * pageSize);
+  const exercises = pagedResults;
   const bodyRegionMap = await getExerciseBodyRegionMap(exercises.map((exercise) => exercise.id));
 
   const total = categoryCounts.reduce((sum, item) => sum + item.count, 0);
@@ -153,6 +160,17 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
               </div>
             </details>
             {selectedMuscles.length ? <div className="mt-2 flex flex-wrap gap-2">{selectedMuscles.map((id) => { const label = bodyRegionOptions.find((option) => option.id === id)?.labelDe ?? id; return <Link className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-bold" href={removeMuscleHref(params, id)} key={id}>{label}<span aria-hidden="true">×</span><span className="sr-only">{label} entfernen</span></Link>; })}</div> : null}
+          </div>
+          <div className="relative md:col-span-2 xl:col-span-5">
+            <details className="group">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black">
+                <span>Trainingsfacetten{selectedFacets.length ? ` · ${selectedFacets.length} gewählt` : ""}</span><span aria-hidden="true">⌄</span>
+              </summary>
+              <div className="absolute left-0 right-0 top-14 z-40 grid max-h-72 grid-cols-2 gap-2 overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-3 shadow-[var(--shadow-raised)] sm:grid-cols-3 lg:grid-cols-5">
+                {tagOptions.map((tag) => <label className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-2 py-2 text-xs font-bold" key={tag.id}><input defaultChecked={selectedFacets.includes(tag.id)} name="facet" type="checkbox" value={tag.id} />{tag.labelDe}</label>)}
+              </div>
+            </details>
+            {selectedFacets.length ? <div className="mt-2 flex flex-wrap gap-2">{selectedFacets.map((id) => { const label = tagOptions.find((option) => option.id === id)?.labelDe ?? id; return <Link className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-bold" href={removeFacetHref(params, id)} key={id}>{label}<span aria-hidden="true">×</span><span className="sr-only">{label} entfernen</span></Link>; })}</div> : null}
           </div>
         </form>
 
@@ -319,6 +337,7 @@ type ExerciseSearchParams = {
   readonly muscle?: string | string[];
   readonly size?: string;
   readonly page?: string;
+  readonly facet?: string | string[];
 };
 
 function pageHref(page: number, params: ExerciseSearchParams): string {
@@ -328,8 +347,13 @@ function pageHref(page: number, params: ExerciseSearchParams): string {
   if (params.status) query.set("status", params.status);
   if (params.size) query.set("size", params.size);
   for (const muscle of parameterList(params.muscle)) query.append("muscle", muscle);
+  for (const facet of parameterList(params.facet)) query.append("facet", facet);
   query.set("page", String(page));
   return `/exercises?${query.toString()}`;
+}
+
+function removeFacetHref(params: ExerciseSearchParams, facet: string): string {
+  return pageHref(1, { ...params, facet: parameterList(params.facet).filter((item) => item !== facet), page: undefined });
 }
 
 function pageNumbers(current: number, total: number): readonly number[] {

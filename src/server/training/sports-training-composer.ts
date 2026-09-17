@@ -410,6 +410,10 @@ function dynamicScore(
     } else {
       score -= Math.min(50, (expectedParticipants - candidate.stationCapacity) * 6);
     }
+    // When no explicit body focus is requested, give a small neutral-core
+    // preference so a well-capacitated general station is selected before
+    // arbitrary upper/lower-body options.
+    if (input.bodyRegions.length === 0 && candidate.bodyRegions.includes("core")) score += 8;
 
     const early = slot < Math.ceil(count / 2);
     if (early && (candidate.exerciseType === "skill" || candidate.exerciseType === "obstacle" || candidate.exerciseType === "drill")) score += 14;

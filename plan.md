@@ -103,6 +103,7 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [x] primary category for every seed
 - [ ] secondary categories/facets
 - [x] shared secondary-facet taxonomy with DE/EN labels and deterministic mappings from category and movement patterns
+- [x] exercise overview facet filtering with multi-select popover, removable tags and combined muscle/facet filtering
 - [x] compatible training phases: warm-up / main / cooldown
 - [x] exercise type: drill / strength / endurance / mobility / skill / obstacle / game / recovery
 - [x] training goals: strength / strength endurance / endurance / speed / coordination / balance / mobility / grip / OCR technique / recovery / teamwork
@@ -198,38 +199,38 @@ The database should describe training suitability, not provide medical diagnosis
 
 #### Additional target categories / facets
 
-- [ ] Games & Teamwork
-- [ ] Kids Adventure / Movement Landscape
-- [ ] Coordination
-- [ ] Speed & Reaction
-- [ ] Jumping / Landing / Plyometrics
-- [ ] Crawling / Ground Movement
-- [ ] Push Strength
-- [ ] Pull Strength
-- [ ] Squat / Knee Dominant
-- [ ] Hinge / Hip Dominant
-- [ ] Lunge / Single Leg
-- [ ] Rotation / Anti-Rotation
-- [ ] Shoulder Stability
-- [ ] Grip Endurance
-- [ ] Rig Technique
-- [ ] Rope Technique
-- [ ] Wall Technique
-- [ ] Carry Technique
-- [ ] Drag / Pull
-- [ ] Obstacle Transition
-- [ ] Running Technique / Lauf-ABC
-- [ ] Easy / Base Endurance Running
-- [ ] Tempo / Threshold-oriented Running
-- [ ] Intervals
-- [ ] Hills / Stairs
-- [ ] Trail / Terrain
-- [ ] Run + Exercise
-- [ ] Run + Obstacle
-- [ ] Balance / Proprioception
-- [ ] Mobility
-- [ ] Stretching
-- [ ] Breathing / Recovery
+- [x] Games & Teamwork
+- [x] Kids Adventure / Movement Landscape
+- [x] Coordination
+- [x] Speed & Reaction
+- [x] Jumping / Landing / Plyometrics
+- [x] Crawling / Ground Movement
+- [x] Push Strength
+- [x] Pull Strength
+- [x] Squat / Knee Dominant
+- [x] Hinge / Hip Dominant
+- [x] Lunge / Single Leg
+- [x] Rotation / Anti-Rotation
+- [x] Shoulder Stability
+- [x] Grip Endurance
+- [x] Rig Technique
+- [x] Rope Technique
+- [x] Wall Technique
+- [x] Carry Technique
+- [x] Drag / Pull
+- [x] Obstacle Transition
+- [x] Running Technique / Lauf-ABC
+- [x] Easy / Base Endurance Running
+- [x] Tempo / Threshold-oriented Running
+- [x] Intervals
+- [x] Hills / Stairs
+- [x] Trail / Terrain
+- [x] Run + Exercise
+- [x] Run + Obstacle
+- [x] Balance / Proprioception
+- [x] Mobility
+- [x] Stretching
+- [x] Breathing / Recovery
 
 ### 4.4 Running pool
 
