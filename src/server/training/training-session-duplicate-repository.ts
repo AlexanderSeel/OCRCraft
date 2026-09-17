@@ -55,6 +55,34 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
         },
       );
 
+      // A copy remains independently editable but keeps the latest generation
+      // context so Builder-Recreate can start from the same original intent.
+      await connection.run(
+        `
+        INSERT INTO training_generation_history (
+          id, training_session_id, builder_mode, provider_id, provider_model,
+          request_json, trainer_reviewed
+        )
+        SELECT
+          $historyId::UUID,
+          $targetSessionId::UUID,
+          builder_mode,
+          provider_id,
+          provider_model,
+          request_json,
+          trainer_reviewed
+        FROM training_generation_history
+        WHERE training_session_id=$sourceSessionId::UUID
+        ORDER BY created_at DESC,id DESC
+        LIMIT 1
+        `,
+        {
+          historyId: randomUUID(),
+          targetSessionId,
+          sourceSessionId,
+        },
+      );
+
       const phaseReader = await connection.runAndReadAll(
         `
         SELECT id::VARCHAR, kind, title, sort_order
@@ -85,7 +113,7 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
         const itemReader = await connection.runAndReadAll(
           `
           SELECT exercise_id::VARCHAR, title_override, format, duration_minutes, instructions,
-            level_label, sort_order, main_part_index, main_part_title
+            level_label, sort_order, main_part_index, main_part_title, programming_json
           FROM training_items
           WHERE training_phase_id=$sourcePhaseId::UUID
           ORDER BY sort_order
@@ -99,11 +127,11 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
             INSERT INTO training_items (
               id, training_phase_id, exercise_id, title_override, format,
               duration_minutes, instructions, level_label, sort_order,
-              main_part_index, main_part_title
+              main_part_index, main_part_title, programming_json
             ) VALUES (
               $id::UUID, $phaseId::UUID, $exerciseId::UUID, $titleOverride, $format,
               $duration, $instructions, $levelLabel, $sortOrder,
-              $mainPartIndex, $mainPartTitle
+              $mainPartIndex, $mainPartTitle, $programmingJson
             )
             `,
             {
@@ -118,6 +146,7 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
               sortOrder: Number(itemRow[6]),
               mainPartIndex: itemRow[7] == null ? null : Number(itemRow[7]),
               mainPartTitle: itemRow[8] == null ? null : String(itemRow[8]),
+              programmingJson: itemRow[9] == null ? null : String(itemRow[9]),
             },
           );
         }

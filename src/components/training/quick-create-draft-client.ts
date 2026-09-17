@@ -49,6 +49,8 @@ export interface QuickCreateDraftClientInput {
   readonly sourceTrainingIds?: readonly string[];
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment?: readonly TrainingEquipmentAvailability[];
+  /** Undefined = do not constrain obstacles; [] = explicitly no obstacle stations available. */
+  readonly availableObstacleExerciseIds?: readonly string[];
 }
 
 export interface ParsedAgeRange {
@@ -79,6 +81,7 @@ export interface NormalizedTrainingDraftRequest {
   readonly sourceTrainingIds: readonly string[];
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment: readonly TrainingEquipmentAvailability[];
+  readonly availableObstacleExerciseIds?: readonly string[];
   readonly minAge?: number;
   readonly maxAge?: number;
   readonly locale: "de";
@@ -102,82 +105,32 @@ const SCORE_MODE_SET = new Set<string>(MAIN_PART_SCORE_MODES);
 const EVERY_UNIT_SET = new Set<string>(MAIN_PART_EVERY_UNITS);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function isAudience(value: string): value is Audience {
-  return AUDIENCE_SET.has(value);
-}
-
-function isBodyRegion(value: string): value is BodyRegion {
-  return BODY_REGION_SET.has(value);
-}
-
-function isExerciseType(value: string): value is ExerciseType {
-  return EXERCISE_TYPE_SET.has(value);
-}
-
-function isTrainingFormat(value: string): value is TrainingFormat {
-  return FORMAT_SET.has(value);
-}
-
-function isTrainingLocation(value: string): value is TrainingLocation {
-  return LOCATION_SET.has(value);
-}
-
-function isDraftIntensity(value: string): value is DraftIntensity {
-  return INTENSITIES.has(value);
-}
-
-function isBuilderMode(value: string): value is QuickCreateBuilderMode {
-  return BUILDER_MODES.has(value);
-}
-
-function isOrganizationMode(value: string): value is TrainingOrganizationMode {
-  return ORGANIZATION_MODES.has(value);
-}
-
-function isProgrammingMode(value: string): value is MainPartProgrammingMode {
-  return PROGRAMMING_MODE_SET.has(value);
-}
-
-function isScoreMode(value: string | undefined): value is MainPartScoreMode {
-  return value != null && SCORE_MODE_SET.has(value);
-}
-
-function isEveryUnit(value: string | undefined): value is MainPartEveryUnit {
-  return value != null && EVERY_UNIT_SET.has(value);
-}
+function isAudience(value: string): value is Audience { return AUDIENCE_SET.has(value); }
+function isBodyRegion(value: string): value is BodyRegion { return BODY_REGION_SET.has(value); }
+function isExerciseType(value: string): value is ExerciseType { return EXERCISE_TYPE_SET.has(value); }
+function isTrainingFormat(value: string): value is TrainingFormat { return FORMAT_SET.has(value); }
+function isTrainingLocation(value: string): value is TrainingLocation { return LOCATION_SET.has(value); }
+function isDraftIntensity(value: string): value is DraftIntensity { return INTENSITIES.has(value); }
+function isBuilderMode(value: string): value is QuickCreateBuilderMode { return BUILDER_MODES.has(value); }
+function isOrganizationMode(value: string): value is TrainingOrganizationMode { return ORGANIZATION_MODES.has(value); }
+function isProgrammingMode(value: string): value is MainPartProgrammingMode { return PROGRAMMING_MODE_SET.has(value); }
+function isScoreMode(value: string | undefined): value is MainPartScoreMode { return value != null && SCORE_MODE_SET.has(value); }
+function isEveryUnit(value: string | undefined): value is MainPartEveryUnit { return value != null && EVERY_UNIT_SET.has(value); }
 
 function boundedInteger(value: number | undefined, fallback: number, min: number, max: number): number {
   if (!Number.isFinite(value) || !Number.isInteger(value)) return fallback;
   return Math.max(min, Math.min(max, Number(value)));
 }
 
-function normalizeMainPartExerciseCounts(
-  values: readonly number[] | undefined,
-  mainPartCount: number,
-  fallback: number,
-): readonly number[] {
-  if (values?.length === mainPartCount) {
-    return values.map((value) => boundedInteger(value, fallback, 1, 8));
-  }
+function normalizeMainPartExerciseCounts(values: readonly number[] | undefined, mainPartCount: number, fallback: number): readonly number[] {
+  if (values?.length === mainPartCount) return values.map((value) => boundedInteger(value, fallback, 1, 8));
   return Array.from({ length: mainPartCount }, () => fallback);
 }
 
 function normalizeProgramming(value: MainPartProgramming | undefined): MainPartProgramming {
   const mode: MainPartProgrammingMode = value?.mode && isProgrammingMode(value.mode) ? value.mode : "standard";
-  if (mode === "interval") {
-    return {
-      mode,
-      workSeconds: boundedInteger(value?.workSeconds, 40, 5, 3600),
-      restSeconds: boundedInteger(value?.restSeconds, 20, 0, 1800),
-    };
-  }
-  if (mode === "rounds") {
-    return {
-      mode,
-      rounds: boundedInteger(value?.rounds, 3, 1, 50),
-      scoreMode: isScoreMode(value?.scoreMode) ? value.scoreMode : "quality",
-    };
-  }
+  if (mode === "interval") return { mode, workSeconds: boundedInteger(value?.workSeconds, 40, 5, 3600), restSeconds: boundedInteger(value?.restSeconds, 20, 0, 1800) };
+  if (mode === "rounds") return { mode, rounds: boundedInteger(value?.rounds, 3, 1, 50), scoreMode: isScoreMode(value?.scoreMode) ? value.scoreMode : "quality" };
   if (mode === "ladder") {
     const start = boundedInteger(value?.ladderStart, 2, 1, 100);
     const end = Math.max(start + 1, boundedInteger(value?.ladderEnd, 10, 1, 200));
@@ -188,43 +141,22 @@ function normalizeProgramming(value: MainPartProgramming | undefined): MainPartP
     const end = Math.min(start - 1, boundedInteger(value?.ladderEnd, 2, 1, 199));
     return { mode, ladderStart: start, ladderEnd: end, ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50) };
   }
-  if (mode === "pyramid") {
-    return {
-      mode,
-      ladderStart: boundedInteger(value?.ladderStart, 2, 1, 100),
-      ladderEnd: boundedInteger(value?.ladderEnd, 10, 2, 200),
-      ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50),
-    };
-  }
-  if (mode === "every") {
-    return {
-      mode,
-      everyValue: boundedInteger(value?.everyValue, 500, 1, 10000),
-      everyUnit: isEveryUnit(value?.everyUnit) ? value.everyUnit : "metres",
-    };
-  }
+  if (mode === "pyramid") return { mode, ladderStart: boundedInteger(value?.ladderStart, 2, 1, 100), ladderEnd: boundedInteger(value?.ladderEnd, 10, 2, 200), ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50) };
+  if (mode === "every") return { mode, everyValue: boundedInteger(value?.everyValue, 500, 1, 10000), everyUnit: isEveryUnit(value?.everyUnit) ? value.everyUnit : "metres" };
   return { mode };
 }
 
-function normalizeMainPartProgramming(
-  values: readonly MainPartProgramming[] | undefined,
-  mainPartCount: number,
-): readonly MainPartProgramming[] {
+function normalizeMainPartProgramming(values: readonly MainPartProgramming[] | undefined, mainPartCount: number): readonly MainPartProgramming[] {
   return Array.from({ length: mainPartCount }, (_, index) => normalizeProgramming(values?.[index]));
 }
 
 export function parseAgeRange(value: string): ParsedAgeRange {
   const numbers = value.match(/\d+/g)?.map(Number).filter(Number.isFinite) ?? [];
   if (numbers.length === 0) return {};
-
   if (numbers.length >= 2) {
     const [first, second] = numbers;
-    return {
-      minAge: Math.min(first, second),
-      maxAge: Math.max(first, second),
-    };
+    return { minAge: Math.min(first, second), maxAge: Math.max(first, second) };
   }
-
   const age = numbers[0];
   const normalized = value.trim().toLocaleLowerCase("de-DE");
   if (value.includes("+") || normalized.startsWith("ab ")) return { minAge: age };
@@ -232,39 +164,29 @@ export function parseAgeRange(value: string): ParsedAgeRange {
   return { minAge: age, maxAge: age };
 }
 
-export function normalizeTrainingDraftRequest(
-  input: QuickCreateDraftClientInput,
-): NormalizedTrainingDraftRequest {
+export function normalizeTrainingDraftRequest(input: QuickCreateDraftClientInput): NormalizedTrainingDraftRequest {
   const audience: Audience = isAudience(input.groupType) ? input.groupType : "mixed";
   const participantCount = boundedInteger(input.participantCount, 1, 1, 200);
   const bodyRegions = [...new Set(input.bodyRegions.filter(isBodyRegion))];
   const focusRegionSet = new Set(bodyRegions);
-  const avoidBodyRegions = [...new Set((input.avoidBodyRegions ?? []).filter(isBodyRegion))]
-    .filter((region) => !focusRegionSet.has(region));
+  const avoidBodyRegions = [...new Set((input.avoidBodyRegions ?? []).filter(isBodyRegion))].filter((region) => !focusRegionSet.has(region));
   const selectedExerciseTypes = [...new Set((input.exerciseTypes ?? []).filter(isExerciseType))];
   const formats = input.formats.filter(isTrainingFormat);
   const location: TrainingLocation = input.location && isTrainingLocation(input.location) ? input.location : "mixed";
   const intensity: DraftIntensity = isDraftIntensity(input.intensity) ? input.intensity : "balanced";
-  const builderMode: QuickCreateBuilderMode = input.builderMode && isBuilderMode(input.builderMode)
-    ? input.builderMode
-    : "local";
-  const organizationMode: TrainingOrganizationMode = input.organizationMode && isOrganizationMode(input.organizationMode)
-    ? input.organizationMode
-    : "solo";
+  const builderMode: QuickCreateBuilderMode = input.builderMode && isBuilderMode(input.builderMode) ? input.builderMode : "local";
+  const organizationMode: TrainingOrganizationMode = input.organizationMode && isOrganizationMode(input.organizationMode) ? input.organizationMode : "solo";
   const warmupExerciseCount = boundedInteger(input.warmupExerciseCount, 2, 1, 6);
   const mainExerciseCount = boundedInteger(input.mainExerciseCount, 4, 1, 8);
   const cooldownExerciseCount = boundedInteger(input.cooldownExerciseCount, 2, 1, 6);
   const mainPartCount = boundedInteger(input.mainPartCount, 1, 1, 4);
-  const mainPartExerciseCounts = normalizeMainPartExerciseCounts(
-    input.mainPartExerciseCounts,
-    mainPartCount,
-    mainExerciseCount,
-  );
+  const mainPartExerciseCounts = normalizeMainPartExerciseCounts(input.mainPartExerciseCounts, mainPartCount, mainExerciseCount);
   const mainPartProgramming = normalizeMainPartProgramming(input.mainPartProgramming, mainPartCount);
-  const teamSize = organizationMode === "team"
-    ? boundedInteger(input.teamSize, Math.min(4, participantCount), 2, Math.min(20, Math.max(2, participantCount)))
-    : undefined;
+  const teamSize = organizationMode === "team" ? boundedInteger(input.teamSize, Math.min(4, participantCount), 2, Math.min(20, Math.max(2, participantCount))) : undefined;
   const sourceTrainingIds = [...new Set((input.sourceTrainingIds ?? []).filter((id) => UUID_PATTERN.test(id)))].slice(0, 6);
+  const availableObstacleExerciseIds = input.availableObstacleExerciseIds == null
+    ? undefined
+    : [...new Set(input.availableObstacleExerciseIds.filter((id) => UUID_PATTERN.test(id)))].slice(0, 100);
   const ages = parseAgeRange(input.ageRange);
   const availableEquipment = new Map<string, number>();
   for (const item of input.availableEquipment ?? []) {
@@ -294,10 +216,8 @@ export function normalizeTrainingDraftRequest(
     teamSize,
     sourceTrainingIds,
     preferredExerciseIds: input.preferredExerciseIds,
-    availableEquipment: [...availableEquipment].map(([equipmentId, quantityAvailable]) => ({
-      equipmentId,
-      quantityAvailable,
-    })),
+    availableEquipment: [...availableEquipment].map(([equipmentId, quantityAvailable]) => ({ equipmentId, quantityAvailable })),
+    availableObstacleExerciseIds,
     ...ages,
     locale: "de",
   };
@@ -308,113 +228,41 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
   return payload?.message ?? fallback;
 }
 
-export async function requestTrainingDraft(
-  input: QuickCreateDraftClientInput,
-): Promise<TrainingDraft> {
-  const response = await fetch("/api/training/draft", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(normalizeTrainingDraftRequest(input)),
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      await readErrorMessage(
-        response,
-        `Trainingsentwurf konnte nicht erstellt werden (${response.status}).`,
-      ),
-    );
-  }
-
+export async function requestTrainingDraft(input: QuickCreateDraftClientInput): Promise<TrainingDraft> {
+  const response = await fetch("/api/training/draft", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(normalizeTrainingDraftRequest(input)) });
+  if (!response.ok) throw new Error(await readErrorMessage(response, `Trainingsentwurf konnte nicht erstellt werden (${response.status}).`));
   return (await response.json()) as TrainingDraft;
 }
 
-export async function regenerateTrainingDraftPhase(
-  input: QuickCreateDraftClientInput,
-  currentDraft: TrainingDraft,
-  phase: TrainingPhaseKind,
-): Promise<TrainingDraft> {
+export async function regenerateTrainingDraftPhase(input: QuickCreateDraftClientInput, currentDraft: TrainingDraft, phase: TrainingPhaseKind): Promise<TrainingDraft> {
   const response = await fetch("/api/training/draft/regenerate-phase", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      request: normalizeTrainingDraftRequest(input),
-      phase,
-      current: toDraftSelection(currentDraft),
-    }),
+    body: JSON.stringify({ request: normalizeTrainingDraftRequest(input), phase, current: toDraftSelection(currentDraft) }),
   });
-
-  if (!response.ok) {
-    throw new Error(
-      await readErrorMessage(
-        response,
-        `Phase konnte nicht neu erstellt werden (${response.status}).`,
-      ),
-    );
-  }
-
+  if (!response.ok) throw new Error(await readErrorMessage(response, `Phase konnte nicht neu erstellt werden (${response.status}).`));
   return (await response.json()) as TrainingDraft;
 }
 
-export async function replaceTrainingDraftExercise(
-  input: QuickCreateDraftClientInput,
-  currentDraft: TrainingDraft,
-  exerciseId: string,
-  mode: DraftAlternativeMode,
-): Promise<TrainingDraft> {
+export async function replaceTrainingDraftExercise(input: QuickCreateDraftClientInput, currentDraft: TrainingDraft, exerciseId: string, mode: DraftAlternativeMode): Promise<TrainingDraft> {
   const response = await fetch("/api/training/draft/replace-item", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      request: normalizeTrainingDraftRequest(input),
-      exerciseId,
-      mode,
-      current: toDraftSelection(currentDraft),
-    }),
+    body: JSON.stringify({ request: normalizeTrainingDraftRequest(input), exerciseId, mode, current: toDraftSelection(currentDraft) }),
   });
-
-  if (!response.ok) {
-    throw new Error(
-      await readErrorMessage(
-        response,
-        `Übungsalternative konnte nicht angewendet werden (${response.status}).`,
-      ),
-    );
-  }
-
+  if (!response.ok) throw new Error(await readErrorMessage(response, `Übungsalternative konnte nicht angewendet werden (${response.status}).`));
   return (await response.json()) as TrainingDraft;
 }
 
-export async function persistTrainingDraft(
-  input: QuickCreateDraftClientInput,
-  title?: string,
-  reviewedDraft?: TrainingDraft,
-): Promise<PersistedTrainingDraftResult> {
+export async function persistTrainingDraft(input: QuickCreateDraftClientInput, title?: string, reviewedDraft?: TrainingDraft): Promise<PersistedTrainingDraftResult> {
   const normalized = normalizeTrainingDraftRequest(input);
-  const reviewed = normalized.builderMode === "ai"
-    ? toReviewedAiSelection(reviewedDraft)
-    : undefined;
-
+  const reviewed = normalized.builderMode === "ai" ? toReviewedAiSelection(reviewedDraft) : undefined;
   const response = await fetch("/api/training/draft/persist", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      request: normalized,
-      title: title?.trim() || undefined,
-      groupId: input.groupId?.trim() || undefined,
-      reviewed,
-    }),
+    body: JSON.stringify({ request: normalized, title: title?.trim() || undefined, groupId: input.groupId?.trim() || undefined, reviewed }),
   });
-
-  if (!response.ok) {
-    throw new Error(
-      await readErrorMessage(
-        response,
-        `Trainingsentwurf konnte nicht gespeichert werden (${response.status}).`,
-      ),
-    );
-  }
-
+  if (!response.ok) throw new Error(await readErrorMessage(response, `Trainingsentwurf konnte nicht gespeichert werden (${response.status}).`));
   return (await response.json()) as PersistedTrainingDraftResult;
 }
 
@@ -437,8 +285,6 @@ function toDraftSelection(draft: TrainingDraft) {
 }
 
 function toReviewedAiSelection(draft?: TrainingDraft) {
-  if (!draft || draft.source !== "ai") {
-    throw new Error("Der AI-Vorschlag muss vor dem Speichern erzeugt und geprüft werden.");
-  }
+  if (!draft || draft.source !== "ai") throw new Error("Der AI-Vorschlag muss vor dem Speichern erzeugt und geprüft werden.");
   return toDraftSelection(draft);
 }

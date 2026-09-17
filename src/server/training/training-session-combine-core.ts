@@ -130,7 +130,8 @@ export async function combineTrainingSessionsCore(
         i.level_label,
         i.sort_order,
         i.main_part_index,
-        i.main_part_title
+        i.main_part_title,
+        i.programming_json
       FROM training_phases p
       JOIN training_items i ON i.training_phase_id=p.id
       WHERE p.kind=$kind
@@ -170,11 +171,11 @@ export async function combineTrainingSessionsCore(
         INSERT INTO training_items (
           id, training_phase_id, exercise_id, title_override, format,
           duration_minutes, instructions, level_label, sort_order,
-          main_part_index, main_part_title
+          main_part_index, main_part_title, programming_json
         ) VALUES (
           $id::UUID, $phaseId::UUID, $exerciseId::UUID, $titleOverride, $format,
           $duration, $instructions, $levelLabel, $sortOrder,
-          $mainPartIndex, $mainPartTitle
+          $mainPartIndex, $mainPartTitle, $programmingJson
         )
         `,
         {
@@ -189,6 +190,7 @@ export async function combineTrainingSessionsCore(
           sortOrder,
           mainPartIndex,
           mainPartTitle,
+          programmingJson: row[10] == null ? null : String(row[10]),
         },
       );
     }
