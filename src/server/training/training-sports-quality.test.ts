@@ -46,6 +46,7 @@ function request(overrides: Partial<TrainingDraftRequest> = {}): TrainingDraftRe
     location: "mixed",
     intensity: "balanced",
     builderMode: "local",
+    sourceTrainingIds: [],
     preferredExerciseIds: [],
     availableEquipment: [],
     locale: "de",
