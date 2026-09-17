@@ -1,13 +1,20 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import type { TrainingLocation } from "@/domain/training/model";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
+import type { DuckDBConnection } from "@duckdb/node-api";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type ClubGroupAudience = "kids" | "youth" | "adults" | "mixed";
 export type ClubGroupRiskLevel = "low" | "medium" | "high";
+
+export interface ClubGroupEquipmentDefault {
+  readonly equipmentId: string;
+  readonly quantityAvailable: number;
+}
 
 export interface ClubGroupInput {
   readonly name: string;
@@ -18,6 +25,8 @@ export interface ClubGroupInput {
   readonly defaultDurationMinutes: number | null;
   readonly defaultLocale: "de" | "en";
   readonly maximumRiskLevel: ClubGroupRiskLevel | null;
+  readonly defaultLocation: TrainingLocation;
+  readonly defaultEquipment: readonly ClubGroupEquipmentDefault[];
 }
 
 export interface ClubGroup extends ClubGroupInput {
@@ -32,7 +41,7 @@ function assertUuid(value: string): void {
   if (!UUID_PATTERN.test(value)) throw new Error("Gruppe ist ungültig.");
 }
 
-function rowToGroup(row: readonly unknown[]): ClubGroup {
+function rowToGroup(row: readonly unknown[]): Omit<ClubGroup, "defaultEquipment"> {
   return {
     id: String(row[0]),
     name: String(row[1]),
@@ -43,11 +52,34 @@ function rowToGroup(row: readonly unknown[]): ClubGroup {
     defaultDurationMinutes: row[6] == null ? null : Number(row[6]),
     defaultLocale: String(row[7]) as "de" | "en",
     maximumRiskLevel: row[8] == null ? null : String(row[8]) as ClubGroupRiskLevel,
-    archived: Boolean(row[9]),
-    createdAt: String(row[10]),
-    updatedAt: String(row[11]),
-    linkedTrainingCount: Number(row[12]),
+    defaultLocation: String(row[9] ?? "mixed") as TrainingLocation,
+    archived: Boolean(row[10]),
+    createdAt: String(row[11]),
+    updatedAt: String(row[12]),
+    linkedTrainingCount: Number(row[13]),
   };
+}
+
+async function replaceGroupEquipmentDefaults(
+  connection: DuckDBConnection,
+  groupId: string,
+  defaults: readonly ClubGroupEquipmentDefault[],
+): Promise<void> {
+  await connection.run(
+    "DELETE FROM club_group_equipment_defaults WHERE group_id=$groupId::UUID",
+    { groupId },
+  );
+  for (const item of defaults) {
+    await connection.run(
+      `INSERT INTO club_group_equipment_defaults (group_id,equipment_id,quantity_available)
+       VALUES ($groupId::UUID,$equipmentId::UUID,$quantityAvailable)`,
+      {
+        groupId,
+        equipmentId: item.equipmentId,
+        quantityAvailable: item.quantityAvailable,
+      },
+    );
+  }
 }
 
 export async function listClubGroups(includeArchived = false): Promise<readonly ClubGroup[]> {
@@ -65,6 +97,7 @@ export async function listClubGroups(includeArchived = false): Promise<readonly 
         g.default_duration_minutes,
         g.default_locale,
         g.maximum_risk_level,
+        COALESCE(g.default_location,'mixed'),
         g.archived,
         g.created_at,
         g.updated_at,
@@ -79,7 +112,30 @@ export async function listClubGroups(includeArchived = false): Promise<readonly 
       `,
       { includeArchived },
     );
-    return reader.getRows().map(rowToGroup);
+    const baseGroups = reader.getRows().map(rowToGroup);
+    if (baseGroups.length === 0) return [];
+
+    const equipmentReader = await connection.runAndReadAll(
+      `
+      SELECT group_id::VARCHAR,equipment_id::VARCHAR,quantity_available
+      FROM club_group_equipment_defaults
+      WHERE list_contains(string_split($groupIds, ','), group_id::VARCHAR)
+      ORDER BY group_id::VARCHAR,equipment_id::VARCHAR
+      `,
+      { groupIds: baseGroups.map((group) => group.id).join(",") },
+    );
+    const equipmentByGroup = new Map<string, ClubGroupEquipmentDefault[]>();
+    for (const row of equipmentReader.getRows()) {
+      const groupId = String(row[0]);
+      const items = equipmentByGroup.get(groupId) ?? [];
+      items.push({ equipmentId: String(row[1]), quantityAvailable: Number(row[2]) });
+      equipmentByGroup.set(groupId, items);
+    }
+
+    return baseGroups.map((group) => ({
+      ...group,
+      defaultEquipment: equipmentByGroup.get(group.id) ?? [],
+    }));
   });
 }
 
@@ -87,28 +143,37 @@ export async function createClubGroup(input: ClubGroupInput): Promise<string> {
   await ensureDatabaseReady();
   const id = randomUUID();
   await withDuckDbConnection(async (connection) => {
-    await connection.run(
-      `
-      INSERT INTO club_groups (
-        id, name, audience, min_age, max_age, default_participant_count,
-        default_duration_minutes, default_locale, maximum_risk_level
-      ) VALUES (
-        $id::UUID, $name, $audience, $minAge, $maxAge, $participants,
-        $duration, $locale, $risk
-      )
-      `,
-      {
-        id,
-        name: input.name.trim(),
-        audience: input.audience,
-        minAge: input.minAge,
-        maxAge: input.maxAge,
-        participants: input.defaultParticipantCount,
-        duration: input.defaultDurationMinutes,
-        locale: input.defaultLocale,
-        risk: input.maximumRiskLevel,
-      },
-    );
+    await connection.run("BEGIN TRANSACTION");
+    try {
+      await connection.run(
+        `
+        INSERT INTO club_groups (
+          id, name, audience, min_age, max_age, default_participant_count,
+          default_duration_minutes, default_locale, maximum_risk_level, default_location
+        ) VALUES (
+          $id::UUID, $name, $audience, $minAge, $maxAge, $participants,
+          $duration, $locale, $risk, $location
+        )
+        `,
+        {
+          id,
+          name: input.name.trim(),
+          audience: input.audience,
+          minAge: input.minAge,
+          maxAge: input.maxAge,
+          participants: input.defaultParticipantCount,
+          duration: input.defaultDurationMinutes,
+          locale: input.defaultLocale,
+          risk: input.maximumRiskLevel,
+          location: input.defaultLocation,
+        },
+      );
+      await replaceGroupEquipmentDefaults(connection, id, input.defaultEquipment);
+      await connection.run("COMMIT");
+    } catch (error) {
+      await connection.run("ROLLBACK");
+      throw error;
+    }
   });
   return id;
 }
@@ -117,35 +182,49 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
   assertUuid(id);
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
-    const reader = await connection.runAndReadAll(
-      `
-      UPDATE club_groups
-      SET
-        name=$name,
-        audience=$audience,
-        min_age=$minAge,
-        max_age=$maxAge,
-        default_participant_count=$participants,
-        default_duration_minutes=$duration,
-        default_locale=$locale,
-        maximum_risk_level=$risk,
-        updated_at=current_timestamp
-      WHERE id=$id::UUID
-      RETURNING id::VARCHAR
-      `,
-      {
-        id,
-        name: input.name.trim(),
-        audience: input.audience,
-        minAge: input.minAge,
-        maxAge: input.maxAge,
-        participants: input.defaultParticipantCount,
-        duration: input.defaultDurationMinutes,
-        locale: input.defaultLocale,
-        risk: input.maximumRiskLevel,
-      },
-    );
-    return reader.getRows().length > 0;
+    await connection.run("BEGIN TRANSACTION");
+    try {
+      const reader = await connection.runAndReadAll(
+        `
+        UPDATE club_groups
+        SET
+          name=$name,
+          audience=$audience,
+          min_age=$minAge,
+          max_age=$maxAge,
+          default_participant_count=$participants,
+          default_duration_minutes=$duration,
+          default_locale=$locale,
+          maximum_risk_level=$risk,
+          default_location=$location,
+          updated_at=current_timestamp
+        WHERE id=$id::UUID
+        RETURNING id::VARCHAR
+        `,
+        {
+          id,
+          name: input.name.trim(),
+          audience: input.audience,
+          minAge: input.minAge,
+          maxAge: input.maxAge,
+          participants: input.defaultParticipantCount,
+          duration: input.defaultDurationMinutes,
+          locale: input.defaultLocale,
+          risk: input.maximumRiskLevel,
+          location: input.defaultLocation,
+        },
+      );
+      if (reader.getRows().length === 0) {
+        await connection.run("ROLLBACK");
+        return false;
+      }
+      await replaceGroupEquipmentDefaults(connection, id, input.defaultEquipment);
+      await connection.run("COMMIT");
+      return true;
+    } catch (error) {
+      await connection.run("ROLLBACK");
+      throw error;
+    }
   });
 }
 
