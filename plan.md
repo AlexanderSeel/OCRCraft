@@ -102,6 +102,7 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [ ] curate additional German/English aliases and common trainer terminology for every seed
 - [x] primary category for every seed
 - [ ] secondary categories/facets
+- [x] shared secondary-facet taxonomy with DE/EN labels and deterministic mappings from category and movement patterns
 - [x] compatible training phases: warm-up / main / cooldown
 - [x] exercise type: drill / strength / endurance / mobility / skill / obstacle / game / recovery
 - [x] training goals: strength / strength endurance / endurance / speed / coordination / balance / mobility / grip / OCR technique / recovery / teamwork
