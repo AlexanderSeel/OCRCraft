@@ -67,7 +67,6 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   const exercises = pagedResults;
   const bodyRegionMap = await getExerciseBodyRegionMap(exercises.map((exercise) => exercise.id));
 
-  const total = categoryCounts.reduce((sum, item) => sum + item.count, 0);
   const runningCount = categoryCounts.find((item) => item.category === "running")?.count ?? 0;
 
   return (
@@ -84,12 +83,6 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       }
     >
       <div className="space-y-6">
-        <section className="grid gap-3 sm:grid-cols-3">
-          <Metric label="Aktive Übungen" value={total} />
-          <Metric label="Laufübungen" value={runningCount} />
-          <Metric label="Kategorien" value={categoryCounts.length} />
-        </section>
-
         <form
           className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] md:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_180px_160px_120px_auto]"
           method="get"
@@ -147,8 +140,9 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
               <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black">
                 <span>Muskelgruppen{selectedMuscles.length ? ` · ${selectedMuscles.length} gewählt` : ""}</span><span aria-hidden="true">⌄</span>
               </summary>
-              <div className="absolute left-0 right-0 top-14 z-40 rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-3 shadow-[var(--shadow-raised)]">
+              <div className="absolute left-0 top-14 z-40 max-h-[min(60vh,30rem)] w-[min(42rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-2 shadow-[var(--shadow-raised)]">
               <MuscleMap
+                compact
                 key={selectedMuscles.join(",") || "none"}
                 description="Wähle eine oder mehrere Regionen. Feine Muskelangaben berücksichtigen kompatible ältere Grobzuordnungen, ohne bestehende Übungen umzuschreiben."
                 fieldName="muscle"
@@ -166,7 +160,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
               <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black">
                 <span>Trainingsfacetten{selectedFacets.length ? ` · ${selectedFacets.length} gewählt` : ""}</span><span aria-hidden="true">⌄</span>
               </summary>
-              <div className="absolute left-0 right-0 top-14 z-40 grid max-h-72 grid-cols-2 gap-2 overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-3 shadow-[var(--shadow-raised)] sm:grid-cols-3 lg:grid-cols-5">
+              <div className="absolute left-0 right-0 top-14 z-40 grid max-h-60 grid-cols-2 gap-1.5 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-2 shadow-[var(--shadow-raised)] sm:grid-cols-3 lg:grid-cols-5">
                 {tagOptions.map((tag) => <label className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-2 py-2 text-xs font-bold" key={tag.id}><input defaultChecked={selectedFacets.includes(tag.id)} name="facet" type="checkbox" value={tag.id} />{tag.labelDe}</label>)}
               </div>
             </details>
@@ -174,8 +168,12 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           </div>
         </form>
 
-        <div className="flex items-center justify-between gap-3 text-sm text-[var(--muted)]">
-          <span>{filteredTotal === 0 ? "0" : `${Math.min((page - 1) * pageSize + 1, filteredTotal)}–${Math.min(page * pageSize, filteredTotal)}`} von {filteredTotal} Übungen</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span>{filteredTotal === 0 ? "0" : `${Math.min((page - 1) * pageSize + 1, filteredTotal)}–${Math.min(page * pageSize, filteredTotal)}`} von {filteredTotal} Übungen</span>
+            <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">Laufen {runningCount}</span>
+            <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">{categoryCounts.length} Kategorien</span>
+          </div>
           {archived ? (
             <Link className="font-bold text-[var(--foreground)]" href="/exercises">
               Aktive Übungen anzeigen
@@ -369,13 +367,4 @@ function removeMuscleHref(params: ExerciseSearchParams, muscle: string): string 
 
 function categoryLabel(category: string): string {
   return exerciseCategoryLabels[category as ExerciseCategory] ?? category;
-}
-
-function Metric({ label, value }: { readonly label: string; readonly value: number }) {
-  return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
-      <div className="text-2xl font-black">{value}</div>
-      <div className="mt-1 text-sm font-semibold text-[var(--muted)]">{label}</div>
-    </div>
-  );
 }

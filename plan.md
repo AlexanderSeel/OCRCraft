@@ -101,7 +101,7 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [x] make the canonical name from the other locale searchable as an alias for every seed where DE/EN names differ
 - [ ] curate additional German/English aliases and common trainer terminology for every seed
 - [x] primary category for every seed
-- [ ] secondary categories/facets
+- [x] secondary categories/facets
 - [x] shared secondary-facet taxonomy with DE/EN labels and deterministic mappings from category and movement patterns
 - [x] exercise overview facet filtering with multi-select popover, removable tags and combined muscle/facet filtering
 - [x] compatible training phases: warm-up / main / cooldown
@@ -152,11 +152,11 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [x] Level 1 regression with explanation
 - [x] Level 2 standard version
 - [x] Level 3 progression with explanation
-- [ ] low-impact alternative where meaningful
-- [ ] no-equipment alternative where meaningful
-- [ ] child/youth variant where meaningful
-- [ ] partner/team variant where meaningful
-- [ ] prerequisite skills for advanced OCR exercises
+- [x] low-impact alternative where meaningful
+- [x] no-equipment alternative where meaningful
+- [x] child/youth variant where meaningful
+- [x] partner/team variant where meaningful
+- [x] prerequisite skills for advanced OCR exercises
 - [x] fallback exercise if an obstacle/equipment item is unavailable
 
 #### Audience & safety metadata
@@ -166,8 +166,8 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [x] difficulty: beginner / intermediate / advanced
 - [x] risk level: low / medium / high
 - [x] supervision requirement: normal / increased / direct station supervision
-- [ ] contact/partner requirement
-- [ ] club-rule restriction hooks
+- [x] contact/partner requirement
+- [x] club-rule restriction hooks
 
 The database should describe training suitability, not provide medical diagnosis. Individual medical restrictions remain outside the normal exercise seed.
 
@@ -329,7 +329,7 @@ Reference entry points:
 - [ ] continue adding missing catalog cohorts as versioned, bilingual seed data with aliases, mappings, structured detail, equipment and safety checks
 - [x] replace generic summaries/instructions/cues/corrections for the complete 10-exercise warm-up cohort
 - [x] enrich all 25+ running exercises with bilingual technique, dosage, correction and RPE details
-- [ ] add missing categories/facets
+- [x] add missing categories/facets
 - [ ] add richer equipment + station logistics
 - [ ] add progression/regression relations
 - [x] update DE/EN search documents to include every newly structured detail field
@@ -345,6 +345,8 @@ Reference entry points:
 - [x] paginated exercise overview beyond the first 80 results
 - [x] standard pagination controls with page-size selection, page numbers, jump-to-page and overall result count
 - [x] compact multi-column filters with muscle popover and removable selection tags
+- [x] compact muscle/facet filter popovers stay bounded to the viewport and do not dominate the overview
+- [x] overview metrics are reduced to compact metadata tags beside the result count
 - [x] counts, equipment, risk, min-age display
 - [x] create exercise
 - [x] new manual exercises continue directly into the same full editor used by existing exercises
@@ -593,6 +595,7 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] groups
 - [ ] advanced exercise/obstacle/media administration
 - [x] exercise completeness report
+- [x] duplicate review supports side-by-side comparison and marked multi-selection with bulk keep-left/keep-right/ignore actions
 - [ ] seed-source/provenance view
 - [ ] bulk enrichment workflow for seed exercises
 - [ ] templates + club rules

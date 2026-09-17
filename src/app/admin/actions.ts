@@ -45,3 +45,21 @@ export async function resolveDuplicateExerciseAction(formData: FormData): Promis
   revalidatePath("/admin");
   revalidatePath("/exercises");
 }
+
+export async function resolveDuplicateExercisesBulkAction(formData: FormData): Promise<void> {
+  const decision = String(formData.get("decision") ?? "left");
+  const selections = formData.getAll("selection").map(String);
+
+  for (const selection of selections) {
+    const [taskId, leftExerciseId, rightExerciseId] = selection.split(":");
+    if (!taskId || !leftExerciseId || !rightExerciseId) continue;
+    if (decision === "ignored") {
+      await resolveDuplicateTask(taskId, leftExerciseId, "ignored");
+      continue;
+    }
+    await resolveDuplicateTask(taskId, decision === "right" ? rightExerciseId : leftExerciseId, "merged");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/exercises");
+}
