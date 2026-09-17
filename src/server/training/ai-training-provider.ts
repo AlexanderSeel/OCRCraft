@@ -3,6 +3,8 @@ import "server-only";
 import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 
+type CandidateWithHistory = TrainingDraftExerciseCandidate & { readonly recentUseCount?: number };
+
 export interface AiTrainingGenerationContext {
   readonly request: TrainingDraftRequest;
   readonly approvedExercises: readonly TrainingDraftExerciseCandidate[];
@@ -51,6 +53,8 @@ export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
               "Create exactly one warmup, one main and one cooldown phase.",
               "Respect audience, ages, goals, body focus/avoidance, requested exercise types, formats, location, intensity and equipment.",
               "Prefer movement-pattern and body-region variety and avoid unnecessary consecutive high-impact loading.",
+              "When two exercises are similarly suitable, prefer the one with the lower recentUseCount so recent sessions are not repeated unnecessarily.",
+              "Preferred exercise IDs may intentionally override that variety preference.",
               "The server will assign exact phase durations and run deterministic safety/logistics validation after your proposal.",
             ].join(" "),
           },
@@ -143,6 +147,7 @@ function buildPromptPayload(context: AiTrainingGenerationContext) {
       tags: exercise.tags,
       equipment: exercise.equipmentRequirements,
       stationCapacity: exercise.stationCapacity,
+      recentUseCount: Math.max(0, Number((exercise as CandidateWithHistory).recentUseCount ?? 0)),
       structuredContext: exercise.planningText?.slice(0, 900),
       level1: exercise.level1?.slice(0, 280),
       level2: exercise.level2?.slice(0, 280),
