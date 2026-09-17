@@ -18,6 +18,7 @@ export function Dialog({
 
   useEffect(() => {
     const previousActive = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
     const firstFocusable = panelRef.current?.querySelector<HTMLElement>(
       "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
     );
@@ -36,7 +37,7 @@ export function Dialog({
     };
     document.addEventListener("keydown", onKeyDown);
     document.body.style.overflow = "hidden";
-    return () => { document.removeEventListener("keydown", onKeyDown); document.body.style.overflow = ""; previousActive?.focus(); };
+    return () => { document.removeEventListener("keydown", onKeyDown); document.body.style.overflow = previousOverflow; previousActive?.focus(); };
   }, [onClose]);
 
   return (
