@@ -61,7 +61,7 @@ export async function createExerciseAction(
   }
 
   revalidatePath("/exercises");
-  redirect(`/exercises/${id}/edit?saved=1`);
+  redirect(`/exercises/${id}/edit?created=1`);
 }
 
 export async function updateExerciseAction(
