@@ -8,7 +8,7 @@ import {
   exerciseTypeLabels,
   exerciseTypes,
 } from "@/domain/exercise/classification";
-import { TRAINING_FORMATS, type TrainingFormat } from "@/domain/training/model";
+import { TRAINING_FORMATS, type TrainingFormat, type TrainingPhaseKind } from "@/domain/training/model";
 import type { TrainingDraft } from "@/domain/training/draft";
 import { BodyFocusSelector } from "./body-focus-selector";
 import {
@@ -17,6 +17,7 @@ import {
 } from "./equipment-availability-picker";
 import {
   persistTrainingDraft,
+  regenerateTrainingDraftPhase,
   requestTrainingDraft,
   type QuickCreateBuilderMode,
   type QuickCreateDraftClientInput,
@@ -66,6 +67,7 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
   const [error, setError] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [regeneratingPhase, setRegeneratingPhase] = useState<TrainingPhaseKind | null>(null);
 
   const canGenerate = goals.length > 0 && formats.length > 0;
   const selectedGoalLabels = useMemo(() => new Set(goals), [goals]);
@@ -108,6 +110,20 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
       setError(cause instanceof Error ? cause.message : "Trainingsentwurf konnte nicht erstellt werden.");
     } finally {
       setPending(false);
+    }
+  }
+
+  async function regeneratePhase(phase: TrainingPhaseKind) {
+    if (!draft) return;
+    setRegeneratingPhase(phase);
+    setError(null);
+    setSavedId(null);
+    try {
+      setDraft(await regenerateTrainingDraftPhase(input(), draft, phase));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Phase konnte nicht neu geplant werden.");
+    } finally {
+      setRegeneratingPhase(null);
     }
   }
 
@@ -210,12 +226,18 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="flex flex-wrap items-end gap-3">
             <label className="grid min-w-64 flex-1 gap-2 text-sm font-bold">Trainingstitel<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" maxLength={120} onChange={(e) => setTitle(e.target.value)} placeholder="Optional" value={title} /></label>
-            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] disabled:opacity-50" disabled={!canGenerate || pending} onClick={() => void generate()} type="button">{pending ? "Plane …" : builderMode === "ai" ? "AI-Vorschlag erzeugen" : "Lokal planen"}</button>
-            <button className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] disabled:opacity-50" disabled={!draft || pending} onClick={() => void save()} type="button">Training speichern</button>
+            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] disabled:opacity-50" disabled={!canGenerate || pending || regeneratingPhase != null} onClick={() => void generate()} type="button">{pending ? "Plane …" : builderMode === "ai" ? "AI-Vorschlag erzeugen" : "Lokal planen"}</button>
+            <button className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] disabled:opacity-50" disabled={!draft || pending || regeneratingPhase != null} onClick={() => void save()} type="button">Training speichern</button>
           </div>
           {error ? <div className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm text-[var(--danger)]">{error}</div> : null}
           {savedId ? <div className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold"><Link className="underline underline-offset-4" href={`/training/${savedId}`}>Gespeichertes Training öffnen</Link></div> : null}
-          {draft ? <TrainingDraftPreview draft={draft} /> : null}
+          {draft ? (
+            <TrainingDraftPreview
+              draft={draft}
+              onRegeneratePhase={(phase) => void regeneratePhase(phase)}
+              regeneratingPhase={regeneratingPhase}
+            />
+          ) : null}
         </section>
       </div>
 
@@ -224,9 +246,11 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-[var(--muted)]">
           <li>Warm-up, Hauptteil und Cooldown mit exakter Zeitverteilung.</li>
           <li>Technik/Koordination vor unnötiger Ermüdung; Belastung passend zur Ausrichtung.</li>
-          <li>Abdeckung gewünschter Muskeln bei gleichzeitiger Bewegungs- und Körperregionsvielfalt.</li>
+          <li>Abdeckung gewünschter Muskeln plus typische Gegenmuskeln und Gegenbewegungen, wenn der freigegebene Pool dies sinnvoll erlaubt.</li>
+          <li>Hohe Stoßbelastungen und hohe Risiken werden nicht unnötig direkt hintereinander geplant.</li>
           <li>Alter, Ort, Ausschlussbereiche, Risiko, Equipment und Stationskapazität als harte Grenzen.</li>
           <li>Level-Varianten aus dem freigegebenen Übungskatalog statt erfundener Übungen.</li>
+          <li>Jede Phase kann separat neu geplant werden; die beiden anderen Phasen bleiben erhalten.</li>
           <li>AI darf auswählen und begründen, aber niemals die deterministische Sicherheitsprüfung umgehen.</li>
         </ul>
       </aside>
