@@ -42,6 +42,13 @@ const formatLabels: Readonly<Record<TrainingFormat, string>> = {
   relay: "Team / Relay",
 };
 
+export interface TrainingBuilderSourceOption {
+  readonly id: string;
+  readonly title: string;
+  readonly totalDurationMinutes: number;
+  readonly itemCount: number;
+}
+
 export interface TrainingBuilderInitialState {
   readonly sourceTrainingId: string;
   readonly sourceTitle: string;
@@ -58,6 +65,7 @@ export interface TrainingBuilderInitialState {
   readonly formats: readonly string[];
   readonly location: string;
   readonly intensity: string;
+  readonly sourceTrainingIds?: readonly string[];
   readonly preferredExercises: readonly SelectedExerciseReference[];
   readonly availableEquipment: readonly {
     readonly equipmentId: string;
@@ -67,6 +75,7 @@ export interface TrainingBuilderInitialState {
 
 interface TrainingBuilderPanelProps {
   readonly equipmentOptions: readonly EquipmentAvailabilityOption[];
+  readonly sourceTrainingOptions?: readonly TrainingBuilderSourceOption[];
   readonly initialState?: TrainingBuilderInitialState;
 }
 
@@ -81,7 +90,11 @@ function formatAgeRange(minAge?: number, maxAge?: number): string {
   return "Offen";
 }
 
-export function TrainingBuilderPanel({ equipmentOptions, initialState }: TrainingBuilderPanelProps) {
+export function TrainingBuilderPanel({
+  equipmentOptions,
+  sourceTrainingOptions = [],
+  initialState,
+}: TrainingBuilderPanelProps) {
   const [builderMode, setBuilderMode] = useState<QuickCreateBuilderMode>(initialState?.builderMode ?? "local");
   const [audience, setAudience] = useState(initialState?.audience ?? "mixed");
   const [ageRange, setAgeRange] = useState(
@@ -93,6 +106,7 @@ export function TrainingBuilderPanel({ equipmentOptions, initialState }: Trainin
   const [bodyRegions, setBodyRegions] = useState<readonly string[]>(initialState?.bodyRegions ?? ["forearms-grip", "core"]);
   const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>(initialState?.avoidBodyRegions ?? []);
   const [selectedTypes, setSelectedTypes] = useState<readonly string[]>(initialState?.exerciseTypes ?? ["skill", "strength"]);
+  const [sourceTrainingIds, setSourceTrainingIds] = useState<readonly string[]>(initialState?.sourceTrainingIds ?? []);
   const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>(initialState?.preferredExercises ?? []);
   const [formats, setFormats] = useState<readonly string[]>(initialState?.formats ?? ["circuit"]);
   const [location, setLocation] = useState(initialState?.location ?? "mixed");
@@ -121,6 +135,15 @@ export function TrainingBuilderPanel({ equipmentOptions, initialState }: Trainin
     setError(null);
   }
 
+  function toggleSourceTraining(id: string) {
+    setSourceTrainingIds((current) => {
+      if (current.includes(id)) return current.filter((entry) => entry !== id);
+      if (current.length >= 6) return current;
+      return [...current, id];
+    });
+    invalidate();
+  }
+
   function input(): QuickCreateDraftClientInput {
     return {
       groupType: audience,
@@ -135,6 +158,7 @@ export function TrainingBuilderPanel({ equipmentOptions, initialState }: Trainin
       location,
       intensity,
       builderMode,
+      sourceTrainingIds: builderMode === "ai" ? sourceTrainingIds : [],
       preferredExerciseIds: preferredExercises.map((exercise) => exercise.id),
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
         quantity.trim() === "" ? [] : [{ equipmentId, quantityAvailable: Number(quantity) }]
@@ -241,9 +265,41 @@ export function TrainingBuilderPanel({ equipmentOptions, initialState }: Trainin
             ))}
           </div>
           {builderMode === "ai" ? (
-            <p className="mt-3 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--muted)]">
-              AI muss serverseitig konfiguriert sein. Sie darf keine neuen Übungs-IDs erfinden und kann Alters-, Orts-, Ausschluss-, Equipment- oder Sicherheitsfilter nicht umgehen.
-            </p>
+            <div className="mt-3 space-y-3">
+              <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--muted)]">
+                AI muss serverseitig konfiguriert sein. Sie darf keine neuen Übungs-IDs erfinden und kann Alters-, Orts-, Ausschluss-, Equipment- oder Sicherheitsfilter nicht umgehen.
+              </p>
+              {sourceTrainingOptions.length > 0 ? (
+                <details className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+                  <summary className="cursor-pointer text-sm font-black">
+                    Frühere Trainings als Rekompositions-Kontext ({sourceTrainingIds.length}/6)
+                  </summary>
+                  <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                    Optional. Die AI darf Muster und Übungsauswahl aus bis zu sechs Einheiten als Inspiration verwenden. Aktuelle Ziele, Muskelwahl, Ausschlüsse, Equipment und Sicherheitsregeln bleiben maßgeblich.
+                  </p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {sourceTrainingOptions.map((option) => {
+                      const active = sourceTrainingIds.includes(option.id);
+                      const disabled = !active && sourceTrainingIds.length >= 6;
+                      return (
+                        <label className={`flex gap-3 rounded-lg border p-3 text-sm ${active ? "border-[var(--accent-strong)] bg-[var(--accent-soft)]" : "border-[var(--border)] bg-[var(--surface)]"} ${disabled ? "opacity-45" : ""}`} key={option.id}>
+                          <input
+                            checked={active}
+                            disabled={disabled}
+                            onChange={() => toggleSourceTraining(option.id)}
+                            type="checkbox"
+                          />
+                          <span>
+                            <span className="block font-black">{option.title}</span>
+                            <span className="mt-0.5 block text-xs text-[var(--muted)]">{option.totalDurationMinutes} Min. · {option.itemCount} Übungen</span>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </details>
+              ) : null}
+            </div>
           ) : null}
         </section>
 
@@ -342,10 +398,12 @@ export function TrainingBuilderPanel({ equipmentOptions, initialState }: Trainin
           <li>Abdeckung gewünschter Muskeln plus typische Gegenmuskeln und Gegenbewegungen.</li>
           <li>Push/Pull, Squat/Hinge und Rumpfrotation/Stabilisation werden für eine ausgewogene Einheit bevorzugt ergänzt.</li>
           <li>Hohe Stoßbelastungen und hohe Risiken werden nicht unnötig direkt hintereinander geplant.</li>
+          <li>Drei direkt aufeinanderfolgende Übungen mit derselben lokalen Muskel-/Körperregion werden im Qualitätscheck beanstandet.</li>
           <li>Übungen aus den letzten Trainings erhalten einen weichen Wiederholungs-Malus; Trainer-Wunschübungen können ihn bewusst überstimmen.</li>
           <li>Alter, Ort, Ausschlussbereiche, Risiko, Equipment und Stationskapazität bleiben harte Grenzen.</li>
           <li>Level-Varianten stammen aus dem freigegebenen Übungskatalog statt aus erfundenen Übungen.</li>
           <li>Phasen und einzelne Übungen können separat neu geplant bzw. leichter/schwerer/materialärmer ersetzt werden.</li>
+          <li>AI kann bis zu sechs ausgewählte frühere Trainings als Rekompositions-Kontext erhalten, aber nur aktuell freigegebene Übungen auswählen.</li>
           <li>AI darf auswählen und begründen, aber niemals die deterministische Sicherheitsprüfung umgehen.</li>
         </ul>
       </aside>
