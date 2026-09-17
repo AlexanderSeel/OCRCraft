@@ -38,6 +38,7 @@ describe("normalizeTrainingDraftRequest", () => {
         bodyRegions: ["core", "biceps", "rear-delts", "abs", "not-a-region"],
         avoidBodyRegions: ["calves", "core", "not-a-region"],
         formats: ["rig-run", "not-a-format"],
+        location: "indoor",
         intensity: "technique",
         preferredExerciseIds: ["exercise-1"],
         availableEquipment: [
@@ -53,6 +54,7 @@ describe("normalizeTrainingDraftRequest", () => {
       bodyRegions: ["core", "biceps", "rear-delts", "abs"],
       avoidBodyRegions: ["calves"],
       formats: ["rig-run"],
+      location: "indoor",
       intensity: "technique",
       preferredExerciseIds: ["exercise-1"],
       availableEquipment: [
@@ -65,7 +67,7 @@ describe("normalizeTrainingDraftRequest", () => {
     });
   });
 
-  it("falls back to safe audience and intensity values", () => {
+  it("falls back to safe audience, location and intensity values", () => {
     const request = normalizeTrainingDraftRequest({
       groupType: "unknown",
       ageRange: "Erwachsene",
@@ -74,11 +76,13 @@ describe("normalizeTrainingDraftRequest", () => {
       goals: ["Ganzkörper"],
       bodyRegions: [],
       formats: ["circuit"],
+      location: "unknown",
       intensity: "unknown",
       preferredExerciseIds: [],
     });
 
     expect(request.audience).toBe("mixed");
+    expect(request.location).toBe("mixed");
     expect(request.intensity).toBe("balanced");
     expect(request.minAge).toBeUndefined();
     expect(request.maxAge).toBeUndefined();
