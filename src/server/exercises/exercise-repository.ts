@@ -25,6 +25,8 @@ export interface ExerciseListItem {
   readonly equipment: readonly string[];
   readonly imageUrl: string | null;
   readonly imageReviewStatus: string | null;
+  /** Attribution/license label for externally sourced preview media. */
+  readonly imageLicenseLabel: string | null;
   readonly imageFormat: "exercise_sequence" | "legacy_triptych" | null;
   readonly sequenceStepCount: number | null;
 }
@@ -338,6 +340,11 @@ export async function listExercises({
           WHERE m.exercise_id=e.id AND m.generation_status='generated'
           ORDER BY m.created_at DESC, m.id DESC LIMIT 1
         ) AS image_review_status
+        ,(
+          SELECT m.license_label FROM exercise_media_assets m
+          WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+        ) AS image_license_label
       FROM exercises e
       JOIN exercise_translations t ON t.exercise_id = e.id AND t.locale = $locale
       WHERE e.archived = $archived
@@ -375,6 +382,7 @@ export async function listExercises({
       imageReviewStatus: row[11] == null ? null : String(row[11]),
       imageFormat: row[12] == null ? null : String(row[12]) as "exercise_sequence" | "legacy_triptych",
       sequenceStepCount: row[13] == null ? null : Number(row[13]),
+      imageLicenseLabel: row[14] == null ? null : String(row[14]),
     }));
   });
 }

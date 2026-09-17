@@ -329,4 +329,18 @@ describe("training validation", () => {
       ]),
     );
   });
+
+  it("applies age, impact and supervision rules for youth groups", () => {
+    const base = createSession();
+    const session: TrainingSession = {
+      ...base,
+      group: { ...base.group, audience: "kids", minAge: 8 },
+      phases: base.phases.map((phase) => phase.kind === "main" ? {
+        ...phase,
+        items: [{ ...phase.items[0], exercise: { ...phase.items[0].exercise, minimumAge: 12, impactLevel: "high", supervision: "direct" } }],
+      } : phase),
+    };
+    const issues = validateTrainingSession(session);
+    expect(issues.map((issue) => issue.code)).toEqual(expect.arrayContaining(["age-restricted", "impact-restricted", "supervision-required"]));
+  });
 });

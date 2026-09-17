@@ -15,6 +15,7 @@ export interface ExerciseSearchHit {
   readonly equipment: readonly string[];
   readonly imageUrl: string | null;
   readonly imageReviewStatus: string | null;
+  readonly imageLicenseLabel: string | null;
   readonly imageFormat: "exercise_sequence" | "legacy_triptych" | null;
   readonly sequenceStepCount: number | null;
 }
@@ -80,6 +81,11 @@ export async function runBm25ExerciseSearch(
         WHERE m.exercise_id=e.id AND m.generation_status='generated'
         ORDER BY m.created_at DESC, m.id DESC LIMIT 1
       ) AS image_review_status,
+      (
+        SELECT m.license_label FROM exercise_media_assets m
+        WHERE m.exercise_id=e.id AND m.generation_status='generated'
+        ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+      ) AS image_license_label,
       ranked.bm25_score
     FROM ranked
     JOIN exercises e ON e.id::VARCHAR=ranked.entity_id
@@ -124,6 +130,7 @@ export async function runBm25ExerciseSearch(
     equipment: String(row[9] ?? "").split(" | ").filter(Boolean),
     imageUrl: safeExerciseImageUri(row[10]),
     imageReviewStatus: row[11] == null ? null : String(row[11]),
+    imageLicenseLabel: row[12] == null ? null : String(row[12]),
     imageFormat: null,
     sequenceStepCount: null,
   }));

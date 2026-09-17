@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 /** The public dataset is treated as untrusted input and media is metadata only. */
-const optionalUrl = z.preprocess((value) => value === "" ? undefined : value, z.string().url().optional());
+// The repository JSON uses relative paths (images/... and videos/...). Keep
+// them as references and resolve them against the source repository later.
+const optionalUrl = z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional());
 export const hasaneyldrmExerciseSchema = z.object({
   id: z.union([z.string(), z.number()]),
   name: z.string().min(1),

@@ -61,6 +61,11 @@ export interface ExerciseReference {
   readonly setupSeconds?: number;
   /** Approximate time to move from this exercise to the next one. */
   readonly transitionSeconds?: number;
+  readonly minimumAge?: number | null;
+  readonly suitableForAudience?: boolean;
+  readonly impactLevel?: "low" | "moderate" | "high";
+  readonly difficulty?: "beginner" | "intermediate" | "advanced";
+  readonly supervision?: "normal" | "increased" | "direct";
 }
 
 export interface TrainingItem {

@@ -13,6 +13,9 @@ export interface TrainingValidationIssue {
     | "empty-main-part"
     | "duration-mismatch"
     | "risk-restricted"
+    | "age-restricted"
+    | "impact-restricted"
+    | "supervision-required"
     | "station-capacity"
     | "equipment-conflict"
     | "equipment-availability-unknown"
@@ -35,11 +38,19 @@ export interface ClubTrainingRules {
   readonly requiredPhases: readonly TrainingPhaseKind[];
   readonly durationToleranceMinutes: number;
   readonly maximumRiskLevel?: RiskLevel;
+  readonly audienceSafety?: Partial<Record<"kids" | "youth" | "adults" | "mixed", {
+    readonly maximumImpactLevel?: "low" | "moderate" | "high";
+    readonly requireDirectSupervision?: boolean;
+  }>>;
 }
 
 export const DEFAULT_CLUB_TRAINING_RULES: ClubTrainingRules = {
   requiredPhases: ["warmup", "main", "cooldown"],
   durationToleranceMinutes: 2,
+  audienceSafety: {
+    kids: { maximumImpactLevel: "moderate", requireDirectSupervision: true },
+    youth: { maximumImpactLevel: "high", requireDirectSupervision: false },
+  },
 };
 
 const RISK_ORDER: Readonly<Record<RiskLevel, number>> = {
@@ -136,6 +147,27 @@ export function validateTrainingSession(
             path: `phases.${phase.id}.items.${item.id}`,
           });
         }
+      }
+    }
+  }
+
+  const audienceRule = rules.audienceSafety?.[session.group.audience];
+  if (audienceRule) {
+    const impactOrder = { low: 1, moderate: 2, high: 3 } as const;
+    for (const phase of session.phases) for (const item of phase.items) {
+      const exercise = item.exercise;
+      const path = `phases.${phase.id}.items.${item.id}`;
+      if (exercise.minimumAge != null && session.group.minAge != null && session.group.minAge < exercise.minimumAge) {
+        issues.push({ code: "age-restricted", severity: "error", message: `${exercise.name} ist erst ab ${exercise.minimumAge} Jahren vorgesehen.`, path });
+      }
+      if (exercise.suitableForAudience === false) {
+        issues.push({ code: "age-restricted", severity: "error", message: `${exercise.name} ist für die Zielgruppe ${session.group.audience} nicht freigegeben.`, path });
+      }
+      if (exercise.impactLevel && audienceRule.maximumImpactLevel && impactOrder[exercise.impactLevel] > impactOrder[audienceRule.maximumImpactLevel]) {
+        issues.push({ code: "impact-restricted", severity: "error", message: `${exercise.name} überschreitet die erlaubte Aufprallstufe für ${session.group.audience}.`, path });
+      }
+      if (audienceRule.requireDirectSupervision && exercise.supervision === "direct") {
+        issues.push({ code: "supervision-required", severity: "warning", message: `${exercise.name} benötigt direkte Traineraufsicht.`, path });
       }
     }
   }

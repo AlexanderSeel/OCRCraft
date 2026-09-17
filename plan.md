@@ -42,8 +42,8 @@
 - [x] station-capacity validation in the deterministic training draft, with calculated parallel-station guidance
 - [x] simultaneous equipment-conflict validation for circuit stations using per-station equipment demand and declared stock
 - [x] transition/setup-time validation using exercise logistics estimates and warning on estimated session overrun
-- [ ] age-specific club-rule engine
-- [ ] progression/regression rules
+- [x] age-specific club-rule engine
+- [x] progression/regression rules
 - [ ] recent-use/load rules
 
 ## 3. DuckDB schema
@@ -56,6 +56,7 @@
 - [x] DE/EN search documents
 - [x] FTS state: `healthy/dirty/rebuilding/failed`
 - [x] DB bootstrap + multi-statement migrations
+- [x] serialized multi-process DuckDB access with WAL recovery quarantine
 - [x] real In-Memory-DuckDB migration test
 - [x] expanded exercise-detail schema foundation from section 4
 - [x] media source/generation metadata schema and migration
@@ -124,7 +125,7 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [x] **breathing cue** where useful
 - [x] **tempo/rhythm cue** where useful
 - [x] **2–5 coaching cues** that can be called out during training
-- [ ] **2–5 common mistakes** and how the trainer corrects them
+- [x] **2–5 common mistakes** and how the trainer corrects them
 - [x] **safety notes / stop conditions** written in practical trainer language
 - [x] **quality criteria:** what a good repetition or successful obstacle attempt looks like
 - [x] hand-authored bilingual, exercise-specific detail for all 10 warm-up seeds
@@ -132,16 +133,16 @@ The remaining generic seed records must be enriched so that every exercise is se
 #### Dosage & programming
 
 - [x] supported prescription units: reps / seconds / minutes / metres / rounds / attempts
-- [ ] suggested beginner prescription
-- [ ] suggested standard prescription
-- [ ] suggested advanced prescription
-- [ ] typical work/rest ranges where appropriate
+- [x] suggested beginner prescription
+- [x] suggested standard prescription
+- [x] suggested advanced prescription
+- [x] typical work/rest ranges where appropriate
 - [ ] suitable training formats, e.g. circuit / AMRAP / EMOM / Tabata-style / interval / technique / relay / Rig & Run
-- [ ] reasonable station capacity
-- [ ] approximate setup time
-- [ ] approximate transition time
-- [ ] space requirement: small / medium / large / running route / rig area
-- [ ] indoor / outdoor suitability
+- [x] reasonable station capacity
+- [x] approximate setup time
+- [x] approximate transition time
+- [x] space requirement: small / medium / large / running route / rig area
+- [x] indoor / outdoor suitability
 
 #### Progression, regression & mixed groups
 
@@ -367,6 +368,10 @@ Reference entry points:
 - [x] safety/logistics editor
 - [ ] source/provenance display
 - [x] dry-run adapter for hasaneyldrm/exercises-dataset preserves source and media references and requires translation/review
+- [x] optional transactional persistence imports the external exercise catalogue as reviewable OCRCraft drafts
+- [x] bundled external catalogue is restored automatically after bootstrap and full reseed
+- [x] imported external exercises receive German names, summaries and ordered instructions via the translation job
+- [x] imported preview images are linked with `Gym-Visual-Lizenz` attribution and marked as templates for later AI replacement
 - [ ] protected hard delete
 - [ ] progressions/regressions
 - [ ] duplicate detection / bulk edit / import-export

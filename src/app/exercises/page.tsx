@@ -176,6 +176,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                       KI-Bild · noch zu prüfen
                     </span>
                   ) : null}
+                  {exercise.imageLicenseLabel ? (
+                    <span className="absolute right-3 top-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]/95 px-2.5 py-1 text-xs font-bold text-[var(--muted)] shadow-sm">
+                      {exercise.imageLicenseLabel}
+                    </span>
+                  ) : null}
                   {exercise.imageFormat === "exercise_sequence" ? (
                     <span className="absolute bottom-3 left-3 rounded-lg bg-[var(--surface)]/95 px-2.5 py-1 text-xs font-bold text-[var(--foreground)] shadow-sm">
                       Schrittfolge{exercise.sequenceStepCount ? ` · ${exercise.sequenceStepCount} Schritte` : ""}
