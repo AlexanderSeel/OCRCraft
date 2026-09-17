@@ -19,12 +19,15 @@ export const hasaneyldrmExerciseSchema = z.object({
   image: optionalUrl,
   gif_url: optionalUrl,
   attribution: z.string().optional(),
+  source_provider: z.string().optional(),
+  source_url: optionalUrl,
+  license_label: z.string().optional(),
 });
 
 export type HasaneyldrmExercise = z.infer<typeof hasaneyldrmExerciseSchema>;
 
 export interface ExerciseImportDraft {
-  readonly sourceProvider: "hasaneyldrm/exercises-dataset";
+  readonly sourceProvider: string;
   readonly sourceRecordId: string;
   readonly seedKey: string;
   readonly nameEn: string;
@@ -37,8 +40,8 @@ export interface ExerciseImportDraft {
   readonly reviewStatus: "draft";
   readonly sourceReference: string;
   readonly sourceMetadata: {
-    readonly provider: "hasaneyldrm/exercises-dataset";
-    readonly title: "hasaneyldrm exercises dataset";
+    readonly provider: string;
+    readonly title: string;
     readonly sourceType: "dataset";
     readonly retrievedAt: string;
   };
@@ -46,7 +49,7 @@ export interface ExerciseImportDraft {
     readonly image?: string;
     readonly gif?: string;
     readonly attribution?: string;
-    readonly licenseLabel: "Gym-Visual-Lizenz";
+    readonly licenseLabel: string;
     readonly usage: "template_only";
   };
   readonly warnings: readonly string[];
@@ -84,8 +87,10 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
     ...(record.image || record.gif_url ? ["Media is a template reference only and carries the Gym-Visual-Lizenz label"] : []),
     "German translation and trainer review are required before publishing",
   ];
+  const sourceProvider = record.source_provider ?? "hasaneyldrm/exercises-dataset";
+  const licenseLabel = record.license_label ?? "Gym-Visual-Lizenz";
   return {
-    sourceProvider: "hasaneyldrm/exercises-dataset",
+    sourceProvider,
     sourceRecordId: String(record.id),
     seedKey: `imported-${slug(record.name)}-${String(record.id)}`,
     nameEn: record.name,
@@ -96,10 +101,10 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
     category: record.category.trim(),
     translationStatus: "required",
     reviewStatus: "draft",
-    sourceReference: `https://github.com/hasaneyldrm/exercises-dataset#${String(record.id)}`,
+    sourceReference: record.source_url ?? `https://github.com/hasaneyldrm/exercises-dataset#${String(record.id)}`,
     sourceMetadata: {
-      provider: "hasaneyldrm/exercises-dataset",
-      title: "hasaneyldrm exercises dataset",
+      provider: sourceProvider,
+      title: sourceProvider === "exercisedb.dev" ? "ExerciseDB Free V1" : "hasaneyldrm exercises dataset",
       sourceType: "dataset",
       retrievedAt: new Date().toISOString(),
     },
@@ -107,7 +112,7 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
       image: record.image,
       gif: record.gif_url,
       attribution: record.attribution,
-      licenseLabel: "Gym-Visual-Lizenz",
+      licenseLabel,
       usage: "template_only",
     },
     warnings,

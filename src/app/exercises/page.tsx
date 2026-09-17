@@ -24,6 +24,7 @@ interface PageProps {
     category?: string;
     status?: string;
     muscle?: string | string[];
+    page?: string;
   }>;
 }
 
@@ -33,9 +34,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   const category = params.category?.trim() || undefined;
   const archived = params.status === "archived";
   const selectedMuscles = parameterList(params.muscle);
+  const pageSize = 80;
+  const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
 
   const [searchResult, categoryCounts, bodyRegionOptions] = await Promise.all([
-    searchExercises({ query, category, archived, limit: selectedMuscles.length > 0 ? 200 : 80 }),
+    searchExercises({ query, category, archived, limit: pageSize + 1, offset: (page - 1) * pageSize }),
     getExerciseCategoryCounts(),
     listBodyRegionOptions(),
   ]);
@@ -43,9 +46,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   const matchingMuscleIds = selectedMuscles.length > 0
     ? new Set(await listExerciseIdsForBodyRegions(expandBodyRegionIds(selectedMuscles)))
     : null;
+  const hasNextPage = searchResult.length > pageSize;
+  const pagedResults = searchResult.slice(0, pageSize);
   const exercises = matchingMuscleIds
-    ? searchResult.filter((exercise) => matchingMuscleIds.has(exercise.id))
-    : searchResult;
+    ? pagedResults.filter((exercise) => matchingMuscleIds.has(exercise.id))
+    : pagedResults;
   const bodyRegionMap = await getExerciseBodyRegionMap(exercises.map((exercise) => exercise.id));
 
   const total = categoryCounts.reduce((sum, item) => sum + item.count, 0);
@@ -267,6 +272,16 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         </section>
         </OverviewLayout>
 
+        {(page > 1 || hasNextPage) ? (
+          <nav aria-label="Seitennavigation Übungen" className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">
+            <span className="text-[var(--muted)]">Seite {page}</span>
+            <div className="flex gap-2">
+              {page > 1 ? <Link className="rounded-xl border border-[var(--border)] px-3 py-2 font-bold" href={pageHref(page - 1, params)}>Zurück</Link> : null}
+              {hasNextPage ? <Link className="rounded-xl bg-[var(--control-strong)] px-3 py-2 font-bold text-[var(--control-strong-foreground)]" href={pageHref(page + 1, params)}>Weiter</Link> : null}
+            </div>
+          </nav>
+        ) : null}
+
         {exercises.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--muted)]">
             Keine Übung passt zu diesem Filter.
@@ -280,6 +295,23 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
 function parameterList(value: string | string[] | undefined): readonly string[] {
   const values = Array.isArray(value) ? value : value ? [value] : [];
   return [...new Set(values.map((item) => item.trim()).filter(Boolean))];
+}
+
+type ExerciseSearchParams = {
+  readonly q?: string;
+  readonly category?: string;
+  readonly status?: string;
+  readonly muscle?: string | string[];
+};
+
+function pageHref(page: number, params: ExerciseSearchParams): string {
+  const query = new URLSearchParams();
+  if (params.q) query.set("q", params.q);
+  if (params.category) query.set("category", params.category);
+  if (params.status) query.set("status", params.status);
+  for (const muscle of parameterList(params.muscle)) query.append("muscle", muscle);
+  query.set("page", String(page));
+  return `/exercises?${query.toString()}`;
 }
 
 function categoryLabel(category: string): string {

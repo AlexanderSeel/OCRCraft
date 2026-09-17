@@ -3,7 +3,8 @@ import { SeedCompletenessReportView } from "@/components/admin/seed-completeness
 import { MuscleMapDebugSetting } from "@/components/admin/muscle-map-debug-setting";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
-import { reseedDatabaseAction } from "./actions";
+import { reseedDatabaseAction, resolveDuplicateExerciseAction, scanDuplicateExercisesAction } from "./actions";
+import { listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,10 @@ interface AdminPageProps {
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
-  const [searchStates, seedCompleteness] = await Promise.all([
+  const [searchStates, seedCompleteness, duplicateTasks] = await Promise.all([
     getSearchIndexStates(),
     getSeedCompletenessReport(),
+    listDuplicateReviewTasks(),
   ]);
   const { reseeded, reseedError } = await searchParams;
 
@@ -28,6 +30,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     >
       <div className="space-y-6">
         <SeedCompletenessReportView report={seedCompleteness} />
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität</div><h2 className="mt-1 text-xl font-black">Doppelungen prüfen</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Die Engine vergleicht normalisierte Namen, Aliase, Equipment, Körperregionen und externe IDs. Zusammenführen archiviert den überzähligen Datensatz und erhält die Trainingshistorie.</p></div>
+            <form action={scanDuplicateExercisesAction}><button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Jetzt prüfen</button></form>
+          </div>
+          {duplicateTasks.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Keine offenen Doppelungsaufgaben.</p> : <div className="mt-4 grid gap-3">{duplicateTasks.map((task) => <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={task.id}><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{task.leftName} ↔ {task.rightName}</div><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{Math.round(task.score * 100)} %</span></div><p className="mt-2 text-sm text-[var(--muted)]">{task.reasons.join(" · ")}</p><div className="mt-3 flex flex-wrap gap-2"><form action={resolveDuplicateExerciseAction}><input name="taskId" type="hidden" value={task.id} /><input name="keepExerciseId" type="hidden" value={task.leftExerciseId} /><button className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">Linke behalten</button></form><form action={resolveDuplicateExerciseAction}><input name="taskId" type="hidden" value={task.id} /><input name="keepExerciseId" type="hidden" value={task.rightExerciseId} /><button className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" type="submit">Rechte behalten</button></form><form action={resolveDuplicateExerciseAction}><input name="taskId" type="hidden" value={task.id} /><input name="keepExerciseId" type="hidden" value={task.leftExerciseId} /><input name="status" type="hidden" value="ignored" /><button className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black text-[var(--muted)]" type="submit">Ignorieren</button></form></div></article>)}</div>}
+        </section>
         <section id="database-settings" className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="max-w-3xl">
             <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenbank</div>

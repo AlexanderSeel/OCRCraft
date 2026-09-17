@@ -25,6 +25,7 @@ export interface Bm25SearchOptions {
   readonly category?: string;
   readonly locale: SearchLocale;
   readonly limit: number;
+  readonly offset?: number;
 }
 
 function configForLocale(locale: SearchLocale) {
@@ -43,7 +44,7 @@ function configForLocale(locale: SearchLocale) {
 
 export async function runBm25ExerciseSearch(
   connection: DuckDBConnection,
-  { query, category, locale, limit }: Bm25SearchOptions,
+  { query, category, locale, limit, offset = 0 }: Bm25SearchOptions,
 ): Promise<readonly ExerciseSearchHit[]> {
   const config = configForLocale(locale);
   const reader = await connection.runAndReadAll(
@@ -107,13 +108,14 @@ export async function runBm25ExerciseSearch(
       END,
       ranked.bm25_score DESC,
       t.name
-    LIMIT $limit
+    LIMIT $limit OFFSET $offset
     `,
     {
       locale,
       query,
       category: category ?? "",
       limit,
+      offset,
     },
   );
 

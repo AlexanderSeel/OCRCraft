@@ -42,16 +42,17 @@ function externalMediaUrl(value: string | undefined): string | null {
 }
 
 async function ensureExternalMedia(connection: DuckDBConnection, exerciseId: string, draft: ExerciseImportDraft): Promise<void> {
-  const imageUrl = externalMediaUrl(draft.mediaReference.image);
+  const imageUrl = externalMediaUrl(draft.mediaReference.image ?? draft.mediaReference.gif);
   if (!imageUrl) return;
   const existing = await connection.runAndReadAll("SELECT 1 FROM exercise_media_assets WHERE exercise_id=$id AND source_type='external_reference' LIMIT 1", { id: exerciseId });
   if (existing.getRows().length) return;
-  await connection.run(`INSERT INTO exercise_media_assets (exercise_id,media_type,source_type,provider,illustration_format,review_status,generation_status,storage_provider,storage_key,storage_uri,content_type,width,height,sha256,generated_at,license_label,source_reference,usage_note) VALUES ($id,'image','external_reference','gym-visual','legacy_triptych','pending','generated','s3',$key,$uri,'image/jpeg',180,180,$sha,current_timestamp,$license,$source,$usage)`, { id: exerciseId, key: `external/hasaneyldrm/${draft.sourceRecordId}.jpg`, uri: imageUrl, sha: createHash("sha256").update(imageUrl).digest("hex"), license: draft.mediaReference.licenseLabel, source: draft.sourceReference, usage: "Vorlage für spätere KI-Ersetzung; Gym-Visual-Lizenz beachten." });
+  const isGif = Boolean(draft.mediaReference.gif && !draft.mediaReference.image);
+  await connection.run(`INSERT INTO exercise_media_assets (exercise_id,media_type,source_type,provider,illustration_format,review_status,generation_status,storage_provider,storage_key,storage_uri,content_type,width,height,sha256,generated_at,license_label,source_reference,usage_note) VALUES ($id,'image','external_reference',$provider,'legacy_triptych','pending','generated','s3',$key,$uri,$contentType,180,180,$sha,current_timestamp,$license,$source,$usage)`, { id: exerciseId, provider: draft.sourceMetadata.provider, key: `external/${slug(draft.sourceMetadata.provider)}/${draft.sourceRecordId}.${isGif ? "gif" : "jpg"}`, uri: imageUrl, contentType: isGif ? "image/gif" : "image/jpeg", sha: createHash("sha256").update(imageUrl).digest("hex"), license: draft.mediaReference.licenseLabel, source: draft.sourceReference, usage: `Vorlage für spätere KI-Ersetzung; ${draft.mediaReference.licenseLabel} beachten.` });
 }
 
 function mappedRegions(record: HasaneyldrmExercise, draft: ExerciseImportDraft): string[] {
   const values = [record.body_part, record.muscle_group, record.target, ...textList(record.secondary_muscles)];
-  const mapped = values.map((value) => bodyRegionAliases[value] ?? (value.includes("glute") ? "glutes" : value.includes("quad") ? "quadriceps" : value.includes("hamstring") ? "hamstrings" : undefined)).filter((value): value is string => Boolean(value));
+  const mapped = values.filter((value): value is string => typeof value === "string" && value.length > 0).map((value) => bodyRegionAliases[value] ?? (value.includes("glute") ? "glutes" : value.includes("quad") ? "quadriceps" : value.includes("hamstring") ? "hamstrings" : undefined)).filter((value): value is string => Boolean(value));
   return [...new Set([...draft.bodyRegionIds, ...mapped])];
 }
 
@@ -87,6 +88,13 @@ async function persistDraft(connection: DuckDBConnection, record: HasaneyldrmExe
   const existing = await connection.runAndReadAll("SELECT exercise_id FROM exercise_source_references WHERE source_url=$sourceUrl LIMIT 1", { sourceUrl });
   if (existing.getRows()[0]?.[0]) {
     await ensureExternalMedia(connection, String(existing.getRows()[0][0]), draft);
+    return "skipped";
+  }
+  const sameName = await connection.runAndReadAll(`SELECT e.id::VARCHAR FROM exercises e JOIN exercise_translations t ON t.exercise_id=e.id WHERE t.locale='en' AND lower(t.name)=lower($name) LIMIT 1`, { name: draft.nameEn });
+  if (sameName.getRows()[0]?.[0]) {
+    const existingId = String(sameName.getRows()[0][0]);
+    await connection.run("INSERT OR IGNORE INTO exercise_source_references (exercise_id,provider,title,source_url,source_type,license_label,notes) VALUES ($id,$provider,$title,$sourceUrl,'dataset',$license,$notes)", { id: existingId, provider: draft.sourceMetadata.provider, title: draft.sourceMetadata.title, sourceUrl, license: draft.mediaReference.licenseLabel, notes: `duplicate_of_existing_name; source_record_id=${draft.sourceRecordId}` });
+    await ensureExternalMedia(connection, existingId, draft);
     return "skipped";
   }
 

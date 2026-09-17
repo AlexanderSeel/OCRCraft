@@ -32,7 +32,9 @@ async function main() {
       SELECT r.exercise_id::VARCHAR, r.notes, t.name, COALESCE(t.summary,''),
         COALESCE((SELECT string_agg(s.instruction, '||| ' ORDER BY s.step_order) FROM exercise_execution_steps s WHERE s.exercise_id=r.exercise_id AND s.locale='en'),'')
       FROM exercise_source_references r JOIN exercise_translations t ON t.exercise_id=r.exercise_id AND t.locale='en'
-      WHERE r.provider='hasaneyldrm/exercises-dataset' ORDER BY r.created_at, r.exercise_id
+      WHERE r.provider IN ('hasaneyldrm/exercises-dataset','exercisedb.dev')
+        AND EXISTS (SELECT 1 FROM exercise_translations de WHERE de.exercise_id=r.exercise_id AND de.locale='de' AND (de.name LIKE '%Übersetzung ausstehend%' OR de.name= t.name))
+      ORDER BY r.created_at, r.exercise_id
     `);
     return reader.getRows().map((row) => {
       const notes = String(row[1] ?? "");

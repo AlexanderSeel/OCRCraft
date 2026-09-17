@@ -87,6 +87,7 @@ A fresh OCRCraft DB must be useful immediately. A trainer must be able to unders
 - [x] equipment/body-region/movement/tag catalogues
 - [x] DE/EN search documents
 - [x] duplicate protection
+- [x] external catalogue expansion from ExerciseDB with exact-name duplicate prevention and review tasks for fuzzy matches
 - [x] startup health check verifies all 157 seed exercises and bilingual identity data without reseeding automatically
 
 ### 4.2 Required exercise detail contract
@@ -339,6 +340,7 @@ Reference entry points:
 - [x] text + alias search
 - [x] category filter
 - [x] active/archive filter
+- [x] paginated exercise overview beyond the first 80 results
 - [x] counts, equipment, risk, min-age display
 - [x] create exercise
 - [x] new manual exercises continue directly into the same full editor used by existing exercises
@@ -367,14 +369,17 @@ Reference entry points:
 - [x] Level 1/2/3 editor
 - [x] safety/logistics editor
 - [ ] source/provenance display
+- [x] source/provider and media attribution are retained for ExerciseDB imports
 - [x] dry-run adapter for hasaneyldrm/exercises-dataset preserves source and media references and requires translation/review
 - [x] optional transactional persistence imports the external exercise catalogue as reviewable OCRCraft drafts
 - [x] bundled external catalogue is restored automatically after bootstrap and full reseed
 - [x] imported external exercises receive German names, summaries and ordered instructions via the translation job
 - [x] imported preview images are linked with `Gym-Visual-Lizenz` attribution and marked as templates for later AI replacement
+- [x] ExerciseDB free catalogue import supports cursor pagination, rate-limit retries and private non-commercial attribution
 - [ ] protected hard delete
 - [ ] progressions/regressions
 - [ ] duplicate detection / bulk edit / import-export
+- [x] duplicate review engine with explainable similarity score and safe archive-based merge action
 
 ## 6. Search & autocomplete
 

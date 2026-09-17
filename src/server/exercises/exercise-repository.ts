@@ -58,6 +58,7 @@ interface ListExercisesOptions {
   readonly locale?: "de" | "en";
   readonly archived?: boolean;
   readonly limit?: number;
+  readonly offset?: number;
 }
 
 async function refreshSearchDocument(
@@ -172,6 +173,8 @@ export async function createExercise(draft: ExerciseDraft): Promise<string> {
   const id = randomUUID();
 
   await withDuckDbConnection(async (connection) => {
+    const duplicate = await connection.runAndReadAll(`SELECT e.id::VARCHAR FROM exercises e JOIN exercise_translations t ON t.exercise_id=e.id WHERE e.archived=false AND lower(t.name) IN (lower($nameDe), lower($nameEn)) LIMIT 1`, { nameDe: draft.nameDe, nameEn: draft.nameEn });
+    if (duplicate.getRows().length) throw new Error("Eine aktive Übung mit diesem Namen existiert bereits.");
     await connection.run("BEGIN TRANSACTION");
     try {
       await connection.run(
@@ -298,6 +301,7 @@ export async function listExercises({
   locale = "de",
   archived = false,
   limit = 80,
+  offset = 0,
 }: ListExercisesOptions = {}): Promise<readonly ExerciseListItem[]> {
   await ensureDatabaseReady();
 
@@ -362,9 +366,9 @@ export async function listExercises({
       ORDER BY
         CASE WHEN lower(t.name) = lower($query) THEN 0 WHEN t.name ILIKE $query || '%' THEN 1 ELSE 2 END,
         t.name
-      LIMIT $limit
+      LIMIT $limit OFFSET $offset
       `,
-      { locale, category: category ?? "", query: query.trim(), archived, limit },
+      { locale, category: category ?? "", query: query.trim(), archived, limit, offset },
     );
 
     return reader.getRows().map((row) => ({

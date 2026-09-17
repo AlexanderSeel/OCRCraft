@@ -40,6 +40,7 @@ const migrations: readonly Migration[] = [
   { version: 27, fileName: "027_exercise_source_references.sql" },
   { version: 28, fileName: "028_seed_quality_expansion.sql" },
   { version: 29, fileName: "029_training_generation_history.sql" },
+  { version: 30, fileName: "030_duplicate_review.sql" },
 ];
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {

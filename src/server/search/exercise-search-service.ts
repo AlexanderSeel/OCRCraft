@@ -15,6 +15,7 @@ export interface ExerciseSearchOptions {
   readonly locale?: SearchLocale;
   readonly archived?: boolean;
   readonly limit?: number;
+  readonly offset?: number;
 }
 
 async function fallbackSearch(
@@ -35,10 +36,11 @@ export async function searchExercises({
   locale = "de",
   archived = false,
   limit = 80,
+  offset = 0,
 }: ExerciseSearchOptions = {}): Promise<readonly ExerciseListItem[]> {
   const query = rawQuery.trim();
   const safeLimit = Math.max(1, Math.min(limit, 200));
-  const fallbackOptions = { query, category, locale, archived, limit: safeLimit };
+  const fallbackOptions = { query, category, locale, archived, limit: safeLimit, offset };
 
   if (query.length < 2 || archived) {
     return fallbackSearch(fallbackOptions);
@@ -60,6 +62,7 @@ export async function searchExercises({
         category,
         locale,
         limit: safeLimit,
+        offset,
       });
     });
 
