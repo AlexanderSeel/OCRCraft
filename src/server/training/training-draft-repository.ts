@@ -7,16 +7,20 @@ import { withDuckDbConnection } from "@/server/db/duckdb";
 import { runRecentExerciseUseQuery } from "./recent-training-use-core";
 import {
   runTrainingEquipmentOptionsQuery,
+  runTrainingObstacleOptionsQuery,
   type TrainingEquipmentOption,
+  type TrainingObstacleOption,
 } from "./training-draft-catalog-core";
 import { runTrainingDraftCandidateQuery } from "./training-draft-candidate-core";
-export type { TrainingEquipmentOption } from "./training-draft-catalog-core";
+export type { TrainingEquipmentOption, TrainingObstacleOption } from "./training-draft-catalog-core";
 
 interface ListTrainingDraftCandidatesOptions {
   readonly audience: Audience;
   readonly minAge?: number;
   readonly locale?: "de" | "en";
   readonly location?: TrainingLocation;
+  /** Undefined means obstacle availability was not declared; [] explicitly means no club obstacles are available. */
+  readonly availableObstacleExerciseIds?: readonly string[];
 }
 
 export type TrainingDraftCandidateWithHistory = TrainingDraftExerciseCandidate & {
@@ -31,19 +35,30 @@ export async function listTrainingEquipmentOptions(
   return withDuckDbConnection((connection) => runTrainingEquipmentOptionsQuery(connection, locale));
 }
 
+export async function listTrainingObstacleOptions(
+  locale: "de" | "en" = "de",
+): Promise<readonly TrainingObstacleOption[]> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection((connection) => runTrainingObstacleOptionsQuery(connection, locale));
+}
+
 export async function listTrainingDraftCandidates({
   audience,
   minAge,
   locale = "de",
   location = "mixed",
+  availableObstacleExerciseIds,
 }: ListTrainingDraftCandidatesOptions): Promise<readonly TrainingDraftCandidateWithHistory[]> {
   await ensureDatabaseReady();
 
   return withDuckDbConnection(async (connection) => {
     const baseCandidates = await runTrainingDraftCandidateQuery(connection, { audience, minAge, locale, location });
-    const candidates = location === "outdoor" && baseCandidates.length > 0
-      ? await applyOutdoorVariants(connection, baseCandidates, locale)
-      : baseCandidates;
+    const obstacleFiltered = availableObstacleExerciseIds == null
+      ? baseCandidates
+      : await filterByObstacleAvailability(connection, baseCandidates, availableObstacleExerciseIds);
+    const candidates = location === "outdoor" && obstacleFiltered.length > 0
+      ? await applyOutdoorVariants(connection, obstacleFiltered, locale)
+      : obstacleFiltered;
     const recentUse = await runRecentExerciseUseQuery(connection);
     const recentUseByExercise = new Map(recentUse.map((item) => [item.exerciseId, item.useCount]));
     return candidates.map((candidate) => ({
@@ -51,6 +66,26 @@ export async function listTrainingDraftCandidates({
       recentUseCount: recentUseByExercise.get(candidate.id) ?? 0,
     }));
   });
+}
+
+async function filterByObstacleAvailability(
+  connection: Parameters<typeof runTrainingDraftCandidateQuery>[0],
+  candidates: readonly TrainingDraftExerciseCandidate[],
+  availableObstacleExerciseIds: readonly string[],
+): Promise<readonly TrainingDraftExerciseCandidate[]> {
+  if (candidates.length === 0) return candidates;
+  const ids = candidates.map((candidate) => candidate.id);
+  const reader = await connection.runAndReadAll(
+    `
+    SELECT DISTINCT exercise_id::VARCHAR
+    FROM exercise_obstacle_guidance
+    WHERE list_contains(string_split($exerciseIds,','),exercise_id::VARCHAR)
+    `,
+    { exerciseIds: ids.join(",") },
+  );
+  const obstacleIds = new Set(reader.getRows().map((row) => String(row[0])));
+  const available = new Set(availableObstacleExerciseIds);
+  return candidates.filter((candidate) => !obstacleIds.has(candidate.id) || available.has(candidate.id));
 }
 
 async function applyOutdoorVariants(
