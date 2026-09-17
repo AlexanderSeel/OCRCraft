@@ -53,6 +53,21 @@ function request(overrides: Partial<TrainingDraftRequest> = {}): TrainingDraftRe
   };
 }
 
+function item(candidate: TrainingDraftExerciseCandidate, index: number, durationMinutes = 15) {
+  return {
+    id: `item-${index}-${candidate.id}`,
+    exercise: {
+      id: candidate.id,
+      name: candidate.name,
+      riskLevel: candidate.riskLevel,
+      bodyRegions: [],
+      equipment: [],
+    },
+    durationMinutes,
+    format: "circuit" as const,
+  };
+}
+
 function draft(candidates: readonly TrainingDraftExerciseCandidate[]): TrainingDraft {
   return {
     source: "deterministic",
@@ -68,20 +83,33 @@ function draft(candidates: readonly TrainingDraftExerciseCandidate[]): TrainingD
           id: "main",
           kind: "main",
           title: "Hauptteil",
-          items: candidates.map((item, index) => ({
-            id: `item-${index}`,
-            exercise: {
-              id: item.id,
-              name: item.name,
-              riskLevel: item.riskLevel,
-              bodyRegions: [],
-              equipment: [],
-            },
-            durationMinutes: 15,
-            format: "circuit",
-          })),
+          items: candidates.map((entry, index) => item(entry, index)),
         },
         { id: "cooldown", kind: "cooldown", title: "Cooldown", items: [] },
+      ],
+    },
+    validationIssues: [],
+    warnings: [],
+  };
+}
+
+function fullDraft(
+  warmup: readonly TrainingDraftExerciseCandidate[],
+  main: readonly TrainingDraftExerciseCandidate[],
+  cooldown: readonly TrainingDraftExerciseCandidate[],
+): TrainingDraft {
+  return {
+    source: "ai",
+    session: {
+      id: "draft",
+      title: "Test",
+      group: { id: "group", name: "Test", audience: "adults", participantCount: 12 },
+      totalDurationMinutes: 60,
+      focus: ["OCR-Technik"],
+      phases: [
+        { id: "warmup", kind: "warmup", title: "Warm-up", items: warmup.map((entry, index) => item(entry, index, 5)) },
+        { id: "main", kind: "main", title: "Hauptteil", items: main.map((entry, index) => item(entry, index, 12)) },
+        { id: "cooldown", kind: "cooldown", title: "Cooldown", items: cooldown.map((entry, index) => item(entry, index, 5)) },
       ],
     },
     validationIssues: [],
@@ -130,5 +158,41 @@ describe("assessTrainingSportsQuality", () => {
       candidates,
     );
     expect(result.warnings.join(" ")).toContain("Kids-Entwurf");
+  });
+
+  it("applies the same warm-up, cooldown and fatigue-sequencing audit to AI drafts", () => {
+    const warmup = candidate("warm", "Unrelated Warm-up", ["calves"], ["run"], {
+      category: "warmup",
+      defaultPhase: "warmup",
+      exerciseType: "mobility",
+    });
+    const highImpact = candidate("jump", "Jump", ["quadriceps"], ["jump"], {
+      impactLevel: "high",
+      exerciseType: "strength",
+    });
+    const complexSkill = candidate("rig", "Complex Rig", ["forearms-grip", "shoulders"], ["hang"], {
+      category: "grip-rig",
+      exerciseType: "skill",
+      coordinationComplexity: "complex",
+    });
+    const repeatedUpper = candidate("pull", "Pull", ["lats", "biceps"], ["pull"]);
+    const badCooldown = candidate("finish-strength", "Finish Strength", ["shoulders"], ["push"], {
+      category: "cooldown",
+      defaultPhase: "cooldown",
+      exerciseType: "strength",
+      impactLevel: "high",
+    });
+    const candidates = [warmup, highImpact, complexSkill, repeatedUpper, badCooldown];
+
+    const result = assessTrainingSportsQuality(
+      request({ goals: ["OCR-Technik"], bodyRegions: ["shoulders"], exerciseTypes: ["skill"] }),
+      fullDraft([warmup], [highImpact, complexSkill, repeatedUpper], [badCooldown]),
+      candidates,
+    );
+
+    expect(result.warnings.join(" ")).toContain("Warm-up hat keinen erkennbaren Bezug");
+    expect(result.warnings.join(" ")).toContain("Cooldown enthält");
+    expect(result.warnings.join(" ")).toContain("komplexe Koordinationsaufgabe direkt nach High-Impact-Belastung");
+    expect(result.score).toBeLessThan(90);
   });
 });
