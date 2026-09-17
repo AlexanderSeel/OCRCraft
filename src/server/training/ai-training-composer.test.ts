@@ -23,6 +23,9 @@ function candidate(
     tags: [],
     movementPatterns: [],
     exerciseType: phase === "main" ? "strength" : "drill",
+    difficulty: "beginner",
+    impactLevel: "low",
+    coordinationComplexity: "simple",
     trainingGoals: phase === "main" ? ["strength"] : [],
     defaultDurationSeconds: 180,
     instructions: `${id} instructions`,
@@ -120,5 +123,42 @@ describe("AI training composer", () => {
     expect(() => composeAiTrainingDraft({
       proposal: invalid, request, approvedExercises: approved, providerId: "test",
     })).toThrow(/unpassenden Phase/);
+  });
+
+  it("rejects a provider format that the trainer did not select", () => {
+    const invalid = {
+      ...proposal(),
+      phases: [
+        { kind: "warmup", items: [{ exerciseId: "warm" }] },
+        { kind: "main", items: [{ exerciseId: "main-a", format: "amrap", level: "level2" }] },
+        { kind: "cooldown", items: [{ exerciseId: "cool" }] },
+      ],
+    };
+    expect(() => composeAiTrainingDraft({
+      proposal: invalid, request, approvedExercises: approved, providerId: "test",
+    })).toThrow(/nicht gewählte Trainingsformat amrap/);
+  });
+
+  it("cannot escalate a Kids proposal beyond the stored Level 1 variant", () => {
+    const kidsRequest = trainingDraftRequestSchema.parse({
+      ...request,
+      audience: "kids",
+      minAge: 10,
+    });
+    const aggressive = {
+      ...proposal(),
+      phases: [
+        { kind: "warmup", items: [{ exerciseId: "warm" }] },
+        { kind: "main", items: [{ exerciseId: "main-a", format: "circuit", level: "level3" }] },
+        { kind: "cooldown", items: [{ exerciseId: "cool" }] },
+      ],
+    };
+    const draft = composeAiTrainingDraft({
+      proposal: aggressive,
+      request: kidsRequest,
+      approvedExercises: approved,
+      providerId: "test",
+    });
+    expect(draft.session.phases[1]?.items[0]?.levelLabel).toBe("main-a easy");
   });
 });
