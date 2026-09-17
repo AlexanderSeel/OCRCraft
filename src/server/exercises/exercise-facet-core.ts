@@ -10,11 +10,17 @@ export type ExerciseFacetEquipmentInput = {
   readonly quantityRequired: number;
 };
 
+export type ExerciseMuscleOppositionInput = {
+  readonly primaryRegionId: string;
+  readonly opposingRegionId: string;
+};
+
 export interface ExerciseFacetMutationInput {
   readonly bodyRegions: readonly ExerciseFacetBodyRegionInput[];
   readonly movementPatternIds: readonly string[];
   readonly tagIds: readonly string[];
   readonly equipment: readonly ExerciseFacetEquipmentInput[];
+  readonly muscleOppositions?: readonly ExerciseMuscleOppositionInput[];
 }
 
 export async function replaceExerciseFacetMappings(
@@ -22,6 +28,10 @@ export async function replaceExerciseFacetMappings(
   exerciseId: string,
   input: ExerciseFacetMutationInput,
 ): Promise<void> {
+  await connection.run(
+    "DELETE FROM exercise_muscle_oppositions WHERE exercise_id=$exerciseId::UUID",
+    { exerciseId },
+  );
   await connection.run(
     "DELETE FROM exercise_body_regions WHERE exercise_id=$exerciseId::UUID",
     { exerciseId },
@@ -43,6 +53,20 @@ export async function replaceExerciseFacetMappings(
     await connection.run(
       "INSERT INTO exercise_body_regions (exercise_id,body_region_id,emphasis) VALUES ($exerciseId::UUID,$id,$emphasis)",
       { exerciseId, id: bodyRegion.id, emphasis: bodyRegion.emphasis },
+    );
+  }
+
+  for (const opposition of input.muscleOppositions ?? []) {
+    if (opposition.primaryRegionId === opposition.opposingRegionId) continue;
+    await connection.run(
+      `INSERT OR IGNORE INTO exercise_muscle_oppositions
+        (exercise_id,primary_region_id,opposing_region_id,relationship)
+       VALUES ($exerciseId::UUID,$primaryRegionId,$opposingRegionId,'antagonist')`,
+      {
+        exerciseId,
+        primaryRegionId: opposition.primaryRegionId,
+        opposingRegionId: opposition.opposingRegionId,
+      },
     );
   }
 
