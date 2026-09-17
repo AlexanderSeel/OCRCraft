@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import {
+  ExerciseDetailEditor,
+  ExerciseLogisticsEditor,
+} from "@/components/exercises/exercise-detail-editor";
 import { ExerciseFacetForm } from "@/components/exercises/exercise-facet-form";
 import { ExerciseForm } from "@/components/exercises/exercise-form";
 import { ExerciseGuidanceListEditor } from "@/components/exercises/exercise-guidance-list-editor";
@@ -8,6 +12,10 @@ import { getExerciseById } from "@/server/exercises/exercise-repository";
 import { getExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 import { setExerciseArchivedAction, updateExerciseAction } from "../../actions";
+import {
+  updateExerciseLogisticsAction,
+  updateLocalizedExerciseDetailsAction,
+} from "../detail-actions";
 import { updateExerciseFacetsAction } from "../facet-actions";
 import { updateExerciseGuidanceListsAction } from "../guidance-actions";
 
@@ -20,6 +28,10 @@ interface PageProps {
     facetError?: string;
     guidanceSaved?: string;
     guidanceError?: string;
+    detailSaved?: string;
+    detailError?: string;
+    logisticsSaved?: string;
+    logisticsError?: string;
   }>;
 }
 
@@ -39,6 +51,8 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const updateAction = updateExerciseAction.bind(null, exercise.id);
   const updateFacetsAction = updateExerciseFacetsAction.bind(null, exercise.id);
   const updateGuidanceAction = updateExerciseGuidanceListsAction.bind(null, exercise.id);
+  const updateDetailAction = updateLocalizedExerciseDetailsAction.bind(null, exercise.id);
+  const updateLogisticsAction = updateExerciseLogisticsAction.bind(null, exercise.id);
   const toggleArchivedAction = setExerciseArchivedAction.bind(null, exercise.id, !exercise.archived);
 
   return (
@@ -67,14 +81,48 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         {status.restored ? <Notice>Übung wiederhergestellt.</Notice> : null}
         {status.facetsSaved ? <Notice>Körperregionen, Bewegungsmuster, Tags und Equipment wurden gespeichert.</Notice> : null}
         {status.guidanceSaved ? <Notice>{status.guidanceSaved === "en" ? "Englische" : "Deutsche"} Ausführung, Coaching-Cues und Fehlerkorrekturen wurden gespeichert.</Notice> : null}
+        {status.detailSaved ? <Notice>{status.detailSaved === "en" ? "Englische" : "Deutsche"} Planungs-, Sicherheits- und Skalierungsdetails wurden gespeichert.</Notice> : null}
+        {status.logisticsSaved ? <Notice>Schwierigkeit, Aufsicht und Stationslogistik wurden gespeichert.</Notice> : null}
         {status.facetError === "invalid" ? <ErrorNotice>Die Facettenauswahl enthält ungültige Werte.</ErrorNotice> : null}
         {status.facetError === "save" ? <ErrorNotice>Die Facetten konnten nicht gespeichert werden.</ErrorNotice> : null}
         {status.guidanceError === "invalid" ? <ErrorNotice>Die Coaching-Inhalte enthalten leere, unvollständige oder zu lange Einträge.</ErrorNotice> : null}
         {status.guidanceError === "save" ? <ErrorNotice>Die Coaching-Inhalte konnten nicht gespeichert werden.</ErrorNotice> : null}
+        {status.detailError === "invalid" ? <ErrorNotice>Die Planungs- und Sicherheitsdetails enthalten ungültige oder zu lange Werte.</ErrorNotice> : null}
+        {status.detailError === "save" ? <ErrorNotice>Die Planungs- und Sicherheitsdetails konnten nicht gespeichert werden.</ErrorNotice> : null}
+        {status.logisticsError === "invalid" ? <ErrorNotice>Die Logistikwerte sind ungültig. Prüfe Zeiten, Kapazität und Pflichtfelder.</ErrorNotice> : null}
+        {status.logisticsError === "save" ? <ErrorNotice>Die Logistikwerte konnten nicht gespeichert werden.</ErrorNotice> : null}
 
         <ExerciseForm action={updateAction} exercise={exercise} submitLabel="Änderungen speichern" />
 
         <ExerciseFacetForm action={updateFacetsAction} data={facets} disabled={exercise.archived} />
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <div className="mb-5">
+            <h2 className="text-lg font-black">Programmierung, Sicherheit & Stationslogistik</h2>
+            <p className="mt-1 max-w-4xl text-sm leading-6 text-[var(--muted)]">
+              Pflege Dosierung, Level 1–3, Zielgruppenvarianten und Sicherheitsinformationen sprachspezifisch. Schwierigkeit, Aufsicht, Aufbauzeit und Stationskapazität gelten für die Übung global und werden für beide Sprachen synchron gehalten.
+            </p>
+          </div>
+          <ExerciseLogisticsEditor
+            action={updateLogisticsAction}
+            disabled={exercise.archived}
+            guidance={guidanceDe ?? guidanceEn}
+          />
+          <div className="mt-4 grid gap-4 xl:grid-cols-2">
+            <ExerciseDetailEditor
+              action={updateDetailAction}
+              disabled={exercise.archived}
+              guidance={guidanceDe}
+              locale="de"
+            />
+            <ExerciseDetailEditor
+              action={updateDetailAction}
+              disabled={exercise.archived}
+              guidance={guidanceEn}
+              locale="en"
+            />
+          </div>
+        </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="mb-5">
