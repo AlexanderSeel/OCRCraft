@@ -223,4 +223,38 @@ describe("local sports training composer", () => {
     const adultLevels = conditioning.session.phases.find((phase) => phase.kind === "main")?.items.map((item) => item.levelLabel) ?? [];
     expect(adultLevels.every((level) => level === "Fortgeschritten")).toBe(true);
   });
+
+  it("prefers stations that can handle the expected circuit group size", () => {
+    const draft = composeSportsTrainingDraft(
+      {
+        ...baseInput,
+        participantCount: 24,
+        durationMinutes: 45,
+        goals: ["Kraft"],
+        bodyRegions: [],
+        exerciseTypes: ["strength"],
+      },
+      [
+        candidate("warm", "warmup"),
+        candidate("cool", "cooldown"),
+        candidate("bottleneck", "main", {
+          bodyRegions: ["core"],
+          movementPatterns: ["brace"],
+          stationCapacity: 1,
+        }),
+        candidate("roomy", "main", {
+          bodyRegions: ["core"],
+          movementPatterns: ["brace"],
+          stationCapacity: 12,
+        }),
+        candidate("push", "main", { bodyRegions: ["chest"], movementPatterns: ["push"], stationCapacity: 12 }),
+        candidate("pull", "main", { bodyRegions: ["lats"], movementPatterns: ["pull"], stationCapacity: 12 }),
+        candidate("legs", "main", { bodyRegions: ["quadriceps"], movementPatterns: ["squat"], stationCapacity: 12 }),
+      ],
+    );
+
+    const main = phaseIds(draft, "main");
+    expect(main).toContain("roomy");
+    expect(main).not.toContain("bottleneck");
+  });
 });
