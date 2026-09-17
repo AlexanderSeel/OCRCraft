@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { AddTrainingItemForm } from "@/components/training/add-training-item-form";
 import { ReplaceTrainingItemForm } from "@/components/training/replace-training-item-form";
+import { TrainingItemAlternatives } from "@/components/training/training-item-alternatives";
 import { TrainingItemGuidance } from "@/components/training/training-item-guidance";
 import { TrainingItemReorderZone } from "@/components/training/training-item-reorder-zone";
 import { TRAINING_PHASE_LABELS } from "@/domain/training/model";
@@ -21,7 +22,12 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   readonly params: Promise<{ id: string }>;
-  readonly searchParams: Promise<{ saved?: string; error?: string }>;
+  readonly searchParams: Promise<{
+    saved?: string;
+    error?: string;
+    alternativeItem?: string;
+    alternativeMode?: string;
+  }>;
 }
 
 export default async function TrainingDetailPage({ params, searchParams }: PageProps) {
@@ -162,6 +168,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                       <div
                         className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4"
                         data-training-drop-id={item.id}
+                        id={`item-${item.id}`}
                         key={item.id}
                       >
                         <div className="grid gap-3 sm:grid-cols-[42px_minmax(0,1fr)_auto]">
@@ -296,6 +303,13 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                   </form>
                                 </details>
                                 <ReplaceTrainingItemForm
+                                  currentExerciseName={item.exerciseName}
+                                  itemId={item.id}
+                                  sessionId={session.id}
+                                />
+                                <TrainingItemAlternatives
+                                  activeItemId={query.alternativeItem}
+                                  activeMode={query.alternativeMode}
                                   currentExerciseName={item.exerciseName}
                                   itemId={item.id}
                                   sessionId={session.id}
