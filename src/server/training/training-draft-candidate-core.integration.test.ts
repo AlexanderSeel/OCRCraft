@@ -18,6 +18,8 @@ async function createFixture() {
       suitable_for_kids BOOLEAN,
       suitable_for_youth BOOLEAN,
       suitable_for_adults BOOLEAN,
+      indoor_suitable BOOLEAN,
+      outdoor_suitable BOOLEAN,
       default_duration_seconds INTEGER,
       station_capacity INTEGER
     );
@@ -84,9 +86,9 @@ async function createFixture() {
     );
 
     INSERT INTO exercises VALUES
-      ('kids-carry','carry-lift','main','low',8,false,true,true,true,240,4),
-      ('adult-wall','ocr-skill','main','high',16,false,false,true,true,300,1),
-      ('archived','strength','main','low',NULL,true,true,true,true,180,4);
+      ('kids-carry','carry-lift','main','low',8,false,true,true,true,true,true,240,4),
+      ('adult-wall','ocr-skill','main','high',16,false,false,true,true,false,true,300,1),
+      ('archived','strength','main','low',NULL,true,true,true,true,true,true,180,4);
     INSERT INTO exercise_translations VALUES
       ('kids-carry','de','Kinder Carry','Kontrolliertes Tragen für Rumpf und Griff.'),
       ('kids-carry','en','Kids Carry','Controlled carrying for trunk and grip.'),
@@ -155,6 +157,28 @@ describe("training draft candidate query", () => {
       expect(results[0]?.bodyRegions).toEqual(["core", "forearms-grip"]);
       expect(results[0]?.tags).toEqual(["carry", "teamwork"]);
       expect(results[0]?.movementPatterns).toEqual(["carry", "locomotion"]);
+    } finally {
+      connection.closeSync();
+    }
+  });
+
+  it("filters candidates by indoor/outdoor suitability", async () => {
+    const connection = await createFixture();
+    try {
+      const indoor = await runTrainingDraftCandidateQuery(connection, {
+        audience: "mixed",
+        minAge: 16,
+        locale: "de",
+        location: "indoor",
+      });
+      const outdoor = await runTrainingDraftCandidateQuery(connection, {
+        audience: "mixed",
+        minAge: 16,
+        locale: "de",
+        location: "outdoor",
+      });
+      expect(indoor.map((item) => item.id)).toEqual(["kids-carry"]);
+      expect(outdoor.map((item) => item.id)).toEqual(["adult-wall", "kids-carry"]);
     } finally {
       connection.closeSync();
     }
