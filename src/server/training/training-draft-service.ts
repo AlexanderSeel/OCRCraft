@@ -21,28 +21,18 @@ async function approvedCandidatesFor(request: TrainingDraftRequest) {
     minAge: request.minAge,
     locale: request.locale,
     location: request.location,
+    availableObstacleExerciseIds: request.availableObstacleExerciseIds,
   });
   return filterCandidatesForDeclaredEquipment(candidates, request.availableEquipment);
 }
 
-function applySportsQualityAudit(
-  request: TrainingDraftRequest,
-  draft: TrainingDraft,
-  candidates: readonly TrainingDraftExerciseCandidate[],
-): TrainingDraft {
+function applySportsQualityAudit(request: TrainingDraftRequest, draft: TrainingDraft, candidates: readonly TrainingDraftExerciseCandidate[]): TrainingDraft {
   const quality = assessTrainingSportsQuality(request, draft, candidates);
   const goalWarnings = assessStructuredTrainingGoalCoverage(request, draft, candidates);
-  return {
-    ...draft,
-    warnings: [...draft.warnings, ...quality.warnings, ...goalWarnings],
-  };
+  return { ...draft, warnings: [...draft.warnings, ...quality.warnings, ...goalWarnings] };
 }
 
-function finalizeDraft(
-  request: TrainingDraftRequest,
-  draft: TrainingDraft,
-  candidates: readonly TrainingDraftExerciseCandidate[],
-): TrainingDraft {
+function finalizeDraft(request: TrainingDraftRequest, draft: TrainingDraft, candidates: readonly TrainingDraftExerciseCandidate[]): TrainingDraft {
   return applySportsQualityAudit(request, applyMainPartProgramming(request, draft), candidates);
 }
 
@@ -50,90 +40,58 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
   const candidates = await approvedCandidatesFor(request);
   if (request.builderMode === "ai") {
     const provider = getConfiguredAiTrainingProvider();
-    if (!provider) {
-      throw new Error(
-        "AI Training Builder ist nicht konfiguriert. Nutze den lokalen Sportalgorithmus oder setze OCRCRAFT_AI_BASE_URL und OCRCRAFT_AI_MODEL.",
-      );
-    }
+    if (!provider) throw new Error("AI Training Builder ist nicht konfiguriert. Nutze den lokalen Sportalgorithmus oder setze OCRCRAFT_AI_BASE_URL und OCRCRAFT_AI_MODEL.");
     const sourceSessions = await loadAiTrainingSourceSessions(request.sourceTrainingIds, candidates);
-    const proposal = await provider.generateTrainingPlan({
-      request,
-      approvedExercises: candidates,
-      sourceSessions,
-    });
-    const draft = composeAiTrainingDraft({
-      proposal,
-      request,
-      approvedExercises: candidates,
-      providerId: provider.id,
-    });
+    const proposal = await provider.generateTrainingPlan({ request, approvedExercises: candidates, sourceSessions });
+    const draft = composeAiTrainingDraft({ proposal, request, approvedExercises: candidates, providerId: provider.id });
     const recompositionWarnings = sourceSessions.length > 0
       ? [`AI-Rekomposition verwendet ${sourceSessions.length} ausgewählte Quelltrainings als Kontext; aktuelle Trainer-Randbedingungen und der freigegebene Übungspool bleiben maßgeblich.`]
       : [];
-    return finalizeDraft(
-      request,
-      { ...draft, warnings: [...draft.warnings, ...recompositionWarnings] },
-      candidates,
-    );
+    return finalizeDraft(request, { ...draft, warnings: [...draft.warnings, ...recompositionWarnings] }, candidates);
   }
 
-  const draft = composeStructuredSportsTrainingDraft(
-    {
-      audience: request.audience,
-      participantCount: request.participantCount,
-      durationMinutes: request.durationMinutes,
-      goals: request.goals,
-      bodyRegions: request.bodyRegions,
-      avoidBodyRegions: request.avoidBodyRegions,
-      exerciseTypes: request.exerciseTypes,
-      formats: request.formats,
-      intensity: request.intensity,
-      preferredExerciseIds: request.preferredExerciseIds,
-      availableEquipment: request.availableEquipment,
-      minAge: request.minAge,
-      maxAge: request.maxAge,
-      warmupExerciseCount: request.warmupExerciseCount,
-      mainExerciseCount: request.mainExerciseCount,
-      mainPartExerciseCounts: request.mainPartExerciseCounts,
-      cooldownExerciseCount: request.cooldownExerciseCount,
-      mainPartCount: request.mainPartCount,
-      organizationMode: request.organizationMode,
-      teamSize: request.teamSize,
-    },
-    candidates,
-  );
+  const draft = composeStructuredSportsTrainingDraft({
+    audience: request.audience,
+    participantCount: request.participantCount,
+    durationMinutes: request.durationMinutes,
+    goals: request.goals,
+    bodyRegions: request.bodyRegions,
+    avoidBodyRegions: request.avoidBodyRegions,
+    exerciseTypes: request.exerciseTypes,
+    formats: request.formats,
+    intensity: request.intensity,
+    preferredExerciseIds: request.preferredExerciseIds,
+    availableEquipment: request.availableEquipment,
+    minAge: request.minAge,
+    maxAge: request.maxAge,
+    warmupExerciseCount: request.warmupExerciseCount,
+    mainExerciseCount: request.mainExerciseCount,
+    mainPartExerciseCounts: request.mainPartExerciseCounts,
+    cooldownExerciseCount: request.cooldownExerciseCount,
+    mainPartCount: request.mainPartCount,
+    organizationMode: request.organizationMode,
+    teamSize: request.teamSize,
+  }, candidates);
   return finalizeDraft(request, draft, candidates);
 }
 
-/** Kept as a stable explicit entry point for local-only callers/tests. */
-export async function createDeterministicTrainingDraft(
-  request: TrainingDraftRequest,
-): Promise<TrainingDraft> {
+export async function createDeterministicTrainingDraft(request: TrainingDraftRequest): Promise<TrainingDraft> {
   return createTrainingDraft({ ...request, builderMode: "local" });
 }
 
-export async function createAndPersistDeterministicTrainingDraft(
-  input: TrainingDraftPersistenceRequest,
-): Promise<{ readonly id: string; readonly draft: TrainingDraft }> {
+export async function createAndPersistDeterministicTrainingDraft(input: TrainingDraftPersistenceRequest): Promise<{ readonly id: string; readonly draft: TrainingDraft }> {
   const draft = await createDeterministicTrainingDraft(input.request);
   const id = await persistTrainingDraft(draft, {
     title: input.title,
     locale: input.request.locale,
     groupId: input.groupId,
     source: "manual",
-    generation: {
-      builderMode: "local",
-      request: input.request,
-      trainerReviewed: true,
-    },
+    generation: { builderMode: "local", request: input.request, trainerReviewed: true },
   });
-
   return { id, draft };
 }
 
-export async function persistReviewedAiTrainingDraft(
-  input: ReviewedAiTrainingPersistence,
-): Promise<{ readonly id: string; readonly draft: TrainingDraft }> {
+export async function persistReviewedAiTrainingDraft(input: ReviewedAiTrainingPersistence): Promise<{ readonly id: string; readonly draft: TrainingDraft }> {
   const candidates = await approvedCandidatesFor(input.request);
   const reviewedDraft = composeReviewedAiTrainingDraft(input, candidates);
   const draft = finalizeDraft(input.request, reviewedDraft, candidates);
