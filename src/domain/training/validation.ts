@@ -219,8 +219,14 @@ function validateMainPartLogistics(
     ? Math.min(session.group.participantCount, session.group.teamSize ?? session.group.participantCount)
     : null;
   const teamCount = teamSize != null ? Math.ceil(session.group.participantCount / teamSize) : null;
+  const declaredGroupCount = !teamMode && Number.isInteger(session.group.groupSplitCount) && (session.group.groupSplitCount ?? 0) > 0
+    ? Math.min(session.group.participantCount, session.group.groupSplitCount as number)
+    : null;
+  const rotationGroupSize = declaredGroupCount != null
+    ? Math.ceil(session.group.participantCount / declaredGroupCount)
+    : null;
   const groupSizePerCircuitStation = circuitStationCount > 0
-    ? teamSize ?? Math.ceil(session.group.participantCount / circuitStationCount)
+    ? teamSize ?? rotationGroupSize ?? Math.ceil(session.group.participantCount / circuitStationCount)
     : 0;
   const pathPrefix = `phases.${phaseId}.mainPart.${mainPartIndex}`;
 
@@ -228,7 +234,7 @@ function validateMainPartLogistics(
     const stationCapacity = item.exercise.stationCapacity;
     const participantsAtExercise = item.format === "circuit"
       ? groupSizePerCircuitStation
-      : teamSize ?? session.group.participantCount;
+      : teamSize ?? rotationGroupSize ?? session.group.participantCount;
     if (
       stationCapacity == null ||
       !Number.isInteger(stationCapacity) ||
@@ -243,10 +249,12 @@ function validateMainPartLogistics(
       code: "station-capacity",
       severity: "warning",
       message: item.format === "circuit"
-        ? `${item.exercise.name}: Im Hauptteil ${mainPartIndex} arbeiten bis zu ${participantsAtExercise} Personen gleichzeitig an dieser Übung. Eine Station fasst ${stationCapacity}; richte ${recommendedStationCount} parallele Varianten ein oder passe Team-/Stationsgröße an.`
+        ? `${item.exercise.name}: Im Hauptteil ${mainPartIndex} arbeiten bis zu ${participantsAtExercise} Personen gleichzeitig an dieser Übung${declaredGroupCount != null ? ` (${declaredGroupCount} Rotationsgruppen)` : ""}. Eine Station fasst ${stationCapacity}; richte ${recommendedStationCount} parallele Varianten ein oder passe Gruppen-/Stationsgröße an.`
         : teamMode
           ? `${item.exercise.name}: Ein Team umfasst bis zu ${participantsAtExercise} Personen, die Station fasst ${stationCapacity}. Plane ${recommendedStationCount} parallele Ausführungen innerhalb des Teams oder verkleinere die Teamgröße.`
-          : `${item.exercise.name}: Eine Station fasst maximal ${stationCapacity} gleichzeitig Trainierende. Für ${session.group.participantCount} Teilnehmende brauchst du ${recommendedStationCount} parallele Stationen oder eine Gruppenrotation.`,
+          : declaredGroupCount != null
+            ? `${item.exercise.name}: Bei ${declaredGroupCount} Rotationsgruppen umfasst die größte Gruppe bis zu ${participantsAtExercise} Personen, die Station fasst ${stationCapacity}. Plane ${recommendedStationCount} parallele Ausführungen oder erhöhe die Gruppenzahl.`
+            : `${item.exercise.name}: Eine Station fasst maximal ${stationCapacity} gleichzeitig Trainierende. Für ${session.group.participantCount} Teilnehmende brauchst du ${recommendedStationCount} parallele Stationen oder eine Gruppenrotation.`,
       path: `${pathPrefix}.items.${item.id}`,
       participantCount: session.group.participantCount,
       participantsAtExercise,
@@ -272,11 +280,13 @@ function validateMainPartLogistics(
 
   const baseGroupSize = teamMode
     ? teamSize ?? 1
-    : Math.floor(session.group.participantCount / circuitStationCount);
-  const remainder = teamMode ? 0 : session.group.participantCount % circuitStationCount;
+    : rotationGroupSize ?? Math.floor(session.group.participantCount / circuitStationCount);
+  const remainder = teamMode || rotationGroupSize != null
+    ? 0
+    : session.group.participantCount % circuitStationCount;
 
   for (const [index, item] of circuitItems.entries()) {
-    const groupSize = teamMode
+    const groupSize = teamMode || rotationGroupSize != null
       ? baseGroupSize
       : session.group.participantCount < circuitStationCount
         ? 1
@@ -314,7 +324,9 @@ function validateMainPartLogistics(
 
   const simultaneouslyActiveStations = teamMode
     ? Math.min(teamCount ?? 1, circuitStationCount)
-    : Math.min(session.group.participantCount, circuitStationCount);
+    : declaredGroupCount != null
+      ? Math.min(declaredGroupCount, circuitStationCount)
+      : Math.min(session.group.participantCount, circuitStationCount);
 
   for (const [equipmentId, demand] of equipmentDemandById) {
     const requiredQuantity = [...demand.stationDemands]
@@ -327,7 +339,7 @@ function validateMainPartLogistics(
     issues.push({
       code: "equipment-conflict",
       severity: "warning",
-      message: `Im Hauptteil ${mainPartIndex} benötigen ${[...demand.exerciseNames].join(" und ")} gleichzeitig bis zu ${requiredQuantity} × ${demand.name}; verfügbar sind ${availableQuantity}. Ergänze Material oder ändere Team-/Stationsplanung.`,
+      message: `Im Hauptteil ${mainPartIndex} benötigen ${[...demand.exerciseNames].join(" und ")} gleichzeitig bis zu ${requiredQuantity} × ${demand.name}; verfügbar sind ${availableQuantity}.${declaredGroupCount != null ? ` Berechnet für ${declaredGroupCount} Rotationsgruppen.` : ""} Ergänze Material oder ändere Team-/Stationsplanung.`,
       path: `${pathPrefix}.equipment.${equipmentId}`,
       equipmentId,
       requiredQuantity,
