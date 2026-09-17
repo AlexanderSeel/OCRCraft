@@ -9,12 +9,43 @@ export interface ExerciseAutocompleteItem {
   readonly matchedContext: string | null;
 }
 
+function goalLabelSql(locale: SearchLocale): string {
+  return locale === "de"
+    ? `CASE etg.goal
+        WHEN 'strength' THEN 'Kraft'
+        WHEN 'strength_endurance' THEN 'Kraftausdauer'
+        WHEN 'endurance' THEN 'Ausdauer'
+        WHEN 'speed' THEN 'Schnelligkeit'
+        WHEN 'coordination' THEN 'Koordination'
+        WHEN 'balance' THEN 'Balance'
+        WHEN 'mobility' THEN 'Mobilität'
+        WHEN 'grip' THEN 'Griffkraft'
+        WHEN 'ocr_technique' THEN 'OCR-Technik'
+        WHEN 'recovery' THEN 'Regeneration'
+        WHEN 'teamwork' THEN 'Teamwork'
+        ELSE etg.goal END`
+    : `CASE etg.goal
+        WHEN 'strength' THEN 'Strength'
+        WHEN 'strength_endurance' THEN 'Strength Endurance'
+        WHEN 'endurance' THEN 'Endurance'
+        WHEN 'speed' THEN 'Speed'
+        WHEN 'coordination' THEN 'Coordination'
+        WHEN 'balance' THEN 'Balance'
+        WHEN 'mobility' THEN 'Mobility'
+        WHEN 'grip' THEN 'Grip'
+        WHEN 'ocr_technique' THEN 'OCR Technique'
+        WHEN 'recovery' THEN 'Recovery'
+        WHEN 'teamwork' THEN 'Teamwork'
+        ELSE etg.goal END`;
+}
+
 export async function runExerciseAutocomplete(
   connection: DuckDBConnection,
   query: string,
   locale: SearchLocale,
   limit: number,
 ): Promise<readonly ExerciseAutocompleteItem[]> {
+  const goalLabel = goalLabelSql(locale);
   const reader = await connection.runAndReadAll(
     `
     SELECT
@@ -32,6 +63,14 @@ export async function runExerciseAutocomplete(
       ) AS matched_alias,
       COALESCE(
         CASE WHEN COALESCE(e.category, 'general') ILIKE '%' || $query || '%' THEN COALESCE(e.category, 'general') END,
+        (
+          SELECT ${goalLabel}
+          FROM exercise_training_goals etg
+          WHERE etg.exercise_id=e.id
+            AND (etg.goal ILIKE '%' || $query || '%' OR (${goalLabel}) ILIKE '%' || $query || '%')
+          ORDER BY length(${goalLabel})
+          LIMIT 1
+        ),
         (
           SELECT CASE WHEN $locale='de' THEN tag.label_de ELSE tag.label_en END
           FROM exercise_tags et
@@ -89,6 +128,11 @@ export async function runExerciseAutocomplete(
           WHERE a.exercise_id=e.id
             AND a.locale=$locale
             AND a.alias ILIKE '%' || $query || '%'
+        )
+        OR EXISTS (
+          SELECT 1 FROM exercise_training_goals etg
+          WHERE etg.exercise_id=e.id
+            AND (etg.goal ILIKE '%' || $query || '%' OR (${goalLabel}) ILIKE '%' || $query || '%')
         )
         OR EXISTS (
           SELECT 1 FROM exercise_tags et
