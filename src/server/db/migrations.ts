@@ -94,3 +94,12 @@ export async function runMigrations(): Promise<void> {
     });
   }
 }
+
+/**
+ * Stable startup-facing name for applying only migrations that are not present
+ * in schema_migrations yet. Kept separate from runMigrations so callers can
+ * express intent without duplicating migration logic.
+ */
+export async function applyPendingMigrations(): Promise<void> {
+  await runMigrations();
+}
