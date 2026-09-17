@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { SeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
+import { Disclosure } from "@/components/ui/disclosure";
 
 interface SeedCompletenessReportProps {
   readonly report: SeedCompletenessReport;
@@ -34,10 +35,11 @@ export function SeedCompletenessReportView({ report }: SeedCompletenessReportPro
           Alle Startübungen erfüllen die geprüften Grundfelder.
         </p>
       ) : (
-        <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]">
-          <summary className="min-h-11 cursor-pointer px-4 py-3 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]">
-            {report.incompleteExercises.length} Übungen mit fehlenden Grundfeldern anzeigen
-          </summary>
+        <Disclosure
+          className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]"
+          summaryClassName="min-h-11 px-4 py-3 text-sm font-bold"
+          summary={`${report.incompleteExercises.length} Übungen mit fehlenden Grundfeldern anzeigen`}
+        >
           <ul className="space-y-2 border-t border-[var(--border)] p-3">
             {report.incompleteExercises.map((exercise) => (
               <li className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3" key={exercise.exerciseId}>
@@ -49,7 +51,7 @@ export function SeedCompletenessReportView({ report }: SeedCompletenessReportPro
               </li>
             ))}
           </ul>
-        </details>
+        </Disclosure>
       )}
     </section>
   );

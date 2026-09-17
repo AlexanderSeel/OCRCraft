@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { replaceTrainingItemExerciseAction } from "@/app/training/[id]/replace-action";
+import { Disclosure } from "@/components/ui/disclosure";
 import {
   ExerciseAutocompletePicker,
   type SelectedExerciseReference,
@@ -21,8 +22,7 @@ export function ReplaceTrainingItemForm({
   const [selected, setSelected] = useState<readonly SelectedExerciseReference[]>([]);
 
   return (
-    <details className="rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-      <summary className="cursor-pointer px-3 py-2 text-xs font-black">Übung ersetzen</summary>
+    <Disclosure className="rounded-lg border border-[var(--border)] bg-[var(--surface)]" summaryClassName="px-3 py-2 text-xs font-black" summary="Übung ersetzen">
       <form action={replaceTrainingItemExerciseAction} className="grid gap-3 border-t border-[var(--border)] p-3">
         <input name="sessionId" type="hidden" value={sessionId} />
         <input name="itemId" type="hidden" value={itemId} />
@@ -44,6 +44,6 @@ export function ReplaceTrainingItemForm({
           </button>
         </div>
       </form>
-    </details>
+    </Disclosure>
   );
 }

@@ -444,6 +444,7 @@ Reference entry points:
 - [x] persistent header shortcuts to Administration and database settings
 - [x] shared accessible dialog primitive with focus management, Escape/backdrop close and scroll locking
 - [x] shared disclosure primitive for consistent expandable panels across filters, editors and administration
+- [x] dialog and expandable-panel accessibility pass for focus, keyboard and visible focus states
 - [ ] shared advanced form kit
 - [ ] toast/feedback
 - [ ] undo/redo
