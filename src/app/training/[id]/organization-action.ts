@@ -12,9 +12,16 @@ const organizationSchema = z.object({
     (value) => value === "" || value == null ? null : value,
     z.coerce.number().int().min(2).max(20).nullable(),
   ),
+  groupSplitCount: z.preprocess(
+    (value) => value === "" || value == null ? null : value,
+    z.coerce.number().int().min(1).max(20).nullable(),
+  ),
 }).superRefine((value, context) => {
   if (value.organizationMode === "team" && value.teamSize == null) {
     context.addIssue({ code: "custom", path: ["teamSize"], message: "Teamgröße fehlt." });
+  }
+  if (value.organizationMode === "team" && value.groupSplitCount != null) {
+    context.addIssue({ code: "custom", path: ["groupSplitCount"], message: "Rotationsgruppen gelten nur für Solo/Rotation." });
   }
 });
 
@@ -24,12 +31,14 @@ export async function updateTrainingOrganizationAction(formData: FormData): Prom
     sessionId,
     organizationMode: formData.get("organizationMode"),
     teamSize: formData.get("teamSize"),
+    groupSplitCount: formData.get("groupSplitCount"),
   });
   if (!parsed.success) redirect(`/training/${sessionId}?error=organization`);
 
   const updated = await updateTrainingOrganization(parsed.data.sessionId, {
     organizationMode: parsed.data.organizationMode,
     teamSize: parsed.data.organizationMode === "team" ? parsed.data.teamSize : null,
+    groupSplitCount: parsed.data.organizationMode === "solo" ? parsed.data.groupSplitCount : null,
   });
   if (!updated) redirect("/training");
 
