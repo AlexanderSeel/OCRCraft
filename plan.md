@@ -69,7 +69,7 @@
 - [x] external media licensing metadata with source reference and template-only usage label
 - [ ] users/roles
 - [ ] audit log
-- [ ] AI generation/source history
+- [x] training generation/source history with persisted builder constraints and provider metadata
 
 ## 4. Initial exercise database
 
@@ -506,7 +506,7 @@ Reference entry points:
 - [x] Level 1/2/3 selection/editor backed by structured exercise levels
 - [x] duplicate session
 - [x] combine sessions
-- [ ] recreate/regenerate an existing session from editable constraints
+- [x] recreate/regenerate an existing generated session from its persisted editable builder constraints
 - [ ] version history/restore
 - [ ] templates
 
@@ -514,19 +514,52 @@ Reference entry points:
 
 Principle: **retrieve approved data → compose → deterministic validation → trainer approval**.
 
-- [ ] provider-neutral AI interface
-- [ ] structured Zod AI schema
-- [ ] retrieve approved exercise/training pool
-- [ ] use structured exercise purpose/execution/safety/variant data as AI context
-- [ ] complete session generation
-- [ ] phase-only regeneration
-- [ ] replace/easier/harder selected item
-- [ ] adapt duration/participants/equipment
-- [ ] adult ↔ kids/youth adaptation
-- [ ] running-focus adaptation
-- [ ] combine previous sessions / avoid repetition
-- [ ] Level 1/2/3 generation
-- [ ] AI-created exercise drafts + approval
+### Shared builder foundation
+
+- [x] one typed builder request for AI and local planning: audience/age, participants, duration, goals, muscles/body regions, avoid-regions, exercise types, formats, location, intensity, preferred exercises and available equipment
+- [x] retrieve only approved active exercises from DuckDB with audience/age/location/equipment constraints
+- [x] use structured purpose/execution/safety/variant, movement, muscle, goal, equipment and logistics metadata as planning context
+- [x] persisted generation history includes builder mode, constraints and provider metadata
+- [x] recreate/adapt a saved generated training from its persisted constraints without mutating the source training
+- [x] shared deterministic post-composition sports-quality audit for AI and local drafts
+- [x] shared final session validation for duration, phases, age/risk, station capacity, equipment conflicts and setup/transition time
+
+### AI provider path
+
+- [x] provider-neutral `AiTrainingProvider` interface
+- [x] OpenAI-compatible provider implementation configurable by base URL/model/API key
+- [x] structured Zod AI response schema
+- [x] AI may select only IDs from the approved exercise pool; invented exercises are rejected
+- [x] complete Warm-up/Main/Cooldown session generation
+- [x] exact phase durations are assigned deterministically after the AI selection
+- [x] phase-only regeneration while preserving the other reviewed phases
+- [x] replace selected draft exercise with easier/harder/lower-equipment alternatives
+- [x] adapt duration/participants/equipment/location/goals/muscles/types by regenerating from edited constraints
+- [x] adult ↔ kids/youth adaptation through audience metadata, age filters and deterministic safety checks
+- [x] running-focus adaptation through goals, exercise types, categories, running metadata and structured planning context
+- [x] recent-use counts are supplied to AI context so repeated exercises can be avoided
+- [x] Level 1/2/3 selection is restricted to stored approved variants; Kids proposals are deterministically constrained to Level 1 and unsafe Level 3 escalation is downgraded
+- [x] provider-selected main formats must be among the trainer-selected formats; provider output cannot override trainer format constraints
+- [x] AI result is rehydrated from the current approved catalogue and revalidated before save
+- [ ] AI-assisted multi-session combine/recomposition using multiple previous sessions as explicit source context
+- [ ] AI-created exercise drafts + separate trainer approval workflow before they can become active catalogue exercises
+
+### Local non-AI sports planner
+
+- [x] deterministic/reproducible local planner with no external AI/provider call
+- [x] same builder inputs and hard candidate constraints as the AI path
+- [x] goal/type/muscle/body-region weighted selection from approved exercises
+- [x] primary muscle + typical antagonist balancing when suitable catalogue exercises exist
+- [x] movement-counterpart balancing such as push/pull, squat/hinge and rotate/brace
+- [x] whole-body macro diversity across upper body/core/lower body where the goal requires it
+- [x] main objective is selected first; warm-up is then matched to actual main-part movement/body demands and cooldown to actual load/recovery demands
+- [x] technique/skill/coordination is preferentially placed before excessive fatigue; conditioning work can be weighted later in the main part
+- [x] avoid unnecessary consecutive high-impact/high-risk work and audit complex coordination immediately after high impact
+- [x] audience-aware deterministic Level 1/2/3 selection from stored exercise variants
+- [x] recent-session use creates a soft repetition penalty while explicit trainer-preferred exercises can intentionally override it
+- [x] equipment availability participates in selection and remains validated after composition
+- [x] station throughput/capacity participates in local ranking to reduce group bottlenecks before the validator needs to warn
+- [x] unmet muscle, exercise-type, antagonist or movement-balance goals produce explicit warnings rather than silently claiming full coverage
 
 ## 12. Kids / Youth / Safeguarding
 
@@ -680,6 +713,9 @@ Each sequence illustration uses one adult athlete, selected randomly as a woman 
 - [x] structured autocomplete integration tests for aliases/tags/equipment/body regions/categories/movement patterns/training goals
 - [x] deterministic TrainingDraft domain tests
 - [x] TrainingDraft candidate retrieval integration test
+- [x] local sports-planner tests for antagonists, requested type diversity, fatigue ordering, movement counterparts, demand-matched warm-up/cooldown, audience levels and station throughput
+- [x] AI composer tests reject invented exercises, wrong phases, avoided muscles and unselected formats, and enforce audience-safe stored levels
+- [x] shared sports-quality tests cover whole-body/movement balance, high-impact sequencing, Kids safety, warm-up relevance and cooldown quality
 - [x] granular/coarse body-region compatibility unit tests
 - [x] Quick Create request normalization tests include granular muscle regions, avoid-regions and location
 - [x] persisted Training Session integration test
@@ -739,6 +775,10 @@ No athlete surveillance or unnecessary personal data.
 - [x] Training list/detail + metadata/archive/restore
 - [x] stored Training item add/edit/remove/reorder/replace + drag/drop + Level 1–3 + alternatives
 - [x] session duplicate and combine flows
+- [x] recreate generated sessions from persisted builder constraints
+- [x] shared AI/local Training Builder with provider-neutral AI path and deterministic local sports algorithm
+- [x] main-objective-led local planning with matched warm-up/cooldown, antagonist/movement balance, fatigue sequencing, recent-use and station-capacity ranking
+- [x] deterministic AI guardrails for approved exercise IDs, selected formats, audience-safe stored levels and shared sports-quality validation
 - [x] Group CRUD + basic age/participant/duration/risk defaults
 - [x] semantic UI tokens + Light/Dark/System theme foundation
 - [x] media schema + AI exercise-image pipeline foundation
@@ -763,6 +803,9 @@ No athlete surveillance or unnecessary personal data.
 - [x] compact side-by-side muscle map workspace with list/small/medium/large/detail exercise overview modes
 - [x] deterministic non-AI `TrainingDraft`
 - [x] persisted Training Session CRUD foundation
+- [x] AI/local Training Builder from approved exercise pool with shared deterministic validation
+- [ ] AI-created exercise proposal + trainer approval workflow
+- [ ] AI-assisted multi-session recomposition
 - [ ] selectable JSON import/export with duplicate compare/resolution workflow
 - [ ] authentication/RBAC before global Admin mutations
 
@@ -785,10 +828,11 @@ No athlete surveillance or unnecessary personal data.
 - [ ] persisted running rules such as every 100 m
 - [x] Level 1/2/3 variants can be edited on exercises and selected in stored training items
 - [x] duplicate/combine sessions
-- [ ] recreate/regenerate existing sessions from constraints
+- [x] recreate/regenerate existing generated sessions from saved constraints
 - [ ] portable selectable JSON import/export including optional images
 - [ ] duplicate/conflict compare screen with left/right/both resolution
-- [ ] AI composition from approved pool
+- [x] AI composition from approved pool with deterministic server validation and trainer review before persistence
+- [x] deterministic local sports-algorithm composition from the same selected goals/types/muscles/resources
 - [ ] AI-created exercises require approval
 - [x] AI sequence illustration generated and attached for every initial seed exercise using stable seed-name files (all 157 remain pending trainer review)
 - [x] new sequence illustrations show one randomly selected adult woman or man across the exercise steps
