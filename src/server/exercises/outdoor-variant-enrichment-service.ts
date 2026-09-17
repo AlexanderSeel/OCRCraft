@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { DuckDBConnection } from "@duckdb/node-api";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import {
@@ -49,7 +50,7 @@ interface OutdoorVariantScanContext {
   readonly exercises: readonly ImportedExerciseRow[];
 }
 
-async function loadScanContext(connection: Parameters<Parameters<typeof withDuckDbConnection>[0]>[0]): Promise<OutdoorVariantScanContext> {
+async function loadScanContext(connection: DuckDBConnection): Promise<OutdoorVariantScanContext> {
   const catalogueReader = await connection.runAndReadAll(`
     SELECT id::VARCHAR,COALESCE(seed_key,''),COALESCE(name_de,''),COALESCE(name_en,name_de,'')
     FROM equipment
@@ -89,7 +90,7 @@ async function loadScanContext(connection: Parameters<Parameters<typeof withDuck
 }
 
 async function loadExerciseEquipment(
-  connection: Parameters<Parameters<typeof withDuckDbConnection>[0]>[0],
+  connection: DuckDBConnection,
   exerciseId: string,
 ): Promise<readonly ExerciseEquipmentSnapshot[]> {
   const equipmentReader = await connection.runAndReadAll(`
