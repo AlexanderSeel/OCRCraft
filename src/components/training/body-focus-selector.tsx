@@ -24,7 +24,7 @@ export function BodyFocusSelector({
   showAntagonistSuggestions = !visualCompact,
 }: BodyFocusSelectorProps) {
   const selectedIds = new Set(selected);
-  const labelById = new Map(BODY_REGION_OPTIONS.map((option) => [option.id, option.labelDe]));
+  const labelById = new Map<string, string>(BODY_REGION_OPTIONS.map((option) => [option.id, option.labelDe]));
   const antagonistSources = new Map<string, string[]>();
 
   if (showAntagonistSuggestions) {
