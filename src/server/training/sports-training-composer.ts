@@ -402,6 +402,15 @@ function dynamicScore(
   if (previous && shareBodyLoad(previous, candidate)) score -= 10;
 
   if (phase === "main") {
+    const expectedParticipants = input.formats.includes("circuit")
+      ? Math.ceil(input.participantCount / Math.max(1, count))
+      : input.participantCount;
+    if (candidate.stationCapacity >= expectedParticipants) {
+      score += 10;
+    } else {
+      score -= Math.min(50, (expectedParticipants - candidate.stationCapacity) * 6);
+    }
+
     const early = slot < Math.ceil(count / 2);
     if (early && (candidate.exerciseType === "skill" || candidate.exerciseType === "obstacle" || candidate.exerciseType === "drill")) score += 14;
     if (!early && input.intensity === "conditioning" && (candidate.exerciseType === "endurance" || candidate.exerciseType === "strength")) score += 12;
