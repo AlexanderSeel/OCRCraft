@@ -9,11 +9,14 @@ import { withDuckDbConnection } from "@/server/db/duckdb";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type TrainingSessionStatus = "draft" | "ready" | "completed" | "archived";
+export type PersistedTrainingSource = "manual" | "ai";
 
 export interface PersistTrainingDraftOptions {
   readonly title?: string;
   readonly locale?: "de" | "en";
   readonly groupId?: string | null;
+  readonly source?: PersistedTrainingSource;
+  readonly notes?: string | null;
 }
 
 export interface UpdateTrainingSessionMetadataInput {
@@ -59,7 +62,15 @@ export interface TrainingSessionDetail extends TrainingSessionListItem {
 
 export async function persistTrainingDraft(
   draft: TrainingDraft,
-  { title, locale = "de", groupId = null }: PersistTrainingDraftOptions = {},
+  {
+    title,
+    locale = "de",
+    groupId = null,
+    source = draft.source === "ai" ? "ai" : "manual",
+    notes = draft.source === "ai"
+      ? "Quick Create · AI proposal · deterministic OCRCraft validation"
+      : "Quick Create · local deterministic sports composer",
+  }: PersistTrainingDraftOptions = {},
 ): Promise<string> {
   await ensureDatabaseReady();
 
@@ -92,16 +103,17 @@ export async function persistTrainingDraft(
         INSERT INTO training_sessions (
           id, title, group_id, status, source, total_duration_minutes, locale, notes
         ) VALUES (
-          $id::UUID, $title, $groupId::UUID, 'draft', 'manual', $duration, $locale,
-          'Quick Create · deterministic composer'
+          $id::UUID, $title, $groupId::UUID, 'draft', $source, $duration, $locale, $notes
         )
         `,
         {
           id: sessionId,
           title: sessionTitle,
           groupId,
+          source,
           duration: draft.session.totalDurationMinutes,
           locale,
+          notes,
         },
       );
 
@@ -178,17 +190,14 @@ export async function listTrainingSessions(
           FROM training_phases p
           JOIN training_items i ON i.training_phase_id=p.id
           WHERE p.training_session_id=s.id
-        ) AS item_count,
+        ),
         s.created_at
       FROM training_sessions s
       WHERE $includeArchived OR s.status <> 'archived'
-      ORDER BY s.created_at DESC, s.title
+      ORDER BY s.created_at DESC
       LIMIT $limit
       `,
-      {
-        includeArchived,
-        limit: Math.max(1, Math.min(limit, 500)),
-      },
+      { includeArchived, limit },
     );
 
     return reader.getRows().map((row) => ({
@@ -197,7 +206,7 @@ export async function listTrainingSessions(
       status: String(row[2]) as TrainingSessionStatus,
       source: String(row[3]),
       totalDurationMinutes: Number(row[4]),
-      locale: String(row[5]) as TrainingSessionListItem["locale"],
+      locale: String(row[5]) as "de" | "en",
       itemCount: Number(row[6]),
       createdAt: String(row[7]),
     }));
@@ -212,21 +221,9 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
     const sessionReader = await connection.runAndReadAll(
       `
       SELECT
-        s.id::VARCHAR,
-        s.title,
-        s.status,
-        s.source,
-        s.total_duration_minutes,
-        s.locale,
-        (
-          SELECT count(*)
-          FROM training_phases p
-          JOIN training_items i ON i.training_phase_id=p.id
-          WHERE p.training_session_id=s.id
-        ) AS item_count,
-        s.created_at,
-        s.notes,
-        s.updated_at
+        s.id::VARCHAR,s.title,s.status,s.source,s.total_duration_minutes,s.locale,
+        (SELECT count(*) FROM training_phases p JOIN training_items i ON i.training_phase_id=p.id WHERE p.training_session_id=s.id),
+        s.created_at,s.notes,s.updated_at
       FROM training_sessions s
       WHERE s.id=$id::UUID
       `,
@@ -235,66 +232,52 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
     const sessionRow = sessionReader.getRows()[0];
     if (!sessionRow) return null;
 
-    const locale = String(sessionRow[5]) as TrainingSessionListItem["locale"];
     const phaseReader = await connection.runAndReadAll(
       `
-      SELECT
-        p.id::VARCHAR,
-        p.kind,
-        p.title,
-        p.sort_order,
-        i.id::VARCHAR,
-        i.exercise_id::VARCHAR,
-        COALESCE(t.name, i.title_override, 'Freier Trainingsblock') AS exercise_name,
-        i.format,
-        i.duration_minutes,
-        i.instructions,
-        i.level_label,
-        i.sort_order
-      FROM training_phases p
-      LEFT JOIN training_items i ON i.training_phase_id=p.id
-      LEFT JOIN exercise_translations t
-        ON t.exercise_id=i.exercise_id AND t.locale=$locale
-      WHERE p.training_session_id=$id::UUID
-      ORDER BY p.sort_order, i.sort_order
+      SELECT id::VARCHAR,kind,title,sort_order
+      FROM training_phases
+      WHERE training_session_id=$id::UUID
+      ORDER BY sort_order,id
       `,
-      { id, locale },
+      { id },
     );
-
-    const phases = new Map<string, {
-      id: string;
-      kind: TrainingPhaseKind;
-      title: string;
-      sortOrder: number;
-      items: PersistedTrainingItem[];
-    }>();
-
-    for (const row of phaseReader.getRows()) {
-      const phaseId = String(row[0]);
-      let phase = phases.get(phaseId);
-      if (!phase) {
-        phase = {
-          id: phaseId,
-          kind: String(row[1]) as TrainingPhaseKind,
-          title: String(row[2]),
-          sortOrder: Number(row[3]),
-          items: [],
-        };
-        phases.set(phaseId, phase);
-      }
-
-      if (row[4] != null) {
-        phase.items.push({
-          id: String(row[4]),
-          exerciseId: row[5] == null ? null : String(row[5]),
-          exerciseName: String(row[6]),
-          format: row[7] == null ? null : String(row[7]),
-          durationMinutes: Number(row[8]),
-          instructions: row[9] == null ? null : String(row[9]),
-          levelLabel: row[10] == null ? null : String(row[10]),
-          sortOrder: Number(row[11]),
-        });
-      }
+    const phases: PersistedTrainingPhase[] = [];
+    for (const phaseRow of phaseReader.getRows()) {
+      const phaseId = String(phaseRow[0]);
+      const itemReader = await connection.runAndReadAll(
+        `
+        SELECT
+          i.id::VARCHAR,
+          i.exercise_id::VARCHAR,
+          COALESCE(t.name,i.title_override,'Unbenannte Übung'),
+          i.format,
+          i.duration_minutes,
+          i.instructions,
+          i.level_label,
+          i.sort_order
+        FROM training_items i
+        LEFT JOIN exercise_translations t ON t.exercise_id=i.exercise_id AND t.locale=$locale
+        WHERE i.training_phase_id=$phaseId::UUID
+        ORDER BY i.sort_order,i.id
+        `,
+        { phaseId, locale: String(sessionRow[5]) },
+      );
+      phases.push({
+        id: phaseId,
+        kind: String(phaseRow[1]) as TrainingPhaseKind,
+        title: String(phaseRow[2]),
+        sortOrder: Number(phaseRow[3]),
+        items: itemReader.getRows().map((row) => ({
+          id: String(row[0]),
+          exerciseId: row[1] == null ? null : String(row[1]),
+          exerciseName: String(row[2]),
+          format: row[3] == null ? null : String(row[3]),
+          durationMinutes: Number(row[4]),
+          instructions: row[5] == null ? null : String(row[5]),
+          levelLabel: row[6] == null ? null : String(row[6]),
+          sortOrder: Number(row[7]),
+        })),
+      });
     }
 
     return {
@@ -303,12 +286,12 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
       status: String(sessionRow[2]) as TrainingSessionStatus,
       source: String(sessionRow[3]),
       totalDurationMinutes: Number(sessionRow[4]),
-      locale,
+      locale: String(sessionRow[5]) as "de" | "en",
       itemCount: Number(sessionRow[6]),
       createdAt: String(sessionRow[7]),
       notes: sessionRow[8] == null ? null : String(sessionRow[8]),
       updatedAt: String(sessionRow[9]),
-      phases: [...phases.values()],
+      phases,
     };
   });
 }
@@ -318,19 +301,17 @@ export async function updateTrainingSessionMetadata(
   input: UpdateTrainingSessionMetadataInput,
 ): Promise<boolean> {
   if (!UUID_PATTERN.test(id)) return false;
-  const title = input.title.trim();
-  if (!title) throw new Error("Trainingstitel darf nicht leer sein.");
-
   await ensureDatabaseReady();
+
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(
       `
       UPDATE training_sessions
-      SET title=$title, status=$status, updated_at=current_timestamp
+      SET title=$title,status=$status,updated_at=current_timestamp
       WHERE id=$id::UUID
       RETURNING id::VARCHAR
       `,
-      { id, title, status: input.status },
+      { id, title: input.title.trim(), status: input.status },
     );
     return reader.getRows().length > 0;
   });
