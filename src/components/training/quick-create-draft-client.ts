@@ -14,6 +14,7 @@ import {
 import type { DraftIntensity, TrainingDraft } from "../../domain/training/draft";
 
 export type QuickCreateBuilderMode = "local" | "ai";
+export type DraftAlternativeMode = "easier" | "harder" | "equipment";
 
 export interface QuickCreateDraftClientInput {
   readonly groupId?: string;
@@ -198,19 +199,7 @@ export async function regenerateTrainingDraftPhase(
     body: JSON.stringify({
       request: normalizeTrainingDraftRequest(input),
       phase,
-      current: {
-        title: currentDraft.session.title,
-        phases: currentDraft.session.phases.map((currentPhase) => ({
-          kind: currentPhase.kind,
-          items: currentPhase.items.map((item) => ({
-            exerciseId: item.exercise.id,
-            durationMinutes: item.durationMinutes,
-            format: item.format,
-            instructions: item.instructions,
-            levelLabel: item.levelLabel,
-          })),
-        })),
-      },
+      current: toDraftSelection(currentDraft),
     }),
   });
 
@@ -219,6 +208,35 @@ export async function regenerateTrainingDraftPhase(
       await readErrorMessage(
         response,
         `Phase konnte nicht neu erstellt werden (${response.status}).`,
+      ),
+    );
+  }
+
+  return (await response.json()) as TrainingDraft;
+}
+
+export async function replaceTrainingDraftExercise(
+  input: QuickCreateDraftClientInput,
+  currentDraft: TrainingDraft,
+  exerciseId: string,
+  mode: DraftAlternativeMode,
+): Promise<TrainingDraft> {
+  const response = await fetch("/api/training/draft/replace-item", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      request: normalizeTrainingDraftRequest(input),
+      exerciseId,
+      mode,
+      current: toDraftSelection(currentDraft),
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await readErrorMessage(
+        response,
+        `Übungsalternative konnte nicht angewendet werden (${response.status}).`,
       ),
     );
   }
@@ -259,11 +277,9 @@ export async function persistTrainingDraft(
   return (await response.json()) as PersistedTrainingDraftResult;
 }
 
-function toReviewedAiSelection(draft?: TrainingDraft) {
-  if (!draft || draft.source !== "ai") {
-    throw new Error("Der AI-Vorschlag muss vor dem Speichern erzeugt und geprüft werden.");
-  }
+function toDraftSelection(draft: TrainingDraft) {
   return {
+    title: draft.session.title,
     phases: draft.session.phases.map((phase) => ({
       kind: phase.kind,
       items: phase.items.map((item) => ({
@@ -275,4 +291,11 @@ function toReviewedAiSelection(draft?: TrainingDraft) {
       })),
     })),
   };
+}
+
+function toReviewedAiSelection(draft?: TrainingDraft) {
+  if (!draft || draft.source !== "ai") {
+    throw new Error("Der AI-Vorschlag muss vor dem Speichern erzeugt und geprüft werden.");
+  }
+  return toDraftSelection(draft);
 }
