@@ -8,6 +8,7 @@ interface BodyFocusSelectorProps {
   readonly onToggle: (regionId: string) => void;
   readonly title?: string;
   readonly description?: string;
+  readonly visualCompact?: boolean;
 }
 
 export function BodyFocusSelector({
@@ -15,6 +16,7 @@ export function BodyFocusSelector({
   onToggle,
   title = "Körper- und Muskelfokus",
   description = "Wähle die Muskel- und Körperregionen, die im Training gezielt berücksichtigt werden sollen. Die Karte dient der Trainingsplanung, nicht der medizinischen Anatomie.",
+  visualCompact = false,
 }: BodyFocusSelectorProps) {
   return (
     <MuscleMap
@@ -29,6 +31,7 @@ export function BodyFocusSelector({
       options={BODY_REGION_OPTIONS}
       title={title}
       value={selected.map((id) => ({ id }))}
+      visualCompact={visualCompact}
     />
   );
 }
