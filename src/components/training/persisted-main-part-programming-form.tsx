@@ -10,6 +10,7 @@ import {
   type MainPartScoreMode,
 } from "@/domain/training/model";
 import { updateTrainingMainPartProgrammingAction } from "@/app/training/[id]/programming-action";
+import { Disclosure } from "@/components/ui/disclosure";
 
 interface PersistedMainPartProgrammingFormProps {
   readonly sessionId: string;
@@ -48,10 +49,11 @@ export function PersistedMainPartProgrammingForm({
   }
 
   return (
-    <details className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]">
-      <summary className="cursor-pointer px-4 py-3 text-sm font-black">
-        {title} programmieren{programming.mode !== "standard" ? ` · ${shortLabel(programming)}` : ""}
-      </summary>
+    <Disclosure
+      className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]"
+      summaryClassName="px-4 py-3 text-sm font-black"
+      summary={`${title} programmieren${programming.mode !== "standard" ? ` · ${shortLabel(programming)}` : ""}`}
+    >
       <form action={updateTrainingMainPartProgrammingAction} className="grid gap-3 border-t border-[var(--border)] p-4">
         <input name="sessionId" type="hidden" value={sessionId} />
         <input name="mainPartIndex" type="hidden" value={mainPartIndex} />
@@ -129,7 +131,7 @@ export function PersistedMainPartProgrammingForm({
           </button>
         </div>
       </form>
-    </details>
+    </Disclosure>
   );
 }
 

@@ -5,6 +5,7 @@ import {
   type TrainingAlternativeMode,
   type TrainingItemAlternative,
 } from "@/server/training/training-item-alternative-repository";
+import { Disclosure } from "@/components/ui/disclosure";
 
 const MODES: readonly {
   readonly id: TrainingAlternativeMode;
@@ -38,13 +39,12 @@ export async function TrainingItemAlternatives({
     : [];
 
   return (
-    <details
+    <Disclosure
       className="rounded-lg border border-[var(--border)] bg-[var(--surface)]"
       open={active}
+      summaryClassName="px-3 py-2 text-xs font-black"
+      summary="Schnell-Alternativen"
     >
-      <summary className="cursor-pointer px-3 py-2 text-xs font-black">
-        Schnell-Alternativen
-      </summary>
       <div className="space-y-3 border-t border-[var(--border)] p-3">
         <div>
           <div className="text-xs font-bold text-[var(--muted)]">Aktuell</div>
@@ -96,7 +96,7 @@ export async function TrainingItemAlternatives({
           </p>
         )}
       </div>
-    </details>
+    </Disclosure>
   );
 }
 
