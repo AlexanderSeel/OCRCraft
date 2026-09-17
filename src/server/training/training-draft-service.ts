@@ -1,20 +1,39 @@
 import "server-only";
 
 import { composeTrainingDraft, type TrainingDraft } from "@/domain/training/draft";
+import { composeAiTrainingDraft } from "./ai-training-composer";
+import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
 import type { TrainingDraftPersistenceRequest } from "./training-draft-persistence-schema";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 import { persistTrainingDraft } from "./training-session-repository";
 
-export async function createDeterministicTrainingDraft(
-  request: TrainingDraftRequest,
-): Promise<TrainingDraft> {
-  const candidates = await listTrainingDraftCandidates({
+async function approvedCandidatesFor(request: TrainingDraftRequest) {
+  return listTrainingDraftCandidates({
     audience: request.audience,
     minAge: request.minAge,
     locale: request.locale,
     location: request.location,
   });
+}
+
+export async function createTrainingDraft(request: TrainingDraftRequest): Promise<TrainingDraft> {
+  const candidates = await approvedCandidatesFor(request);
+  if (request.builderMode === "ai") {
+    const provider = getConfiguredAiTrainingProvider();
+    if (!provider) {
+      throw new Error(
+        "AI Training Builder ist nicht konfiguriert. Nutze den lokalen Sportalgorithmus oder setze OCRCRAFT_AI_BASE_URL und OCRCRAFT_AI_MODEL.",
+      );
+    }
+    const proposal = await provider.generateTrainingPlan({ request, approvedExercises: candidates });
+    return composeAiTrainingDraft({
+      proposal,
+      request,
+      approvedExercises: candidates,
+      providerId: provider.id,
+    });
+  }
 
   return composeTrainingDraft(
     {
@@ -24,6 +43,7 @@ export async function createDeterministicTrainingDraft(
       goals: request.goals,
       bodyRegions: request.bodyRegions,
       avoidBodyRegions: request.avoidBodyRegions,
+      exerciseTypes: request.exerciseTypes,
       formats: request.formats,
       intensity: request.intensity,
       preferredExerciseIds: request.preferredExerciseIds,
@@ -33,6 +53,13 @@ export async function createDeterministicTrainingDraft(
     },
     candidates,
   );
+}
+
+/** Kept as a stable explicit entry point for local-only callers/tests. */
+export async function createDeterministicTrainingDraft(
+  request: TrainingDraftRequest,
+): Promise<TrainingDraft> {
+  return createTrainingDraft({ ...request, builderMode: "local" });
 }
 
 export async function createAndPersistDeterministicTrainingDraft(
