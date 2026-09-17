@@ -341,6 +341,8 @@ Reference entry points:
 - [x] category filter
 - [x] active/archive filter
 - [x] paginated exercise overview beyond the first 80 results
+- [x] standard pagination controls with page-size selection, page numbers, jump-to-page and overall result count
+- [x] compact multi-column filters with muscle popover and removable selection tags
 - [x] counts, equipment, risk, min-age display
 - [x] create exercise
 - [x] new manual exercises continue directly into the same full editor used by existing exercises

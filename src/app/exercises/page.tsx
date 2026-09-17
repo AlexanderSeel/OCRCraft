@@ -13,7 +13,7 @@ import {
   listBodyRegionOptions,
   listExerciseIdsForBodyRegions,
 } from "@/server/exercises/exercise-facet-repository";
-import { getExerciseCategoryCounts } from "@/server/exercises/exercise-repository";
+import { countExercises, getExerciseCategoryCounts } from "@/server/exercises/exercise-repository";
 import { searchExercises } from "@/server/search/exercise-search-service";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +25,7 @@ interface PageProps {
     status?: string;
     muscle?: string | string[];
     page?: string;
+    size?: string;
   }>;
 }
 
@@ -34,22 +35,28 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   const category = params.category?.trim() || undefined;
   const archived = params.status === "archived";
   const selectedMuscles = parameterList(params.muscle);
-  const pageSize = 80;
+  const requestedSize = Number.parseInt(params.size ?? "80", 10) || 80;
+  const pageSize = [20, 40, 80, 120].includes(requestedSize) ? requestedSize : 80;
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
 
-  const [searchResult, categoryCounts, bodyRegionOptions] = await Promise.all([
-    searchExercises({ query, category, archived, limit: pageSize + 1, offset: (page - 1) * pageSize }),
+  const [searchResult, categoryCounts, baseFilteredTotal, bodyRegionOptions] = await Promise.all([
+    searchExercises({ query, category, archived, limit: selectedMuscles.length ? 200 : pageSize + 1, offset: selectedMuscles.length ? 0 : (page - 1) * pageSize }),
     getExerciseCategoryCounts(),
+    countExercises({ query, category, archived }),
     listBodyRegionOptions(),
   ]);
 
   const matchingMuscleIds = selectedMuscles.length > 0
     ? new Set(await listExerciseIdsForBodyRegions(expandBodyRegionIds(selectedMuscles)))
     : null;
-  const hasNextPage = searchResult.length > pageSize;
-  const pagedResults = searchResult.slice(0, pageSize);
+  const filteredTotal = matchingMuscleIds && !query && !category && !archived ? matchingMuscleIds.size : baseFilteredTotal;
+  const muscleFilteredResults = matchingMuscleIds ? searchResult.filter((exercise) => matchingMuscleIds.has(exercise.id)) : null;
+  const hasNextPage = matchingMuscleIds
+    ? page * pageSize < filteredTotal
+    : searchResult.length > pageSize;
+  const pagedResults = (muscleFilteredResults ?? searchResult).slice((matchingMuscleIds ? page - 1 : 0) * pageSize, (matchingMuscleIds ? page : 1) * pageSize);
   const exercises = matchingMuscleIds
-    ? pagedResults.filter((exercise) => matchingMuscleIds.has(exercise.id))
+    ? pagedResults
     : pagedResults;
   const bodyRegionMap = await getExerciseBodyRegionMap(exercises.map((exercise) => exercise.id));
 
@@ -77,10 +84,10 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         </section>
 
         <form
-          className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] lg:grid-cols-[1fr_220px_180px_auto]"
+          className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] md:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_180px_160px_120px_auto]"
           method="get"
         >
-          <label className="grid gap-1 text-sm font-bold">
+          <label className="grid gap-1 text-sm font-bold xl:col-span-1">
             Suchen
             <input
               className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
@@ -115,6 +122,12 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
               <option value="archived">Archiviert</option>
             </select>
           </label>
+          <label className="grid gap-1 text-sm font-bold">
+            Pro Seite
+            <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={String(pageSize)} name="size">
+              {[20, 40, 80, 120].map((size) => <option key={size} value={size}>{size}</option>)}
+            </select>
+          </label>
           <button
             className="self-end rounded-xl bg-[var(--control-strong)] px-5 py-3 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
             type="submit"
@@ -122,14 +135,12 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             Filtern
           </button>
 
-          <details
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 lg:col-span-4"
-            open={selectedMuscles.length > 0}
-          >
-            <summary className="cursor-pointer text-sm font-black">
-              Nach Muskelgruppen filtern{selectedMuscles.length > 0 ? ` · ${selectedMuscles.length} gewählt` : ""}
-            </summary>
-            <div className="mt-3 min-w-0">
+          <div className="relative md:col-span-2 xl:col-span-5">
+            <details className="group">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black">
+                <span>Muskelgruppen{selectedMuscles.length ? ` · ${selectedMuscles.length} gewählt` : ""}</span><span aria-hidden="true">⌄</span>
+              </summary>
+              <div className="absolute left-0 right-0 top-14 z-40 rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-3 shadow-[var(--shadow-raised)]">
               <MuscleMap
                 key={selectedMuscles.join(",") || "none"}
                 description="Wähle eine oder mehrere Regionen. Feine Muskelangaben berücksichtigen kompatible ältere Grobzuordnungen, ohne bestehende Übungen umzuschreiben."
@@ -139,12 +150,14 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                 title="Muskel- & Körperregionen"
                 value={selectedMuscles.map((id) => ({ id }))}
               />
-            </div>
-          </details>
+              </div>
+            </details>
+            {selectedMuscles.length ? <div className="mt-2 flex flex-wrap gap-2">{selectedMuscles.map((id) => { const label = bodyRegionOptions.find((option) => option.id === id)?.labelDe ?? id; return <Link className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-bold" href={removeMuscleHref(params, id)} key={id}>{label}<span aria-hidden="true">×</span><span className="sr-only">{label} entfernen</span></Link>; })}</div> : null}
+          </div>
         </form>
 
         <div className="flex items-center justify-between gap-3 text-sm text-[var(--muted)]">
-          <span>{exercises.length} Treffer in der aktuellen Ansicht</span>
+          <span>{filteredTotal === 0 ? "0" : `${Math.min((page - 1) * pageSize + 1, filteredTotal)}–${Math.min(page * pageSize, filteredTotal)}`} von {filteredTotal} Übungen</span>
           {archived ? (
             <Link className="font-bold text-[var(--foreground)]" href="/exercises">
               Aktive Übungen anzeigen
@@ -274,10 +287,12 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
 
         {(page > 1 || hasNextPage) ? (
           <nav aria-label="Seitennavigation Übungen" className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">
-            <span className="text-[var(--muted)]">Seite {page}</span>
+            <span className="text-[var(--muted)]">Seite {page} von {Math.max(1, Math.ceil(filteredTotal / pageSize))}</span>
             <div className="flex gap-2">
               {page > 1 ? <Link className="rounded-xl border border-[var(--border)] px-3 py-2 font-bold" href={pageHref(page - 1, params)}>Zurück</Link> : null}
+              {pageNumbers(page, Math.ceil(filteredTotal / pageSize)).map((number) => <Link className={`rounded-xl border px-3 py-2 font-bold ${number === page ? "border-[var(--accent)] bg-[var(--accent)]/15" : "border-[var(--border)]"}`} href={pageHref(number, params)} key={number}>{number}</Link>)}
               {hasNextPage ? <Link className="rounded-xl bg-[var(--control-strong)] px-3 py-2 font-bold text-[var(--control-strong-foreground)]" href={pageHref(page + 1, params)}>Weiter</Link> : null}
+              <form action="/exercises" className="flex items-center gap-1" method="get"><input aria-label="Zu Seite springen" className="h-9 w-16 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-center" min="1" max={Math.max(1, Math.ceil(filteredTotal / pageSize))} name="page" type="number" /><input name="size" type="hidden" value={pageSize} /><button className="rounded-lg border border-[var(--border)] px-2 py-2 text-xs font-bold" type="submit">Springen</button></form>
             </div>
           </nav>
         ) : null}
@@ -302,6 +317,8 @@ type ExerciseSearchParams = {
   readonly category?: string;
   readonly status?: string;
   readonly muscle?: string | string[];
+  readonly size?: string;
+  readonly page?: string;
 };
 
 function pageHref(page: number, params: ExerciseSearchParams): string {
@@ -309,9 +326,21 @@ function pageHref(page: number, params: ExerciseSearchParams): string {
   if (params.q) query.set("q", params.q);
   if (params.category) query.set("category", params.category);
   if (params.status) query.set("status", params.status);
+  if (params.size) query.set("size", params.size);
   for (const muscle of parameterList(params.muscle)) query.append("muscle", muscle);
   query.set("page", String(page));
   return `/exercises?${query.toString()}`;
+}
+
+function pageNumbers(current: number, total: number): readonly number[] {
+  const safeTotal = Math.max(1, total);
+  const start = Math.max(1, Math.min(current - 2, safeTotal - 4));
+  return Array.from({ length: Math.min(5, safeTotal) }, (_, index) => start + index);
+}
+
+function removeMuscleHref(params: ExerciseSearchParams, muscle: string): string {
+  const remaining = parameterList(params.muscle).filter((item) => item !== muscle);
+  return pageHref(1, { ...params, muscle: remaining, page: undefined });
 }
 
 function categoryLabel(category: string): string {

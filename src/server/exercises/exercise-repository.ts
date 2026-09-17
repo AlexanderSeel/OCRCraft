@@ -407,3 +407,18 @@ export async function getExerciseCategoryCounts(): Promise<readonly ExerciseCate
     }));
   });
 }
+
+export async function countExercises(options: Pick<ListExercisesOptions, "query" | "category" | "archived" | "locale"> = {}): Promise<number> {
+  await ensureDatabaseReady();
+  const { query = "", category, archived = false, locale = "de" } = options;
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      SELECT count(*) FROM exercises e
+      JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale=$locale
+      WHERE e.archived=$archived AND ($category='' OR e.category=$category)
+        AND ($query='' OR t.name ILIKE '%' || $query || '%' OR COALESCE(t.summary,'') ILIKE '%' || $query || '%'
+          OR EXISTS (SELECT 1 FROM exercise_aliases a WHERE a.exercise_id=e.id AND a.locale=$locale AND a.alias ILIKE '%' || $query || '%'))
+    `, { locale, category: category ?? "", archived, query: query.trim() });
+    return Number(reader.getRows()[0]?.[0] ?? 0);
+  });
+}
