@@ -16,6 +16,7 @@ import {
   updateTrainingSessionMetadataAction,
 } from "./actions";
 import { duplicateTrainingSessionAction } from "./duplicate-action";
+import { updateTrainingOrganizationAction } from "./organization-action";
 import { reorderTrainingItemsAction } from "./reorder-action";
 
 export const dynamic = "force-dynamic";
@@ -92,7 +93,9 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
               ? "Training konnte nicht dupliziert werden. Bitte erneut versuchen."
               : query.error === "item-level"
                 ? "Level konnte nicht gespeichert werden. Bitte erneut versuchen."
-                : "Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen."}
+                : query.error === "organization"
+                  ? "Solo-/Teamorganisation konnte nicht gespeichert werden. Prüfe die Teamgröße."
+                  : "Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen."}
           </div>
         ) : null}
 
@@ -103,10 +106,48 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           <InfoCard
             label="Organisation"
             value={session.organizationMode === "team"
-              ? `${Math.ceil(session.itemCount > 0 ? 1 : 1)}Team · ${session.teamSize ?? 2} Pers. · ${mainPartCount} ${mainPartCount === 1 ? "Hauptteil" : "Hauptteile"}`
+              ? `Team · ${session.teamSize ?? 2} Pers./Team · ${mainPartCount} ${mainPartCount === 1 ? "Hauptteil" : "Hauptteile"}`
               : `Individuell · ${mainPartCount} ${mainPartCount === 1 ? "Hauptteil" : "Hauptteile"}`}
           />
         </section>
+
+        {editable ? (
+          <form
+            action={updateTrainingOrganizationAction}
+            className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+          >
+            <input name="sessionId" type="hidden" value={session.id} />
+            <label className="grid gap-2 text-sm font-bold">
+              Organisation Hauptteil
+              <select
+                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                defaultValue={session.organizationMode}
+                name="organizationMode"
+              >
+                <option value="solo">Alleine / individuelle Rotation</option>
+                <option value="team">Teams</option>
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm font-bold">
+              Teamgröße
+              <input
+                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                defaultValue={session.teamSize ?? 4}
+                max={20}
+                min={2}
+                name="teamSize"
+                type="number"
+              />
+              <span className="text-xs font-normal leading-5 text-[var(--muted)]">Wird nur bei Teamorganisation verwendet.</span>
+            </label>
+            <button
+              className="min-h-11 self-end rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-4 text-sm font-black hover:bg-[var(--surface-elevated)]"
+              type="submit"
+            >
+              Organisation speichern
+            </button>
+          </form>
+        ) : null}
 
         <form
           action={updateMetadataAction}
@@ -409,6 +450,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
 function savedMessage(saved: string): string {
   if (saved === "item") return "Trainingsinhalt wurde aktualisiert.";
   if (saved === "item-level") return "Level-Zuordnung wurde aktualisiert.";
+  if (saved === "organization") return "Solo-/Teamorganisation wurde aktualisiert.";
   if (saved === "duplicated") return "Training wurde als neue Kopie angelegt.";
   if (saved === "combined") return "Kombiniertes Training wurde als neuer Entwurf angelegt.";
   return "Training wurde aktualisiert.";
