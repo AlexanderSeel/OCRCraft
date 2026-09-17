@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
 import { MuscleMap } from "@/components/body/muscle-map";
+import { Disclosure } from "@/components/ui/disclosure";
 import { expandBodyRegionIds } from "@/domain/body-regions";
 import {
   exerciseCategoryLabels,
@@ -136,10 +137,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           </button>
 
           <div className="relative md:col-span-2 xl:col-span-5">
-            <details className="group">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black">
+            <Disclosure className="group" summaryClassName="flex min-h-11 items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black" summary={
+              <>
                 <span>Muskelgruppen{selectedMuscles.length ? ` · ${selectedMuscles.length} gewählt` : ""}</span><span aria-hidden="true">⌄</span>
-              </summary>
+              </>
+            }>
               <div className="absolute left-0 top-14 z-40 max-h-[min(60vh,30rem)] w-[min(42rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-2 shadow-[var(--shadow-raised)]">
               <MuscleMap
                 compact
@@ -152,18 +154,19 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                 value={selectedMuscles.map((id) => ({ id }))}
               />
               </div>
-            </details>
+            </Disclosure>
             {selectedMuscles.length ? <div className="mt-2 flex flex-wrap gap-2">{selectedMuscles.map((id) => { const label = bodyRegionOptions.find((option) => option.id === id)?.labelDe ?? id; return <Link className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-bold" href={removeMuscleHref(params, id)} key={id}>{label}<span aria-hidden="true">×</span><span className="sr-only">{label} entfernen</span></Link>; })}</div> : null}
           </div>
           <div className="relative md:col-span-2 xl:col-span-5">
-            <details className="group">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black">
+            <Disclosure className="group" summaryClassName="flex min-h-11 items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black" summary={
+              <>
                 <span>Trainingsfacetten{selectedFacets.length ? ` · ${selectedFacets.length} gewählt` : ""}</span><span aria-hidden="true">⌄</span>
-              </summary>
+              </>
+            }>
               <div className="absolute left-0 right-0 top-14 z-40 grid max-h-60 grid-cols-2 gap-1.5 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-2 shadow-[var(--shadow-raised)] sm:grid-cols-3 lg:grid-cols-5">
                 {tagOptions.map((tag) => <label className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-2 py-2 text-xs font-bold" key={tag.id}><input defaultChecked={selectedFacets.includes(tag.id)} name="facet" type="checkbox" value={tag.id} />{tag.labelDe}</label>)}
               </div>
-            </details>
+            </Disclosure>
             {selectedFacets.length ? <div className="mt-2 flex flex-wrap gap-2">{selectedFacets.map((id) => { const label = tagOptions.find((option) => option.id === id)?.labelDe ?? id; return <Link className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-bold" href={removeFacetHref(params, id)} key={id}>{label}<span aria-hidden="true">×</span><span className="sr-only">{label} entfernen</span></Link>; })}</div> : null}
           </div>
         </form>

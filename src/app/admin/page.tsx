@@ -3,6 +3,7 @@ import { SeedCompletenessReportView } from "@/components/admin/seed-completeness
 import { MuscleMapDebugSetting } from "@/components/admin/muscle-map-debug-setting";
 import { DuplicateReviewPanel } from "@/components/admin/duplicate-review-panel";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
+import { Disclosure } from "@/components/ui/disclosure";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, scanDuplicateExercisesAction } from "./actions";
@@ -62,11 +63,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </p>
           ) : null}
 
-          <details className="group relative mt-4 max-w-md">
-            <summary aria-label="Datenbank-Reset bestätigen" className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-[var(--danger)] px-4 py-2.5 text-sm font-black text-[var(--danger)] hover:bg-[var(--danger-bg)]">
-              Datenbank vollständig neu seed-en
-              <span aria-hidden="true" className="transition-transform group-open:rotate-90">›</span>
-            </summary>
+          <Disclosure className="group relative mt-4 max-w-md" summaryClassName="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-[var(--danger)] px-4 py-2.5 text-sm font-black text-[var(--danger)] hover:bg-[var(--danger-bg)]" summary={
+            <span aria-label="Datenbank-Reset bestätigen">Datenbank vollständig neu seed-en <span aria-hidden="true" className="transition-transform group-open:rotate-90">›</span></span>
+          }>
             <div className="mt-2 rounded-2xl border border-[var(--danger)] bg-[var(--surface-elevated)] p-4 shadow-[var(--shadow-raised)] sm:absolute sm:right-0 sm:top-full sm:z-30 sm:w-[min(28rem,calc(100vw-2rem))]">
               <h3 className="font-black text-[var(--danger)]">Alle gespeicherten Daten werden gelöscht</h3>
               <p className="mt-2 text-sm leading-6 text-[var(--foreground)]">
@@ -90,7 +89,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 </div>
               </form>
             </div>
-          </details>
+          </Disclosure>
           <MuscleMapDebugSetting />
         </section>
 
