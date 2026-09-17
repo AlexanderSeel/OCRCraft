@@ -11,12 +11,21 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3
 export type TrainingSessionStatus = "draft" | "ready" | "completed" | "archived";
 export type PersistedTrainingSource = "manual" | "ai";
 
+export interface TrainingGenerationContext {
+  readonly builderMode: "local" | "ai";
+  readonly providerId?: string | null;
+  readonly providerModel?: string | null;
+  readonly request: unknown;
+  readonly trainerReviewed: boolean;
+}
+
 export interface PersistTrainingDraftOptions {
   readonly title?: string;
   readonly locale?: "de" | "en";
   readonly groupId?: string | null;
   readonly source?: PersistedTrainingSource;
   readonly notes?: string | null;
+  readonly generation?: TrainingGenerationContext | null;
 }
 
 export interface UpdateTrainingSessionMetadataInput {
@@ -70,6 +79,7 @@ export async function persistTrainingDraft(
     notes = draft.source === "ai"
       ? "Quick Create · AI proposal · deterministic OCRCraft validation"
       : "Quick Create · local deterministic sports composer",
+    generation = null,
   }: PersistTrainingDraftOptions = {},
 ): Promise<string> {
   await ensureDatabaseReady();
@@ -116,6 +126,29 @@ export async function persistTrainingDraft(
           notes,
         },
       );
+
+      if (generation) {
+        await connection.run(
+          `
+          INSERT INTO training_generation_history (
+            id, training_session_id, builder_mode, provider_id, provider_model,
+            request_json, trainer_reviewed
+          ) VALUES (
+            $id::UUID, $sessionId::UUID, $builderMode, $providerId, $providerModel,
+            $requestJson, $trainerReviewed
+          )
+          `,
+          {
+            id: randomUUID(),
+            sessionId,
+            builderMode: generation.builderMode,
+            providerId: generation.providerId ?? null,
+            providerModel: generation.providerModel ?? null,
+            requestJson: JSON.stringify(generation.request),
+            trainerReviewed: generation.trainerReviewed,
+          },
+        );
+      }
 
       for (const [phaseIndex, phase] of draft.session.phases.entries()) {
         const phaseId = randomUUID();
