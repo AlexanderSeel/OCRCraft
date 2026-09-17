@@ -67,11 +67,14 @@ const LOWER_BODY = new Set([
   "hips", "glutes", "quadriceps", "hamstrings", "adductors", "calves", "tibialis", "ankles-feet",
 ]);
 
+type CandidateWithHistory = TrainingDraftExerciseCandidate & { readonly recentUseCount?: number };
+
 /**
  * Local, deterministic training planner. It never calls an AI provider. Selection
  * is based on approved exercise metadata plus conservative training heuristics:
  * phase suitability, requested goals/types/muscles, movement and muscle balance,
- * impact spacing, fatigue sequencing, audience suitability and equipment reality.
+ * impact spacing, fatigue sequencing, audience suitability, equipment reality
+ * and recent-session variety.
  */
 export function composeSportsTrainingDraft(
   input: TrainingDraftInput,
@@ -80,7 +83,7 @@ export function composeSportsTrainingDraft(
   const budgets = getTrainingPhaseBudgets(input.durationMinutes);
   const phaseKinds: readonly TrainingPhaseKind[] = ["warmup", "main", "cooldown"];
   const warnings: string[] = [
-    "Lokaler Sportalgorithmus: deterministische Auswahl ohne AI; Fokus auf Phasenlogik, Bewegungsvielfalt, Muskelbalance, Belastungsreihenfolge und Sicherheitsmetadaten.",
+    "Lokaler Sportalgorithmus: deterministische Auswahl ohne AI; Fokus auf Phasenlogik, Bewegungsvielfalt, Muskelbalance, Belastungsreihenfolge, letzte Trainings und Sicherheitsmetadaten.",
   ];
 
   const phases = phaseKinds.map((kind) => {
@@ -224,7 +227,13 @@ function baseScore(
 
   score += phaseSuitabilityScore(candidate, phase, input);
   score += equipmentScore(candidate, input);
+  score -= recentUsePenalty(candidate);
   return score;
+}
+
+function recentUsePenalty(candidate: TrainingDraftExerciseCandidate): number {
+  const count = Math.max(0, Number((candidate as CandidateWithHistory).recentUseCount ?? 0));
+  return Math.min(60, count * 12);
 }
 
 function phaseSuitabilityScore(
@@ -396,6 +405,13 @@ function appendCoverageWarnings(
     if (antagonists.length > 0 && !antagonists.some((antagonist) => selectedParents.has(bodyRegionParent(antagonist)))) {
       warnings.push(`Muskelbalance: zum Fokus ${focus} wurde kein typischer Gegenmuskel eingeplant.`);
     }
+  }
+
+  const repeatedRecent = selected.filter((candidate) => recentUsePenalty(candidate) >= 24);
+  if (repeatedRecent.length > 0) {
+    warnings.push(
+      `Abwechslung: ${repeatedRecent.length} Übung(en) wurden trotz mehrfacher Nutzung in den letzten Trainings erneut gewählt, weil sie für die aktuellen Vorgaben hoch gewichtet sind.`,
+    );
   }
 }
 
