@@ -24,7 +24,7 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
       const sessionReader = await connection.runAndReadAll(
         `
         SELECT title, group_id::VARCHAR, total_duration_minutes, locale, notes,
-          COALESCE(organization_mode,'solo'), team_size
+          COALESCE(organization_mode,'solo'), team_size, group_split_count
         FROM training_sessions
         WHERE id=$sourceSessionId::UUID
         `,
@@ -37,10 +37,10 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
         `
         INSERT INTO training_sessions (
           id, title, group_id, status, source, total_duration_minutes, locale, notes,
-          organization_mode, team_size
+          organization_mode, team_size, group_split_count
         ) VALUES (
           $id::UUID, $title, $groupId::UUID, 'draft', 'copied', $duration, $locale, $notes,
-          $organizationMode, $teamSize
+          $organizationMode, $teamSize, $groupSplitCount
         )
         `,
         {
@@ -52,6 +52,7 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
           notes: sourceSession[4] == null ? null : String(sourceSession[4]),
           organizationMode: String(sourceSession[5] ?? "solo"),
           teamSize: sourceSession[6] == null ? null : Number(sourceSession[6]),
+          groupSplitCount: sourceSession[7] == null ? null : Number(sourceSession[7]),
         },
       );
 
