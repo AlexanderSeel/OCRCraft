@@ -83,6 +83,12 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
       availableEquipment: request.availableEquipment,
       minAge: request.minAge,
       maxAge: request.maxAge,
+      warmupExerciseCount: request.warmupExerciseCount,
+      mainExerciseCount: request.mainExerciseCount,
+      cooldownExerciseCount: request.cooldownExerciseCount,
+      mainPartCount: request.mainPartCount,
+      organizationMode: request.organizationMode,
+      teamSize: request.teamSize,
     },
     candidates,
   );
