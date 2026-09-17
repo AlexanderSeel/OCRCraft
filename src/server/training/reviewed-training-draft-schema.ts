@@ -50,17 +50,22 @@ export const reviewedAiTrainingPersistenceSchema = z.object({
     context.addIssue({ code: "custom", path: ["reviewed", "phases"], message: `Cooldown muss ${value.request.cooldownExerciseCount} Übungen enthalten.` });
   }
   if (main) {
-    const expectedMainItems = value.request.mainPartCount * value.request.mainExerciseCount;
+    const expectedCounts = Array.from(
+      { length: value.request.mainPartCount },
+      (_, index) => value.request.mainPartExerciseCounts[index] ?? value.request.mainExerciseCount,
+    );
+    const expectedMainItems = expectedCounts.reduce((sum, count) => sum + count, 0);
     if (main.items.length !== expectedMainItems) {
       context.addIssue({ code: "custom", path: ["reviewed", "phases"], message: `Hauptteil muss insgesamt ${expectedMainItems} Übungen enthalten.` });
     }
     for (let part = 1; part <= value.request.mainPartCount; part += 1) {
+      const expectedCount = expectedCounts[part - 1] ?? value.request.mainExerciseCount;
       const count = main.items.filter((item) => (item.mainPartIndex ?? 1) === part).length;
-      if (count !== value.request.mainExerciseCount) {
+      if (count !== expectedCount) {
         context.addIssue({
           code: "custom",
           path: ["reviewed", "phases"],
-          message: `Hauptteil ${part} muss ${value.request.mainExerciseCount} Übungen enthalten.`,
+          message: `Hauptteil ${part} muss ${expectedCount} Übungen enthalten.`,
         });
       }
     }
