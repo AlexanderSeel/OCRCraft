@@ -101,6 +101,7 @@ export function QuickCreateWizard({
   const [ageRange, setAgeRange] = useState("16+");
   const [participantCount, setParticipantCount] = useState(16);
   const [duration, setDuration] = useState(75);
+  const [groupSplitCount, setGroupSplitCount] = useState<number | undefined>();
   const [goals, setGoals] = useState<readonly string[]>(["Ganzkörper", "OCR-Technik"]);
   const [bodyRegions, setBodyRegions] = useState<readonly string[]>(["forearms-grip", "core"]);
   const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>([]);
@@ -136,6 +137,12 @@ export function QuickCreateWizard({
     () => [...new Set([45, 60, 75, 90, 120, duration])].sort((a, b) => a - b),
     [duration],
   );
+  const effectiveGroupSplitCount = groupSplitCount == null
+    ? undefined
+    : Math.max(1, Math.min(20, participantCount, groupSplitCount));
+  const maxRotationGroupSize = effectiveGroupSplitCount == null
+    ? undefined
+    : Math.ceil(participantCount / effectiveGroupSplitCount);
   const canContinue = useMemo(() => {
     if (step === 2) return goals.length > 0;
     if (step === 3) return formats.length > 0;
@@ -194,6 +201,8 @@ export function QuickCreateWizard({
       avoidBodyRegions,
       formats,
       location,
+      organizationMode: "solo",
+      groupSplitCount: effectiveGroupSplitCount,
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
         quantity.trim() === "" ? [] : [{ equipmentId, quantityAvailable: Number(quantity) }]
       ),
@@ -436,7 +445,7 @@ export function QuickCreateWizard({
           {step === 3 ? (
             <div>
               <h3 className="text-lg font-black">Wie und wo soll trainiert werden?</h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">Formate lassen sich kombinieren. Ort, Equipment und optional der reale Hindernisbestand begrenzen den freigegebenen Übungspool.</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">Formate lassen sich kombinieren. Ort, Rotationsgruppen, Equipment und optional der reale Hindernisbestand begrenzen die praktische Planung.</p>
 
               <div className="mt-5">
                 <div className="text-sm font-black">Trainingsort</div>
@@ -488,6 +497,29 @@ export function QuickCreateWizard({
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+                <label className="grid gap-2 text-sm font-black sm:max-w-xs">
+                  Rotationsgruppen (optional)
+                  <input
+                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                    max={Math.min(20, Math.max(1, participantCount))}
+                    min={1}
+                    onChange={(event) => {
+                      setGroupSplitCount(event.target.value === ""
+                        ? undefined
+                        : Math.max(1, Math.min(20, participantCount, Number(event.target.value) || 1)));
+                      invalidateDraft();
+                    }}
+                    placeholder="Automatisch"
+                    type="number"
+                    value={groupSplitCount ?? ""}
+                  />
+                </label>
+                <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                  Leer = automatische Verteilung auf die aktiven Stationen. Eine feste Zahl steuert Stationskapazität und parallelen Equipmentbedarf. {effectiveGroupSplitCount != null ? `Aktuell: ${effectiveGroupSplitCount} Gruppen mit bis zu ${maxRotationGroupSize} Personen.` : ""}
+                </p>
               </div>
 
               <details className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
@@ -587,6 +619,9 @@ export function QuickCreateWizard({
                 {[
                   ["Vereinsgruppe", selectedPreset?.name ?? "Keine feste Gruppe"],
                   ["Gruppe", `${selectedGroup?.[1] ?? groupType} · ${ageRange} · ${participantCount} Personen`],
+                  ["Rotationsgruppen", effectiveGroupSplitCount != null
+                    ? `${effectiveGroupSplitCount} Gruppen · bis zu ${maxRotationGroupSize} Personen/Gruppe`
+                    : "Automatische Stationsverteilung"],
                   ["Dauer", `${duration} Minuten`],
                   ["Ziele", goals.join(", ")],
                   ["Körperregionen", bodyRegions.length ? bodyRegions.join(", ") : "Keine Vorgabe"],
@@ -703,6 +738,12 @@ export function QuickCreateWizard({
               <div className="mt-1 font-black">{selectedPreset?.name ?? selectedGroup?.[1]} · {participantCount}</div>
               {selectedPreset ? <div className="mt-1 text-xs text-[var(--sidebar-muted)]">{selectedGroup?.[1]} · {ageRange}</div> : null}
             </div>
+            {effectiveGroupSplitCount != null ? (
+              <div>
+                <div className="text-xs text-[var(--sidebar-muted)]">Rotation</div>
+                <div className="mt-1 text-sm font-bold leading-6">{effectiveGroupSplitCount} Gruppen · max. {maxRotationGroupSize} Personen</div>
+              </div>
+            ) : null}
             <div>
               <div className="text-xs text-[var(--sidebar-muted)]">Zeit</div>
               <div className="mt-1 font-black">{duration} Minuten</div>
