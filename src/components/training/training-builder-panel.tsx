@@ -65,6 +65,12 @@ export interface TrainingBuilderInitialState {
   readonly formats: readonly string[];
   readonly location: string;
   readonly intensity: string;
+  readonly warmupExerciseCount?: number;
+  readonly mainExerciseCount?: number;
+  readonly cooldownExerciseCount?: number;
+  readonly mainPartCount?: number;
+  readonly organizationMode?: "solo" | "team";
+  readonly teamSize?: number;
   readonly sourceTrainingIds?: readonly string[];
   readonly preferredExercises: readonly SelectedExerciseReference[];
   readonly availableEquipment: readonly {
@@ -90,6 +96,11 @@ function formatAgeRange(minAge?: number, maxAge?: number): string {
   return "Offen";
 }
 
+function clampInteger(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min;
+  return Math.max(min, Math.min(max, Math.trunc(value)));
+}
+
 export function TrainingBuilderPanel({
   equipmentOptions,
   sourceTrainingOptions = [],
@@ -111,6 +122,12 @@ export function TrainingBuilderPanel({
   const [formats, setFormats] = useState<readonly string[]>(initialState?.formats ?? ["circuit"]);
   const [location, setLocation] = useState(initialState?.location ?? "mixed");
   const [intensity, setIntensity] = useState(initialState?.intensity ?? "balanced");
+  const [warmupExerciseCount, setWarmupExerciseCount] = useState(initialState?.warmupExerciseCount ?? 2);
+  const [mainExerciseCount, setMainExerciseCount] = useState(initialState?.mainExerciseCount ?? 4);
+  const [cooldownExerciseCount, setCooldownExerciseCount] = useState(initialState?.cooldownExerciseCount ?? 2);
+  const [mainPartCount, setMainPartCount] = useState(initialState?.mainPartCount ?? 1);
+  const [organizationMode, setOrganizationMode] = useState<"solo" | "team">(initialState?.organizationMode ?? "solo");
+  const [teamSize, setTeamSize] = useState(initialState?.teamSize ?? 4);
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
     initialState
       ? Object.fromEntries(initialState.availableEquipment.map((item) => [item.equipmentId, String(item.quantityAvailable)]))
@@ -128,6 +145,10 @@ export function TrainingBuilderPanel({
 
   const canGenerate = goals.length > 0 && formats.length > 0;
   const selectedGoalLabels = useMemo(() => new Set(goals), [goals]);
+  const effectiveTeamSize = organizationMode === "team"
+    ? clampInteger(teamSize, 2, Math.min(20, Math.max(2, participants)))
+    : undefined;
+  const totalRequestedExercises = warmupExerciseCount + cooldownExerciseCount + mainPartCount * mainExerciseCount;
 
   function invalidate() {
     setDraft(null);
@@ -158,6 +179,12 @@ export function TrainingBuilderPanel({
       location,
       intensity,
       builderMode,
+      warmupExerciseCount,
+      mainExerciseCount,
+      cooldownExerciseCount,
+      mainPartCount,
+      organizationMode,
+      teamSize: effectiveTeamSize,
       sourceTrainingIds: builderMode === "ai" ? sourceTrainingIds : [],
       preferredExerciseIds: preferredExercises.map((exercise) => exercise.id),
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
@@ -283,12 +310,7 @@ export function TrainingBuilderPanel({
                       const disabled = !active && sourceTrainingIds.length >= 6;
                       return (
                         <label className={`flex gap-3 rounded-lg border p-3 text-sm ${active ? "border-[var(--accent-strong)] bg-[var(--accent-soft)]" : "border-[var(--border)] bg-[var(--surface)]"} ${disabled ? "opacity-45" : ""}`} key={option.id}>
-                          <input
-                            checked={active}
-                            disabled={disabled}
-                            onChange={() => toggleSourceTraining(option.id)}
-                            type="checkbox"
-                          />
+                          <input checked={active} disabled={disabled} onChange={() => toggleSourceTraining(option.id)} type="checkbox" />
                           <span>
                             <span className="block font-black">{option.title}</span>
                             <span className="mt-0.5 block text-xs text-[var(--muted)]">{option.totalDurationMinutes} Min. · {option.itemCount} Übungen</span>
@@ -315,14 +337,66 @@ export function TrainingBuilderPanel({
               </select>
             </Field>
             <Field label="Alter"><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" onChange={(event) => { setAgeRange(event.target.value); invalidate(); }} value={ageRange} /></Field>
-            <Field label="Teilnehmer"><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" min={1} onChange={(event) => { setParticipants(Number(event.target.value)); invalidate(); }} type="number" value={participants} /></Field>
-            <Field label="Dauer"><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" max={180} min={30} onChange={(event) => { setDuration(Number(event.target.value)); invalidate(); }} type="number" value={duration} /></Field>
+            <Field label="Teilnehmer"><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" min={1} max={200} onChange={(event) => { setParticipants(clampInteger(Number(event.target.value), 1, 200)); invalidate(); }} type="number" value={participants} /></Field>
+            <Field label="Dauer"><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" max={180} min={30} onChange={(event) => { setDuration(clampInteger(Number(event.target.value), 30, 180)); invalidate(); }} type="number" value={duration} /></Field>
             <Field label="Ort">
               <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" onChange={(event) => { setLocation(event.target.value); invalidate(); }} value={location}>
                 <option value="mixed">Flexibel</option><option value="indoor">Indoor</option><option value="outdoor">Outdoor</option>
               </select>
             </Field>
           </div>
+        </section>
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-black">Trainingsstruktur & Organisation</h2>
+              <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+                Steuert die exakte Anzahl der Übungen je Abschnitt. Mehrere Hauptteile werden als getrennte Blöcke geplant und gespeichert.
+              </p>
+            </div>
+            <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5 text-xs font-black">
+              {totalRequestedExercises} Übungen gesamt
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <NumberField label="Warm-up Übungen" value={warmupExerciseCount} min={1} max={6} onChange={(value) => { setWarmupExerciseCount(value); invalidate(); }} />
+            <NumberField label="Hauptteile" value={mainPartCount} min={1} max={4} onChange={(value) => { setMainPartCount(value); invalidate(); }} />
+            <NumberField label="Übungen je Hauptteil" value={mainExerciseCount} min={1} max={8} onChange={(value) => { setMainExerciseCount(value); invalidate(); }} />
+            <NumberField label="Cooldown Übungen" value={cooldownExerciseCount} min={1} max={6} onChange={(value) => { setCooldownExerciseCount(value); invalidate(); }} />
+          </div>
+
+          <div className="mt-5 grid gap-4 border-t border-[var(--border)] pt-4 sm:grid-cols-2">
+            <Field label="Organisation im Hauptteil">
+              <select
+                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+                onChange={(event) => { setOrganizationMode(event.target.value === "team" ? "team" : "solo"); invalidate(); }}
+                value={organizationMode}
+              >
+                <option value="solo">Alleine / individuelle Rotation</option>
+                <option value="team">Teams</option>
+              </select>
+            </Field>
+            {organizationMode === "team" ? (
+              <NumberField
+                label="Teamgröße"
+                value={effectiveTeamSize ?? 2}
+                min={2}
+                max={Math.min(20, Math.max(2, participants))}
+                onChange={(value) => { setTeamSize(value); invalidate(); }}
+              />
+            ) : (
+              <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm leading-5 text-[var(--muted)]">
+                Solo/Rotation: Kapazitäts- und Equipmentprüfung rechnet mit Stationsverteilung statt fester Teamgröße.
+              </div>
+            )}
+          </div>
+          {organizationMode === "team" ? (
+            <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
+              Der lokale Planer bevorzugt bei Teamtraining Teamwork-/Drill-Übungen und berücksichtigt die Teamgröße bei Stationskapazität und gleichzeitigem Equipmentbedarf. Die AI erhält dieselben Werte als verbindliche Strukturvorgabe.
+            </p>
+          ) : null}
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
@@ -393,7 +467,9 @@ export function TrainingBuilderPanel({
       <aside className="h-fit rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] xl:sticky xl:top-4">
         <h2 className="font-black">Sportlogik</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-[var(--muted)]">
-          <li>Warm-up, Hauptteil und Cooldown mit exakter Zeitverteilung.</li>
+          <li>Warm-up, ein bis vier Hauptteile und Cooldown mit exakter Zeit- und Übungsanzahl.</li>
+          <li>Bei mehreren Hauptteilen werden Übungen blockübergreifend variiert und nicht unnötig wiederholt.</li>
+          <li>Teamgröße fließt in Stationskapazität, Teamwork-Gewichtung und gleichzeitigen Equipmentbedarf ein.</li>
           <li>Technik und Koordination vor unnötiger Ermüdung; Conditioning danach, wenn gewählt.</li>
           <li>Abdeckung gewünschter Muskeln plus typische Gegenmuskeln und Gegenbewegungen.</li>
           <li>Push/Pull, Squat/Hinge und Rumpfrotation/Stabilisation werden für eine ausgewogene Einheit bevorzugt ergänzt.</li>
@@ -401,6 +477,7 @@ export function TrainingBuilderPanel({
           <li>Drei direkt aufeinanderfolgende Übungen mit derselben lokalen Muskel-/Körperregion werden im Qualitätscheck beanstandet.</li>
           <li>Übungen aus den letzten Trainings erhalten einen weichen Wiederholungs-Malus; Trainer-Wunschübungen können ihn bewusst überstimmen.</li>
           <li>Alter, Ort, Ausschlussbereiche, Risiko, Equipment und Stationskapazität bleiben harte Grenzen.</li>
+          <li>Outdoor-Varianten verwenden bei Outdoor-Planung ihr eigenes geprüftes Ersatz-Equipment statt Studio-Geräten.</li>
           <li>Level-Varianten stammen aus dem freigegebenen Übungskatalog statt aus erfundenen Übungen.</li>
           <li>Phasen und einzelne Übungen können separat neu geplant bzw. leichter/schwerer/materialärmer ersetzt werden.</li>
           <li>AI kann bis zu sechs ausgewählte frühere Trainings als Rekompositions-Kontext erhalten, aber nur aktuell freigegebene Übungen auswählen.</li>
@@ -413,6 +490,10 @@ export function TrainingBuilderPanel({
 
 function Field({ label, children }: { readonly label: string; readonly children: React.ReactNode }) {
   return <label className="grid gap-2 text-sm font-bold">{label}{children}</label>;
+}
+
+function NumberField({ label, value, min, max, onChange }: { readonly label: string; readonly value: number; readonly min: number; readonly max: number; readonly onChange: (value: number) => void }) {
+  return <Field label={label}><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" max={max} min={min} onChange={(event) => onChange(clampInteger(Number(event.target.value), min, max))} type="number" value={value} /></Field>;
 }
 
 function Toggle({ active, onClick, children }: { readonly active: boolean; readonly onClick: () => void; readonly children: React.ReactNode }) {
