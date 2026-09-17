@@ -69,7 +69,13 @@ export default async function TrainingPage({ searchParams }: PageProps) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-                      {session.source === "manual" ? "Quick Create" : session.source === "copied" ? "Kopie" : session.source}
+                      {session.source === "manual"
+                        ? "Quick Create"
+                        : session.source === "copied"
+                          ? "Kopie"
+                          : session.source === "combined"
+                            ? "Kombiniert"
+                            : session.source}
                     </div>
                     <h2 className="mt-1 break-words text-lg font-black">{session.title}</h2>
                   </div>
@@ -94,6 +100,14 @@ export default async function TrainingPage({ searchParams }: PageProps) {
                     Erstellt {formatCreatedAt(session.createdAt)} · {session.locale.toUpperCase()}
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
+                    {!archived ? (
+                      <Link
+                        className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-subtle)]"
+                        href={`/training/${session.id}/combine`}
+                      >
+                        Kombinieren
+                      </Link>
+                    ) : null}
                     <Link
                       className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-subtle)]"
                       href={`/training/${session.id}/trainer`}
