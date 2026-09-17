@@ -151,6 +151,21 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Shared disclosure treatment for filters, editor sections and compact panels. */
+details > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+details > summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;

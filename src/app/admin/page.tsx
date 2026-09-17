@@ -63,7 +63,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           ) : null}
 
           <details className="group relative mt-4 max-w-md">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl border border-[var(--danger)] px-4 py-2.5 text-sm font-black text-[var(--danger)] hover:bg-[var(--danger-bg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--danger)]">
+            <summary aria-label="Datenbank-Reset bestätigen" className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-[var(--danger)] px-4 py-2.5 text-sm font-black text-[var(--danger)] hover:bg-[var(--danger-bg)]">
               Datenbank vollständig neu seed-en
               <span aria-hidden="true" className="transition-transform group-open:rotate-90">›</span>
             </summary>

@@ -312,6 +312,15 @@ export function composeTrainingDraft(
   for (const phase of phaseKinds) {
     const durationMinutes = budgets[phase];
     const count = getTrainingPhaseItemCount(phase, durationMinutes);
+    if (input.minAge != null) {
+      const requestedMinAge = input.minAge;
+      const ageRestricted = candidates
+        .filter((candidate) => inferTrainingPhase(candidate) === phase && candidate.minAge != null && candidate.minAge > requestedMinAge)
+        .map((candidate) => `${candidate.name} (${candidate.id})`);
+      if (ageRestricted.length > 0) {
+        warnings.push(`${ageRestricted.join(", ")} wurde wegen des Mindestalters aus ${TRAINING_PHASE_LABELS[phase]} ausgeschlossen.`);
+      }
+    }
     const selected = selectForPhase(candidates, phase, count, input);
     if (selected.length === 0) {
       warnings.push(`Keine passende Übung für ${TRAINING_PHASE_LABELS[phase]} gefunden.`);

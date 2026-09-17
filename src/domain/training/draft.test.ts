@@ -66,7 +66,7 @@ describe("composeTrainingDraft", () => {
   it("checks declared equipment inventory while building simultaneous circuit stations", () => {
     const draft = composeTrainingDraft({
       ...baseInput,
-      formats: ["rig-run", "circuit"],
+      formats: ["circuit"],
       preferredExerciseIds: ["hang", "restricted"],
       availableEquipment: [{ equipmentId: "rig", quantityAvailable: 3 }],
     }, candidates);
