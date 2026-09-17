@@ -15,6 +15,7 @@ import {
   type TrainingFormat,
   type TrainingEquipmentAvailability,
   type ExerciseEquipmentRequirement,
+  type TrainingOrganizationMode,
   type TrainingPhaseKind,
   type TrainingSession,
 } from "./model";
@@ -36,6 +37,16 @@ export interface TrainingDraftInput {
   readonly availableEquipment?: readonly TrainingEquipmentAvailability[];
   readonly minAge?: number;
   readonly maxAge?: number;
+  /** Exact number of warm-up exercises when supplied. */
+  readonly warmupExerciseCount?: number;
+  /** Legacy/default number of exercises for each main part. */
+  readonly mainExerciseCount?: number;
+  /** Exact per-main-part counts. Takes precedence over mainExerciseCount. */
+  readonly mainPartExerciseCounts?: readonly number[];
+  readonly cooldownExerciseCount?: number;
+  readonly mainPartCount?: number;
+  readonly organizationMode?: TrainingOrganizationMode;
+  readonly teamSize?: number;
 }
 
 export interface TrainingDraftExerciseCandidate {
@@ -260,28 +271,18 @@ function selectForPhase(
   const categoryCounts = new Map<ExerciseCategory, number>();
   const movementCounts = new Map<string, number>();
   const bodyRegionCounts = new Map<string, number>();
-  const coveredFocusRegions = new Set<string>();
   const remaining = [...pool];
 
   while (selected.length < count && remaining.length > 0) {
     remaining.sort((left, right) => {
-      const dynamicScore = (entry: (typeof remaining)[number]) => {
-        const candidate = entry.candidate;
-        const categoryPenalty = (categoryCounts.get(candidate.category) ?? 0) * 14;
-        const movementPenalty = countOverlap(candidate.movementPatterns, movementCounts) * 9;
-        const regionPenalty = countOverlap(candidate.bodyRegions, bodyRegionCounts) * 3;
-        const focusCoverageBonus = input.bodyRegions.reduce((bonus, focus) => {
-          if (coveredFocusRegions.has(focus)) return bonus;
-          return bonus + (bodyRegionsOverlap([focus], candidate.bodyRegions) ? 18 : 0);
-        }, 0);
-        const consecutiveHighImpactPenalty = selected.at(-1)?.impactLevel === "high" && candidate.impactLevel === "high" ? 12 : 0;
-        return entry.baseScore + focusCoverageBonus - categoryPenalty - movementPenalty - regionPenalty - consecutiveHighImpactPenalty;
-      };
-      const leftScore = dynamicScore(left);
-      const rightScore = dynamicScore(right);
-      return rightScore - leftScore
-        || left.candidate.name.localeCompare(right.candidate.name)
-        || left.candidate.id.localeCompare(right.candidate.id);
+      const leftPenalty = (categoryCounts.get(left.candidate.category) ?? 0) * 13
+        + countOverlap(left.candidate.movementPatterns, movementCounts) * 8
+        + countOverlap(left.candidate.bodyRegions, bodyRegionCounts) * 4;
+      const rightPenalty = (categoryCounts.get(right.candidate.category) ?? 0) * 13
+        + countOverlap(right.candidate.movementPatterns, movementCounts) * 8
+        + countOverlap(right.candidate.bodyRegions, bodyRegionCounts) * 4;
+      return (right.baseScore - rightPenalty) - (left.baseScore - leftPenalty)
+        || left.candidate.name.localeCompare(right.candidate.name);
     });
 
     const next = remaining.shift();
@@ -294,17 +295,9 @@ function selectForPhase(
     for (const region of next.candidate.bodyRegions) {
       bodyRegionCounts.set(region, (bodyRegionCounts.get(region) ?? 0) + 1);
     }
-    for (const focus of input.bodyRegions) {
-      if (bodyRegionsOverlap([focus], next.candidate.bodyRegions)) coveredFocusRegions.add(focus);
-    }
   }
 
   return selected;
-}
-
-function formatForPhase(kind: TrainingPhaseKind, input: TrainingDraftInput): TrainingFormat {
-  if (kind !== "main") return "free";
-  return input.formats.includes("circuit") ? "circuit" : input.formats[0] ?? "free";
 }
 
 export function composeTrainingDraft(
@@ -313,14 +306,22 @@ export function composeTrainingDraft(
 ): TrainingDraft {
   const budgets = getTrainingPhaseBudgets(input.durationMinutes);
   const phaseKinds: readonly TrainingPhaseKind[] = ["warmup", "main", "cooldown"];
+  const selectedByPhase = new Map<TrainingPhaseKind, readonly TrainingDraftExerciseCandidate[]>();
   const warnings: string[] = [];
 
-  const phases = phaseKinds.map((kind) => {
-    const budget = budgets[kind];
-    const selected = selectForPhase(candidates, kind, getTrainingPhaseItemCount(kind, budget), input);
-    if (selected.length === 0) warnings.push(`Keine passende Übung für ${TRAINING_PHASE_LABELS[kind]} gefunden.`);
-    const durations = distributeTrainingMinutes(budget, selected.length);
+  for (const phase of phaseKinds) {
+    const durationMinutes = budgets[phase];
+    const count = getTrainingPhaseItemCount(phase, durationMinutes);
+    const selected = selectForPhase(candidates, phase, count, input);
+    if (selected.length === 0) {
+      warnings.push(`Keine passende Übung für ${TRAINING_PHASE_LABELS[phase]} gefunden.`);
+    }
+    selectedByPhase.set(phase, selected);
+  }
 
+  const phases = phaseKinds.map((kind) => {
+    const selected = selectedByPhase.get(kind) ?? [];
+    const durations = distributeTrainingMinutes(budgets[kind], selected.length);
     return {
       id: `draft-${kind}`,
       kind,
@@ -339,52 +340,33 @@ export function composeTrainingDraft(
           transitionSeconds: candidate.transitionSeconds ?? undefined,
         },
         durationMinutes: durations[index] ?? 0,
-        format: formatForPhase(kind, input),
-        instructions: candidate.instructions,
-        levelLabel: candidate.level2,
+        format: kind === "main" ? input.formats[0] : "free",
       })),
     };
   });
 
-  const selectedItems = phases.flatMap((phase) => phase.items);
-  const selectedIds = new Set(selectedItems.map((item) => item.exercise.id));
-  for (const preferredId of input.preferredExerciseIds) {
-    if (!selectedIds.has(preferredId)) warnings.push(`Wunschübung ${preferredId} konnte nicht passend eingeplant werden.`);
-  }
-
-  for (const focus of input.bodyRegions) {
-    if (!selectedItems.some((item) => bodyRegionsOverlap([focus], item.exercise.bodyRegions))) {
-      warnings.push(`Der gewünschte Körperfokus ${focus} konnte im verfügbaren Übungspool nicht abgedeckt werden.`);
-    }
-  }
-
-  for (const exerciseType of input.exerciseTypes ?? []) {
-    if (!candidates.some((candidate) => selectedIds.has(candidate.id) && candidate.exerciseType === exerciseType)) {
-      warnings.push(`Der gewünschte Übungstyp ${exerciseType} konnte nicht sinnvoll eingeplant werden.`);
-    }
-  }
-
   const session: TrainingSession = {
-    id: "quick-create-draft",
-    title: "Quick Create Trainingsentwurf",
+    id: "training-draft",
+    title: "OCR Trainingsentwurf",
     group: {
       id: "quick-create-group",
-      name: "Quick Create",
+      name: "Quick Create Gruppe",
       audience: input.audience,
       minAge: input.minAge,
       maxAge: input.maxAge,
       participantCount: input.participantCount,
+      organizationMode: input.organizationMode,
+      teamSize: input.organizationMode === "team" ? input.teamSize : undefined,
     },
     totalDurationMinutes: input.durationMinutes,
     focus: input.goals,
     phases,
   };
 
-  const validationIssues = validateTrainingSession(session, undefined, input.availableEquipment);
   return {
     source: "deterministic",
     session,
-    validationIssues,
+    validationIssues: validateTrainingSession(session, undefined, input.availableEquipment),
     warnings,
   };
 }
