@@ -7,6 +7,7 @@ const navigation = [
   ["Übersicht", "/"],
   ["Training", "/training"],
   ["Übungen", "/exercises"],
+  ["AI-Entwürfe", "/exercises/ai-drafts"],
   ["Hindernisse", "/obstacles"],
   ["Gruppen", "/groups"],
   ["Medien", "/media"],
@@ -17,7 +18,9 @@ interface PrimaryNavigationProps {
 }
 
 function isActivePath(pathname: string, href: string): boolean {
-  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  if (href === "/") return pathname === "/";
+  if (href === "/exercises" && pathname.startsWith("/exercises/ai-drafts")) return false;
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function PrimaryNavigation({ variant }: PrimaryNavigationProps) {
