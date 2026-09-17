@@ -16,6 +16,13 @@ async function createFixture() {
       body_region_id VARCHAR,
       emphasis VARCHAR
     );
+    CREATE TABLE exercise_muscle_oppositions (
+      exercise_id UUID,
+      primary_region_id VARCHAR,
+      opposing_region_id VARCHAR,
+      relationship VARCHAR,
+      PRIMARY KEY (exercise_id, primary_region_id, opposing_region_id)
+    );
     CREATE TABLE exercise_movement_patterns (
       exercise_id UUID,
       movement_pattern_id VARCHAR
@@ -31,6 +38,7 @@ async function createFixture() {
     );
 
     INSERT INTO exercise_body_regions VALUES ('${EXERCISE_ID}', 'old-region', 'primary');
+    INSERT INTO exercise_muscle_oppositions VALUES ('${EXERCISE_ID}', 'old-region', 'old-opponent', 'antagonist');
     INSERT INTO exercise_movement_patterns VALUES ('${EXERCISE_ID}', 'old-pattern');
     INSERT INTO exercise_tags VALUES ('${EXERCISE_ID}', 'old-tag');
     INSERT INTO exercise_equipment VALUES ('${EXERCISE_ID}', '${EQUIPMENT_OLD}', 1);
@@ -47,7 +55,7 @@ async function rows(
 }
 
 describe("exercise facet mapping replacement", () => {
-  it("replaces body regions, movement patterns, tags and equipment quantities", async () => {
+  it("replaces body regions, antagonist pairs, movement patterns, tags and equipment quantities", async () => {
     const connection = await createFixture();
     try {
       await replaceExerciseFacetMappings(connection, EXERCISE_ID, {
@@ -55,6 +63,7 @@ describe("exercise facet mapping replacement", () => {
           { id: "core", emphasis: "primary" },
           { id: "shoulders", emphasis: "secondary" },
         ],
+        muscleOppositions: [{ primaryRegionId: "core", opposingRegionId: "lower-back" }],
         movementPatternIds: ["brace", "carry"],
         tagIds: ["grip", "teamwork"],
         equipment: [{ id: EQUIPMENT_NEW, quantityRequired: 3 }],
@@ -68,6 +77,11 @@ describe("exercise facet mapping replacement", () => {
         ["core", "primary"],
         ["shoulders", "secondary"],
       ]);
+      expect(await rows(
+        connection,
+        `SELECT primary_region_id,opposing_region_id,relationship FROM exercise_muscle_oppositions
+         WHERE exercise_id='${EXERCISE_ID}'`,
+      )).toEqual([["core", "lower-back", "antagonist"]]);
       expect(await rows(
         connection,
         `SELECT movement_pattern_id FROM exercise_movement_patterns
@@ -93,12 +107,14 @@ describe("exercise facet mapping replacement", () => {
     try {
       await replaceExerciseFacetMappings(connection, EXERCISE_ID, {
         bodyRegions: [],
+        muscleOppositions: [],
         movementPatternIds: [],
         tagIds: [],
         equipment: [],
       });
 
       expect(await rows(connection, "SELECT * FROM exercise_body_regions")).toEqual([]);
+      expect(await rows(connection, "SELECT * FROM exercise_muscle_oppositions")).toEqual([]);
       expect(await rows(connection, "SELECT * FROM exercise_movement_patterns")).toEqual([]);
       expect(await rows(connection, "SELECT * FROM exercise_tags")).toEqual([]);
       expect(await rows(connection, "SELECT * FROM exercise_equipment")).toEqual([]);
