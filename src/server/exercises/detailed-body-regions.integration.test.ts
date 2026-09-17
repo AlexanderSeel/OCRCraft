@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { DuckDBInstance } from "@duckdb/node-api";
 import { expect, it } from "vitest";
-import { COARSE_BODY_REGION_IDS, expandBodyRegionIds } from "../../domain/body-regions";
+import { BODY_REGION_IDS, COARSE_BODY_REGION_IDS, expandBodyRegionIds } from "../../domain/body-regions";
 import { replaceExerciseFacetMappings } from "./exercise-facet-core";
 
 it("migrates all details and persists primary/secondary selections with valid foreign keys", async () => {
@@ -22,7 +22,7 @@ it("migrates all details and persists primary/secondary selections with valid fo
       const statements = await connection.extractStatements(sql);
       for (let i = 0; i < statements.count; i++) await (await statements.prepare(i)).run();
     }
-    expect((await connection.runAndReadAll("SELECT count(*)::INTEGER FROM body_regions")).getRows()).toEqual([[113]]);
+    expect((await connection.runAndReadAll("SELECT count(*)::INTEGER FROM body_regions")).getRows()).toEqual([[BODY_REGION_IDS.length]]);
     const id = "11111111-1111-4111-8111-111111111111";
     await replaceExerciseFacetMappings(connection, id, {
       bodyRegions: [{ id: "detail:biceps-left", emphasis: "primary" }, { id: "detail:forearm-right", emphasis: "secondary" }],
