@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
 import { BODY_REGION_OPTIONS, COARSE_BODY_REGION_IDS } from "@/domain/body-regions";
 import type { EquipmentAvailabilityOption } from "./equipment-availability-picker";
+import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
 import { TrainingDraftPreview } from "./training-draft-preview";
 
 const goals = ["Ganzkörper", "OCR-Technik", "Grip", "Kraftausdauer", "Laufen", "Core", "Balance", "Koordination"] as const;
@@ -20,6 +21,7 @@ const audiences = [["adults", "Erwachsene"], ["youth", "Jugend"], ["kids", "Kids
 
 interface TrainingQuickPlannerProps {
   readonly equipmentOptions?: readonly EquipmentAvailabilityOption[];
+  readonly obstacleOptions?: readonly TrainingObstacleOption[];
 }
 
 export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPlannerProps) {

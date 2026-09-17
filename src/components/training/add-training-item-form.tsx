@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { addTrainingItemAction } from "@/app/training/[id]/actions";
+import { Disclosure } from "@/components/ui/disclosure";
 import {
   ExerciseAutocompletePicker,
   type SelectedExerciseReference,
@@ -16,8 +17,7 @@ export function AddTrainingItemForm({ sessionId, phaseId }: AddTrainingItemFormP
   const [selected, setSelected] = useState<readonly SelectedExerciseReference[]>([]);
 
   return (
-    <details className="mt-4 rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)]">
-      <summary className="cursor-pointer px-4 py-3 text-sm font-black">+ Übung hinzufügen</summary>
+    <Disclosure className="mt-4 rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)]" summaryClassName="px-4 py-3 text-sm font-black" summary="+ Übung hinzufügen">
       <form action={addTrainingItemAction} className="grid gap-4 border-t border-[var(--border)] p-4">
         <input name="sessionId" type="hidden" value={sessionId} />
         <input name="phaseId" type="hidden" value={phaseId} />
@@ -76,8 +76,7 @@ export function AddTrainingItemForm({ sessionId, phaseId }: AddTrainingItemFormP
           </label>
         </div>
 
-        <details className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
-          <summary className="cursor-pointer text-sm font-black">Hauptteil-Zuordnung</summary>
+        <Disclosure className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" summaryClassName="text-sm font-black" summary="Hauptteil-Zuordnung">
           <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
             Wird nur ausgewertet, wenn diese Übung in der Hauptphase hinzugefügt wird. Leer lassen übernimmt den letzten vorhandenen Hauptteil bzw. Hauptteil 1.
           </p>
@@ -103,7 +102,7 @@ export function AddTrainingItemForm({ sessionId, phaseId }: AddTrainingItemFormP
               />
             </label>
           </div>
-        </details>
+        </Disclosure>
 
         <label className="grid gap-2 text-sm font-bold">
           Trainingshinweis
@@ -125,6 +124,6 @@ export function AddTrainingItemForm({ sessionId, phaseId }: AddTrainingItemFormP
           </button>
         </div>
       </form>
-    </details>
+    </Disclosure>
   );
 }

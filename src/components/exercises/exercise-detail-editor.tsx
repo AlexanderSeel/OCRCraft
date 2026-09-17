@@ -1,4 +1,5 @@
 import type { TrainingExerciseGuidance } from "@/server/training/training-exercise-guidance-repository";
+import { Disclosure } from "@/components/ui/disclosure";
 
 interface ExerciseDetailEditorProps {
   readonly locale: "de" | "en";
@@ -23,8 +24,7 @@ export function ExerciseDetailEditor({
         <h3 className="mt-1 text-lg font-black">Planung, Sicherheit & Skalierung</h3>
       </div>
 
-      <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)]" open>
-        <summary className="cursor-pointer px-4 py-3 font-black">Zweck & Bewegungsrahmen</summary>
+      <Disclosure className="rounded-xl border border-[var(--border)] bg-[var(--surface)]" open summaryClassName="px-4 py-3 font-black" summary="Zweck & Bewegungsrahmen">
         <div className="grid gap-3 border-t border-[var(--border)] p-4">
           <TextArea disabled={disabled} label="Trainingszweck" name="purpose" value={guidance?.purpose} />
           <TextArea disabled={disabled} label="Aufbau / Setup" name="setup" value={guidance?.setup} />
@@ -33,10 +33,9 @@ export function ExerciseDetailEditor({
             <TextArea disabled={disabled} label="Abschluss / Reset" name="finishReset" value={guidance?.finishReset} />
           </div>
         </div>
-      </details>
+      </Disclosure>
 
-      <details className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-        <summary className="cursor-pointer px-4 py-3 font-black">Qualität & Sicherheit</summary>
+      <Disclosure className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]" summaryClassName="px-4 py-3 font-black" summary="Qualität & Sicherheit">
         <div className="grid gap-3 border-t border-[var(--border)] p-4">
           <div className="grid gap-3 lg:grid-cols-2">
             <TextArea disabled={disabled} label="Atmungs-Cue" name="breathingCue" value={guidance?.breathingCue} />
@@ -49,10 +48,9 @@ export function ExerciseDetailEditor({
             <TextArea disabled={disabled} label="Fallback / Regression" name="fallbackExercise" value={guidance?.fallbackExercise} />
           </div>
         </div>
-      </details>
+      </Disclosure>
 
-      <details className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-        <summary className="cursor-pointer px-4 py-3 font-black">Dosierung & Programmierung</summary>
+      <Disclosure className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]" summaryClassName="px-4 py-3 font-black" summary="Dosierung & Programmierung">
         <div className="grid gap-3 border-t border-[var(--border)] p-4">
           <TextArea disabled={disabled} label="Einsteiger-Dosierung" name="beginnerPrescription" value={guidance?.beginnerPrescription} />
           <TextArea disabled={disabled} label="Standard-Dosierung" name="standardPrescription" value={guidance?.standardPrescription} />
@@ -63,10 +61,9 @@ export function ExerciseDetailEditor({
             <TextArea disabled={disabled} label="Herzfrequenz-Zone (Orientierung)" name="heartRateZone" value={guidance?.heartRateZone} />
           </div>
         </div>
-      </details>
+      </Disclosure>
 
-      <details className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-        <summary className="cursor-pointer px-4 py-3 font-black">Level & Zielgruppen-Varianten</summary>
+      <Disclosure className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]" summaryClassName="px-4 py-3 font-black" summary="Level & Zielgruppen-Varianten">
         <div className="grid gap-3 border-t border-[var(--border)] p-4">
           <div className="grid gap-3 lg:grid-cols-3">
             <TextArea disabled={disabled} label="Level 1" name="level1" value={guidance?.level1} />
@@ -75,7 +72,7 @@ export function ExerciseDetailEditor({
           </div>
           <TextArea disabled={disabled} label="Kinder-/Jugendvariante" name="childYouthVariant" value={guidance?.childYouthVariant} />
         </div>
-      </details>
+      </Disclosure>
 
       <div className="mt-4 flex justify-end border-t border-[var(--border)] pt-4">
         <button

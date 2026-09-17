@@ -25,6 +25,7 @@ import {
   type SelectedExerciseReference,
 } from "./exercise-autocomplete-picker";
 import { MainPartProgrammingEditor } from "./main-part-programming-editor";
+import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
 import {
   persistTrainingDraft,
   regenerateTrainingDraftPhase,
@@ -85,10 +86,12 @@ export interface TrainingBuilderInitialState {
     readonly equipmentId: string;
     readonly quantityAvailable: number;
   }[];
+  readonly availableObstacleExerciseIds?: readonly string[];
 }
 
 interface TrainingBuilderPanelProps {
   readonly equipmentOptions: readonly EquipmentAvailabilityOption[];
+  readonly obstacleOptions?: readonly TrainingObstacleOption[];
   readonly sourceTrainingOptions?: readonly TrainingBuilderSourceOption[];
   readonly initialState?: TrainingBuilderInitialState;
 }
