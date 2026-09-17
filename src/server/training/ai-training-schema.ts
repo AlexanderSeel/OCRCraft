@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TRAINING_FORMATS, TRAINING_PHASES } from "@/domain/training/model";
+import { TRAINING_FORMATS, TRAINING_PHASES } from "../../domain/training/model";
 
 const aiTrainingItemSchema = z.object({
   exerciseId: z.string().trim().min(1).max(100),
