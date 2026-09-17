@@ -80,6 +80,7 @@ describe("normalizeTrainingDraftRequest", () => {
       mainPartProgramming: [{ mode: "standard" }],
       organizationMode: "solo",
       teamSize: undefined,
+      groupSplitCount: undefined,
       sourceTrainingIds: [
         "11111111-1111-4111-8111-111111111111",
         "22222222-2222-4222-8222-222222222222",
@@ -97,6 +98,41 @@ describe("normalizeTrainingDraftRequest", () => {
       maxAge: 12,
       locale: "de",
     });
+  });
+
+  it("normalizes explicit solo rotation groups and removes them in team mode", () => {
+    const base = {
+      groupType: "adults",
+      ageRange: "18+",
+      participantCount: 20,
+      durationMinutes: 60,
+      goals: ["OCR-Technik"],
+      bodyRegions: [],
+      formats: ["circuit"],
+      intensity: "balanced",
+      preferredExerciseIds: [],
+    };
+
+    expect(normalizeTrainingDraftRequest({
+      ...base,
+      organizationMode: "solo",
+      groupSplitCount: 4,
+    }).groupSplitCount).toBe(4);
+
+    expect(normalizeTrainingDraftRequest({
+      ...base,
+      organizationMode: "solo",
+      groupSplitCount: 50,
+    }).groupSplitCount).toBe(20);
+
+    const team = normalizeTrainingDraftRequest({
+      ...base,
+      organizationMode: "team",
+      teamSize: 5,
+      groupSplitCount: 4,
+    });
+    expect(team.teamSize).toBe(5);
+    expect(team.groupSplitCount).toBeUndefined();
   });
 
   it("preserves the difference between undeclared and explicitly empty obstacle inventory", () => {
@@ -142,6 +178,7 @@ describe("normalizeTrainingDraftRequest", () => {
     expect(request.maxAge).toBeUndefined();
     expect(request.availableEquipment).toEqual([]);
     expect(request.availableObstacleExerciseIds).toBeUndefined();
+    expect(request.groupSplitCount).toBeUndefined();
     expect(request.avoidBodyRegions).toEqual([]);
   });
 });
