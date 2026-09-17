@@ -4,8 +4,6 @@ import { AUDIENCES, BODY_REGIONS, TRAINING_FORMATS, TRAINING_LOCATIONS } from ".
 
 export const TRAINING_BUILDER_MODES = ["local", "ai"] as const;
 export type TrainingBuilderMode = (typeof TRAINING_BUILDER_MODES)[number];
-export const TRAINING_ORGANIZATION_MODES = ["solo", "team"] as const;
-export type TrainingOrganizationMode = (typeof TRAINING_ORGANIZATION_MODES)[number];
 
 export const trainingDraftRequestSchema = z.object({
   audience: z.enum(AUDIENCES),
@@ -21,9 +19,14 @@ export const trainingDraftRequestSchema = z.object({
   builderMode: z.enum(TRAINING_BUILDER_MODES).default("local"),
   warmupExerciseCount: z.number().int().min(1).max(6).default(2),
   mainExerciseCount: z.number().int().min(1).max(8).default(4),
+  /**
+   * Optional exact count for every numbered main-part block. Empty keeps the
+   * backwards-compatible uniform mainExerciseCount for every block.
+   */
+  mainPartExerciseCounts: z.array(z.number().int().min(1).max(8)).max(4).default([]),
   cooldownExerciseCount: z.number().int().min(1).max(6).default(2),
   mainPartCount: z.number().int().min(1).max(4).default(1),
-  organizationMode: z.enum(TRAINING_ORGANIZATION_MODES).default("solo"),
+  organizationMode: z.enum(["solo", "team"]).default("solo"),
   teamSize: z.number().int().min(2).max(20).optional(),
   sourceTrainingIds: z.array(z.string().uuid()).max(6).default([]),
   preferredExerciseIds: z.array(z.string().trim().min(1).max(100)).max(12),
@@ -48,10 +51,13 @@ export const trainingDraftRequestSchema = z.object({
   { message: "Eine Körperregion kann nicht gleichzeitig Fokus und Ausschluss sein.", path: ["avoidBodyRegions"] },
 ).refine(
   (value) => value.organizationMode !== "team" || value.teamSize != null,
-  { message: "Für Teamtraining muss eine Teamgröße angegeben werden.", path: ["teamSize"] },
+  { message: "Für Teamtraining ist eine Teamgröße erforderlich.", path: ["teamSize"] },
 ).refine(
   (value) => value.teamSize == null || value.teamSize <= value.participantCount,
   { message: "Die Teamgröße darf die Teilnehmerzahl nicht überschreiten.", path: ["teamSize"] },
+).refine(
+  (value) => value.mainPartExerciseCounts.length === 0 || value.mainPartExerciseCounts.length === value.mainPartCount,
+  { message: "Für jeden Hauptteil muss genau eine Übungsanzahl angegeben werden.", path: ["mainPartExerciseCounts"] },
 );
 
 export type TrainingDraftRequest = z.infer<typeof trainingDraftRequestSchema>;
