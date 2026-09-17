@@ -331,7 +331,7 @@ Reference entry points:
 - [x] enrich all 25+ running exercises with bilingual technique, dosage, correction and RPE details
 - [x] add missing categories/facets
 - [x] add richer equipment + station logistics
-- [ ] add progression/regression relations
+- [x] add progression/regression relations
 - [x] update DE/EN search documents to include every newly structured detail field
 - [x] autocomplete uses aliases, categories, tags, equipment, movement patterns and body regions
 - [x] extend autocomplete with explicit training goals and OCR transfer-tag taxonomy

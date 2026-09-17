@@ -12,6 +12,8 @@ import { withDuckDbConnection } from "@/server/db/duckdb";
 import { safeExerciseImageUri } from "./exercise-image-uri";
 import type { DuckDBConnection } from "@duckdb/node-api";
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export interface ExerciseListItem {
   readonly id: string;
   readonly seedKey: string | null;
@@ -413,6 +415,47 @@ export async function getExerciseCategoryCounts(): Promise<readonly ExerciseCate
     return reader.getRows().map(([category, count]) => ({
       category: String(category),
       count: Number(count),
+    }));
+  });
+}
+
+export type ExerciseProgressionRelationType = "regression" | "progression" | "alternative";
+
+export interface ExerciseProgressionRelation {
+  readonly id: string;
+  readonly type: ExerciseProgressionRelationType;
+  readonly exerciseId: string;
+  readonly exerciseName: string;
+  readonly notesDe: string;
+  readonly notesEn: string;
+}
+
+export async function getExerciseProgressionRelations(
+  exerciseId: string,
+  locale: "de" | "en" = "de",
+): Promise<readonly ExerciseProgressionRelation[]> {
+  if (!UUID_PATTERN.test(exerciseId)) return [];
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `
+      SELECT r.id::VARCHAR, r.relation_type, r.related_exercise_id::VARCHAR,
+        COALESCE(t.name, 'Unbenannte Übung'), r.notes_de, r.notes_en
+      FROM exercise_progression_relations r
+      LEFT JOIN exercise_translations t
+        ON t.exercise_id=r.related_exercise_id AND t.locale=$locale
+      WHERE r.exercise_id=$exerciseId::UUID
+      ORDER BY r.relation_type, r.sort_order, r.id
+      `,
+      { exerciseId, locale },
+    );
+    return reader.getRows().map((row) => ({
+      id: String(row[0]),
+      type: String(row[1]) as ExerciseProgressionRelationType,
+      exerciseId: String(row[2]),
+      exerciseName: String(row[3]),
+      notesDe: String(row[4] ?? ""),
+      notesEn: String(row[5] ?? ""),
     }));
   });
 }

@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { MuscleMap } from "@/components/body/muscle-map";
 import { exerciseCategoryLabels, exercisePhaseLabels } from "@/domain/exercise/model";
 import { getExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
-import { getExerciseById } from "@/server/exercises/exercise-repository";
+import { getExerciseById, getExerciseProgressionRelations } from "@/server/exercises/exercise-repository";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +18,11 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
   const exercise = await getExerciseById(id);
   if (!exercise) notFound();
 
-  const [facets, guidanceDeMap, guidanceEnMap] = await Promise.all([
+  const [facets, guidanceDeMap, guidanceEnMap, progressionRelations] = await Promise.all([
     getExerciseFacetEditorData(id),
     getTrainingExerciseGuidanceMap([id], "de"),
     getTrainingExerciseGuidanceMap([id], "en"),
+    getExerciseProgressionRelations(id),
   ]);
   const guidance = guidanceDeMap[id];
   const guidanceEn = guidanceEnMap[id];
@@ -169,6 +170,24 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
               </div>
               <OptionalSection title="Kinder-/Jugendvariante" value={guidance?.childYouthVariant} />
             </Card>
+
+            {progressionRelations.length ? (
+              <Card title="Verknüpfte Progressionen">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {progressionRelations.map((relation) => (
+                    <Link
+                      className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 hover:border-[var(--control-strong)]"
+                      href={`/exercises/${relation.exerciseId}`}
+                      key={relation.id}
+                    >
+                      <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">{relationTypeLabel(relation.type)}</div>
+                      <div className="mt-1 font-black">{relation.exerciseName}</div>
+                      {relation.notesDe ? <div className="mt-2 text-sm leading-5 text-[var(--muted)]">{relation.notesDe}</div> : null}
+                    </Link>
+                  ))}
+                </div>
+              </Card>
+            ) : null}
           </div>
 
           <aside className="space-y-5">
@@ -310,6 +329,12 @@ function riskLabel(risk: string): string {
   if (risk === "medium") return "Mittel";
   if (risk === "high") return "Hoch";
   return risk;
+}
+
+function relationTypeLabel(type: "regression" | "progression" | "alternative"): string {
+  if (type === "regression") return "Regression / leichter";
+  if (type === "progression") return "Progression / anspruchsvoller";
+  return "Alternative Variante";
 }
 
 function difficultyLabel(value?: string | null): string {

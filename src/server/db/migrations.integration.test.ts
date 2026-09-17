@@ -20,13 +20,13 @@ describe("database migrations", () => {
       const files = (await readdir(path.join(process.cwd(), "src", "server", "db", "migrations")))
         .filter((fileName) => /^\d{3}_.*\.sql$/.test(fileName))
         .sort();
-      expect(files).toHaveLength(39);
+      expect(files).toHaveLength(40);
       for (const fileName of files) {
         await runScript(connection, await readFile(path.join(process.cwd(), "src", "server", "db", "migrations", fileName), "utf8"));
       }
 
       const versions = await connection.runAndReadAll("SELECT count(*) FROM schema_migrations");
-      expect(Number(versions.getRows()[0]?.[0])).toBe(39);
+      expect(Number(versions.getRows()[0]?.[0])).toBe(40);
 
       const columns = await connection.runAndReadAll(`
         SELECT table_name, column_name
