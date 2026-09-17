@@ -7,6 +7,7 @@ import { validateTrainingSession } from "../../domain/training/validation";
 import { composeAiTrainingDraft } from "./ai-training-composer";
 import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
 import { composeSportsTrainingDraft } from "./sports-training-composer";
+import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
 import type { TrainingPhaseRegenerationRequest } from "./training-phase-regeneration-schema";
 
@@ -14,12 +15,13 @@ export async function regenerateTrainingDraftPhase(
   input: TrainingPhaseRegenerationRequest,
 ): Promise<TrainingDraft> {
   const { request, phase: targetKind, current } = input;
-  const candidates = await listTrainingDraftCandidates({
+  const rawCandidates = await listTrainingDraftCandidates({
     audience: request.audience,
     minAge: request.minAge,
     locale: request.locale,
     location: request.location,
   });
+  const candidates = filterCandidatesForDeclaredEquipment(rawCandidates, request.availableEquipment);
   const candidateById = new Map(candidates.map((candidate) => [candidate.id, candidate]));
   const budgets = getTrainingPhaseBudgets(request.durationMinutes);
 
@@ -129,7 +131,7 @@ function rehydratePreservedPhase(
     items: phase.items.map((item) => {
       const candidate = candidateById.get(item.exerciseId);
       if (!candidate) {
-        throw new Error(`Die beizubehaltende Übung ${item.exerciseId} ist nicht mehr im freigegebenen Übungspool.`);
+        throw new Error(`Die beizubehaltende Übung ${item.exerciseId} ist nicht mehr im freigegebenen Übungspool oder passt nicht zum deklarierten Equipment.`);
       }
       return {
         id: `preserved-${phase.kind}-${candidate.id}`,
