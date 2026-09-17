@@ -1,9 +1,54 @@
 import { z } from "zod";
 import { exerciseTypes } from "../../domain/exercise/classification";
-import { AUDIENCES, BODY_REGIONS, TRAINING_FORMATS, TRAINING_LOCATIONS } from "../../domain/training/model";
+import {
+  AUDIENCES,
+  BODY_REGIONS,
+  MAIN_PART_EVERY_UNITS,
+  MAIN_PART_PROGRAMMING_MODES,
+  MAIN_PART_SCORE_MODES,
+  TRAINING_FORMATS,
+  TRAINING_LOCATIONS,
+} from "../../domain/training/model";
 
 export const TRAINING_BUILDER_MODES = ["local", "ai"] as const;
 export type TrainingBuilderMode = (typeof TRAINING_BUILDER_MODES)[number];
+
+export const mainPartProgrammingSchema = z.object({
+  mode: z.enum(MAIN_PART_PROGRAMMING_MODES),
+  workSeconds: z.number().int().min(5).max(3600).optional(),
+  restSeconds: z.number().int().min(0).max(1800).optional(),
+  rounds: z.number().int().min(1).max(50).optional(),
+  scoreMode: z.enum(MAIN_PART_SCORE_MODES).optional(),
+  ladderStart: z.number().int().min(1).max(100).optional(),
+  ladderEnd: z.number().int().min(1).max(200).optional(),
+  ladderStep: z.number().int().min(1).max(50).optional(),
+  everyValue: z.number().int().min(1).max(10000).optional(),
+  everyUnit: z.enum(MAIN_PART_EVERY_UNITS).optional(),
+}).superRefine((value, context) => {
+  if (value.mode === "interval") {
+    if (value.workSeconds == null) context.addIssue({ code: "custom", path: ["workSeconds"], message: "Intervallblöcke benötigen eine Arbeitszeit." });
+    if (value.restSeconds == null) context.addIssue({ code: "custom", path: ["restSeconds"], message: "Intervallblöcke benötigen eine Pausenzeit." });
+  }
+  if (value.mode === "rounds") {
+    if (value.rounds == null) context.addIssue({ code: "custom", path: ["rounds"], message: "Rundenblöcke benötigen eine Rundenzahl." });
+    if (value.scoreMode == null) context.addIssue({ code: "custom", path: ["scoreMode"], message: "Rundenblöcke benötigen Zeit oder Qualität als Ziel." });
+  }
+  if (["ladder", "reverse-ladder", "pyramid"].includes(value.mode)) {
+    if (value.ladderStart == null) context.addIssue({ code: "custom", path: ["ladderStart"], message: "Ladder/Pyramid benötigt einen Startwert." });
+    if (value.ladderEnd == null) context.addIssue({ code: "custom", path: ["ladderEnd"], message: "Ladder/Pyramid benötigt einen Endwert." });
+    if (value.ladderStep == null) context.addIssue({ code: "custom", path: ["ladderStep"], message: "Ladder/Pyramid benötigt eine Schrittweite." });
+    if (value.mode === "ladder" && value.ladderStart != null && value.ladderEnd != null && value.ladderStart >= value.ladderEnd) {
+      context.addIssue({ code: "custom", path: ["ladderEnd"], message: "Eine aufsteigende Ladder benötigt einen Endwert über dem Startwert." });
+    }
+    if (value.mode === "reverse-ladder" && value.ladderStart != null && value.ladderEnd != null && value.ladderStart <= value.ladderEnd) {
+      context.addIssue({ code: "custom", path: ["ladderEnd"], message: "Eine Reverse Ladder benötigt einen Endwert unter dem Startwert." });
+    }
+  }
+  if (value.mode === "every") {
+    if (value.everyValue == null) context.addIssue({ code: "custom", path: ["everyValue"], message: "Every-X benötigt einen Abstand/Wert." });
+    if (value.everyUnit == null) context.addIssue({ code: "custom", path: ["everyUnit"], message: "Every-X benötigt eine Einheit." });
+  }
+});
 
 export const trainingDraftRequestSchema = z.object({
   audience: z.enum(AUDIENCES),
@@ -21,6 +66,8 @@ export const trainingDraftRequestSchema = z.object({
   mainExerciseCount: z.number().int().min(1).max(8).default(4),
   /** Optional exact count for every numbered main-part block. */
   mainPartExerciseCounts: z.array(z.number().int().min(1).max(8)).max(4).default([]),
+  /** Optional structured programming for every numbered main-part block. */
+  mainPartProgramming: z.array(mainPartProgrammingSchema).max(4).default([]),
   cooldownExerciseCount: z.number().int().min(1).max(6).default(2),
   mainPartCount: z.number().int().min(1).max(4).default(1),
   organizationMode: z.enum(["solo", "team"]).default("solo"),
@@ -55,15 +102,19 @@ export const trainingDraftRequestSchema = z.object({
 ).refine(
   (value) => value.mainPartExerciseCounts.length === 0 || value.mainPartExerciseCounts.length === value.mainPartCount,
   { message: "Für jeden Hauptteil muss genau eine Übungsanzahl angegeben werden.", path: ["mainPartExerciseCounts"] },
+).refine(
+  (value) => value.mainPartProgramming.length === 0 || value.mainPartProgramming.length === value.mainPartCount,
+  { message: "Für jeden Hauptteil muss genau eine Programmierung angegeben werden.", path: ["mainPartProgramming"] },
 );
 
 type ParsedTrainingDraftRequest = z.infer<typeof trainingDraftRequestSchema>;
 
 /**
  * Type-level compatibility for callers constructing requests in code. Runtime
- * parsing always supplies an array; callers may omit it to retain the historic
- * uniform mainExerciseCount behavior.
+ * parsing always supplies arrays; callers may omit them to retain historic
+ * uniform mainExerciseCount/standard-programming behavior.
  */
-export type TrainingDraftRequest = Omit<ParsedTrainingDraftRequest, "mainPartExerciseCounts"> & {
+export type TrainingDraftRequest = Omit<ParsedTrainingDraftRequest, "mainPartExerciseCounts" | "mainPartProgramming"> & {
   readonly mainPartExerciseCounts?: readonly number[];
+  readonly mainPartProgramming?: readonly z.infer<typeof mainPartProgrammingSchema>[];
 };
