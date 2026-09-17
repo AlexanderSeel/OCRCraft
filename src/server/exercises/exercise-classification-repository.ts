@@ -17,7 +17,7 @@ import {
   type ExerciseClassificationInput,
 } from "./exercise-classification-core";
 
-export interface ExerciseClassificationEditorData extends ExerciseClassificationInput {}
+export type ExerciseClassificationEditorData = ExerciseClassificationInput;
 
 export async function getExerciseClassificationEditorData(
   exerciseId: string,
