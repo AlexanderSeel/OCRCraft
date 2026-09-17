@@ -6,21 +6,23 @@ import { TRAINING_PHASE_LABELS, type TrainingPhase, type TrainingSession } from 
 import { validateTrainingSession } from "../../domain/training/validation";
 import { rankDraftExerciseAlternatives } from "./draft-item-alternative";
 import type { DraftItemReplacementRequest } from "./draft-item-replacement-schema";
+import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
 
 export async function replaceDraftExerciseWithAlternative(
   input: DraftItemReplacementRequest,
 ): Promise<TrainingDraft> {
   const { request, current, exerciseId, mode } = input;
-  const candidates = await listTrainingDraftCandidates({
+  const rawCandidates = await listTrainingDraftCandidates({
     audience: request.audience,
     minAge: request.minAge,
     locale: request.locale,
     location: request.location,
   });
+  const candidates = filterCandidatesForDeclaredEquipment(rawCandidates, request.availableEquipment);
   const candidateById = new Map(candidates.map((candidate) => [candidate.id, candidate]));
   const currentCandidate = candidateById.get(exerciseId);
-  if (!currentCandidate) throw new Error("Die ausgewählte Übung ist nicht mehr im freigegebenen Übungspool.");
+  if (!currentCandidate) throw new Error("Die ausgewählte Übung ist nicht mehr im freigegebenen Übungspool oder passt nicht zum deklarierten Equipment.");
 
   const phase = current.phases.find((candidatePhase) =>
     candidatePhase.items.some((item) => item.exerciseId === exerciseId),
@@ -52,7 +54,7 @@ export async function replaceDraftExerciseWithAlternative(
       const candidate = item.exerciseId === exerciseId
         ? replacement.candidate
         : candidateById.get(item.exerciseId);
-      if (!candidate) throw new Error(`Übung ${item.exerciseId} ist nicht mehr im freigegebenen Übungspool.`);
+      if (!candidate) throw new Error(`Übung ${item.exerciseId} ist nicht mehr im freigegebenen Übungspool oder passt nicht zum deklarierten Equipment.`);
       return hydrateItem(
         candidate,
         currentPhase.kind,
