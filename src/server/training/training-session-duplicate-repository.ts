@@ -55,6 +55,34 @@ export async function duplicateTrainingSession(sourceSessionId: string): Promise
         },
       );
 
+      // A copy remains independently editable but keeps the latest generation
+      // context so Builder-Recreate can start from the same original intent.
+      await connection.run(
+        `
+        INSERT INTO training_generation_history (
+          id, training_session_id, builder_mode, provider_id, provider_model,
+          request_json, trainer_reviewed
+        )
+        SELECT
+          $historyId::UUID,
+          $targetSessionId::UUID,
+          builder_mode,
+          provider_id,
+          provider_model,
+          request_json,
+          trainer_reviewed
+        FROM training_generation_history
+        WHERE training_session_id=$sourceSessionId::UUID
+        ORDER BY created_at DESC,id DESC
+        LIMIT 1
+        `,
+        {
+          historyId: randomUUID(),
+          targetSessionId,
+          sourceSessionId,
+        },
+      );
+
       const phaseReader = await connection.runAndReadAll(
         `
         SELECT id::VARCHAR, kind, title, sort_order
