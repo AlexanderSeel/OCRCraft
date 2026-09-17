@@ -31,6 +31,11 @@ export interface PersistTrainingDraftOptions {
 export interface UpdateTrainingSessionMetadataInput {
   readonly title: string;
   readonly status: TrainingSessionStatus;
+  readonly routeName: string | null;
+  readonly routeDistanceMetres: number | null;
+  readonly routeSurface: string | null;
+  readonly routeGpsReference: string | null;
+  readonly routeNotes: string | null;
 }
 
 export interface TrainingSessionListItem {
@@ -65,6 +70,11 @@ export interface PersistedTrainingPhase {
 
 export interface TrainingSessionDetail extends TrainingSessionListItem {
   readonly notes: string | null;
+  readonly routeName: string | null;
+  readonly routeDistanceMetres: number | null;
+  readonly routeSurface: string | null;
+  readonly routeGpsReference: string | null;
+  readonly routeNotes: string | null;
   readonly updatedAt: string;
   readonly phases: readonly PersistedTrainingPhase[];
 }
@@ -256,7 +266,7 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
       SELECT
         s.id::VARCHAR,s.title,s.status,s.source,s.total_duration_minutes,s.locale,
         (SELECT count(*) FROM training_phases p JOIN training_items i ON i.training_phase_id=p.id WHERE p.training_session_id=s.id),
-        s.created_at,s.notes,s.updated_at
+        s.created_at,s.notes,s.updated_at,s.route_name,s.route_distance_metres,s.route_surface,s.route_gps_reference,s.route_notes
       FROM training_sessions s
       WHERE s.id=$id::UUID
       `,
@@ -324,6 +334,11 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
       createdAt: String(sessionRow[7]),
       notes: sessionRow[8] == null ? null : String(sessionRow[8]),
       updatedAt: String(sessionRow[9]),
+      routeName: sessionRow[10] == null ? null : String(sessionRow[10]),
+      routeDistanceMetres: sessionRow[11] == null ? null : Number(sessionRow[11]),
+      routeSurface: sessionRow[12] == null ? null : String(sessionRow[12]),
+      routeGpsReference: sessionRow[13] == null ? null : String(sessionRow[13]),
+      routeNotes: sessionRow[14] == null ? null : String(sessionRow[14]),
       phases,
     };
   });
@@ -340,7 +355,9 @@ export async function updateTrainingSessionMetadata(
     const reader = await connection.runAndReadAll(
       `
       UPDATE training_sessions
-      SET title=$title,status=$status,updated_at=current_timestamp
+      SET title=$title,status=$status,route_name=$routeName,route_distance_metres=$routeDistanceMetres,
+          route_surface=$routeSurface,route_gps_reference=$routeGpsReference,route_notes=$routeNotes,
+          updated_at=current_timestamp
       WHERE id=$id::UUID
       RETURNING id::VARCHAR
       `,

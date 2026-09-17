@@ -14,6 +14,11 @@ import { updateTrainingSessionMetadata } from "@/server/training/training-sessio
 const metadataSchema = z.object({
   title: z.string().trim().min(1).max(120),
   status: z.enum(["draft", "ready", "completed", "archived"]),
+  routeName: z.preprocess((value) => typeof value === "string" && value.trim() === "" ? null : value, z.string().trim().max(160).nullable()),
+  routeDistanceMetres: z.preprocess((value) => value === "" || value == null ? null : value, z.coerce.number().positive().max(100000).nullable()),
+  routeSurface: z.preprocess((value) => typeof value === "string" && value.trim() === "" ? null : value, z.string().trim().max(160).nullable()),
+  routeGpsReference: z.preprocess((value) => typeof value === "string" && value.trim() === "" ? null : value, z.string().trim().max(500).nullable()),
+  routeNotes: z.preprocess((value) => typeof value === "string" && value.trim() === "" ? null : value, z.string().trim().max(2000).nullable()),
 });
 
 const nullableText = (max: number) =>
@@ -75,6 +80,11 @@ export async function updateTrainingSessionMetadataAction(
   const parsed = metadataSchema.safeParse({
     title: formData.get("title"),
     status: formData.get("status"),
+    routeName: formData.get("routeName"),
+    routeDistanceMetres: formData.get("routeDistanceMetres"),
+    routeSurface: formData.get("routeSurface"),
+    routeGpsReference: formData.get("routeGpsReference"),
+    routeNotes: formData.get("routeNotes"),
   });
 
   if (!parsed.success) redirect(`/training/${id}?error=invalid-metadata`);

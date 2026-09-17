@@ -256,7 +256,7 @@ The database should describe training suitability, not provide medical diagnosis
 - [x] distinguish technique drill vs endurance unit vs interval prescription (also transition and team)
 - [x] add RPE/intensity guidance independent of athlete-specific medical data
 - [x] pace/HR-zone prescription
-- [ ] GPS/route-aware sessions
+- [x] GPS/route-aware sessions
 
 ### 4.5 OCR pool
 

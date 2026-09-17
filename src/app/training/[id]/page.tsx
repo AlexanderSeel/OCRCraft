@@ -123,6 +123,16 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
               <option value="archived">Archiviert</option>
             </select>
           </label>
+          <details className="md:col-span-2 xl:col-span-3">
+            <summary className="cursor-pointer rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2.5 text-sm font-bold">Optionale Route & GPS-Daten</summary>
+            <div className="mt-3 grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 md:grid-cols-2">
+              <label className="grid gap-2 text-sm font-bold">Routenname<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={session.routeName ?? ""} maxLength={160} name="routeName" placeholder="z. B. Vereinsrunde" /></label>
+              <label className="grid gap-2 text-sm font-bold">Strecke (m)<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={session.routeDistanceMetres ?? ""} min="0.1" name="routeDistanceMetres" step="0.1" type="number" /></label>
+              <label className="grid gap-2 text-sm font-bold">Untergrund<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={session.routeSurface ?? ""} maxLength={160} name="routeSurface" placeholder="Asphalt, Waldweg …" /></label>
+              <label className="grid gap-2 text-sm font-bold">GPS-/Kartenreferenz<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={session.routeGpsReference ?? ""} maxLength={500} name="routeGpsReference" placeholder="Link oder interne Referenz" /></label>
+              <label className="grid gap-2 text-sm font-bold md:col-span-2">Routenhinweise<textarea className="min-h-20 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 font-normal" defaultValue={session.routeNotes ?? ""} maxLength={2000} name="routeNotes" /></label>
+            </div>
+          </details>
           <button
             className="min-h-11 self-end rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
             type="submit"
