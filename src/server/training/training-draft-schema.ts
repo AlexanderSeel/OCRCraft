@@ -17,6 +17,7 @@ export const trainingDraftRequestSchema = z.object({
   location: z.enum(TRAINING_LOCATIONS).default("mixed"),
   intensity: z.enum(["technique", "balanced", "conditioning"]),
   builderMode: z.enum(TRAINING_BUILDER_MODES).default("local"),
+  sourceTrainingIds: z.array(z.string().uuid()).max(6).default([]),
   preferredExerciseIds: z.array(z.string().trim().min(1).max(100)).max(12),
   availableEquipment: z.array(z.object({
     equipmentId: z.string().trim().min(1).max(100),
@@ -28,6 +29,9 @@ export const trainingDraftRequestSchema = z.object({
 }).refine(
   (value) => new Set(value.availableEquipment.map((item) => item.equipmentId)).size === value.availableEquipment.length,
   { message: "Jede Ausrüstungsart darf nur einmal angegeben werden.", path: ["availableEquipment"] },
+).refine(
+  (value) => new Set(value.sourceTrainingIds).size === value.sourceTrainingIds.length,
+  { message: "Ein Quelltraining darf nur einmal ausgewählt werden.", path: ["sourceTrainingIds"] },
 ).refine(
   (value) => value.minAge == null || value.maxAge == null || value.minAge <= value.maxAge,
   { message: "minAge darf nicht größer als maxAge sein.", path: ["maxAge"] },
