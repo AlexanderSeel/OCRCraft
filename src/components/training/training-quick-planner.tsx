@@ -5,6 +5,7 @@ import type { TrainingDraft } from "@/domain/training/draft";
 import { BODY_REGION_OPTIONS, COARSE_BODY_REGION_IDS } from "@/domain/body-regions";
 import type { EquipmentAvailabilityOption } from "./equipment-availability-picker";
 import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
+import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import { TrainingDraftPreview } from "./training-draft-preview";
 
 const goals = ["Ganzkörper", "OCR-Technik", "Grip", "Kraftausdauer", "Laufen", "Core", "Balance", "Koordination"] as const;
@@ -24,7 +25,10 @@ interface TrainingQuickPlannerProps {
   readonly obstacleOptions?: readonly TrainingObstacleOption[];
 }
 
-export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPlannerProps) {
+export function TrainingQuickPlanner({
+  equipmentOptions = [],
+  obstacleOptions = [],
+}: TrainingQuickPlannerProps) {
   const [audience, setAudience] = useState("adults");
   const [participants, setParticipants] = useState(12);
   const [duration, setDuration] = useState(60);
@@ -38,6 +42,10 @@ export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPla
   const [mainPartCount, setMainPartCountState] = useState(1);
   const [organizationMode, setOrganizationMode] = useState<"solo" | "team">("solo");
   const [teamSize, setTeamSize] = useState(4);
+  const [obstacleInventoryDeclared, setObstacleInventoryDeclared] = useState(false);
+  const [availableObstacleExerciseIds, setAvailableObstacleExerciseIds] = useState<readonly string[]>(() =>
+    obstacleOptions.map((option) => option.id),
+  );
   const [draft, setDraft] = useState<TrainingDraft | null>(null);
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -94,6 +102,7 @@ export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPla
       sourceTrainingIds: [],
       preferredExerciseIds: [],
       availableEquipment: automaticEquipment,
+      availableObstacleExerciseIds: obstacleInventoryDeclared ? availableObstacleExerciseIds : undefined,
       locale: "de",
     };
   }
@@ -151,7 +160,7 @@ export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPla
         <div>
           <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Quickplaner · lokal</div>
           <h2 className="mt-1 text-xl font-black">Mit wenigen Angaben direkt zum Training</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Kein AI-Aufruf. OCRCraft nutzt den freigegebenen Übungspool und die Sportlogik für Belastung, Bewegungsmuster, Muskelbalance, Alter, Equipment und Wiederholungen.</p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Kein AI-Aufruf. OCRCraft nutzt den freigegebenen Übungspool und die Sportlogik für Belastung, Bewegungsmuster, Muskelbalance, Alter, Equipment, Hindernisbestand und Wiederholungen.</p>
         </div>
         <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5 text-xs font-black">Deterministisch</span>
       </div>
@@ -191,6 +200,25 @@ export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPla
             ? `Der Quickplaner verwendet automatisch ${automaticEquipment.length} bekannte Equipment-Bestände aus OCRCraft. Für Outdoor werden vorhandene Outdoor-Ersatzvarianten berücksichtigt.`
             : "Es ist kein Equipment-Bestand hinterlegt. Der Planer arbeitet deshalb ohne Bestandsvorgabe und weist mögliche Materialkonflikte im Entwurf aus."}
         </p>
+
+        <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4" open={obstacleInventoryDeclared}>
+          <summary className="cursor-pointer text-sm font-black">OCR-Hindernisbestand</summary>
+          <div className="mt-3">
+            <ObstacleAvailabilityPicker
+              declared={obstacleInventoryDeclared}
+              onDeclaredChange={(declared) => {
+                setObstacleInventoryDeclared(declared);
+                invalidateDraft();
+              }}
+              onSelectionChange={(ids) => {
+                setAvailableObstacleExerciseIds(ids);
+                invalidateDraft();
+              }}
+              options={obstacleOptions}
+              selectedIds={availableObstacleExerciseIds}
+            />
+          </div>
+        </details>
       </div>
 
       <div className="mt-5 flex flex-wrap justify-end gap-2">
