@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { PrimaryNavigation } from "@/components/navigation/primary-navigation";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
+import { TrainingBuilderResumeLink } from "@/components/training/training-builder-resume-link";
 
 interface AppShellProps {
   readonly title: string;
@@ -43,6 +44,7 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
               {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+              <TrainingBuilderResumeLink />
               <ThemeSwitcher />
               <nav aria-label="Schnellzugriff" className="flex items-center gap-1">
                 <Link className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-xs font-bold text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)] sm:px-3 sm:text-sm" href="/admin#database-settings">
