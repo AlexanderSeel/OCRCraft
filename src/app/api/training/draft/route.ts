@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createDeterministicTrainingDraft } from "@/server/training/training-draft-service";
+import { createTrainingDraft } from "@/server/training/training-draft-service";
 import { trainingDraftRequestSchema } from "@/server/training/training-draft-schema";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +27,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const draft = await createDeterministicTrainingDraft(parsed.data);
-  return NextResponse.json(draft);
+  try {
+    const draft = await createTrainingDraft(parsed.data);
+    return NextResponse.json(draft);
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: parsed.data.builderMode === "ai" ? "ai-training-generation-failed" : "training-generation-failed",
+        message: error instanceof Error ? error.message : "Trainingsentwurf konnte nicht erstellt werden.",
+      },
+      { status: 422 },
+    );
+  }
 }
