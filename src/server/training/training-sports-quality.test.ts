@@ -74,7 +74,7 @@ function draft(candidates: readonly TrainingDraftExerciseCandidate[]): TrainingD
               id: item.id,
               name: item.name,
               riskLevel: item.riskLevel,
-              bodyRegions: item.bodyRegions.filter((region): region is never => false),
+              bodyRegions: [],
               equipment: [],
             },
             durationMinutes: 15,
