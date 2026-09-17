@@ -135,12 +135,16 @@ export async function updateExerciseOutdoorVariant(
         UPDATE exercises SET outdoor_suitable=$enabled,updated_at=current_timestamp
         WHERE id=$exerciseId::UUID
       `, { exerciseId, enabled: input.enabled });
+
+      await refreshExerciseSearchDocuments(connection, "de");
+      await refreshExerciseSearchDocuments(connection, "en");
+      await connection.run(
+        "UPDATE search_index_state SET status='dirty', last_error=NULL WHERE locale IN ('de','en')",
+      );
       await connection.run("COMMIT");
     } catch (error) {
       await connection.run("ROLLBACK");
       throw error;
     }
   });
-
-  await refreshExerciseSearchDocuments(exerciseId);
 }
