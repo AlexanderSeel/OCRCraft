@@ -30,7 +30,7 @@ export async function combineTrainingSessionsCore(
   const sessionReader = await connection.runAndReadAll(
     `
     SELECT id::VARCHAR, title, group_id::VARCHAR, locale,
-      COALESCE(organization_mode,'solo'), team_size
+      COALESCE(organization_mode,'solo'), team_size, group_split_count
     FROM training_sessions
     WHERE id IN ($firstSessionId::UUID, $secondSessionId::UUID)
     `,
@@ -53,14 +53,19 @@ export async function combineTrainingSessionsCore(
   const secondOrganization = String(second[4] ?? "solo");
   const firstTeamSize = first[5] == null ? null : Number(first[5]);
   const secondTeamSize = second[5] == null ? null : Number(second[5]);
+  const firstGroupSplitCount = first[6] == null ? null : Number(first[6]);
+  const secondGroupSplitCount = second[6] == null ? null : Number(second[6]);
   const organizationMode = firstOrganization === secondOrganization ? firstOrganization : "solo";
   const teamSize = organizationMode === "team" && firstTeamSize === secondTeamSize ? firstTeamSize : null;
+  const groupSplitCount = organizationMode === "solo" && firstOrganization === secondOrganization && firstGroupSplitCount === secondGroupSplitCount
+    ? firstGroupSplitCount
+    : null;
 
   await connection.run(
     `
     INSERT INTO training_sessions (
       id, title, group_id, status, source, total_duration_minutes, locale, notes,
-      organization_mode, team_size
+      organization_mode, team_size, group_split_count
     ) VALUES (
       $targetSessionId::UUID,
       $title,
@@ -71,7 +76,8 @@ export async function combineTrainingSessionsCore(
       $locale,
       $notes,
       $organizationMode,
-      $teamSize
+      $teamSize,
+      $groupSplitCount
     )
     `,
     {
@@ -82,6 +88,7 @@ export async function combineTrainingSessionsCore(
       notes: `Kombiniert aus „${String(first[1])}“ und „${String(second[1])}“.`,
       organizationMode,
       teamSize,
+      groupSplitCount,
     },
   );
 
