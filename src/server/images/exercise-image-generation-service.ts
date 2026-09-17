@@ -83,6 +83,7 @@ export class ExerciseImageGenerationService {
       const storedImage = await this.storage.save({
         exerciseId: context.exerciseId,
         assetId,
+        fileStem: context.seedKey ?? undefined,
         bytes: generatedImage.bytes,
         contentType: generatedImage.contentType,
       });

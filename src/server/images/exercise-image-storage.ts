@@ -9,6 +9,7 @@ import type { StoredExerciseImage } from "./exercise-image-types";
 export interface SaveExerciseImageInput {
   readonly exerciseId: string;
   readonly assetId: string;
+  readonly fileStem?: string;
   readonly bytes: Uint8Array;
   readonly contentType: "image/png";
 }
@@ -20,8 +21,9 @@ export interface ExerciseImageStorage {
   close?(): void;
 }
 
-function safeObjectKey(exerciseId: string, assetId: string): string {
-  return `${exerciseId}/${assetId}.png`;
+function safeObjectKey(exerciseId: string, assetId: string, fileStem?: string): string {
+  const stem = fileStem && /^[a-z0-9][a-z0-9-]*$/i.test(fileStem) ? fileStem : assetId;
+  return `${exerciseId}/${stem}.png`;
 }
 
 export class FileSystemExerciseImageStorage implements ExerciseImageStorage {
@@ -33,7 +35,7 @@ export class FileSystemExerciseImageStorage implements ExerciseImageStorage {
   }
 
   async save(input: SaveExerciseImageInput): Promise<StoredExerciseImage> {
-    const storageKey = safeObjectKey(input.exerciseId, input.assetId);
+    const storageKey = safeObjectKey(input.exerciseId, input.assetId, input.fileStem);
     const destination = path.resolve(this.root, storageKey);
     if (!destination.startsWith(`${this.root}${path.sep}`)) throw new Error("Invalid exercise image storage key.");
     await mkdir(path.dirname(destination), { recursive: true });
@@ -75,7 +77,7 @@ export class S3CompatibleExerciseImageStorage implements ExerciseImageStorage {
   }
 
   async save(input: SaveExerciseImageInput): Promise<StoredExerciseImage> {
-    const storageKey = `${this.prefix}/${safeObjectKey(input.exerciseId, input.assetId)}`;
+    const storageKey = `${this.prefix}/${safeObjectKey(input.exerciseId, input.assetId, input.fileStem)}`;
     await this.options.client.send(new PutObjectCommand({
       Bucket: this.options.bucket,
       Key: storageKey,

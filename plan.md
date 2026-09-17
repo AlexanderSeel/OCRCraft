@@ -108,7 +108,7 @@ The remaining generic seed records must be enriched so that every exercise is se
 - [x] movement plane where useful: sagittal / frontal / transverse / multiplanar
 - [x] impact level: low / moderate / high
 - [x] coordination complexity: simple / moderate / complex
-- [ ] OCR transfer tags, e.g. grip, wall, carry, rig, rope, transition, trail, obstacle efficiency
+- [x] OCR transfer tags, e.g. grip, wall, carry, rig, rope, transition, trail, obstacle efficiency
 
 #### Trainer-readable explanation
 
@@ -619,6 +619,7 @@ Each sequence illustration uses one adult athlete, selected randomly as a woman 
 - [x] preserve seed image metadata and associations through full database reseed
 - [ ] off-machine backup strategy for generated image files
 - [x] ability to regenerate while preserving style profile and source history
+- [x] filesystem image keys use stable exercise seed names instead of opaque UUIDs
 - [x] single-exercise prompt dry run, OpenAI generation with retry handling, and filesystem/S3-compatible storage adapters
 - [x] resumable seed-catalog generation with serialized database writes and concurrent API requests
 - [x] generate and inspect one real sample exercise image
@@ -750,7 +751,7 @@ No athlete surveillance or unnecessary personal data.
 - [ ] duplicate/conflict compare screen with left/right/both resolution
 - [ ] AI composition from approved pool
 - [ ] AI-created exercises require approval
-- [ ] AI sequence illustration generated and attached for every initial seed exercise (8 expansion exercises have sequences; the original 149 remain legacy triptychs pending reviewed conversion)
+- [ ] AI sequence illustration generated and attached for every initial seed exercise (regeneration with seed-name files is resumable; current API credit limit stopped the run after the first successful subset)
 - [x] new sequence illustrations show one randomly selected adult woman or man across the exercise steps
 - [x] illustration source/generation metadata stored and reviewable
 - [ ] Admin users/groups/media/settings/DB
