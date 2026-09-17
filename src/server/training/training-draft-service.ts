@@ -85,6 +85,7 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
       maxAge: request.maxAge,
       warmupExerciseCount: request.warmupExerciseCount,
       mainExerciseCount: request.mainExerciseCount,
+      mainPartExerciseCounts: request.mainPartExerciseCounts,
       cooldownExerciseCount: request.cooldownExerciseCount,
       mainPartCount: request.mainPartCount,
       organizationMode: request.organizationMode,
