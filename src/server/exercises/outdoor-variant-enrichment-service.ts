@@ -11,6 +11,8 @@ import {
   type OutdoorVariantPlan,
 } from "./outdoor-variant-enrichment-core";
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export interface OutdoorVariantEnrichmentReport {
   readonly scanned: number;
   readonly enriched: number;
@@ -189,6 +191,95 @@ async function setOutdoorSuitability(
   );
 }
 
+async function clearOutdoorVariantEquipment(connection: DuckDBConnection, exerciseId: string): Promise<void> {
+  await connection.run(
+    "DELETE FROM exercise_outdoor_variant_equipment WHERE exercise_id=$exerciseId::UUID",
+    { exerciseId },
+  );
+}
+
+async function applyOutdoorPlan(
+  connection: DuckDBConnection,
+  exercise: ImportedExerciseRow,
+  plan: OutdoorVariantPlan,
+): Promise<void> {
+  await connection.run("BEGIN TRANSACTION");
+  try {
+    await clearOutdoorVariantEquipment(connection, exercise.id);
+    for (const item of plan.equipment) {
+      await connection.run(`
+        INSERT INTO exercise_outdoor_variant_equipment (exercise_id,equipment_id,quantity_required)
+        VALUES ($exerciseId::UUID,$equipmentId::UUID,$quantity)
+      `, {
+        exerciseId: exercise.id,
+        equipmentId: item.equipmentId,
+        quantity: item.quantityRequired,
+      });
+    }
+    await connection.run(`
+      UPDATE exercise_details
+      SET outdoor_variant=CASE locale
+        WHEN 'de' THEN $de
+        ELSE $en
+      END
+      WHERE exercise_id=$exerciseId::UUID AND locale IN ('de','en')
+    `, {
+      exerciseId: exercise.id,
+      de: outdoorVariantText(plan, "de"),
+      en: outdoorVariantText(plan, "en"),
+    });
+    await setOutdoorSuitability(connection, exercise.id, true);
+    await connection.run("COMMIT");
+  } catch (error) {
+    await connection.run("ROLLBACK");
+    throw error;
+  }
+}
+
+async function markOutdoorPlanUnmappable(connection: DuckDBConnection, exerciseId: string): Promise<void> {
+  await connection.run("BEGIN TRANSACTION");
+  try {
+    await clearOutdoorVariantEquipment(connection, exerciseId);
+    await setOutdoorSuitability(connection, exerciseId, false);
+    await connection.run("COMMIT");
+  } catch (error) {
+    await connection.run("ROLLBACK");
+    throw error;
+  }
+}
+
+/** Applies one reviewed candidate only. Existing manual variants are not overwritten. */
+export async function enrichImportedGymExerciseForOutdoor(exerciseId: string): Promise<"enriched" | "existing" | "unmappable" | "missing-details" | "not-found"> {
+  if (!UUID_PATTERN.test(exerciseId)) return "not-found";
+  await ensureDatabaseReady();
+
+  return withDuckDbConnection(async (connection) => {
+    const { catalogue, exercises } = await loadScanContext(connection);
+    const exercise = exercises.find((item) => item.id === exerciseId);
+    if (!exercise) return "not-found";
+
+    const equipment = await loadExerciseEquipment(connection, exercise.id);
+    if (!equipment.some((item) => isGymBoundEquipment(item.seedKey))) return "not-found";
+    if (!exercise.hasDetails) {
+      await setOutdoorSuitability(connection, exercise.id, false);
+      return "missing-details";
+    }
+
+    const plan = buildOutdoorVariantPlan(equipment, catalogue);
+    if (exercise.outdoorVariant.trim()) {
+      if (plan.canApply) await setOutdoorSuitability(connection, exercise.id, true);
+      return "existing";
+    }
+    if (!plan.canApply) {
+      await markOutdoorPlanUnmappable(connection, exercise.id);
+      return "unmappable";
+    }
+
+    await applyOutdoorPlan(connection, exercise, plan);
+    return "enriched";
+  });
+}
+
 export async function enrichImportedGymExercisesForOutdoor(
   force = false,
 ): Promise<OutdoorVariantEnrichmentReport> {
@@ -220,8 +311,9 @@ export async function enrichImportedGymExercisesForOutdoor(
 
       const plan = buildOutdoorVariantPlan(equipment, catalogue);
 
-      // Existing variants remain valid only when their currently structured
-      // replacement equipment still fully maps the original gym dependencies.
+      // Manual/existing variants are preserved by default. A forced enrichment
+      // run is the only bulk operation allowed to regenerate their structured
+      // equipment mapping and bilingual text.
       if (!force && exercise.outdoorVariant.trim() && plan.canApply) {
         await setOutdoorSuitability(connection, exercise.id, true);
         alreadyEnriched += 1;
@@ -229,58 +321,14 @@ export async function enrichImportedGymExercisesForOutdoor(
       }
 
       if (!plan.canApply) {
-        await connection.run("BEGIN TRANSACTION");
-        try {
-          await connection.run(
-            "DELETE FROM exercise_outdoor_variant_equipment WHERE exercise_id=$exerciseId::UUID",
-            { exerciseId: exercise.id },
-          );
-          await setOutdoorSuitability(connection, exercise.id, false);
-          await connection.run("COMMIT");
-        } catch (error) {
-          await connection.run("ROLLBACK");
-          throw error;
-        }
+        await markOutdoorPlanUnmappable(connection, exercise.id);
         unmappable += 1;
         unmappableExercises.push(exercise.name);
         continue;
       }
 
-      await connection.run("BEGIN TRANSACTION");
-      try {
-        await connection.run(
-          "DELETE FROM exercise_outdoor_variant_equipment WHERE exercise_id=$exerciseId::UUID",
-          { exerciseId: exercise.id },
-        );
-        for (const item of plan.equipment) {
-          await connection.run(`
-            INSERT INTO exercise_outdoor_variant_equipment (exercise_id,equipment_id,quantity_required)
-            VALUES ($exerciseId::UUID,$equipmentId::UUID,$quantity)
-          `, {
-            exerciseId: exercise.id,
-            equipmentId: item.equipmentId,
-            quantity: item.quantityRequired,
-          });
-        }
-        await connection.run(`
-          UPDATE exercise_details
-          SET outdoor_variant=CASE locale
-            WHEN 'de' THEN $de
-            ELSE $en
-          END
-          WHERE exercise_id=$exerciseId::UUID AND locale IN ('de','en')
-        `, {
-          exerciseId: exercise.id,
-          de: outdoorVariantText(plan, "de"),
-          en: outdoorVariantText(plan, "en"),
-        });
-        await setOutdoorSuitability(connection, exercise.id, true);
-        await connection.run("COMMIT");
-        enriched += 1;
-      } catch (error) {
-        await connection.run("ROLLBACK");
-        throw error;
-      }
+      await applyOutdoorPlan(connection, exercise, plan);
+      enriched += 1;
     }
 
     return {
