@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import type { TrainingDraft } from "@/domain/training/draft";
 import {
   exerciseTrainingGoalLabels,
   exerciseTrainingGoals,
@@ -9,12 +10,15 @@ import {
   exerciseTypes,
 } from "@/domain/exercise/classification";
 import { TRAINING_FORMATS, type TrainingFormat, type TrainingPhaseKind } from "@/domain/training/model";
-import type { TrainingDraft } from "@/domain/training/draft";
 import { BodyFocusSelector } from "./body-focus-selector";
 import {
   EquipmentAvailabilityPicker,
   type EquipmentAvailabilityOption,
 } from "./equipment-availability-picker";
+import {
+  ExerciseAutocompletePicker,
+  type SelectedExerciseReference,
+} from "./exercise-autocomplete-picker";
 import {
   persistTrainingDraft,
   regenerateTrainingDraftPhase,
@@ -54,6 +58,7 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
   const [bodyRegions, setBodyRegions] = useState<readonly string[]>(["forearms-grip", "core"]);
   const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<readonly string[]>(["skill", "strength"]);
+  const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>([]);
   const [formats, setFormats] = useState<readonly string[]>(["circuit"]);
   const [location, setLocation] = useState("mixed");
   const [intensity, setIntensity] = useState("balanced");
@@ -92,7 +97,7 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
       location,
       intensity,
       builderMode,
-      preferredExerciseIds: [],
+      preferredExerciseIds: preferredExercises.map((exercise) => exercise.id),
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
         quantity.trim() === "" ? [] : [{ equipmentId, quantityAvailable: Number(quantity) }]
       ),
@@ -149,7 +154,7 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
           <h2 className="text-lg font-black">Planungsengine</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {([
-              ["local", "Lokaler Sportalgorithmus", "Deterministisch, offline und reproduzierbar. Gewichtet Trainingslehre, Ziele, Muskeln, Typen, Belastung und Vielfalt."],
+              ["local", "Lokaler Sportalgorithmus", "Deterministisch und reproduzierbar. Gewichtet Trainingslehre, Ziele, Muskeln, Gegenmuskeln, Typen, Belastung, letzte Trainings und Vielfalt."],
               ["ai", "AI-Vorschlag", "Nutzt nur freigegebene OCRCraft-Übungen. Der Vorschlag wird anschließend mit denselben deterministischen Regeln validiert."],
             ] as const).map(([id, label, description]) => (
               <button
@@ -175,14 +180,29 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
           <h2 className="text-lg font-black">Gruppe & Rahmen</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <Field label="Zielgruppe">
-              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" onChange={(e) => { setAudience(e.target.value); invalidate(); }} value={audience}>
-                <option value="kids">Kids</option><option value="youth">Jugend</option><option value="adults">Erwachsene</option><option value="mixed">Mixed</option>
+              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" onChange={(event) => { setAudience(event.target.value); invalidate(); }} value={audience}>
+                <option value="kids">Kids</option>
+                <option value="youth">Jugend</option>
+                <option value="adults">Erwachsene</option>
+                <option value="mixed">Mixed</option>
               </select>
             </Field>
-            <Field label="Alter"><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" onChange={(e) => { setAgeRange(e.target.value); invalidate(); }} value={ageRange} /></Field>
-            <Field label="Teilnehmer"><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" min={1} onChange={(e) => { setParticipants(Number(e.target.value)); invalidate(); }} type="number" value={participants} /></Field>
-            <Field label="Dauer"><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" min={30} max={180} onChange={(e) => { setDuration(Number(e.target.value)); invalidate(); }} type="number" value={duration} /></Field>
-            <Field label="Ort"><select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" onChange={(e) => { setLocation(e.target.value); invalidate(); }} value={location}><option value="mixed">Flexibel</option><option value="indoor">Indoor</option><option value="outdoor">Outdoor</option></select></Field>
+            <Field label="Alter">
+              <input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" onChange={(event) => { setAgeRange(event.target.value); invalidate(); }} value={ageRange} />
+            </Field>
+            <Field label="Teilnehmer">
+              <input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" min={1} onChange={(event) => { setParticipants(Number(event.target.value)); invalidate(); }} type="number" value={participants} />
+            </Field>
+            <Field label="Dauer">
+              <input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" max={180} min={30} onChange={(event) => { setDuration(Number(event.target.value)); invalidate(); }} type="number" value={duration} />
+            </Field>
+            <Field label="Ort">
+              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" onChange={(event) => { setLocation(event.target.value); invalidate(); }} value={location}>
+                <option value="mixed">Flexibel</option>
+                <option value="indoor">Indoor</option>
+                <option value="outdoor">Outdoor</option>
+              </select>
+            </Field>
           </div>
         </section>
 
@@ -197,7 +217,11 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
           <div className="mt-5 border-t border-[var(--border)] pt-4">
             <div className="text-sm font-black">Bevorzugte Übungstypen</div>
             <div className="mt-2 flex flex-wrap gap-2">
-              {exerciseTypes.map((type) => <Toggle key={type} active={selectedTypes.includes(type)} onClick={() => { setSelectedTypes(toggle(selectedTypes, type)); invalidate(); }}>{exerciseTypeLabels[type]}</Toggle>)}
+              {exerciseTypes.map((type) => (
+                <Toggle key={type} active={selectedTypes.includes(type)} onClick={() => { setSelectedTypes(toggle(selectedTypes, type)); invalidate(); }}>
+                  {exerciseTypeLabels[type]}
+                </Toggle>
+              ))}
             </div>
             <p className="mt-2 text-xs text-[var(--muted)]">Typen sind eine starke Präferenz; wenn der freigegebene Pool keine sinnvolle Kombination erlaubt, erzeugt die Engine eine Warnung statt Sicherheitsregeln zu brechen.</p>
           </div>
@@ -207,27 +231,72 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
           <BodyFocusSelector selected={bodyRegions} onToggle={(id) => { setBodyRegions(toggle(bodyRegions, id)); setAvoidBodyRegions((current) => current.filter((entry) => entry !== id)); invalidate(); }} />
           <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
             <summary className="cursor-pointer font-black">Nicht belasten / vermeiden ({avoidBodyRegions.length})</summary>
-            <div className="mt-4"><BodyFocusSelector visualCompact selected={avoidBodyRegions} title="Ausgeschlossene Bereiche" description="Übungen, die diese Bereiche belasten, werden ausgeschlossen." onToggle={(id) => { setAvoidBodyRegions(toggle(avoidBodyRegions, id)); setBodyRegions((current) => current.filter((entry) => entry !== id)); invalidate(); }} /></div>
+            <div className="mt-4">
+              <BodyFocusSelector
+                description="Übungen, die diese Bereiche belasten, werden ausgeschlossen."
+                onToggle={(id) => { setAvoidBodyRegions(toggle(avoidBodyRegions, id)); setBodyRegions((current) => current.filter((entry) => entry !== id)); invalidate(); }}
+                selected={avoidBodyRegions}
+                title="Ausgeschlossene Bereiche"
+                visualCompact
+              />
+            </div>
           </details>
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <h2 className="text-lg font-black">Wunschübungen & Hindernisse</h2>
+          <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+            Optional als starke Trainerpräferenz. Der lokale Algorithmus und die AI versuchen diese Übungen einzubauen, solange Phase, Alter, Ausschlüsse und Sicherheitsregeln passen.
+          </p>
+          <div className="mt-4">
+            <ExerciseAutocompletePicker
+              description="Durchsucht den freigegebenen Übungspool nach Namen, Aliasen und strukturierten Metadaten."
+              label="Bevorzugte Übungen"
+              maxItems={8}
+              onChange={(items) => { setPreferredExercises(items); invalidate(); }}
+              selected={preferredExercises}
+            />
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <h2 className="text-lg font-black">Format & Belastung</h2>
-          <div className="mt-3 flex flex-wrap gap-2">{TRAINING_FORMATS.filter((format) => format !== "free").map((format) => <Toggle key={format} active={formats.includes(format)} onClick={() => { setFormats(toggle(formats, format)); invalidate(); }}>{formatLabels[format]}</Toggle>)}</div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {TRAINING_FORMATS.filter((format) => format !== "free").map((format) => (
+              <Toggle key={format} active={formats.includes(format)} onClick={() => { setFormats(toggle(formats, format)); invalidate(); }}>
+                {formatLabels[format]}
+              </Toggle>
+            ))}
+          </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            {([ ["technique", "Technik"], ["balanced", "Ausgewogen"], ["conditioning", "Conditioning"] ] as const).map(([id, label]) => <Toggle key={id} active={intensity === id} onClick={() => { setIntensity(id); invalidate(); }}>{label}</Toggle>)}
+            {([ ["technique", "Technik"], ["balanced", "Ausgewogen"], ["conditioning", "Conditioning"] ] as const).map(([id, label]) => (
+              <Toggle key={id} active={intensity === id} onClick={() => { setIntensity(id); invalidate(); }}>{label}</Toggle>
+            ))}
           </div>
           <details className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
             <summary className="cursor-pointer font-black">Equipment-Bestand</summary>
-            <div className="mt-4"><EquipmentAvailabilityPicker options={equipmentOptions} value={availableEquipment} onChange={(id, value) => { setAvailableEquipment((current) => ({ ...current, [id]: value })); invalidate(); }} /></div>
+            <div className="mt-4">
+              <EquipmentAvailabilityPicker
+                onChange={(id, value) => { setAvailableEquipment((current) => ({ ...current, [id]: value })); invalidate(); }}
+                options={equipmentOptions}
+                value={availableEquipment}
+              />
+            </div>
           </details>
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="flex flex-wrap items-end gap-3">
-            <label className="grid min-w-64 flex-1 gap-2 text-sm font-bold">Trainingstitel<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" maxLength={120} onChange={(e) => setTitle(e.target.value)} placeholder="Optional" value={title} /></label>
-            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] disabled:opacity-50" disabled={!canGenerate || pending || regeneratingPhase != null} onClick={() => void generate()} type="button">{pending ? "Plane …" : builderMode === "ai" ? "AI-Vorschlag erzeugen" : "Lokal planen"}</button>
-            <button className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] disabled:opacity-50" disabled={!draft || pending || regeneratingPhase != null} onClick={() => void save()} type="button">Training speichern</button>
+            <label className="grid min-w-64 flex-1 gap-2 text-sm font-bold">
+              Trainingstitel
+              <input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Optional" value={title} />
+            </label>
+            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] disabled:opacity-50" disabled={!canGenerate || pending || regeneratingPhase != null} onClick={() => void generate()} type="button">
+              {pending ? "Plane …" : builderMode === "ai" ? "AI-Vorschlag erzeugen" : "Lokal planen"}
+            </button>
+            <button className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] disabled:opacity-50" disabled={!draft || pending || regeneratingPhase != null} onClick={() => void save()} type="button">
+              Training speichern
+            </button>
           </div>
           {error ? <div className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm text-[var(--danger)]">{error}</div> : null}
           {savedId ? <div className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold"><Link className="underline underline-offset-4" href={`/training/${savedId}`}>Gespeichertes Training öffnen</Link></div> : null}
@@ -245,11 +314,13 @@ export function TrainingBuilderPanel({ equipmentOptions }: TrainingBuilderPanelP
         <h2 className="font-black">Sportlogik</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-[var(--muted)]">
           <li>Warm-up, Hauptteil und Cooldown mit exakter Zeitverteilung.</li>
-          <li>Technik/Koordination vor unnötiger Ermüdung; Belastung passend zur Ausrichtung.</li>
-          <li>Abdeckung gewünschter Muskeln plus typische Gegenmuskeln und Gegenbewegungen, wenn der freigegebene Pool dies sinnvoll erlaubt.</li>
+          <li>Technik und Koordination vor unnötiger Ermüdung; Conditioning danach, wenn gewählt.</li>
+          <li>Abdeckung gewünschter Muskeln plus typische Gegenmuskeln und Gegenbewegungen.</li>
+          <li>Push/Pull, Squat/Hinge und Rumpfrotation/Stabilisation werden für eine ausgewogene Einheit bevorzugt ergänzt.</li>
           <li>Hohe Stoßbelastungen und hohe Risiken werden nicht unnötig direkt hintereinander geplant.</li>
-          <li>Alter, Ort, Ausschlussbereiche, Risiko, Equipment und Stationskapazität als harte Grenzen.</li>
-          <li>Level-Varianten aus dem freigegebenen Übungskatalog statt erfundener Übungen.</li>
+          <li>Übungen aus den letzten Trainings erhalten einen weichen Wiederholungs-Malus; Trainer-Wunschübungen können ihn bewusst überstimmen.</li>
+          <li>Alter, Ort, Ausschlussbereiche, Risiko, Equipment und Stationskapazität bleiben harte Grenzen.</li>
+          <li>Level-Varianten stammen aus dem freigegebenen Übungskatalog statt aus erfundenen Übungen.</li>
           <li>Jede Phase kann separat neu geplant werden; die beiden anderen Phasen bleiben erhalten.</li>
           <li>AI darf auswählen und begründen, aber niemals die deterministische Sicherheitsprüfung umgehen.</li>
         </ul>
@@ -263,5 +334,14 @@ function Field({ label, children }: { readonly label: string; readonly children:
 }
 
 function Toggle({ active, onClick, children }: { readonly active: boolean; readonly onClick: () => void; readonly children: React.ReactNode }) {
-  return <button aria-pressed={active} className={`min-h-11 rounded-xl border px-4 py-2 text-sm font-bold ${active ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]" : "border-[var(--border)] bg-[var(--surface-subtle)]"}`} onClick={onClick} type="button">{children}</button>;
+  return (
+    <button
+      aria-pressed={active}
+      className={`min-h-11 rounded-xl border px-4 py-2 text-sm font-bold ${active ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]" : "border-[var(--border)] bg-[var(--surface-subtle)]"}`}
+      onClick={onClick}
+      type="button"
+    >
+      {children}
+    </button>
+  );
 }
