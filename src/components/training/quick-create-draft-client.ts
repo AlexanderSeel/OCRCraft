@@ -1,3 +1,4 @@
+import { exerciseTypes, type ExerciseType } from "../../domain/exercise/classification";
 import {
   AUDIENCES,
   BODY_REGIONS,
@@ -11,6 +12,8 @@ import {
 } from "../../domain/training/model";
 import type { DraftIntensity, TrainingDraft } from "../../domain/training/draft";
 
+export type QuickCreateBuilderMode = "local" | "ai";
+
 export interface QuickCreateDraftClientInput {
   readonly groupId?: string;
   readonly groupType: string;
@@ -20,9 +23,11 @@ export interface QuickCreateDraftClientInput {
   readonly goals: readonly string[];
   readonly bodyRegions: readonly string[];
   readonly avoidBodyRegions?: readonly string[];
+  readonly exerciseTypes?: readonly string[];
   readonly formats: readonly string[];
   readonly location?: string;
   readonly intensity: string;
+  readonly builderMode?: string;
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment?: readonly TrainingEquipmentAvailability[];
 }
@@ -39,9 +44,11 @@ export interface NormalizedTrainingDraftRequest {
   readonly goals: readonly string[];
   readonly bodyRegions: readonly BodyRegion[];
   readonly avoidBodyRegions: readonly BodyRegion[];
+  readonly exerciseTypes: readonly ExerciseType[];
   readonly formats: readonly TrainingFormat[];
   readonly location: TrainingLocation;
   readonly intensity: DraftIntensity;
+  readonly builderMode: QuickCreateBuilderMode;
   readonly preferredExerciseIds: readonly string[];
   readonly availableEquipment: readonly TrainingEquipmentAvailability[];
   readonly minAge?: number;
@@ -56,9 +63,11 @@ export interface PersistedTrainingDraftResult {
 
 const AUDIENCE_SET = new Set<string>(AUDIENCES);
 const BODY_REGION_SET = new Set<string>(BODY_REGIONS);
+const EXERCISE_TYPE_SET = new Set<string>(exerciseTypes);
 const FORMAT_SET = new Set<string>(TRAINING_FORMATS);
 const LOCATION_SET = new Set<string>(TRAINING_LOCATIONS);
 const INTENSITIES = new Set<string>(["technique", "balanced", "conditioning"]);
+const BUILDER_MODES = new Set<string>(["local", "ai"]);
 
 function isAudience(value: string): value is Audience {
   return AUDIENCE_SET.has(value);
@@ -66,6 +75,10 @@ function isAudience(value: string): value is Audience {
 
 function isBodyRegion(value: string): value is BodyRegion {
   return BODY_REGION_SET.has(value);
+}
+
+function isExerciseType(value: string): value is ExerciseType {
+  return EXERCISE_TYPE_SET.has(value);
 }
 
 function isTrainingFormat(value: string): value is TrainingFormat {
@@ -78,6 +91,10 @@ function isTrainingLocation(value: string): value is TrainingLocation {
 
 function isDraftIntensity(value: string): value is DraftIntensity {
   return INTENSITIES.has(value);
+}
+
+function isBuilderMode(value: string): value is QuickCreateBuilderMode {
+  return BUILDER_MODES.has(value);
 }
 
 export function parseAgeRange(value: string): ParsedAgeRange {
@@ -107,9 +124,13 @@ export function normalizeTrainingDraftRequest(
   const focusRegionSet = new Set(bodyRegions);
   const avoidBodyRegions = [...new Set((input.avoidBodyRegions ?? []).filter(isBodyRegion))]
     .filter((region) => !focusRegionSet.has(region));
+  const selectedExerciseTypes = [...new Set((input.exerciseTypes ?? []).filter(isExerciseType))];
   const formats = input.formats.filter(isTrainingFormat);
   const location: TrainingLocation = input.location && isTrainingLocation(input.location) ? input.location : "mixed";
   const intensity: DraftIntensity = isDraftIntensity(input.intensity) ? input.intensity : "balanced";
+  const builderMode: QuickCreateBuilderMode = input.builderMode && isBuilderMode(input.builderMode)
+    ? input.builderMode
+    : "local";
   const ages = parseAgeRange(input.ageRange);
   const availableEquipment = new Map<string, number>();
   for (const item of input.availableEquipment ?? []) {
@@ -124,9 +145,11 @@ export function normalizeTrainingDraftRequest(
     goals: input.goals,
     bodyRegions,
     avoidBodyRegions,
+    exerciseTypes: selectedExerciseTypes,
     formats,
     location,
     intensity,
+    builderMode,
     preferredExerciseIds: input.preferredExerciseIds,
     availableEquipment: [...availableEquipment].map(([equipmentId, quantityAvailable]) => ({
       equipmentId,
@@ -167,11 +190,16 @@ export async function persistTrainingDraft(
   input: QuickCreateDraftClientInput,
   title?: string,
 ): Promise<PersistedTrainingDraftResult> {
+  const normalized = normalizeTrainingDraftRequest(input);
+  if (normalized.builderMode === "ai") {
+    throw new Error("AI-Entwürfe müssen nach der Vorschau explizit als geprüfter Vorschlag gespeichert werden.");
+  }
+
   const response = await fetch("/api/training/draft/persist", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
-      request: normalizeTrainingDraftRequest(input),
+      request: normalized,
       title: title?.trim() || undefined,
       groupId: input.groupId?.trim() || undefined,
     }),
