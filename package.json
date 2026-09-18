@@ -18,7 +18,8 @@
     "exercise:images:seed": "node --conditions=react-server --import=tsx scripts/generate-seed-exercise-images.ts",
     "exercise:import:hasaneyldrm": "node --conditions=react-server --import=tsx scripts/import-hasaneyldrm-exercises.ts",
     "exercise:translate:de": "node --conditions=react-server --import=tsx scripts/translate-hasaneyldrm-german.ts",
-    "exercise:import:exercisedb": "node --conditions=react-server --import=tsx scripts/import-exercisedb-exercises.ts"
+    "exercise:import:exercisedb": "node --conditions=react-server --import=tsx scripts/import-exercisedb-exercises.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1133.0",

@@ -13,6 +13,12 @@ interface AppShellProps {
 export function AppShell({ title, subtitle, actions, children }: AppShellProps) {
   return (
     <div className="min-h-screen lg:flex lg:h-dvh lg:min-h-0 lg:overflow-hidden">
+      <a
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[2147482000] focus:rounded-lg focus:bg-[var(--control-strong)] focus:px-4 focus:py-3 focus:text-sm focus:font-black focus:text-[var(--control-strong-foreground)]"
+        href="#main-content"
+      >
+        Zum Hauptinhalt springen
+      </a>
       <CollapsibleSidebar />
       <div className="min-w-0 flex-1 lg:h-dvh lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
         <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[var(--header)] backdrop-blur">
@@ -28,7 +34,7 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
           </div>
           <PrimaryNavigation variant="mobile" />
         </header>
-        <main className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8" id="main-content" tabIndex={-1}>{children}</main>
       </div>
     </div>
   );

@@ -438,6 +438,7 @@ export function QuickCreateWizard({
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {groupOptions.map(([id, label, description]) => (
                   <button
+                    aria-pressed={groupType === id}
                     className={`min-h-28 rounded-xl border p-4 text-left transition ${
                       groupType === id
                         ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"

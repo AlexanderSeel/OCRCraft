@@ -85,7 +85,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Globales Toast-/Feedbacksystem mit zugänglichem `aria-live`, Loading-, Erfolgs-, Info- und Fehlerzuständen, Auto-Dismiss und manuellem Schließen eingeführt; Quick Create und Training Builder verwenden es für Planung, Neuplanung, Übungsersatz und Speichern, während ausführliche Inline-Fehler erhalten bleiben.
 - [x] Undo/Redo für geeignete Editoraktionen: Der Training Builder hält bis zu 20 Entwurfsstände für komplette Neuplanung, Phasen-Neuplanung und Übungsersatz; neue Randbedingungen starten bewusst eine frische Historie.
 - [x] Fullscreen-Traineransicht und Druckansicht: Der Readonly-Trainermodus unterstützt die Browser-Fullscreen-API mit sauberem Exit-Zustand; die separate Druckansicht besitzt druckspezifische Tokens, Seitenränder und ausgeklappte Detailbereiche.
-- [ ] Vollständiges Accessibility-Audit inklusive E2E-Tastaturpfaden.
+- [x] Accessibility-Audit als CI-Gate ergänzt: zentrale Seiten werden im Chromium-Browser auf Main-/H1-Landmarks, doppelte IDs, Bild-Alternativtexte, benannte Controls und positive `tabindex` geprüft; Skip-Link, Quick-Create-Zielgruppenwahl und Themewechsel besitzen echte Playwright-Tastaturpfade.
 - [x] Medienauswahl und KI-Bildgenerierung direkt im Übungs-/Spiel-/Hindernis-Editor anbieten; ausgewählte Medien werden als primäres Bild persistiert.
 
 ## P2 – Katalogquellen, Medien und KI
@@ -133,7 +133,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Qualität und Analysen
 
-- [ ] Quick-Create-, Training-Editor-, Kids/Youth- und Theme-E2E-Tests.
+- [ ] Quick-Create-, Training-Editor-, Kids/Youth- und Theme-E2E-Tests (Quick-Create-Tastaturwahl und Theme-Persistenz sind jetzt in Playwright/CI abgedeckt; Training-Editor und Kids/Youth-Schutzpfade fehlen noch).
 - [ ] Übungsnutzung, Körperregionen, Hindernisabdeckung, Laufvolumen, Wiederholungswarnungen und Nulltreffer analysieren.
 - [ ] Vollständigkeits- und KI-Ersetzungsanalysen ergänzen.
 
