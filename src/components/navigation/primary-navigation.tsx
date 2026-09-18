@@ -31,8 +31,8 @@ export function PrimaryNavigation({ variant, collapsed = false }: PrimaryNavigat
 
   if (variant === "mobile") {
     return (
-      <nav aria-label="Hauptnavigation mobil" className="overflow-x-auto border-t border-[var(--border)] lg:hidden">
-        <div className="mx-auto flex min-w-max max-w-[1500px] gap-1 px-4 py-2 sm:px-6">
+      <nav aria-label="Hauptnavigation mobil" className="min-w-0 max-w-full overflow-x-auto border-t border-[var(--border)] lg:hidden">
+        <div className="mx-auto flex w-full min-w-0 max-w-[1500px] flex-wrap gap-1 px-4 py-2 sm:px-6">
           {navigation.map(([label, href]) => {
             const active = isActivePath(pathname, href);
             return (

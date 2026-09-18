@@ -352,9 +352,9 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         </OverviewLayout>
 
         {(page > 1 || hasNextPage) ? (
-          <nav aria-label="Seitennavigation Übungen" className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">
+          <nav aria-label="Seitennavigation Übungen" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">
             <span className="text-[var(--muted)]">Seite {page} von {Math.max(1, Math.ceil(filteredTotal / pageSize))}</span>
-            <div className="flex gap-2">
+            <div className="flex min-w-0 flex-wrap justify-end gap-2">
               {page > 1 ? <Link className="rounded-xl border border-[var(--border)] px-3 py-2 font-bold" href={pageHref(page - 1, params)}>Zurück</Link> : null}
               {pageNumbers(page, Math.ceil(filteredTotal / pageSize)).map((number) => <Link className={`rounded-xl border px-3 py-2 font-bold ${number === page ? "border-[var(--accent)] bg-[var(--accent)]/15" : "border-[var(--border)]"}`} href={pageHref(number, params)} key={number}>{number}</Link>)}
               {hasNextPage ? <Link className="rounded-xl bg-[var(--control-strong)] px-3 py-2 font-bold text-[var(--control-strong-foreground)]" href={pageHref(page + 1, params)}>Weiter</Link> : null}

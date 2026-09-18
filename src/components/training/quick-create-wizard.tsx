@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
 import { TEAM_COMPETITION_STYLES, getTeamCompetitionStyle } from "@/domain/training/team-competition-catalog";
 import type { TrainingObstacleOption } from "@/server/training/training-draft-repository";
@@ -183,6 +183,9 @@ export function QuickCreateWizard({
   const [persisting, setPersisting] = useState(false);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [persistedId, setPersistedId] = useState<string | null>(null);
+  useEffect(() => {
+    document.querySelector("[data-quick-create-root]")?.setAttribute("data-quick-create-ready", "true");
+  }, []);
 
   const selectedGroup = groupOptions.find(([id]) => id === groupType);
   const selectedPreset = groupPresets.find((preset) => preset.id === selectedGroupId);
@@ -402,8 +405,8 @@ export function QuickCreateWizard({
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]" data-quick-create-ready="false" data-quick-create-root>
+      <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
         <header className="border-b border-[var(--border)] p-5 sm:p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -439,9 +442,9 @@ export function QuickCreateWizard({
               <p className="mt-1 text-sm text-[var(--muted)]">Diese Angaben steuern Skalierung, Umfang und spätere Vereinsregeln.</p>
 
               {templatePresets.length > 0 ? (
-                <label className="mt-5 grid gap-2 rounded-xl border border-[var(--accent-strong)] bg-[var(--accent-soft)] p-4 text-sm font-black">
+                <label className="mt-5 grid min-w-0 gap-2 rounded-xl border border-[var(--accent-strong)] bg-[var(--accent-soft)] p-4 text-sm font-black">
                   Trainingsvorlage auswählen
-                  <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" value={selectedTemplateKey} onChange={(event) => applyTemplate(event.target.value)}>
+                  <select className="h-11 min-w-0 max-w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" value={selectedTemplateKey} onChange={(event) => applyTemplate(event.target.value)}>
                     <option value="">Ohne Vorlage starten</option>
                     {templatePresets.map((template) => <option key={template.key} value={template.key}>{template.title} · {ageRangeForTemplate(template)} · {template.durationMinutes} Min.</option>)}
                   </select>
@@ -983,7 +986,7 @@ export function QuickCreateWizard({
           </div>
         </section>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+        <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="font-black">Planungsprinzip</div>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
             Der Wizard verwendet echte Bibliotheksübungen. Beim Speichern erzeugt und validiert der Server denselben Entwurf erneut, bevor er als bearbeitbarer Trainingsentwurf in DuckDB landet.

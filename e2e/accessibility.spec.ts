@@ -71,6 +71,7 @@ test("skip link is the first keyboard stop and moves focus to main", async ({ pa
 
 test("quick create audience selection works with keyboard only", async ({ page }) => {
   await page.goto("/quick-create", { waitUntil: "domcontentloaded" });
+  await page.locator("[data-quick-create-ready='true']").waitFor();
   const kids = page.getByRole("button", { name: /^Kids/ });
   const youth = page.getByRole("button", { name: /^Jugend/ });
 
@@ -87,6 +88,8 @@ test("quick create audience selection works with keyboard only", async ({ page }
 test("theme can be changed by keyboard and persists after reload", async ({ page }) => {
   await page.goto("/admin?tab=settings", { waitUntil: "domcontentloaded" });
   const theme = page.getByRole("combobox", { name: "Darstellung" });
+  await theme.waitFor();
+  await page.waitForFunction(() => document.documentElement.dataset.themePreference !== undefined);
   await theme.focus();
 
   await page.keyboard.press("End");

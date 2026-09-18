@@ -53,7 +53,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 - [ ] Gemeinsame Kataloglisten vollständig auf `OverviewLayout` migrieren: Games, Hindernisse, Medien, Gruppen, AI-Entwürfe und Outdoor erhalten dieselbe Ansichtsauswahl, Filter-/Suchzustand, Ergebniszähler und Pagination wie Übungen.
 - [ ] Listen- und Detaildatenquellen auf statische Legacy-Platzhalter prüfen; insbesondere Dashboard-Kennzahlen und Vorschaukarten dürfen ausschließlich aus Repository-/Service-Daten entstehen.
-- [ ] Quick-Create- und Builder-E2E um Vorlagenauswahl, leeren Trainingsbestand und Template-Provenienz ergänzen.
+- [ ] Quick-Create- und Builder-E2E weiter ausbauen: Vorlagenauswahl und responsive Empty-/Shell-/Overflow-Gates sind abgedeckt; Training-Editor und Kids/Youth-Schutzpfade fehlen noch.
 - [ ] Übrig gebliebene Legacy-UI-Texte und feste Katalogzähler in CI als Review-Gate erkennen.
 
 ### Übungskatalog

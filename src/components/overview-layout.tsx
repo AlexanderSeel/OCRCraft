@@ -24,7 +24,7 @@ function readView(key: string) {
 export function OverviewLayout({ children, storageKey }: { readonly children: ReactNode; readonly storageKey: string }) {
   const view = useSyncExternalStore(subscribe, () => readView(storageKey), () => "small");
   return (
-    <div className="overview-layout space-y-3" data-view={view}>
+    <div className="overview-layout space-y-3" data-testid="overview-layout" data-view={view}>
       <div aria-label="Übersichtsdarstellung" className="flex flex-wrap items-center gap-1" role="group">
         <span className="mr-2 text-xs font-bold text-[var(--muted)]">Ansicht</span>
         {views.map(([id, label]) => (
