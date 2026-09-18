@@ -55,3 +55,9 @@ export function assessExerciseDuplicate(left: DuplicateExerciseRecord, right: Du
 export function shouldReviewDuplicate(assessment: DuplicateAssessment): boolean {
   return assessment.classification !== "new" && assessment.reasons.length > 0;
 }
+
+/** Returns the non-selected exercise after validating that the selection belongs to the task. */
+export function duplicateArchiveId(leftExerciseId: string, rightExerciseId: string, keepExerciseId: string): string {
+  if (keepExerciseId !== leftExerciseId && keepExerciseId !== rightExerciseId) throw new Error("duplicate-keep-exercise-mismatch");
+  return keepExerciseId === leftExerciseId ? rightExerciseId : leftExerciseId;
+}

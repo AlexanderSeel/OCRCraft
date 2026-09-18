@@ -1,6 +1,6 @@
 import "server-only";
 
-import { assessExerciseDuplicate, shouldReviewDuplicate, type DuplicateClassification, type DuplicateExerciseRecord } from "@/domain/exercise/duplicate-detection";
+import { assessExerciseDuplicate, duplicateArchiveId, shouldReviewDuplicate, type DuplicateClassification, type DuplicateExerciseRecord } from "@/domain/exercise/duplicate-detection";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { recordAuditEvent } from "@/server/db/audit-service";
@@ -134,7 +134,18 @@ export async function resolveDuplicateTask(taskId: string, keepExerciseId: strin
   await withDuckDbConnection(async (connection) => {
     await connection.run("BEGIN TRANSACTION");
     try {
-      if (status === "merged") await connection.run("UPDATE exercises SET archived=true, updated_at=current_timestamp WHERE id=(SELECT CASE WHEN left_exercise_id=$keep::UUID THEN right_exercise_id ELSE left_exercise_id END FROM exercise_duplicate_tasks WHERE id=$task::UUID)", { task: taskId, keep: keepExerciseId });
+      const taskReader = await connection.runAndReadAll(
+        "SELECT left_exercise_id::VARCHAR, right_exercise_id::VARCHAR FROM exercise_duplicate_tasks WHERE id=$task::UUID",
+        { task: taskId },
+      );
+      const taskRow = taskReader.getRows()[0];
+      const leftExerciseId = taskRow == null ? null : String(taskRow[0]);
+      const rightExerciseId = taskRow == null ? null : String(taskRow[1]);
+      if (leftExerciseId == null || rightExerciseId == null) throw new Error("duplicate-task-not-found");
+      const archiveExerciseId = duplicateArchiveId(leftExerciseId, rightExerciseId, keepExerciseId);
+      if (status === "merged") {
+        await connection.run("UPDATE exercises SET archived=true, updated_at=current_timestamp WHERE id=$archive::UUID", { archive: archiveExerciseId });
+      }
       await connection.run("UPDATE exercise_duplicate_tasks SET status=$status,resolution_decision=$resolutionDecision,resolved_at=current_timestamp WHERE id=$task::UUID", { task: taskId, status, resolutionDecision });
       await connection.run("COMMIT");
     } catch (error) { await connection.run("ROLLBACK"); throw error; }
