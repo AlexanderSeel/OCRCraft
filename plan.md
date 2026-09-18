@@ -55,7 +55,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [ ] Weitere Katalogkohorten versioniert, zweisprachig und mit Detail-/Sicherheits-Gates aufnehmen.
 - [x] Zusätzliche Kategorien und Facetten editierbar machen.
 - [x] Progressionen/Regressionen als Katalogverwaltung mit Editor und geschützter Archivierung ausbauen.
-- [ ] Geschützte Hard-Delete-Regeln implementieren.
+- [x] Geschützte Hard-Delete-Regeln implementieren (nur Super-Admin, archivierte Nicht-Seed-Übung, exakte Bestätigung und keine Betriebsreferenzen).
 - [x] Dublettenprüfung, Bulk-Edit und Import/Export im Admin abschließen.
 
 ### Suche und Planung
