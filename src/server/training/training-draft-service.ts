@@ -69,7 +69,7 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
   const rules = await resolveTrainingClubRules(request);
   const candidates = await approvedCandidatesFor(request, rules);
   if (request.builderMode === "ai") {
-    const provider = getConfiguredAiTrainingProvider();
+    const provider = await getConfiguredAiTrainingProvider();
     if (!provider) throw new Error("AI Training Builder ist nicht konfiguriert. Nutze den lokalen Sportalgorithmus oder setze OCRCRAFT_AI_BASE_URL und OCRCRAFT_AI_MODEL.");
     const sourceSessions = await loadAiTrainingSourceSessions(request.sourceTrainingIds, candidates);
     const proposal = await provider.generateTrainingPlan({ request, approvedExercises: candidates, sourceSessions });
@@ -126,7 +126,7 @@ export async function persistReviewedAiTrainingDraft(input: ReviewedAiTrainingPe
   const candidates = await approvedCandidatesFor(input.request, rules);
   const reviewedDraft = composeReviewedAiTrainingDraft(input, candidates);
   const draft = finalizeDraft(input.request, reviewedDraft, candidates, rules);
-  const provider = getConfiguredAiTrainingProvider();
+  const provider = await getConfiguredAiTrainingProvider();
   const id = await persistTrainingDraft(draft, {
     title: input.title,
     locale: input.request.locale,

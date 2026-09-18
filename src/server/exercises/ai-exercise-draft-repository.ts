@@ -3,6 +3,7 @@ import "server-only";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { createExercise, setExerciseArchived } from "./exercise-repository";
+import { reviewAiExerciseDraftProposal, type AiExerciseDraftReview } from "./ai-exercise-draft-review-service";
 import {
   aiExerciseDraftProposalSchema,
   type AiExerciseDraftProposal,
@@ -18,6 +19,7 @@ export interface AiExerciseDraftRecord {
   readonly requestText: string;
   readonly proposal: AiExerciseDraftProposal;
   readonly approvedExerciseId: string | null;
+  readonly review: AiExerciseDraftReview | null;
   readonly createdAt: string;
   readonly reviewedAt: string | null;
 }
@@ -31,14 +33,15 @@ function rowToRecord(row: readonly unknown[]): AiExerciseDraftRecord {
     requestText: String(row[4]),
     proposal: aiExerciseDraftProposalSchema.parse(JSON.parse(String(row[5]))),
     approvedExerciseId: row[6] == null ? null : String(row[6]),
-    createdAt: String(row[7]),
-    reviewedAt: row[8] == null ? null : String(row[8]),
+    review: row[7] == null ? null : JSON.parse(String(row[7])) as AiExerciseDraftReview,
+    createdAt: String(row[8]),
+    reviewedAt: row[9] == null ? null : String(row[9]),
   };
 }
 
 const SELECT_COLUMNS = `
   id::VARCHAR,status,provider_id,provider_model,request_text,proposal_json,
-  approved_exercise_id::VARCHAR,created_at,reviewed_at
+  approved_exercise_id::VARCHAR,review_json,created_at,reviewed_at
 `;
 
 export async function saveAiExerciseDraft(
@@ -46,16 +49,17 @@ export async function saveAiExerciseDraft(
   providerId: string,
   providerModel: string | null,
   proposal: AiExerciseDraftProposal,
+  review: AiExerciseDraftReview | null,
 ): Promise<string> {
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(
       `
       INSERT INTO ai_exercise_drafts (
-        provider_id,provider_model,request_text,proposal_json,
+        provider_id,provider_model,request_text,proposal_json,review_json,
         name_de,name_en,category,phase,risk_level,min_age
       ) VALUES (
-        $providerId,$providerModel,$requestText,$proposalJson,
+        $providerId,$providerModel,$requestText,$proposalJson,$reviewJson,
         $nameDe,$nameEn,$category,$phase,$riskLevel,$minAge
       )
       RETURNING id::VARCHAR
@@ -65,6 +69,7 @@ export async function saveAiExerciseDraft(
         providerModel,
         requestText: requestText.trim(),
         proposalJson: JSON.stringify(proposal),
+        reviewJson: review ? JSON.stringify(review) : null,
         nameDe: proposal.nameDe,
         nameEn: proposal.nameEn,
         category: proposal.category,
@@ -143,6 +148,18 @@ async function resetApprovalClaim(id: string): Promise<void> {
 export async function approveAiExerciseDraft(id: string): Promise<string | null> {
   const draft = await claimDraftForApproval(id);
   if (!draft) return null;
+
+  const review = await reviewAiExerciseDraftProposal(draft.proposal);
+  await withDuckDbConnection(async (connection) => {
+    await connection.run(
+      "UPDATE ai_exercise_drafts SET review_json=$reviewJson WHERE id=$id::UUID",
+      { id: draft.id, reviewJson: JSON.stringify(review) },
+    );
+  });
+  if (review.blocking) {
+    await resetApprovalClaim(draft.id);
+    throw new Error(review.issues.filter((issue) => issue.severity === "blocker").map((issue) => issue.message).join(" "));
+  }
 
   let exerciseId: string | null = null;
   try {

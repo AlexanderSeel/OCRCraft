@@ -1,4 +1,6 @@
 import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
+import { createAiJsonClient } from "@/server/ai/ai-json-provider";
+import { resolveAiProvider } from "@/server/ai/ai-provider-settings-repository";
 import { SPORTS_PLANNING_PRINCIPLES } from "./sports-planning-principles";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 
@@ -48,26 +50,7 @@ export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
         temperature: 0.2,
         response_format: { type: "json_object" },
         messages: [
-          {
-            role: "system",
-            content: [
-              "You are OCRCraft's training-plan composer.",
-              "Use ONLY exerciseId values from the approved exercise pool.",
-              "Return JSON only. Do not invent exercises, equipment, safety facts or medical advice.",
-              "Create exactly one canonical warmup phase, one canonical main phase and one canonical cooldown phase.",
-              "Respect the exact requested exercise counts. mainPartExerciseCounts contains the exact number of exercises for main parts 1..N; assign every main item a matching 1-based mainPart.",
-              "mainPartProgramming is trainer-owned programming for main parts 1..N. Use it as context when selecting suitable exercises, but never rewrite, replace or invent its work/rest, rounds, ladder, pyramid, chipper or every-X values. The server applies it canonically after selection.",
-              "Respect organizationMode, teamSize and groupSplitCount. teamSize applies to team mode; groupSplitCount is the explicit number of parallel rotation groups in solo mode and therefore affects station-capacity/logistics suitability.",
-              "If partner format is requested, organizationMode is team and teamSize is exactly 2. Prefer approved teamwork/partner exercises and never change the pair size.",
-              "availableObstacleExerciseIds is a hard club-inventory constraint when present. The approved pool has already removed unavailable obstacle stations; never infer or re-introduce a missing obstacle.",
-              "Respect audience, ages, goals, body focus/avoidance, requested exercise types, formats, location, intensity and equipment.",
-              "If sourceSessions are supplied, use them as inspiration/context for recomposition, not as permission to bypass current constraints or copy every item.",
-              "When two exercises are similarly suitable, prefer the one with the lower recentUseCount so recent sessions are not repeated unnecessarily.",
-              "Preferred exercise IDs may intentionally override that variety preference.",
-              "Follow the supplied sportsPlanningPrinciples; the same principles are checked deterministically after generation.",
-              "The server assigns exact phase/block durations and runs deterministic safety/logistics validation after your proposal.",
-            ].join(" "),
-          },
+          { role: "system", content: trainingSystemPrompt() },
           { role: "user", content: JSON.stringify(buildPromptPayload(context)) },
         ],
       }),
@@ -84,11 +67,46 @@ export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
   }
 }
 
-export function getConfiguredAiTrainingProvider(): AiTrainingProvider | null {
-  const baseUrl = process.env.OCRCRAFT_AI_BASE_URL?.trim();
-  const model = process.env.OCRCRAFT_AI_MODEL?.trim();
-  if (!baseUrl || !model) return null;
-  return new OpenAiCompatibleTrainingProvider(baseUrl, model, process.env.OCRCRAFT_AI_API_KEY?.trim() || undefined);
+class ConfiguredAiTrainingProvider implements AiTrainingProvider {
+  readonly id: string;
+  readonly modelId: string;
+
+  constructor(
+    private readonly client: ReturnType<typeof createAiJsonClient>,
+  ) {
+    this.id = client.providerId;
+    this.modelId = client.modelId;
+  }
+
+  async generateTrainingPlan(context: AiTrainingGenerationContext): Promise<unknown> {
+    return this.client.generateJson(trainingSystemPrompt(), buildPromptPayload(context));
+  }
+}
+
+export async function getConfiguredAiTrainingProvider(): Promise<AiTrainingProvider | null> {
+  const config = await resolveAiProvider("training");
+  if (!config) return null;
+  return new ConfiguredAiTrainingProvider(createAiJsonClient(config, "training"));
+}
+
+function trainingSystemPrompt(): string {
+  return [
+    "You are OCRCraft's training-plan composer.",
+    "Use ONLY exerciseId values from the approved exercise pool.",
+    "Return JSON only. Do not invent exercises, equipment, safety facts or medical advice.",
+    "Create exactly one canonical warmup phase, one canonical main phase and one canonical cooldown phase.",
+    "Respect the exact requested exercise counts. mainPartExerciseCounts contains the exact number of exercises for main parts 1..N; assign every main item a matching 1-based mainPart.",
+    "mainPartProgramming is trainer-owned programming for main parts 1..N. Use it as context when selecting suitable exercises, but never rewrite, replace or invent its work/rest, rounds, ladder, pyramid, chipper or every-X values. The server applies it canonically after selection.",
+    "Respect organizationMode, teamSize and groupSplitCount. teamSize applies to team mode; groupSplitCount is the explicit number of parallel rotation groups in solo mode and therefore affects station-capacity/logistics suitability.",
+    "If partner format is requested, organizationMode is team and teamSize is exactly 2. Prefer approved teamwork/partner exercises and never change the pair size.",
+    "availableObstacleExerciseIds is a hard club-inventory constraint when present. The approved pool has already removed unavailable obstacle stations; never infer or re-introduce a missing obstacle.",
+    "Respect audience, ages, goals, body focus/avoidance, requested exercise types, formats, location, intensity and equipment.",
+    "If sourceSessions are supplied, use them as inspiration/context for recomposition, not as permission to bypass current constraints or copy every item.",
+    "When two exercises are similarly suitable, prefer the one with the lower recentUseCount so recent sessions are not repeated unnecessarily.",
+    "Preferred exercise IDs may intentionally override that variety preference.",
+    "Follow the supplied sportsPlanningPrinciples; the same principles are checked deterministically after generation.",
+    "The server assigns exact phase/block durations and runs deterministic safety/logistics validation after your proposal.",
+  ].join(" ");
 }
 
 function buildPromptPayload(context: AiTrainingGenerationContext) {

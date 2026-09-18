@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import type { GeneratedExerciseImage } from "./exercise-image-types";
+import { recordAiProviderUsage } from "@/server/ai/ai-provider-settings-repository";
 
 export const OPENAI_IMAGE_MODEL = "gpt-image-2";
 const endpoint = "https://api.openai.com/v1/images/generations";
@@ -123,6 +124,12 @@ export class OpenAIImageGenerator implements ExerciseImageGenerator {
       const bytes = Buffer.from(parsed.data.data[0].b64_json, "base64");
       const isPng = bytes.length >= 24 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
       if (!isPng) throw new OpenAIImageGenerationError("OpenAI image response was not a valid PNG file.", response.status, false);
+      await recordAiProviderUsage({
+        providerId: "openai",
+        capability: "image",
+        modelId: OPENAI_IMAGE_MODEL,
+        imageCount: 1,
+      }).catch(() => undefined);
       return {
         bytes,
         contentType: "image/png",
