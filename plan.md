@@ -578,7 +578,7 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [ ] media consent
 - [ ] blocked-item explanations
 - [ ] child-specific exercise wording and teaching cues
-- [ ] club rules always override AI
+- [x] club rules always override AI
 
 ## 13. Groups
 
@@ -587,8 +587,8 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [x] age/participant/duration defaults
 - [x] location/equipment defaults
 - [x] skill distribution + preferred formats
-- [ ] club-rule profile
-- [ ] Kids/Youth/Beginner/Advanced/Competition/Running/Open presets
+- [x] club-rule profile
+- [x] Kids/Youth/Beginner/Advanced/Competition/Running/Open presets
 
 ## 14. Admin
 
