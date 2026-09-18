@@ -22,6 +22,7 @@ export const TRAINING_FORMATS = [
   "run-exercise",
   "technique",
   "relay",
+  "partner",
 ] as const;
 export type TrainingFormat = (typeof TRAINING_FORMATS)[number];
 
