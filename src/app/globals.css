@@ -107,7 +107,7 @@ body {
 /* Modal content is rendered in a body portal; keep page stacking contexts from
    bleeding through the backdrop while a dialog is open. */
 body[data-dialog-open="true"] > *:not([role="dialog"]) {
-  visibility: hidden;
+  display: none !important;
 }
 
 body,
