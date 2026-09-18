@@ -50,6 +50,8 @@ export default async function QuickCreatePage() {
           durationMinutes: group.defaultDurationMinutes,
           defaultLocation: group.defaultLocation,
           defaultEquipment: group.defaultEquipment,
+          skillDistribution: group.skillDistribution,
+          preferredFormats: group.preferredFormats,
         }))}
       />
     </AppShell>
