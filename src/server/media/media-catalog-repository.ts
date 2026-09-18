@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash, randomUUID } from "node:crypto";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { safeExerciseImageUri } from "@/server/exercises/exercise-image-uri";
@@ -37,6 +38,11 @@ export interface MediaCatalogItem {
   readonly licenseLabel: string | null;
   readonly sourceReference: string | null;
   readonly usageNote: string | null;
+  readonly thumbnailUrl: string | null;
+  readonly attributionText: string | null;
+  readonly rightsStatus: string;
+  readonly consentRequired: boolean;
+  readonly consentConfirmed: boolean;
   readonly generatedAt: string | null;
   readonly createdAt: string;
   readonly errorMessage: string | null;
@@ -119,6 +125,11 @@ export async function listMediaCatalog({
         m.license_label,
         m.source_reference,
         m.usage_note,
+        m.thumbnail_uri,
+        m.attribution_text,
+        COALESCE(m.rights_status,'unreviewed'),
+        COALESCE(m.consent_required,false),
+        COALESCE(m.consent_confirmed,false),
         m.generated_at,
         m.created_at,
         m.error_message
@@ -169,9 +180,14 @@ export async function listMediaCatalog({
       licenseLabel: row[18] == null ? null : String(row[18]),
       sourceReference: row[19] == null ? null : String(row[19]),
       usageNote: row[20] == null ? null : String(row[20]),
-      generatedAt: row[21] == null ? null : String(row[21]),
-      createdAt: String(row[22]),
-      errorMessage: row[23] == null ? null : String(row[23]),
+      thumbnailUrl: safeExerciseImageUri(row[21]),
+      attributionText: row[22] == null ? null : String(row[22]),
+      rightsStatus: String(row[23] ?? "unreviewed"),
+      consentRequired: Boolean(row[24]),
+      consentConfirmed: Boolean(row[25]),
+      generatedAt: row[26] == null ? null : String(row[26]),
+      createdAt: String(row[27]),
+      errorMessage: row[28] == null ? null : String(row[28]),
     }));
   });
 }
@@ -263,8 +279,146 @@ export async function setMediaReviewStatus(
       UPDATE exercise_media_assets
       SET review_status=$reviewStatus, updated_at=current_timestamp
       WHERE id=$assetId::UUID
+        AND (
+          $reviewStatus<>'approved'
+          OR source_type<>'external_reference'
+          OR (
+            COALESCE(rights_status,'unreviewed')='approved'
+            AND COALESCE(trim(license_label),'')<>''
+            AND COALESCE(trim(source_reference),'')<>''
+            AND (COALESCE(consent_required,false)=false OR COALESCE(consent_confirmed,false)=true)
+          )
+        )
       RETURNING id::VARCHAR
     `, { assetId, reviewStatus });
     return reader.getRows().length === 1;
+  });
+}
+
+
+export interface SaveExternalMediaAssetInput {
+  readonly assetId?: string | null;
+  readonly exerciseId: string;
+  readonly mediaType: "image" | "video";
+  readonly mediaUrl: string;
+  readonly thumbnailUrl?: string | null;
+  readonly provider?: string | null;
+  readonly sourceReference: string;
+  readonly licenseLabel: string;
+  readonly attributionText?: string | null;
+  readonly usageNote?: string | null;
+  readonly rightsStatus: "unreviewed" | "approved" | "restricted";
+  readonly consentRequired: boolean;
+  readonly consentConfirmed: boolean;
+}
+
+function requireHttpsUrl(value: string, label: string): string {
+  const trimmed = value.trim();
+  let url: URL;
+  try { url = new URL(trimmed); } catch { throw new Error(label + " ist keine gültige URL."); }
+  if (url.protocol !== "https:") throw new Error(label + " muss HTTPS verwenden.");
+  return url.toString();
+}
+
+export async function saveExternalMediaAsset(input: SaveExternalMediaAssetInput): Promise<string> {
+  if (!UUID_PATTERN.test(input.exerciseId)) throw new Error("Ungültige Übungs-ID.");
+  if (input.assetId && !UUID_PATTERN.test(input.assetId)) throw new Error("Ungültige Medien-ID.");
+  if (input.rightsStatus === "approved" && input.consentRequired && !input.consentConfirmed) {
+    throw new Error("Für eine Rechtefreigabe muss die erforderliche Einwilligung bestätigt sein.");
+  }
+  const mediaUrl = requireHttpsUrl(input.mediaUrl, "Medien-URL");
+  const thumbnailUrl = input.thumbnailUrl?.trim()
+    ? requireHttpsUrl(input.thumbnailUrl, "Thumbnail-URL")
+    : null;
+  const sourceReference = requireHttpsUrl(input.sourceReference, "Quellen-URL");
+  const licenseLabel = input.licenseLabel.trim();
+  if (!licenseLabel) throw new Error("Lizenz/Verwendungsrecht ist erforderlich.");
+
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    if (input.assetId) {
+      const updated = await connection.runAndReadAll(`
+        UPDATE exercise_media_assets
+        SET media_type=$mediaType,
+            storage_uri=$mediaUrl,
+            content_type=$contentType,
+            sha256=$sha,
+            thumbnail_uri=$thumbnailUrl,
+            provider=$provider,
+            source_reference=$sourceReference,
+            license_label=$licenseLabel,
+            attribution_text=$attributionText,
+            usage_note=$usageNote,
+            rights_status=$rightsStatus,
+            consent_required=$consentRequired,
+            consent_confirmed=$consentConfirmed,
+            updated_at=current_timestamp
+        WHERE id=$assetId::UUID AND source_type='external_reference'
+        RETURNING id::VARCHAR
+      `, {
+        assetId: input.assetId,
+        mediaType: input.mediaType,
+        mediaUrl,
+        contentType: input.mediaType === "video" ? "video/external" : "image/external",
+        sha: createHash("sha256").update(mediaUrl).digest("hex"),
+        thumbnailUrl,
+        provider: input.provider?.trim() || null,
+        sourceReference,
+        licenseLabel,
+        attributionText: input.attributionText?.trim() || null,
+        usageNote: input.usageNote?.trim() || null,
+        rightsStatus: input.rightsStatus,
+        consentRequired: input.consentRequired,
+        consentConfirmed: input.consentConfirmed,
+      });
+      const id = updated.getRows()[0]?.[0];
+      if (id == null) throw new Error("Externes Medium wurde nicht gefunden.");
+      return String(id);
+    }
+
+    const created = await connection.runAndReadAll(`
+      INSERT INTO exercise_media_assets (
+        exercise_id,media_type,source_type,provider,
+        review_status,generation_status,storage_provider,storage_key,storage_uri,
+        content_type,sha256,generated_at,license_label,source_reference,usage_note,
+        thumbnail_uri,attribution_text,rights_status,consent_required,consent_confirmed
+      ) VALUES (
+        $exerciseId,$mediaType,'external_reference',$provider,
+        'pending','generated','filesystem',$storageKey,$mediaUrl,
+        $contentType,$sha,current_timestamp,$licenseLabel,$sourceReference,$usageNote,
+        $thumbnailUrl,$attributionText,$rightsStatus,$consentRequired,$consentConfirmed
+      )
+      RETURNING id::VARCHAR
+    `, {
+      exerciseId: input.exerciseId,
+      mediaType: input.mediaType,
+      provider: input.provider?.trim() || null,
+      storageKey: "external-reference/" + randomUUID(),
+      mediaUrl,
+      contentType: input.mediaType === "video" ? "video/external" : "image/external",
+      sha: createHash("sha256").update(mediaUrl).digest("hex"),
+      licenseLabel,
+      sourceReference,
+      usageNote: input.usageNote?.trim() || null,
+      thumbnailUrl,
+      attributionText: input.attributionText?.trim() || null,
+      rightsStatus: input.rightsStatus,
+      consentRequired: input.consentRequired,
+      consentConfirmed: input.consentConfirmed,
+    });
+    return String(created.getRows()[0]?.[0]);
+  });
+}
+
+export async function deleteExternalMediaAsset(assetId: string): Promise<boolean> {
+  if (!UUID_PATTERN.test(assetId)) return false;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const result = await connection.runAndReadAll(`
+      DELETE FROM exercise_media_assets
+      WHERE id=$assetId::UUID AND source_type='external_reference'
+      RETURNING id::VARCHAR
+    `, { assetId });
+    return result.getRows().length === 1;
   });
 }

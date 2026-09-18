@@ -43,11 +43,58 @@ function externalMediaUrl(value: string | undefined): string | null {
 
 async function ensureExternalMedia(connection: DuckDBConnection, exerciseId: string, draft: ExerciseImportDraft): Promise<void> {
   const imageUrl = externalMediaUrl(draft.mediaReference.image ?? draft.mediaReference.gif);
-  if (!imageUrl) return;
-  const existing = await connection.runAndReadAll("SELECT 1 FROM exercise_media_assets WHERE exercise_id=$id AND source_type='external_reference' LIMIT 1", { id: exerciseId });
-  if (existing.getRows().length) return;
-  const isGif = Boolean(draft.mediaReference.gif && !draft.mediaReference.image);
-  await connection.run(`INSERT INTO exercise_media_assets (exercise_id,media_type,source_type,provider,illustration_format,review_status,generation_status,storage_provider,storage_key,storage_uri,content_type,width,height,sha256,generated_at,license_label,source_reference,usage_note) VALUES ($id,'image','external_reference',$provider,'legacy_triptych','pending','generated','s3',$key,$uri,$contentType,180,180,$sha,current_timestamp,$license,$source,$usage)`, { id: exerciseId, provider: draft.sourceMetadata.provider, key: `external/${slug(draft.sourceMetadata.provider)}/${draft.sourceRecordId}.${isGif ? "gif" : "jpg"}`, uri: imageUrl, contentType: isGif ? "image/gif" : "image/jpeg", sha: createHash("sha256").update(imageUrl).digest("hex"), license: draft.mediaReference.licenseLabel, source: draft.sourceReference, usage: `Vorlage für spätere KI-Ersetzung; ${draft.mediaReference.licenseLabel} beachten.` });
+  const videoUrl = externalMediaUrl(draft.mediaReference.video);
+  const references = [
+    ...(imageUrl ? [{
+      mediaType: "image" as const,
+      url: imageUrl,
+      contentType: draft.mediaReference.gif && !draft.mediaReference.image ? "image/gif" : "image/jpeg",
+      thumbnailUrl: null as string | null,
+      suffix: draft.mediaReference.gif && !draft.mediaReference.image ? "gif" : "jpg",
+    }] : []),
+    ...(videoUrl ? [{
+      mediaType: "video" as const,
+      url: videoUrl,
+      contentType: videoUrl.toLowerCase().includes(".webm") ? "video/webm" : "video/mp4",
+      thumbnailUrl: imageUrl,
+      suffix: videoUrl.toLowerCase().includes(".webm") ? "webm" : "mp4",
+    }] : []),
+  ];
+
+  for (const reference of references) {
+    const existing = await connection.runAndReadAll(
+      "SELECT 1 FROM exercise_media_assets WHERE exercise_id=$id AND source_type='external_reference' AND media_type=$mediaType AND storage_uri=$uri LIMIT 1",
+      { id: exerciseId, mediaType: reference.mediaType, uri: reference.url },
+    );
+    if (existing.getRows().length) continue;
+
+    await connection.run(`
+      INSERT INTO exercise_media_assets (
+        exercise_id,media_type,source_type,provider,illustration_format,
+        review_status,generation_status,storage_provider,storage_key,storage_uri,
+        content_type,width,height,sha256,generated_at,license_label,source_reference,
+        usage_note,thumbnail_uri,attribution_text,rights_status,consent_required,consent_confirmed
+      ) VALUES (
+        $id,$mediaType,'external_reference',$provider,'legacy_triptych',
+        'pending','generated','filesystem',$key,$uri,
+        $contentType,NULL,NULL,$sha,current_timestamp,$license,$source,
+        $usage,$thumbnail,$attribution,'unreviewed',false,false
+      )
+    `, {
+      id: exerciseId,
+      mediaType: reference.mediaType,
+      provider: draft.sourceMetadata.provider,
+      key: `external-reference/${slug(draft.sourceMetadata.provider)}/${draft.sourceRecordId}-${reference.mediaType}.${reference.suffix}`,
+      uri: reference.url,
+      contentType: reference.contentType,
+      sha: createHash("sha256").update(reference.url).digest("hex"),
+      license: draft.mediaReference.licenseLabel,
+      source: draft.sourceReference,
+      usage: `Externe Referenz; vor Freigabe Lizenz, Quelle und ggf. Einwilligung prüfen. ${draft.mediaReference.licenseLabel}.`,
+      thumbnail: reference.thumbnailUrl,
+      attribution: draft.mediaReference.attribution ?? null,
+    });
+  }
 }
 
 function mappedRegions(record: HasaneyldrmExercise, draft: ExerciseImportDraft): string[] {
@@ -150,7 +197,7 @@ async function persistDraft(connection: DuckDBConnection, record: HasaneyldrmExe
     const equipment = await connection.runAndReadAll("SELECT id::VARCHAR FROM equipment WHERE seed_key=$key", { key });
     if (equipment.getRows()[0]?.[0]) await connection.run("INSERT OR IGNORE INTO exercise_equipment VALUES ($id,$equipment,1)", { id: exerciseId, equipment: String(equipment.getRows()[0][0]) });
   }
-  await connection.run("INSERT INTO exercise_source_references (exercise_id,provider,title,source_url,source_type,license_label,notes) VALUES ($id,$provider,$title,$sourceUrl,'dataset',$license,$notes)", { id: exerciseId, provider: draft.sourceMetadata.provider, title: draft.sourceMetadata.title, sourceUrl, license: draft.mediaReference.licenseLabel, notes: `source_record_id=${draft.sourceRecordId}; media_usage=${draft.mediaReference.usage}; image=${draft.mediaReference.image ?? ""}; gif=${draft.mediaReference.gif ?? ""}` });
+  await connection.run("INSERT INTO exercise_source_references (exercise_id,provider,title,source_url,source_type,license_label,notes) VALUES ($id,$provider,$title,$sourceUrl,'dataset',$license,$notes)", { id: exerciseId, provider: draft.sourceMetadata.provider, title: draft.sourceMetadata.title, sourceUrl, license: draft.mediaReference.licenseLabel, notes: `source_record_id=${draft.sourceRecordId}; media_usage=${draft.mediaReference.usage}; image=${draft.mediaReference.image ?? ""}; gif=${draft.mediaReference.gif ?? ""}; video=${draft.mediaReference.video ?? ""}` });
   await ensureExternalMedia(connection, exerciseId, draft);
   for (const locale of ["de", "en"] as const) await connection.run(`INSERT OR REPLACE INTO search_documents_${locale} (document_id,entity_type,entity_id,title,aliases,summary,tags,body_regions,equipment,instructions) VALUES ($documentId,'exercise',$id,$title,$title,$summary,'external-import',$regions,$equipment,$instructions)`, { documentId: `exercise:${exerciseId}`, id: exerciseId, title: locale === "de" ? deName : draft.nameEn, summary: locale === "de" ? deSummary : enSummary, regions: draft.bodyRegionIds.join(" "), equipment: draft.equipmentSeedKeys.join(" "), instructions: draft.executionStepsEn.join(" ") });
   await connection.run("UPDATE search_index_state SET status='dirty',last_error=NULL WHERE locale IN ('de','en')");

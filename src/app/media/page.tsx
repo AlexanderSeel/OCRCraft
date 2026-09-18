@@ -3,6 +3,8 @@ import { AppShell } from "@/components/app-shell";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import { MediaJobRefresh } from "@/components/media/media-job-refresh";
 import { OrphanedMediaCleanupForm } from "@/components/media/orphaned-media-cleanup-form";
+import { ExternalMediaManager } from "@/components/media/external-media-manager";
+import { VideoPopoverButton } from "@/components/media/video-popover-button";
 import {
   getMediaCatalogSummary,
   listMediaCatalog,
@@ -15,7 +17,7 @@ import {
   listRecentMediaGenerationJobs,
   type RecentMediaGenerationJob,
 } from "@/server/media/media-generation-job-repository";
-import { cleanupOrphanedMediaAction, queueMediaBatchAction, retryMediaGenerationJobAction, updateMediaReviewStatusAction } from "./actions";
+import { cleanupOrphanedMediaAction, deleteExternalMediaAction, queueMediaBatchAction, retryMediaGenerationJobAction, saveExternalMediaAction, updateMediaReviewStatusAction } from "./actions";
 import { getMediaMaintenanceSummary } from "@/server/media/media-maintenance-service";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +38,9 @@ interface PageProps {
     jobRetried?: string;
     cleanupRemoved?: string;
     cleanupError?: string;
+    externalSaved?: string;
+    externalDeleted?: string;
+    externalError?: string;
   }>;
 }
 
@@ -69,6 +74,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
       subtitle="Bilder, Illustrationen und Videos des Übungskatalogs mit Herkunft, Generierungs- und Reviewstatus."
       actions={(
         <div className="flex flex-wrap gap-2">
+          <ExternalMediaManager deleteAction={deleteExternalMediaAction} saveAction={saveExternalMediaAction} />
           <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/exercises">
             Übungskatalog
           </Link>
@@ -115,6 +121,21 @@ export default async function MediaPage({ searchParams }: PageProps) {
         {params.cleanupError ? (
           <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
             Die Medienbereinigung konnte nicht vollständig ausgeführt werden.
+          </p>
+        ) : null}
+        {params.externalSaved ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            Externes Medium wurde gespeichert.
+          </p>
+        ) : null}
+        {params.externalDeleted ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            Externes Medium wurde entfernt.
+          </p>
+        ) : null}
+        {params.externalError ? (
+          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+            Externes Medium konnte nicht gespeichert werden. Prüfe HTTPS-URLs, Lizenz und Einwilligungsstatus.
           </p>
         ) : null}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
@@ -330,12 +351,15 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
       <div className="aspect-[16/10] bg-[var(--surface-subtle)]">
-        {asset.imageUrl && asset.mediaType !== "video" ? (
+        {asset.mediaType === "video" && asset.thumbnailUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img alt={`${asset.exerciseName} · Video-Thumbnail`} className="h-full w-full object-contain" loading="lazy" src={asset.thumbnailUrl} />
+        ) : asset.imageUrl && asset.mediaType !== "video" ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img alt={`${asset.exerciseName} · Medienvorschau`} className="h-full w-full object-contain" loading="lazy" src={asset.imageUrl} />
         ) : (
           <div className="grid h-full place-items-center p-6 text-center text-sm font-bold text-[var(--muted)]">
-            {asset.mediaType === "video" ? "Video-Metadaten · keine Inline-Vorschau" : "Keine aufrufbare Vorschau gespeichert"}
+            {asset.mediaType === "video" ? "Video vorhanden · ohne Thumbnail" : "Keine aufrufbare Vorschau gespeichert"}
           </div>
         )}
       </div>
@@ -365,6 +389,8 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
           <Data label="Sequenz" value={asset.sequenceStepCount == null ? "–" : `${asset.sequenceStepCount} Schritte`} />
           <Data label="Größe" value={asset.width && asset.height ? `${asset.width} × ${asset.height}` : "–"} />
           <Data label="Content-Type" value={asset.contentType ?? "–"} />
+          <Data label="Rechte" value={rightsLabel(asset.rightsStatus)} />
+          <Data label="Einwilligung" value={asset.consentRequired ? (asset.consentConfirmed ? "Bestätigt" : "Fehlt") : "Nicht erforderlich"} />
         </dl>
 
         {(asset.provider || asset.model || asset.styleProfile) ? (
@@ -373,6 +399,8 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
           </p>
         ) : null}
         {asset.licenseLabel ? <p className="text-xs font-bold">Lizenz: {asset.licenseLabel}</p> : null}
+        {asset.attributionText ? <p className="text-xs text-[var(--muted)]">Attribution: {asset.attributionText}</p> : null}
+        {asset.usageNote ? <p className="text-xs text-[var(--muted)]">{asset.usageNote}</p> : null}
         {asset.errorMessage ? <p className="rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs font-bold text-[var(--danger)]">{asset.errorMessage}</p> : null}
 
         <div className="flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
@@ -399,8 +427,33 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
             Übung öffnen
           </Link>
           <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/exercises/${asset.exerciseId}/edit`}>
-            Bearbeiten
+            Übung bearbeiten
           </Link>
+          {asset.mediaType === "video" && asset.imageUrl ? (
+            <VideoPopoverButton title={asset.exerciseName} videoUrl={asset.imageUrl} thumbnailUrl={asset.thumbnailUrl} />
+          ) : null}
+          {asset.sourceType === "external_reference" && asset.imageUrl ? (
+            <ExternalMediaManager
+              deleteAction={deleteExternalMediaAction}
+              saveAction={saveExternalMediaAction}
+              value={{
+                id: asset.id,
+                exerciseId: asset.exerciseId,
+                exerciseName: asset.exerciseName,
+                mediaType: asset.mediaType === "video" ? "video" : "image",
+                mediaUrl: asset.imageUrl,
+                thumbnailUrl: asset.thumbnailUrl,
+                provider: asset.provider,
+                sourceReference: asset.sourceReference,
+                licenseLabel: asset.licenseLabel,
+                attributionText: asset.attributionText,
+                usageNote: asset.usageNote,
+                rightsStatus: asset.rightsStatus,
+                consentRequired: asset.consentRequired,
+                consentConfirmed: asset.consentConfirmed,
+              }}
+            />
+          ) : null}
           {sourceHref ? (
             <a className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={sourceHref} rel="noreferrer" target="_blank">
               Quelle
@@ -564,6 +617,12 @@ function mediaTypeLabel(value: string): string {
   return value;
 }
 
+function rightsLabel(value: string): string {
+  if (value === "approved") return "Geprüft";
+  if (value === "restricted") return "Eingeschränkt";
+  return "Noch zu prüfen";
+}
+
 function safeHttps(value: string | null): string | null {
   if (!value) return null;
   try {
@@ -598,3 +657,4 @@ function batchErrorLabel(value: string): string {
   if (value === "action") return "Die gewählte Batch-Aktion ist ungültig.";
   return "Die Batch-Operation konnte nicht in die Warteschlange gestellt werden.";
 }
+

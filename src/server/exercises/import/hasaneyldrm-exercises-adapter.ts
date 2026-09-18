@@ -18,6 +18,9 @@ export const hasaneyldrmExerciseSchema = z.object({
   media_id: z.union([z.string(), z.number()]).optional(),
   image: optionalUrl,
   gif_url: optionalUrl,
+  video: optionalUrl,
+  video_url: optionalUrl,
+  videoUrl: optionalUrl,
   attribution: z.string().optional(),
   source_provider: z.string().optional(),
   source_url: optionalUrl,
@@ -48,6 +51,7 @@ export interface ExerciseImportDraft {
   readonly mediaReference: {
     readonly image?: string;
     readonly gif?: string;
+    readonly video?: string;
     readonly attribution?: string;
     readonly licenseLabel: string;
     readonly usage: "template_only";
@@ -84,7 +88,7 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
   const warnings = [
     ...(bodyRegionIds.length ? [] : ["No OCRCraft body region could be mapped"]),
     ...(equipmentSeedKeys.some((key) => !Object.values(EQUIPMENT_MAP).includes(key)) ? ["One or more equipment values need catalogue review"] : []),
-    ...(record.image || record.gif_url ? ["Media is a template reference only and carries the Gym-Visual-Lizenz label"] : []),
+    ...(record.image || record.gif_url || record.video || record.video_url || record.videoUrl ? ["Media is a template reference only and requires license/source review before approval"] : []),
     "German translation and trainer review are required before publishing",
   ];
   const sourceProvider = record.source_provider ?? "hasaneyldrm/exercises-dataset";
@@ -111,6 +115,7 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
     mediaReference: {
       image: record.image,
       gif: record.gif_url,
+      video: record.video ?? record.video_url ?? record.videoUrl,
       attribution: record.attribution,
       licenseLabel,
       usage: "template_only",

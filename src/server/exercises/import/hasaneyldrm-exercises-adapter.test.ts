@@ -7,7 +7,7 @@ describe("hasaneyldrm exercise adapter", () => {
       id: 42, name: "Goblet Squat", category: "strength", body_part: "upper legs",
       equipment: "Kettlebell", instructions: { en: "Squat while holding the kettlebell." },
       instruction_steps: { en: ["Stand tall.", "Lower with control.", "Drive up."] },
-      image: "https://example.com/image.jpg", attribution: "Gym Visual",
+      image: "https://example.com/image.jpg", video: "videos/goblet-squat.mp4", attribution: "Gym Visual",
     });
     expect(draft.seedKey).toBe("imported-goblet-squat-42");
     expect(draft.bodyRegionIds).toContain("quadriceps");
@@ -16,9 +16,10 @@ describe("hasaneyldrm exercise adapter", () => {
     expect(draft.reviewStatus).toBe("draft");
     expect(draft.mediaReference.licenseLabel).toBe("Gym-Visual-Lizenz");
     expect(draft.mediaReference.usage).toBe("template_only");
+    expect(draft.mediaReference.video).toBe("videos/goblet-squat.mp4");
     expect(draft.sourceMetadata.sourceType).toBe("dataset");
     expect(draft.sourceMetadata.provider).toBe("hasaneyldrm/exercises-dataset");
-    expect(draft.warnings.join(" ")).toContain("Gym-Visual-Lizenz");
+    expect(draft.warnings.join(" ")).toContain("license/source review");
   });
 
   it("rejects non-array batch input and supplies safe fallback steps", () => {

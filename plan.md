@@ -99,8 +99,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Medien
 
-- [ ] Galerie, Videos und externe Thumbnails verwalten.
-- [ ] Lizenz-, Quellen- und Einwilligungsprüfung ergänzen.
+- [x] Galerie, Videos und externe Thumbnails im Medienkatalog verwalten; externe Medien können einer Übung per Autocomplete zugeordnet, bearbeitet/entfernt und Videos im Player-Popover abgespielt werden.
+- [x] Lizenz-, Quellen-, Attribution- und Einwilligungsprüfung für externe Medien ergänzen; Importmedien starten ungeprüft und können explizit freigegeben oder eingeschränkt werden.
 - [x] Verwaiste Medien in Dateisystem/S3 gegen DuckDB-Referenzen erkennen; nicht referenzierte Storage-Objekte werden nur nach Admin-Bestätigung gelöscht, fehlende referenzierte Objekte bleiben als Prüfhinweis sichtbar.
 - [ ] S3-kompatible Speicherung produktionsfest machen.
 - [ ] Legacy-Triptychon nach fachlicher Prüfung in Sequenzbilder migrieren.

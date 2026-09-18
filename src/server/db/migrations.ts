@@ -68,6 +68,7 @@ const migrations: readonly Migration[] = [
   { version: 55, fileName: "055_user_profile_identity.sql" },
   { version: 56, fileName: "056_duplicate_resolution_decision.sql" },
   { version: 57, fileName: "057_ai_provider_oauth_copilot.sql" },
+  { version: 58, fileName: "058_external_media_metadata.sql" },
 ];
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {
