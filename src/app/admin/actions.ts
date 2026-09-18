@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
+import { createDatabaseBackup } from "@/server/db/backup-service";
+import { recordAuditEvent } from "@/server/db/audit-service";
 import { reseedAllDatabaseData } from "@/server/db/reseed-service";
 import { refreshDuplicateReviewTasks, resolveDuplicateTask } from "@/server/exercises/duplicate-review-service";
 import {
@@ -25,6 +27,7 @@ export async function reseedDatabaseAction(formData: FormData): Promise<void> {
   try {
     await ensureDatabaseReady();
     await reseedAllDatabaseData();
+    await recordAuditEvent({ action: "database.reseed", entityType: "database", metadata: { source: "admin" } });
   } catch {
     redirect("/admin?tab=database&reseedError=failed#database-settings");
   }
@@ -33,6 +36,16 @@ export async function reseedDatabaseAction(formData: FormData): Promise<void> {
   revalidatePath("/admin");
   revalidatePath("/exercises");
   redirect("/admin?tab=database&reseeded=1#database-settings");
+}
+
+export async function createDatabaseBackupAction(): Promise<void> {
+  try {
+    const backup = await createDatabaseBackup();
+    await recordAuditEvent({ action: "database.backup", entityType: "database", metadata: { fileName: backup.fileName, bytes: backup.bytes } });
+    redirect(`/admin?tab=database&backup=${encodeURIComponent(backup.fileName)}`);
+  } catch {
+    redirect("/admin?tab=database&backupError=1");
+  }
 }
 
 export async function runOutdoorVariantEnrichmentAction(): Promise<void> {

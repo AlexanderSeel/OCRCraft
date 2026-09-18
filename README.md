@@ -34,7 +34,9 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Bet
 ### Daten und Medien
 
 - DuckDB über zentrale serverseitige Verbindungen und versionierte Migrationen
+- lock-gesicherte Datenbank-Backups unter `data/backups/` mit JSON-Manifest; Restore und Rotation bleiben ein offener Planpunkt
 - FTS-Status (`healthy`, `dirty`, `rebuilding`, `failed`) und zweisprachige Suchdokumente
+- Audit-Events für Reset-, Backup- und Dublettenaktionen
 - externe Quellen-, Lizenz- und Generierungsmetadaten
 - OpenAI-Images-Pipeline mit `gpt-image-2`, Dry Run, stabilen Seed-Dateinamen, Reviewstatus und Dateisystem/S3-Abstraktion
 - generierte Bilder bleiben an stabile Übungs-/Seed-IDs gebunden und werden bei Reseeds nicht automatisch gelöscht

@@ -20,7 +20,7 @@ describe("database migrations", () => {
       const files = (await readdir(path.join(process.cwd(), "src", "server", "db", "migrations")))
         .filter((fileName) => /^\d{3}_.*\.sql$/.test(fileName))
         .sort();
-      expect(files.length).toBeGreaterThanOrEqual(40);
+      expect(files.length).toBeGreaterThanOrEqual(45);
       for (const fileName of files) {
         await runScript(connection, await readFile(path.join(process.cwd(), "src", "server", "db", "migrations", fileName), "utf8"));
       }

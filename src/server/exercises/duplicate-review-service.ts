@@ -3,6 +3,7 @@ import "server-only";
 import { assessExerciseDuplicate, shouldReviewDuplicate, type DuplicateExerciseRecord } from "@/domain/exercise/duplicate-detection";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
+import { recordAuditEvent } from "@/server/db/audit-service";
 import type { DuckDBConnection } from "@duckdb/node-api";
 
 export interface DuplicateReviewTask {
@@ -132,4 +133,5 @@ export async function resolveDuplicateTask(taskId: string, keepExerciseId: strin
       await connection.run("COMMIT");
     } catch (error) { await connection.run("ROLLBACK"); throw error; }
   });
+  await recordAuditEvent({ action: `duplicate.${status}`, entityType: "exercise_duplicate_task", entityId: taskId, metadata: { keepExerciseId } });
 }

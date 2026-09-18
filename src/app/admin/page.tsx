@@ -7,7 +7,8 @@ import { Disclosure } from "@/components/ui/disclosure";
 import { AdminTabs, normalizeAdminTab } from "@/components/admin/admin-tabs";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
-import { reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, scanDuplicateExercisesAction } from "./actions";
+import { listRecentAuditEvents } from "@/server/db/audit-service";
+import { createDatabaseBackupAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, scanDuplicateExercisesAction } from "./actions";
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 
 export const dynamic = "force-dynamic";
@@ -17,17 +18,20 @@ interface AdminPageProps {
     readonly reseeded?: string;
     readonly reseedError?: string;
     readonly tab?: string;
+    readonly backup?: string;
+    readonly backupError?: string;
   }>;
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
-  const [searchStates, seedCompleteness, duplicateTasks] = await Promise.all([
+  const [searchStates, seedCompleteness, duplicateTasks, auditEvents] = await Promise.all([
     getSearchIndexStates(),
     getSeedCompletenessReport(),
     listDuplicateReviewTasks(),
+    listRecentAuditEvents(),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
-  const { reseeded, reseedError, tab } = await searchParams;
+  const { reseeded, reseedError, tab, backup, backupError } = await searchParams;
   const activeTab = normalizeAdminTab(tab);
 
   return (
@@ -59,6 +63,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               Die Datenbank wurde mit den aktuellen Initialdaten neu aufgebaut.
             </p>
           ) : null}
+          {backup ? <p aria-live="polite" className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Backup erstellt: {backup}</p> : null}
+          {backupError ? <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Das Datenbank-Backup konnte nicht erstellt werden.</p> : null}
+          <form action={createDatabaseBackupAction} className="mt-4">
+            <ActionProgressButton className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-4 text-sm font-black" pendingLabel="Backup wird erstellt …">Datenbank sichern</ActionProgressButton>
+          </form>
           {reseedError ? (
             <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
               {reseedError === "confirmation"
@@ -129,6 +138,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 {state.lastError ? <p className="mt-3 text-sm font-semibold text-[var(--danger)]">{state.lastError}</p> : null}
               </article>
             ))}
+          </div>
+          <div className="mt-6 border-t border-[var(--border)] pt-5">
+            <h3 className="text-sm font-black">Letzte Betriebsaktionen</h3>
+            {auditEvents.length === 0 ? <p className="mt-2 text-sm text-[var(--muted)]">Noch keine protokollierten Aktionen.</p> : <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{auditEvents.slice(0, 10).map((event) => <li className="rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2" key={event.id}><span className="font-black text-[var(--foreground)]">{event.action}</span> · {event.entityType} · {event.createdAt}</li>)}</ul>}
           </div>
         </section> : null}
 
