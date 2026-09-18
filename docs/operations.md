@@ -57,6 +57,29 @@ Die GitHub OAuth-App erhält dieselbe Callback-URL. Der zurückgegebene User Acc
 
 `OCRCRAFT_PUBLIC_BASE_URL` ist bei Reverse Proxy/externem Host empfohlen. Ohne die Variable verwendet OCRCraft den Origin des eingehenden Requests.
 
+## S3-kompatibler Medienspeicher
+
+Für produktiven S3-/MinIO-/R2-kompatiblen Speicher:
+
+```text
+OCRCRAFT_IMAGE_STORAGE=s3
+OCRCRAFT_IMAGE_BUCKET=<bucket>
+OCRCRAFT_S3_REGION=<region>
+OCRCRAFT_S3_ENDPOINT=https://<endpoint>        # optional bei AWS S3
+OCRCRAFT_IMAGE_PUBLIC_BASE_URL=https://<cdn-or-public-bucket-base>
+OCRCRAFT_IMAGE_PREFIX=exercise-images
+OCRCRAFT_S3_FORCE_PATH_STYLE=1                 # typischerweise für MinIO/kompatible Endpunkte
+OCRCRAFT_IMAGE_CACHE_CONTROL=public, max-age=31536000, immutable
+OCRCRAFT_S3_SSE=AES256                         # optional: AES256 oder aws:kms
+OCRCRAFT_S3_KMS_KEY_ID=<kms-key-id>            # erforderlich bei aws:kms
+```
+
+Im Produktionsmodus ist eine HTTPS-`OCRCRAFT_IMAGE_PUBLIC_BASE_URL` erforderlich, damit gespeicherte Bilder in der Anwendung ausgeliefert werden können. Benutzerdefinierte S3-Endpunkte müssen ebenfalls HTTPS verwenden. Nur für bewusst isolierte Entwicklungsumgebungen kann HTTP mit `OCRCRAFT_S3_ALLOW_INSECURE_HTTP=1` erlaubt werden.
+
+Der Storage führt für Diagnose/Wartung einen Bucket-`HeadBucket`-Check aus und inventarisiert Objekte paginiert. Neue Objekte erhalten Cache-Control, OCRCraft-Metadaten und optional serverseitige S3-Verschlüsselung. Bei `aws:kms` muss der App-Principal zusätzlich Zugriff auf den konfigurierten KMS-Key besitzen.
+
+Die S3-Zugangsdaten können über `AWS_ACCESS_KEY_ID` und `AWS_SECRET_ACCESS_KEY` oder über die normale AWS Credential Chain bereitgestellt werden. Niemals S3-Secrets in DuckDB-Exporte oder Git übernehmen.
+
 ## Backup und Restore
 
 - `Datenbank sichern` erstellt eine konsistente Kopie in `data/backups/` inklusive Manifest.

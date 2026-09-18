@@ -67,6 +67,7 @@ async function withInventoryStorage<T>(
     throw new Error("Das konfigurierte Medien-Storage unterstützt keine Inventarisierung.");
   }
   try {
+    await storage.healthCheck?.();
     return await callback(storage as ExerciseImageStorage & { listKeys(): Promise<readonly string[]> });
   } finally {
     storage.close?.();
