@@ -15,7 +15,7 @@ import {
 } from "@/server/exercises/outdoor-variant-enrichment-service";
 import { requireAdmin, requireSuperAdmin } from "@/server/auth/identity-service";
 import { restoreDatabaseBackup } from "@/server/db/restore-service";
-import { aiProviderInstanceIdSchema, aiProviderKindSchema, deleteAiProviderInstance, saveAiProviderInstance, type AiCapability } from "@/server/ai/ai-provider-settings-repository";
+import { aiProviderInstanceIdSchema, aiProviderKindSchema, deleteAiProviderInstance, disconnectAiProviderOAuth, saveAiProviderInstance, type AiCapability } from "@/server/ai/ai-provider-settings-repository";
 
 const reseedConfirmationSchema = z.literal("OCRCRAFT ZURÜCKSETZEN");
 
@@ -185,9 +185,12 @@ export async function saveAiProviderSettingsAction(formData: FormData): Promise<
   if (id && !id.success) redirect("/admin?tab=settings&aiError=provider#ai-provider-settings");
 
   try {
-    const authMode = String(formData.get("authMode") ?? "environment") === "encrypted_key"
+    const authModeValue = String(formData.get("authMode") ?? "environment");
+    const authMode = authModeValue === "encrypted_key"
       ? "encrypted_key"
-      : "environment";
+      : authModeValue === "oauth"
+        ? "oauth"
+        : "environment";
     const assignments = (["training","exercise_draft","image"] as const)
       .map((capability) => assignmentFrom(formData, capability))
       .filter((item): item is NonNullable<typeof item> => item != null);
@@ -263,4 +266,27 @@ export async function deleteAiProviderSettingsAction(formData: FormData): Promis
 
   revalidatePath("/admin");
   redirect("/admin?tab=settings#ai-provider-settings");
+}
+
+
+export async function disconnectAiProviderOAuthAction(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const id = aiProviderInstanceIdSchema.safeParse(formData.get("id"));
+  if (!id.success) redirect("/admin?tab=settings&aiError=provider#ai-provider-settings");
+
+  try {
+    await disconnectAiProviderOAuth(id.data, actor.id);
+    await recordAuditEvent({
+      action: "ai_provider.oauth.disconnect",
+      entityType: "ai_provider_instance",
+      entityId: id.data,
+      actorType: "user",
+      actorId: actor.id,
+    });
+  } catch {
+    redirect("/admin?tab=settings&aiError=oauth#ai-provider-settings");
+  }
+
+  revalidatePath("/admin");
+  redirect("/admin?tab=settings&aiSaved=oauth-disconnected#ai-provider-settings");
 }

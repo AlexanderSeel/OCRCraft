@@ -1,7 +1,7 @@
 import "server-only";
 
 import { z } from "zod";
-import type { AiProviderKind } from "./ai-provider-core";
+import type { AiProviderAuthMode, AiProviderKind } from "./ai-provider-core";
 
 export interface AiModelOption {
   readonly id: string;
@@ -31,8 +31,6 @@ const knownModels: Readonly<Record<AiProviderKind, readonly AiModelOption[]>> = 
     { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash", supportsText: true, supportsImage: false, source: "known" },
     { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", supportsText: true, supportsImage: false, source: "known" },
     { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro Preview", supportsText: true, supportsImage: false, source: "known" },
-    { id: "gemini-3-pro-image", label: "Gemini 3 Pro Image", supportsText: false, supportsImage: true, source: "known" },
-    { id: "gemini-3.1-flash-image", label: "Gemini 3.1 Flash Image", supportsText: false, supportsImage: true, source: "known" },
   ],
   anthropic: [
     { id: "claude-fable-5", label: "Claude Fable 5", supportsText: true, supportsImage: false, source: "known" },
@@ -42,6 +40,7 @@ const knownModels: Readonly<Record<AiProviderKind, readonly AiModelOption[]>> = 
     { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6", supportsText: true, supportsImage: false, source: "known" },
     { id: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5", supportsText: true, supportsImage: false, source: "known" },
   ],
+  copilot: [],
   "openai-compatible": [],
 };
 
@@ -93,10 +92,23 @@ async function discoverOpenAiCompatible(
   return payload.data.map((model) => openAiModelOption(model.id));
 }
 
-async function discoverGemini(apiKey?: string): Promise<readonly AiModelOption[]> {
-  if (!apiKey) throw new Error("Für den Live-Abruf fehlt GEMINI_API_KEY bzw. ein gespeicherter Key.");
-  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", {
-    headers: { "x-goog-api-key": apiKey },
+async function discoverGemini(input: {
+  readonly baseUrl: string;
+  readonly apiKey?: string;
+  readonly authMode: AiProviderAuthMode;
+  readonly googleProjectId: string | null;
+}): Promise<readonly AiModelOption[]> {
+  if (!input.apiKey) throw new Error("Für den Live-Abruf fehlt ein Gemini API-Key oder OAuth-Token.");
+  const headers: Record<string, string> = {};
+  if (input.authMode === "oauth") {
+    if (!input.googleProjectId) throw new Error("OCRCRAFT_GOOGLE_PROJECT_ID fehlt für Gemini OAuth.");
+    headers.authorization = "Bearer " + input.apiKey;
+    headers["x-goog-user-project"] = input.googleProjectId;
+  } else {
+    headers["x-goog-api-key"] = input.apiKey;
+  }
+  const response = await fetch(input.baseUrl.replace(/\/$/, "") + "/models?pageSize=1000", {
+    headers,
     signal: AbortSignal.timeout(12_000),
     redirect: "error",
   });
@@ -151,18 +163,53 @@ async function discoverAnthropic(
   }));
 }
 
+async function discoverCopilot(apiKey?: string): Promise<readonly AiModelOption[]> {
+  if (!apiKey) throw new Error("Für den Copilot-Modellabruf fehlt ein GitHub User Access Token.");
+  const { CopilotClient } = await import("@github/copilot-sdk");
+  const client = new CopilotClient({
+    gitHubToken: apiKey,
+    useLoggedInUser: false,
+    mode: "empty",
+    logLevel: "error",
+  });
+  try {
+    await client.start();
+    const models = await client.listModels();
+    return models
+      .filter((model) => model.policy?.state !== "disabled")
+      .map((model) => ({
+        id: model.id,
+        label: model.name || model.id,
+        supportsText: true,
+        supportsImage: false,
+        source: "live" as const,
+      }));
+  } finally {
+    await client.stop().catch(() => []);
+  }
+}
+
 export async function discoverAiModels(input: {
   readonly providerKind: AiProviderKind;
   readonly baseUrl: string | null;
   readonly apiKey?: string;
+  readonly authMode: AiProviderAuthMode;
+  readonly googleProjectId: string | null;
 }): Promise<AiModelDiscoveryResult> {
   const fallback = getKnownAiModels(input.providerKind);
   try {
     let live: readonly AiModelOption[];
     if (input.providerKind === "gemini") {
-      live = await discoverGemini(input.apiKey);
+      live = await discoverGemini({
+        baseUrl: input.baseUrl || "https://generativelanguage.googleapis.com/v1beta",
+        apiKey: input.apiKey,
+        authMode: input.authMode,
+        googleProjectId: input.googleProjectId,
+      });
     } else if (input.providerKind === "anthropic") {
       live = await discoverAnthropic(input.baseUrl || "https://api.anthropic.com/v1", input.apiKey);
+    } else if (input.providerKind === "copilot") {
+      live = await discoverCopilot(input.apiKey);
     } else {
       if (!input.baseUrl) throw new Error("Base URL fehlt.");
       live = await discoverOpenAiCompatible(input.baseUrl, input.apiKey);

@@ -10,12 +10,12 @@ import {
   defaultProviderKeyEnvironment,
   providerKindLabel,
   providerSupportsCapability,
+  providerSupportsOAuth,
   type AiCapability,
+  type AiProviderAuthMode,
   type AiProviderKind,
 } from "@/server/ai/ai-provider-core";
-import type {
-  AiProviderSettingsView,
-} from "@/server/ai/ai-provider-settings-repository";
+import type { AiProviderSettingsView } from "@/server/ai/ai-provider-settings-repository";
 import type { AiModelOption } from "@/server/ai/ai-model-discovery";
 
 interface Props {
@@ -24,6 +24,7 @@ interface Props {
   readonly error?: string;
   readonly saveAction: (formData: FormData) => Promise<void>;
   readonly deleteAction: (formData: FormData) => Promise<void>;
+  readonly disconnectOAuthAction: (formData: FormData) => Promise<void>;
 }
 
 type EditorTarget = AiProviderSettingsView | "new" | null;
@@ -34,6 +35,7 @@ export function AiProviderSettingsPanel({
   error,
   saveAction,
   deleteAction,
+  disconnectOAuthAction,
 }: Props) {
   const [editor, setEditor] = useState<EditorTarget>(null);
   const routes = useMemo(() => {
@@ -66,8 +68,8 @@ export function AiProviderSettingsPanel({
           <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">KI Provider</div>
           <h2 className="mt-1 text-xl font-black">AI-Provider und Routing</h2>
           <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--muted)]">
-            Lege beliebig viele AI-Instanzen an und ordne sie Trainingsgenerierung, Übungsentwürfen oder Bildgenerierung mit Priorität zu.
-            Ist ein Monatslimit erreicht oder ein Provider technisch nicht verfügbar, versucht OCRCraft den nächsten zugewiesenen Provider.
+            Lege mehrere AI-Instanzen an und ordne sie Trainingsgenerierung, Übungsentwürfen oder Bildgenerierung mit Priorität zu.
+            Bei Limit, fehlender Berechtigung oder technischem Fehler versucht OCRCraft den nächsten Provider.
           </p>
         </div>
         <button
@@ -80,8 +82,8 @@ export function AiProviderSettingsPanel({
       </div>
 
       <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm leading-6 text-[var(--muted)]">
-        <strong className="text-[var(--foreground)]">Text-Token-Limit</strong> bedeutet die Anzahl der verarbeiteten Input- und Output-Tokens im aktuellen Monat – <strong className="text-[var(--foreground)]">kein Geldbetrag</strong>.
-        Das Request-Limit zählt API-Aufrufe. Bildaufrufe werden separat als Bilder gezählt.
+        <strong className="text-[var(--foreground)]">Text-Token-Limit</strong> zählt Input- und Output-Tokens im aktuellen Monat – <strong className="text-[var(--foreground)]">kein Geldbetrag</strong>.
+        Das Request-Limit zählt API-Aufrufe. Für GitHub Copilot ist das Request-Limit maßgeblich, weil der SDK-Adapter keine einheitlichen Tokenzähler liefert.
       </div>
 
       {saved ? (
@@ -112,13 +114,14 @@ export function AiProviderSettingsPanel({
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-xl border border-[var(--border)]">
-        <table className="w-full min-w-[920px] border-collapse text-left text-sm">
+        <table className="w-full min-w-[980px] border-collapse text-left text-sm">
           <thead className="bg-[var(--surface-subtle)] text-xs uppercase tracking-[0.08em] text-[var(--muted)]">
             <tr>
               <th className="px-4 py-3">AI</th>
               <th className="px-4 py-3">Modelle</th>
               <th className="px-4 py-3">Verwendung / Prio</th>
               <th className="px-4 py-3">Verbrauch Monat</th>
+              <th className="px-4 py-3">Zugang</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3 text-right">Aktion</th>
             </tr>
@@ -151,6 +154,13 @@ export function AiProviderSettingsPanel({
                   <div>{formatNumber(provider.usage.totalTokens)} Text-Tokens</div>
                   <div>{formatNumber(provider.usage.images)} Bilder</div>
                 </td>
+                <td className="px-4 py-3 text-xs">
+                  {provider.authMode === "oauth"
+                    ? <span className={provider.hasOAuthCredential ? "font-black text-[var(--success-foreground)]" : "font-black text-[var(--danger)]"}>{provider.hasOAuthCredential ? "OAuth verbunden" : "OAuth nicht verbunden"}</span>
+                    : provider.authMode === "encrypted_key"
+                      ? <span>{provider.hasStoredApiKey ? "gespeicherter Key" : "Key fehlt"}</span>
+                      : <span>{provider.environmentKeyAvailable ? "ENV verfügbar" : "ENV fehlt"}</span>}
+                </td>
                 <td className="px-4 py-3">
                   <span className={provider.enabled
                     ? "rounded-full bg-[var(--success-bg)] px-2.5 py-1 text-xs font-black text-[var(--success-foreground)]"
@@ -170,7 +180,7 @@ export function AiProviderSettingsPanel({
               </tr>
             ))}
             {providers.length === 0 ? (
-              <tr><td className="px-4 py-6 text-center text-[var(--muted)]" colSpan={6}>Noch keine AI-Instanz angelegt.</td></tr>
+              <tr><td className="px-4 py-6 text-center text-[var(--muted)]" colSpan={7}>Noch keine AI-Instanz angelegt.</td></tr>
             ) : null}
           </tbody>
         </table>
@@ -184,6 +194,7 @@ export function AiProviderSettingsPanel({
         >
           <AiProviderEditor
             deleteAction={deleteAction}
+            disconnectOAuthAction={disconnectOAuthAction}
             onClose={() => setEditor(null)}
             provider={editor === "new" ? null : editor}
             saveAction={saveAction}
@@ -198,29 +209,33 @@ function AiProviderEditor({
   provider,
   saveAction,
   deleteAction,
+  disconnectOAuthAction,
   onClose,
 }: {
   readonly provider: AiProviderSettingsView | null;
   readonly saveAction: (formData: FormData) => Promise<void>;
   readonly deleteAction: (formData: FormData) => Promise<void>;
+  readonly disconnectOAuthAction: (formData: FormData) => Promise<void>;
   readonly onClose: () => void;
 }) {
   const initialKind = provider?.providerKind ?? "openai";
   const [providerKind, setProviderKind] = useState<AiProviderKind>(initialKind);
   const [baseUrl, setBaseUrl] = useState(provider?.baseUrl ?? defaultProviderBaseUrl(initialKind) ?? "");
-  const [authMode, setAuthMode] = useState<"environment" | "encrypted_key">(provider?.authMode ?? "environment");
+  const [authMode, setAuthMode] = useState<AiProviderAuthMode>(provider?.authMode ?? "environment");
   const [apiKeyEnv, setApiKeyEnv] = useState(provider?.apiKeyEnv ?? defaultProviderKeyEnvironment(initialKind) ?? "");
   const [apiKey, setApiKey] = useState("");
   const [models, setModels] = useState<readonly AiModelOption[]>([]);
   const [modelWarning, setModelWarning] = useState<string | null>(null);
   const [loadingModels, setLoadingModels] = useState(false);
   const supportsImage = providerSupportsCapability(providerKind, "image");
+  const supportsOAuth = providerSupportsOAuth(providerKind);
   const assignment = (capability: AiCapability) => provider?.assignments.find((item) => item.capability === capability);
 
   function changeKind(next: AiProviderKind) {
     setProviderKind(next);
     setBaseUrl(defaultProviderBaseUrl(next) ?? "");
     setApiKeyEnv(defaultProviderKeyEnvironment(next) ?? "");
+    if (!providerSupportsOAuth(next) && authMode === "oauth") setAuthMode("environment");
     setModels([]);
     setModelWarning(null);
   }
@@ -233,7 +248,7 @@ function AiProviderEditor({
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          instanceId: provider?.id ?? null,
+          instanceId: provider?.providerKind === providerKind ? provider.id : null,
           providerKind,
           baseUrl,
           authMode,
@@ -275,6 +290,7 @@ function AiProviderEditor({
             <option value="openai">OpenAI</option>
             <option value="gemini">Google Gemini</option>
             <option value="anthropic">Anthropic Claude</option>
+            <option value="copilot">GitHub Copilot</option>
             <option value="openai-compatible">OpenAI-kompatibel / lokal</option>
           </select>
         </label>
@@ -282,7 +298,7 @@ function AiProviderEditor({
           defaultValue={provider?.displayName ?? providerKindLabel(providerKind)}
           label="Anzeigename"
           name="displayName"
-          placeholder="z. B. OpenAI Training Primär"
+          placeholder="z. B. Copilot Training Primär"
         />
       </div>
 
@@ -299,10 +315,10 @@ function AiProviderEditor({
             disabled={providerKind !== "openai-compatible"}
             name="baseUrl"
             onChange={(event) => setBaseUrl(event.target.value)}
-            placeholder="https://..."
+            placeholder={providerKind === "copilot" ? "wird vom Copilot SDK verwaltet" : "https://..."}
             value={baseUrl}
           />
-          {providerKind !== "openai-compatible" ? <span className="text-xs font-normal text-[var(--muted)]">Standard-URL wird automatisch verwaltet.</span> : null}
+          {providerKind !== "openai-compatible" ? <span className="text-xs font-normal text-[var(--muted)]">{providerKind === "copilot" ? "Der offizielle Copilot SDK verwaltet den Endpunkt." : "Standard-URL wird automatisch verwaltet."}</span> : null}
         </label>
         <div className="grid content-start gap-2">
           <span className="text-sm font-bold">Verfügbare Modelle</span>
@@ -347,7 +363,7 @@ function AiProviderEditor({
             name="imageModelId"
             placeholder={supportsImage ? "Bildmodell auswählen oder ID eingeben" : "für diesen Adapter nicht verfügbar"}
           />
-          <span className="text-xs font-normal text-[var(--muted)]">Aktuell für OpenAI/OpenAI-kompatible Images-Endpunkte.</span>
+          <span className="text-xs font-normal text-[var(--muted)]">Bildgenerierung bleibt derzeit auf OpenAI/OpenAI-kompatible Images-Endpunkte begrenzt.</span>
         </label>
       </div>
 
@@ -363,21 +379,23 @@ function AiProviderEditor({
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-1 text-sm font-bold">
-          Key-Quelle
+          Zugang
           <select
             className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
             name="authMode"
-            onChange={(event) => setAuthMode(event.target.value as "environment" | "encrypted_key")}
+            onChange={(event) => setAuthMode(event.target.value as AiProviderAuthMode)}
             value={authMode}
           >
             <option value="environment">Umgebungsvariable</option>
-            <option value="encrypted_key">Verschlüsselt in DuckDB</option>
+            <option value="encrypted_key">Verschlüsselter Key in DuckDB</option>
+            {supportsOAuth ? <option value="oauth">Provider-Login / OAuth</option> : null}
           </select>
         </label>
         <label className="grid gap-1 text-sm font-bold">
           Umgebungsvariable
           <input
-            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal disabled:opacity-60"
+            disabled={authMode !== "environment"}
             name="apiKeyEnv"
             onChange={(event) => setApiKeyEnv(event.target.value)}
             value={apiKeyEnv}
@@ -385,11 +403,42 @@ function AiProviderEditor({
         </label>
       </div>
 
+      {authMode === "oauth" ? (
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+          <div className="font-black">{providerKind === "copilot" ? "GitHub Copilot verbinden" : "Google Gemini verbinden"}</div>
+          {!provider || provider.providerKind !== providerKind ? (
+            <p className="mt-2 text-sm text-[var(--muted)]">Speichere die AI-Instanz zuerst. Danach kann der Provider-Login gestartet werden.</p>
+          ) : !provider.oauthClientConfigured ? (
+            <p className="mt-2 text-sm text-[var(--danger)]">OAuth-App oder OCRCRAFT_AI_SECRET_KEY ist serverseitig noch nicht vollständig konfiguriert. Details stehen in docs/operations.md.</p>
+          ) : provider.hasOAuthCredential ? (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-sm font-black text-[var(--success-foreground)]">Verbunden{provider.oauthExpiresAt ? " · Tokenablauf " + provider.oauthExpiresAt : ""}</span>
+              <button
+                className="min-h-10 rounded-lg border border-[var(--border)] px-3 text-xs font-black"
+                formAction={disconnectOAuthAction}
+                name="id"
+                type="submit"
+                value={provider.id}
+              >
+                OAuth trennen
+              </button>
+            </div>
+          ) : (
+            <a
+              className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]"
+              href={"/api/admin/ai/oauth/start?instanceId=" + encodeURIComponent(provider.id)}
+            >
+              {providerKind === "copilot" ? "Mit GitHub verbinden" : "Mit Google verbinden"}
+            </a>
+          )}
+        </div>
+      ) : null}
+
       <label className="grid gap-1 text-sm font-bold">
         Neuen API-Key speichern
         <input
           autoComplete="new-password"
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal disabled:opacity-60"
           disabled={authMode !== "encrypted_key" || !(provider?.keyStorageAvailable ?? true)}
           name="apiKey"
           onChange={(event) => setApiKey(event.target.value)}
@@ -399,7 +448,7 @@ function AiProviderEditor({
         />
       </label>
 
-      {provider?.hasStoredApiKey ? (
+      {provider?.hasStoredApiKey && authMode === "encrypted_key" ? (
         <label className="flex items-center gap-2 text-xs font-bold">
           <input name="clearStoredApiKey" type="checkbox" />
           Gespeicherten API-Key löschen
@@ -412,7 +461,7 @@ function AiProviderEditor({
           inputMode="numeric"
           label="Monatliches Text-Token-Limit"
           name="monthlyTextTokenLimit"
-          placeholder="kein Limit"
+          placeholder={providerKind === "copilot" ? "für Copilot Request-Limit verwenden" : "kein Limit"}
         />
         <Field
           defaultValue={provider?.monthlyRequestLimit == null ? "" : String(provider.monthlyRequestLimit)}
@@ -422,9 +471,6 @@ function AiProviderEditor({
           placeholder="kein Limit"
         />
       </div>
-      <p className="-mt-3 text-xs leading-5 text-[var(--muted)]">
-        Text-Tokens sind eine Mengenbegrenzung, keine Kostenangabe. Ein monetäres Budget wird erst ergänzt, wenn belastbare providerübergreifende Kostendaten verfügbar sind.
-      </p>
 
       {provider ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
@@ -530,12 +576,16 @@ function Metric({ label, value }: { readonly label: string; readonly value: stri
 
 function ErrorNotice({ code }: { readonly code: string }) {
   const message = code === "secret"
-    ? "API-Key konnte nicht gespeichert werden, weil OCRCRAFT_AI_SECRET_KEY nicht gesetzt ist."
+    ? "API-Key oder OAuth-Token konnte nicht gespeichert werden, weil OCRCRAFT_AI_SECRET_KEY nicht gesetzt ist."
     : code === "provider"
       ? "Provider oder AI-Instanz ist ungültig."
-      : code === "config"
-        ? "Die AI-Konfiguration ist unvollständig. Prüfe Modelle, URL und Funktionszuweisungen."
-        : "AI-Einstellungen konnten nicht gespeichert werden.";
+      : code === "oauth-config"
+        ? "OAuth ist für diesen Provider noch nicht vollständig serverseitig konfiguriert."
+        : code === "oauth"
+          ? "Provider-Login konnte nicht abgeschlossen werden."
+          : code === "config"
+            ? "Die AI-Konfiguration ist unvollständig. Prüfe Modelle, URL und Funktionszuweisungen."
+            : "AI-Einstellungen konnten nicht gespeichert werden.";
   return <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">{message}</p>;
 }
 

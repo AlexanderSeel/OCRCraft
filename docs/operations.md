@@ -28,6 +28,35 @@ Der lokale Login-Dialog verwendet die E-Mail als Benutzernamen und einen individ
 
 Für einen vorgeschalteten Login ohne gemeinsam genutzte Prozessvariable kann der Proxy pro Request den Header `x-ocrcraft-actor` setzen. Der Wert hat die Form `email|unixSeconds|hexSignature`; signiert wird `email|unixSeconds` mit HMAC-SHA256 und `OCRCRAFT_ACTOR_ASSERTION_SECRET`. Assertions sind fünf Minuten gültig. Der Proxy muss den Header von außen entfernen und selbst neu setzen; das Secret darf nicht an Browser oder Clients gelangen. Mit `OCRCRAFT_ACTOR_ASSERTION_HEADER` kann ein anderer Headername verwendet werden.
 
+## AI-Provider und OAuth
+
+AI-Keys können aus Umgebungsvariablen gelesen oder mit `OCRCRAFT_AI_SECRET_KEY` verschlüsselt in DuckDB gespeichert werden. Derselbe Secret-Key verschlüsselt OAuth-Tokens; er muss auf allen App-Instanzen identisch und dauerhaft verfügbar sein.
+
+Für Google Gemini OAuth:
+
+```text
+OCRCRAFT_AI_SECRET_KEY=<langes-zufälliges-secret>
+OCRCRAFT_GOOGLE_OAUTH_CLIENT_ID=<google-oauth-client-id>
+OCRCRAFT_GOOGLE_OAUTH_CLIENT_SECRET=<google-oauth-client-secret>
+OCRCRAFT_GOOGLE_PROJECT_ID=<google-cloud-project-id>
+OCRCRAFT_PUBLIC_BASE_URL=https://ocrcraft.example.org
+```
+
+Als Redirect URI in der Google OAuth-App wird `https://<host>/api/admin/ai/oauth/callback` registriert. OCRCraft fordert die offiziell dokumentierten Gemini-/Cloud-Scopes an und verwendet bei OAuth das Google-Projekt als `x-goog-user-project`.
+
+Für GitHub Copilot:
+
+```text
+OCRCRAFT_AI_SECRET_KEY=<langes-zufälliges-secret>
+OCRCRAFT_GITHUB_OAUTH_CLIENT_ID=<github-oauth-client-id>
+OCRCRAFT_GITHUB_OAUTH_CLIENT_SECRET=<github-oauth-client-secret>
+OCRCRAFT_PUBLIC_BASE_URL=https://ocrcraft.example.org
+```
+
+Die GitHub OAuth-App erhält dieselbe Callback-URL. Der zurückgegebene User Access Token wird verschlüsselt gespeichert und an den offiziellen `@github/copilot-sdk` übergeben. Der angemeldete GitHub-Benutzer benötigt eine passende Copilot-Berechtigung/Subscription. OCRCraft ruft die für den Benutzer verfügbaren Copilot-Modelle über `listModels()` ab.
+
+`OCRCRAFT_PUBLIC_BASE_URL` ist bei Reverse Proxy/externem Host empfohlen. Ohne die Variable verwendet OCRCraft den Origin des eingehenden Requests.
+
 ## Backup und Restore
 
 - `Datenbank sichern` erstellt eine konsistente Kopie in `data/backups/` inklusive Manifest.
@@ -52,4 +81,4 @@ Portable JSON-Exporte sind für ausgewählte strukturierte Bereiche gedacht. Der
 
 ## Geheimnisse
 
-`OPENAI_API_KEY` und S3-Zugangsdaten gehören ausschließlich in die Prozessumgebung oder eine lokale `.env`, niemals in Git, portable Exporte oder Logs.
+`OPENAI_API_KEY`, andere Provider-Keys, OAuth-Client-Secrets, `OCRCRAFT_AI_SECRET_KEY` und S3-Zugangsdaten gehören ausschließlich in die Prozessumgebung oder eine lokale `.env`, niemals in Git, portable Exporte oder Logs.

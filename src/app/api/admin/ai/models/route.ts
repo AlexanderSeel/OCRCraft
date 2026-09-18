@@ -12,7 +12,7 @@ const requestSchema = z.object({
   instanceId: aiProviderInstanceIdSchema.nullish(),
   providerKind: aiProviderKindSchema,
   baseUrl: z.string().trim().max(500).nullish(),
-  authMode: z.enum(["environment","encrypted_key"]).optional(),
+  authMode: z.enum(["environment","encrypted_key","oauth"]).optional(),
   apiKeyEnv: z.string().trim().max(120).nullish(),
   apiKey: z.string().trim().max(1000).nullish(),
 });

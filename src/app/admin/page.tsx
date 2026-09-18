@@ -11,7 +11,7 @@ import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { listRecentAuditEvents } from "@/server/db/audit-service";
 import { listDatabaseBackups } from "@/server/db/backup-service";
 import { listAiProviderSettings } from "@/server/ai/ai-provider-settings-repository";
-import { createDatabaseBackupAction, deleteAiProviderSettingsAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, saveAiProviderSettingsAction, scanDuplicateExercisesAction } from "./actions";
+import { createDatabaseBackupAction, deleteAiProviderSettingsAction, disconnectAiProviderOAuthAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, saveAiProviderSettingsAction, scanDuplicateExercisesAction } from "./actions";
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 import { listAppUsers } from "@/server/auth/identity-service";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
@@ -169,6 +169,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <>
             <AiProviderSettingsPanel
               deleteAction={deleteAiProviderSettingsAction}
+              disconnectOAuthAction={disconnectAiProviderOAuthAction}
               error={aiError}
               providers={aiProviders}
               saveAction={saveAiProviderSettingsAction}

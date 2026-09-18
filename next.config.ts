@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@duckdb/node-api"],
+  serverExternalPackages: ["@duckdb/node-api", "@github/copilot-sdk"],
   outputFileTracingExcludes: {
     "/*": ["./data/**"],
   },
