@@ -8,7 +8,7 @@ Die Kernstruktur bleibt sichtbar: **Aufwärmen → Hauptteil → Cooldown & Stre
 
 Die produktive Grundlage steht auf `main`. Der Katalog wird dynamisch aus versionierten Seeds und importierten Datensätzen aufgebaut. Übungen besitzen deutsche und englische Identität, Aliase, Körperregionen, Muskel- und Gegenmuskelbeziehungen, Equipment, Bewegungsmuster, Zielgruppen-, Risiko- und Coachingdaten.
 
-Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Betriebs- und Datensicherheit, Trainer-Workflow, Katalog/Medien und Ausbau klar voneinander.
+Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Betriebs- und Datensicherheit, Trainer-Workflow, Katalog/Medien und Ausbau klar voneinander. Die produktive Betriebsroutine ist in [`docs/operations.md`](./docs/operations.md) dokumentiert.
 
 ## Funktionen
 
@@ -60,7 +60,7 @@ Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit e
 - responsive Traineroberflächen für Desktop, Tablet und mobile Nutzung
 - einklappbare Hauptnavigation mit persistiertem Icon-Modus sowie wiederverwendbare Sidepanel-Filter in Übungs-, Medien- und Hinderniskatalog
 - zentrale Dialog-Komponente mit ARIA-Rolle, Fokusfalle, Escape, Backdrop-Schließen, Scroll-Lock und Fokus-Rückgabe
-- AppShell trennt kontextbezogene Seitenaktionen von globalen Systemwerkzeugen wie Theme, Builder-Fortsetzung und Administration
+- AppShell hält den Seitenkopf auf kontextbezogene Seitenaktionen begrenzt; Darstellung und Diagnose liegen im gemeinsamen Einstellungen-Tab der Administration
 - große Muskel- und Facettenfilter öffnen als zentrierte Dialoge und halten die Sidepanels kompakt
 - zentrale Disclosure-Komponente für Filter, Editoren, Builder und Adminflächen
 - sichtbare Fokuszustände und Tastaturbedienung für zentrale Auswahl- und Formularpfade

@@ -12,6 +12,7 @@ import { listDatabaseBackups } from "@/server/db/backup-service";
 import { createDatabaseBackupAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, scanDuplicateExercisesAction } from "./actions";
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 import { listAppUsers } from "@/server/auth/identity-service";
+import { ThemeSwitcher } from "@/components/theme/theme-switcher";
 
 export const dynamic = "force-dynamic";
 
@@ -138,8 +139,19 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         {activeTab === "settings" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Einstellungen</div>
           <h2 className="mt-1 text-xl font-black">Darstellung und Diagnose</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Optionale Diagnosewerkzeuge bleiben deaktiviert, solange sie nicht ausdrücklich benötigt werden.</p>
-          <MuscleMapDebugSetting />
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Seitenspezifische Einstellungen bleiben hier gebündelt. Änderungen werden lokal für dieses Gerät gespeichert.</p>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+              <h3 className="text-sm font-black">Darstellung</h3>
+              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Wähle zwischen hellem, dunklem und automatisch vom Betriebssystem übernommenem Theme.</p>
+              <div className="mt-3"><ThemeSwitcher /></div>
+            </div>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+              <h3 className="text-sm font-black">Diagnose</h3>
+              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Optionale Diagnosewerkzeuge bleiben deaktiviert, solange sie nicht ausdrücklich benötigt werden.</p>
+              <div className="mt-3"><MuscleMapDebugSetting /></div>
+            </div>
+          </div>
         </section> : null}
 
         {activeTab === "database" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">

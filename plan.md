@@ -27,7 +27,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [ ] Authentifizierung einführen.
 - [x] RBAC für Trainer, Admin und Super-Admin einführen.
 - [x] Globale Admin-Mutationen serverseitig autorisieren.
-- [ ] Produktions-Deployment und Betriebsdokumentation ergänzen.
+- [x] Produktions-Deployment und Betriebsdokumentation ergänzen.
 - [x] Benutzer und Rollen persistieren; externe Anmeldung kann per Actor-Konfiguration erzwungen werden.
 - [x] Audit-Events für zentrale Admin-/Datenbankaktionen persistieren.
 
@@ -151,7 +151,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - Gemeinsamer Administrationsbereich mit Tabs für Übersicht, Datenbank, Datenqualität und Einstellungen; doppelte Settings-/Admin-Navigation entfernt.
 - Dynamischer Vollständigkeitsbericht für Seed-Bestand und gesamten Übungskatalog sowie Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes.
 - Light/Dark/System-Theme, semantische UI-Tokens, responsive Layouts und laufende CI-Gates.
-- AppShell trennt Seitenaktionen sichtbar von globalen Systemwerkzeugen; globale Administration und Theme sind nicht mehr mit kontextbezogenen Aktionen vermischt.
+- AppShell zeigt im Seitenkopf nur kontextbezogene Aktionen; Administration, Darstellung und Diagnose sind über die Hauptnavigation und den Einstellungen-Tab erreichbar.
+- Darstellung und optionale Diagnose sind im Administrations-Tab Einstellungen gebündelt; der globale Seitenkopf bleibt frei von doppelten Systemaktionen.
 
 ## CI und Definition of Done
 
