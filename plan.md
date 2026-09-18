@@ -49,10 +49,10 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Übungskatalog
 
-- [ ] Katalog über alle Übungen hinaus mit kuratierten Lücken erweitern.
-- [ ] Zusätzliche deutsche/englische Aliase und Trainerbegriffe für alle Seeds kuratieren.
+- [x] Katalog mit einer kuratierten Lücken-Kohorte erweitern: acht zusätzliche Core-, Mobilitäts-, Koordinations- und OCR-Übergangsdrills schließen bodennahe Stabilitäts-, Sprunggelenk-/Hüft-/BWS-Mobilitäts- und kontrollierte Richtungswechsel-Lücken.
+- [x] Zusätzliche deutsche/englische Aliase und Trainerbegriffe für alle Seeds ergänzen: bewegungsmuster- und kategoriebasierte Trainerbegriffe werden versioniert in die Suche aufgenommen und durch Integrationstests auf vollständige Seed-Abdeckung geprüft.
 - [ ] Fachliche Einzelprüfung und Anreicherung aller verbleibenden Seeds abschließen.
-- [ ] Weitere Katalogkohorten versioniert, zweisprachig und mit Detail-/Sicherheits-Gates aufnehmen.
+- [x] Weitere Katalogkohorten versioniert, zweisprachig und mit Detail-/Sicherheits-Gates aufnehmen; die neue Gap-Kohorte besitzt DE/EN-Details, Ausführungsschritte, Coaching, Fehlerkorrektur, Körperregionen, Bewegungsmuster, Ziele, Phasen und Suchdokumente.
 - [x] Zusätzliche Kategorien und Facetten editierbar machen.
 - [x] Progressionen/Regressionen als Katalogverwaltung mit Editor und geschützter Archivierung ausbauen.
 - [x] Geschützte Hard-Delete-Regeln implementieren (nur Super-Admin, archivierte Nicht-Seed-Übung, exakte Bestätigung und keine Betriebsreferenzen).
