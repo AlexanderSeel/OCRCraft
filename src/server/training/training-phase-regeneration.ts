@@ -78,7 +78,7 @@ export async function regenerateTrainingDraftPhase(input: TrainingPhaseRegenerat
 
 async function generateReplacementDraft(request: TrainingPhaseRegenerationRequest["request"], candidates: readonly TrainingDraftExerciseCandidate[]): Promise<TrainingDraft> {
   if (request.builderMode === "ai") {
-    const provider = getConfiguredAiTrainingProvider();
+    const provider = await getConfiguredAiTrainingProvider();
     if (!provider) throw new Error("AI Training Builder ist nicht konfiguriert. Nutze den lokalen Sportalgorithmus oder konfiguriere OCRCRAFT_AI_BASE_URL und OCRCRAFT_AI_MODEL.");
     const proposal = await provider.generateTrainingPlan({ request, approvedExercises: candidates });
     return composeAiTrainingDraft({ proposal, request, approvedExercises: candidates, providerId: provider.id });

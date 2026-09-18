@@ -1,9 +1,11 @@
 import "server-only";
 
+import { headers } from "next/headers";
 import { z } from "zod";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { isRoleAtLeast } from "./identity-core";
+import { verifyActorAssertion } from "./identity-assertion";
 
 export const userRoleSchema = z.enum(["trainer", "admin", "super_admin"]);
 export type UserRole = z.infer<typeof userRoleSchema>;
@@ -18,7 +20,7 @@ export interface AppUser {
 }
 
 export interface CurrentActor extends AppUser {
-  readonly source: "configured" | "bootstrap";
+  readonly source: "configured" | "assertion" | "bootstrap";
 }
 
 const emailSchema = z.string().trim().toLowerCase().email();
@@ -31,8 +33,9 @@ const emailSchema = z.string().trim().toLowerCase().email();
 export async function requireRole(required: UserRole): Promise<CurrentActor> {
   await ensureDatabaseReady();
   const configuredEmail = emailSchema.safeParse(process.env.OCRCRAFT_ACTOR_EMAIL ?? "").data;
+  const assertedEmail = await resolveAssertedActorEmail();
   const authRequired = process.env.OCRCRAFT_AUTH_REQUIRED === "1";
-  const email = configuredEmail ?? "owner@ocrcraft.local";
+  const email = assertedEmail?.email ?? configuredEmail ?? "owner@ocrcraft.local";
 
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(
@@ -41,7 +44,7 @@ export async function requireRole(required: UserRole): Promise<CurrentActor> {
       { email },
     );
     let row = reader.getRows()[0];
-    let source: CurrentActor["source"] = "configured";
+    let source: CurrentActor["source"] = assertedEmail ? "assertion" : "configured";
 
     if (!row && !authRequired && email === "owner@ocrcraft.local") {
       await connection.run(
@@ -64,6 +67,19 @@ export async function requireRole(required: UserRole): Promise<CurrentActor> {
     }
     return actor;
   });
+}
+
+async function resolveAssertedActorEmail(): Promise<{ readonly email: string } | null> {
+  const secret = process.env.OCRCRAFT_ACTOR_ASSERTION_SECRET;
+  if (!secret) return null;
+  const headerName = process.env.OCRCRAFT_ACTOR_ASSERTION_HEADER?.trim().toLowerCase() || "x-ocrcraft-actor";
+  try {
+    const requestHeaders = await headers();
+    const assertion = verifyActorAssertion(requestHeaders.get(headerName) ?? "", secret);
+    return assertion ? { email: assertion.email } : null;
+  } catch {
+    return null;
+  }
 }
 
 export const requireTrainer = () => requireRole("trainer");

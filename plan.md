@@ -24,7 +24,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Identität und Betrieb
 
-- [ ] Authentifizierung einführen.
+- [x] Authentifizierung einführen (signierte, kurzlebige Actor-Assertions aus einem vorgeschalteten Vereins-Login; lokale Bootstrap-/Umgebungsidentität bleibt verfügbar).
 - [x] RBAC für Trainer, Admin und Super-Admin einführen.
 - [x] Globale Admin-Mutationen serverseitig autorisieren.
 - [x] Produktions-Deployment und Betriebsdokumentation ergänzen.

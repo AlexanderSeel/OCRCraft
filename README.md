@@ -44,7 +44,7 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Bet
 - Medienwarteschlange mit dedupliziertem Worker und periodischer Statusaktualisierung ohne wiederholte Request-Callbacks
 - generierte Bilder bleiben an stabile Übungs-/Seed-IDs gebunden und werden bei Reseeds nicht automatisch gelöscht
 
-Für den privaten Vereinsbetrieb kann die lokale Bootstrap-Identität verwendet werden. Mit `OCRCRAFT_AUTH_REQUIRED=1` und `OCRCRAFT_ACTOR_EMAIL=<email>` müssen globale Admin-Aktionen einem aktiven Benutzer mit passender Rolle zugeordnet sein. Die Rollen `trainer`, `admin` und `super_admin` werden in DuckDB persistiert; eine externe Anmeldung (zum Beispiel über einen vorgeschalteten Vereins-Login) liefert die Actor-Konfiguration.
+Für den privaten Vereinsbetrieb kann die lokale Bootstrap-Identität verwendet werden. Mit `OCRCRAFT_AUTH_REQUIRED=1` und `OCRCRAFT_ACTOR_EMAIL=<email>` müssen globale Admin-Aktionen einem aktiven Benutzer mit passender Rolle zugeordnet sein. Die Rollen `trainer`, `admin` und `super_admin` werden in DuckDB persistiert. Ein vorgeschalteter Vereins-Login kann alternativ einen fünf Minuten gültigen HMAC-Header übergeben: `OCRCRAFT_ACTOR_ASSERTION_SECRET=<secret>` und optional `OCRCRAFT_ACTOR_ASSERTION_HEADER=<header-name>` (Standard: `x-ocrcraft-actor`). Der Headerwert ist `email|unixSeconds|hexSignature`; signiert wird `email|unixSeconds` mit HMAC-SHA256. Das Secret bleibt ausschließlich in der Prozessumgebung.
 
 ### Administration
 

@@ -22,6 +22,8 @@ OCRCRAFT_ACTOR_EMAIL=trainer@example.org
 
 Der konfigurierte Actor muss als aktiver Benutzer in DuckDB vorhanden sein. Schreibende globale Aktionen prüfen die Rolle serverseitig; die UI-Prüfung ersetzt keine Autorisierung. Eine vorgeschaltete Vereinsanmeldung muss nach erfolgreicher Anmeldung die Actor-E-Mail für den Prozess setzen.
 
+Für einen vorgeschalteten Login ohne gemeinsam genutzte Prozessvariable kann der Proxy pro Request den Header `x-ocrcraft-actor` setzen. Der Wert hat die Form `email|unixSeconds|hexSignature`; signiert wird `email|unixSeconds` mit HMAC-SHA256 und `OCRCRAFT_ACTOR_ASSERTION_SECRET`. Assertions sind fünf Minuten gültig. Der Proxy muss den Header von außen entfernen und selbst neu setzen; das Secret darf nicht an Browser oder Clients gelangen. Mit `OCRCRAFT_ACTOR_ASSERTION_HEADER` kann ein anderer Headername verwendet werden.
+
 ## Backup und Restore
 
 - `Datenbank sichern` erstellt eine konsistente Kopie in `data/backups/` inklusive Manifest.
