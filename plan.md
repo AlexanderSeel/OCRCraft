@@ -72,7 +72,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 ### Training Editor und Gruppen
 
 - [x] Version History/Restore für Trainings.
-- [ ] Trainingsvorlagen erstellen, speichern und wiederverwenden.
+- [x] Trainingsvorlagen erstellen, speichern und wiederverwenden: bestehende Trainings können als persistierte Vereins-Snapshots mit konkreter Übungsauswahl, Hauptteilprogrammierung und Teamorganisation gespeichert, im Vorlagenkatalog erneut instanziiert und archiviert werden; vor Wiederverwendung werden alle Übungsreferenzen gegen den aktiven Katalog validiert.
 - [ ] Gruppen-Splits, Stationskapazität und Vereinsdefaults weiter ausbauen.
 - [ ] Kids/Youth/Beginner/Advanced/Competition/Running/Open-Presets ergänzen.
 - [ ] Club-Regelprofile, Standort-/Equipmentdefaults und Skill-Verteilung ergänzen.

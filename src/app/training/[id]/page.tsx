@@ -23,6 +23,7 @@ import { updateTrainingOrganizationAction } from "./organization-action";
 import { reorderTrainingItemsAction } from "./reorder-action";
 import { createTrainingVersionAction, restoreTrainingVersionAction } from "./version-actions";
 import { listTrainingVersions } from "@/server/training/training-version-service";
+import { createClubTrainingTemplateAction } from "../templates/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -123,6 +124,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                     ? "Hauptteil-Programmierung konnte nicht gespeichert werden. Bitte die Werte prüfen."
               : query.error === "version" ? "Version konnte nicht erstellt werden. Bitte erneut versuchen."
                 : query.error === "restore" ? "Version konnte nicht wiederhergestellt werden."
+                : query.error === "template" ? "Vereinsvorlage konnte nicht gespeichert werden. Bitte Eingaben und Training prüfen."
                   : "Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen."}
           </div>
         ) : null}
@@ -133,6 +135,44 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
             <form action={createTrainingVersionAction.bind(null, session.id)}><button className="min-h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black" type="submit">Snapshot erstellen</button></form>
           </div>
           {versions.length ? <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{versions.map((version) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2" key={version.id}><span><strong className="text-[var(--foreground)]">Version {version.versionNumber}</strong> · {version.createdAt}{version.createdBy ? ` · ${version.createdBy}` : ""}</span><form action={restoreTrainingVersionAction}><input name="sessionId" type="hidden" value={session.id} /><input name="versionId" type="hidden" value={version.id} /><button className="rounded-lg border border-[var(--border)] px-2 py-1 font-black" type="submit">Wiederherstellen</button></form></li>)}</ul> : <p className="mt-3 text-sm text-[var(--muted)]">Noch kein Snapshot vorhanden.</p>}
+        </section>
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <div>
+            <h2 className="font-black">Als Vereinsvorlage speichern</h2>
+            <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+              Speichert die aktuelle Übungsauswahl, Hauptteilstruktur, Programmierung und Teamorganisation als wiederverwendbaren Snapshot.
+            </p>
+          </div>
+          <form action={createClubTrainingTemplateAction} className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] md:items-end">
+            <input name="sessionId" type="hidden" value={session.id} />
+            <label className="grid gap-1 text-sm font-bold">
+              Vorlagenname
+              <input
+                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                defaultValue={session.title}
+                maxLength={120}
+                minLength={2}
+                name="name"
+                required
+              />
+            </label>
+            <label className="grid gap-1 text-sm font-bold">
+              Beschreibung
+              <input
+                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                maxLength={1000}
+                name="description"
+                placeholder="Optional: Einsatz, Gruppe oder besondere Hinweise"
+              />
+            </label>
+            <button className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-4 text-sm font-black" type="submit">
+              Vorlage speichern
+            </button>
+          </form>
+          <div className="mt-3 text-xs text-[var(--muted)]">
+            <Link className="font-bold underline underline-offset-2" href="/training/templates">Vereinsvorlagen verwalten</Link>
+          </div>
         </section>
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -393,7 +433,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                           <option value="rig-run">Rig & Run</option>
                                           <option value="run-exercise">Run + Exercise</option>
                                           <option value="technique">Technik</option>
-                                          <option value="relay">Team / Relay</option>
+                                          <option value="relay">Team / Relay</option>\n                                          <option value="partner">Partner Workout</option>\n                                          <option value="team-competition">Teamwettkampf</option>
                                           <option value="partner">Partner Workout</option>
                                         </select>
                                       </label>
@@ -548,6 +588,8 @@ function savedMessage(saved: string): string {
   if (saved === "combined") return "Kombiniertes Training wurde als neuer Entwurf angelegt.";
   if (saved === "version") return "Training-Snapshot wurde erstellt.";
   if (saved === "restore") return "Training-Snapshot wurde wiederhergestellt.";
+  if (saved === "template") return "Training wurde als Vereinsvorlage gespeichert.";
+  if (saved === "from-template") return "Neues Training wurde aus einer Vereinsvorlage erstellt.";
   return "Training wurde aktualisiert.";
 }
 
@@ -555,6 +597,7 @@ function sourceLabel(source: string): string {
   if (source === "manual") return "Quick Create";
   if (source === "copied") return "Kopie";
   if (source === "combined") return "Kombiniert";
+  if (source === "template") return "Vorlage";
   return source;
 }
 
