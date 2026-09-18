@@ -87,6 +87,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </form>
           </div>
           <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+            <h3 className="text-sm font-black">Portable Daten importieren</h3>
+            <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Nur versionierte `ocrcraft-portable`-JSON-Dateien importieren. Der Schreibvorgang ist auf Super-Admins begrenzt und läuft transaktional.</p>
+            <form action="/api/admin/import" className="mt-3 flex flex-wrap items-center gap-3" encType="multipart/form-data" method="post" target="_blank">
+              <input accept="application/json,.json" className="max-w-full text-xs" name="file" required type="file" />
+              <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black" type="submit">JSON importieren</button>
+            </form>
+          </div>
+          <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-black">Vorhandene Backups</h3><span className="text-xs font-bold text-[var(--muted)]">{backups.length} vorhanden</span></div>
             {backups.length === 0 ? <p className="mt-2 text-sm text-[var(--muted)]">Noch kein Backup vorhanden.</p> : <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{backups.slice(0, 5).map((item) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2" key={item.fileName}><span><span className="font-bold text-[var(--foreground)]">{item.fileName}</span><span className="ml-2">{formatBytes(item.bytes)} · {item.createdAt}</span></span><form action={restoreDatabaseBackupAction} className="flex items-center gap-2"><input aria-label={`${item.fileName} bestätigen`} className="h-8 w-36 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-2 text-[10px]" name="confirmation" placeholder="Dateiname bestätigen" /><input name="fileName" type="hidden" value={item.fileName} /><button className="rounded-lg border border-[var(--danger)] px-2 py-1.5 text-[10px] font-black text-[var(--danger)]" type="submit">Wiederherstellen</button></form></li>)}</ul>}
           </div>

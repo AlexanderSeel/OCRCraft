@@ -40,7 +40,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Selektierbaren, versionierten JSON-Export implementieren.
 - [x] Exportoptionen für Übungen, Details, Mapping, Trainings, Gruppen, Medien und Provenienz anbieten.
 - [ ] Optional Binärmedien mit MIME-Typ, Prüfsumme und Quellenmetadaten exportieren.
-- [x] Import-Preflight und Schema-Version als sichere Vorschauvalidierung implementieren; transaktionaler Import bleibt als nächster Ausbau.
+- [x] Import-Preflight, Schema-Version und transaktionalen Schreibvorgang für erlaubte portable Tabellen implementieren.
 - [ ] Dublettenklassifikation (`same`, `new`, `probable duplicate`, `conflict`) und Side-by-Side-Vergleich für Importkonflikte abschließen.
 - [ ] Feldvergleich, Bildvergleich, Bulk-Entscheidungen und `Use left / Use right / Keep both` vollständig abdecken.
 - [ ] Round-trip- und Konfliktauflösungstests ergänzen.
