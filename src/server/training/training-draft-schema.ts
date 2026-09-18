@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { exerciseTypes } from "../../domain/exercise/classification";
+import { TEAM_COMPETITION_STYLE_KEYS, getTeamCompetitionStyle } from "../../domain/training/team-competition-catalog";
 import {
   AUDIENCES,
   BODY_REGIONS,
@@ -52,6 +53,7 @@ export const mainPartProgrammingSchema = z.object({
 
 export const trainingDraftRequestSchema = z.object({
   templateKey: z.string().regex(/^[a-z0-9][a-z0-9-]{2,79}$/).optional(),
+  competitionStyleKey: z.enum(TEAM_COMPETITION_STYLE_KEYS).optional(),
   groupId: z.string().uuid().optional(),
   audience: z.enum(AUDIENCES),
   participantCount: z.number().int().min(1).max(200),
@@ -85,7 +87,29 @@ export const trainingDraftRequestSchema = z.object({
   minAge: z.number().int().min(3).max(99).optional(),
   maxAge: z.number().int().min(3).max(99).optional(),
   locale: z.enum(["de", "en"]).default("de"),
+}).superRefine((value, context) => {
+  if (!value.competitionStyleKey) return;
+  const style = getTeamCompetitionStyle(value.competitionStyleKey);
+  if (!style) {
+    context.addIssue({ code: "custom", path: ["competitionStyleKey"], message: "Der gewählte Teamwettkampfstil ist unbekannt." });
+    return;
+  }
+  if (!value.formats.includes("team-competition")) {
+    context.addIssue({ code: "custom", path: ["formats"], message: "Ein Teamwettkampfstil benötigt das Format Teamwettkampf." });
+  }
+  if (value.organizationMode !== "team") {
+    context.addIssue({ code: "custom", path: ["organizationMode"], message: "Teamwettkämpfe werden im Teammodus geplant." });
+  }
+  if (value.teamSize !== style.teamSize) {
+    context.addIssue({ code: "custom", path: ["teamSize"], message: `Der Stil ${style.titleDe} benötigt ${style.teamSize} Personen pro Team.` });
+  }
+  if (value.mainPartCount !== style.mainPartTitlesDe.length) {
+    context.addIssue({ code: "custom", path: ["mainPartCount"], message: "Die Hauptteilanzahl passt nicht zum Teamwettkampfstil." });
+  }
 }).refine(
+  (value) => !value.formats.includes("team-competition") || value.competitionStyleKey != null,
+  { message: "Für Teamwettkampf muss ein Wettkampfstil ausgewählt werden.", path: ["competitionStyleKey"] },
+).refine(
   (value) => new Set(value.availableEquipment.map((item) => item.equipmentId)).size === value.availableEquipment.length,
   { message: "Jede Ausrüstungsart darf nur einmal angegeben werden.", path: ["availableEquipment"] },
 ).refine(

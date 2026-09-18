@@ -23,6 +23,7 @@ import {
   type TrainingSession,
 } from "../../domain/training/model";
 import { validateTrainingSession } from "../../domain/training/validation";
+import { getTeamCompetitionStyle } from "../../domain/training/team-competition-catalog";
 import { composeSportsTrainingDraft } from "./sports-training-composer";
 
 export interface StructuredSportsTrainingInput extends TrainingDraftInput {
@@ -33,6 +34,7 @@ export interface StructuredSportsTrainingInput extends TrainingDraftInput {
   readonly mainPartCount: number;
   readonly organizationMode: "solo" | "team";
   readonly teamSize?: number;
+  readonly competitionStyleKey?: string;
 }
 
 type CandidateWithHistory = TrainingDraftExerciseCandidate & { readonly recentUseCount?: number };
@@ -47,6 +49,7 @@ const FORMAT_CATEGORY_BONUS: Readonly<Partial<Record<TrainingFormat, readonly Ex
   technique: ["ocr-skill", "grip-rig", "balance-agility", "throw", "mobility"],
   relay: ["running", "balance-agility", "carry-lift", "general"],
   partner: ["strength", "core", "carry-lift", "balance-agility", "general"],
+  "team-competition": ["strength", "running", "ocr-skill", "carry-lift", "balance-agility", "general"],
 };
 
 const MOVEMENT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
@@ -218,6 +221,7 @@ function structuredScore(
 
   score += goalScore(candidate, input.goals, phase);
   score += formatScore(candidate, input.formats, phase);
+  if (phase === "main") score += competitionPartScore(candidate, input, partIndex);
 
   for (const region of input.bodyRegions) {
     if (bodyRegionsOverlap([region], candidate.bodyRegions)) score += phase === "main" ? 60 : 24;
@@ -302,6 +306,38 @@ function formatScore(
   if (phase !== "main") return 0;
   return formats.reduce((sum, format) =>
     sum + (FORMAT_CATEGORY_BONUS[format]?.includes(candidate.category) ? 20 : 0), 0);
+}
+
+function competitionPartScore(
+  candidate: TrainingDraftExerciseCandidate,
+  input: StructuredSportsTrainingInput,
+  partIndex: number,
+): number {
+  const style = getTeamCompetitionStyle(input.competitionStyleKey);
+  if (!style) return 0;
+  const title = (style.mainPartTitlesDe[partIndex] ?? "").toLocaleLowerCase("de-DE");
+  let score = 0;
+
+  if (title.includes("kraft") || title.includes("carry")) {
+    if (["strength", "carry-lift", "core"].includes(candidate.category)) score += 110;
+    if (candidate.trainingGoals?.some((goal) => ["strength_endurance", "grip"].includes(goal))) score += 70;
+  }
+  if (title.includes("speed") || title.includes("schnellig") || title.includes("run")) {
+    if (["running", "balance-agility"].includes(candidate.category)) score += 110;
+    if (candidate.trainingGoals?.some((goal) => ["speed", "endurance"].includes(goal))) score += 70;
+    if (candidate.impactLevel === "high") score += 10;
+  }
+  if (title.includes("technik") || title.includes("ocr")) {
+    if (["ocr-skill", "grip-rig", "balance-agility", "throw"].includes(candidate.category)) score += 120;
+    if (candidate.trainingGoals?.some((goal) => ["ocr_technique", "coordination", "balance"].includes(goal))) score += 70;
+    if (candidate.riskLevel === "low") score += 20;
+  }
+  if (title.includes("finisher") || title.includes("team") || title.includes("gemeinsam") || title.includes("synchron")) {
+    if (candidate.trainingGoals?.includes("teamwork")) score += 130;
+    if (candidate.exerciseType === "game" || candidate.exerciseType === "drill") score += 40;
+    if (input.teamSize != null && candidate.stationCapacity >= input.teamSize) score += 50;
+  }
+  return score;
 }
 
 function movementCounterpartScore(
@@ -475,13 +511,20 @@ function buildItem(
     instructions: candidate.instructions,
     levelLabel: levelFor(candidate, kind, input),
     ...(kind === "main" && mainPartIndex != null
-      ? { mainPartIndex, mainPartTitle: input.mainPartCount > 1 ? `Hauptteil ${mainPartIndex}` : "Hauptteil" }
+      ? { mainPartIndex, mainPartTitle: mainPartTitle(input, mainPartIndex) }
       : {}),
   };
 }
 
+function mainPartTitle(input: StructuredSportsTrainingInput, mainPartIndex: number): string {
+  const style = getTeamCompetitionStyle(input.competitionStyleKey);
+  return style?.mainPartTitlesDe[mainPartIndex - 1]
+    ?? (input.mainPartCount > 1 ? `Hauptteil ${mainPartIndex}` : "Hauptteil");
+}
+
 function formatForPhase(kind: TrainingPhaseKind, input: StructuredSportsTrainingInput): TrainingFormat {
   if (kind !== "main") return "free";
+  if (input.formats.includes("team-competition")) return "team-competition";
   if (input.formats.includes("partner")) return "partner";
   if (input.organizationMode === "team" && input.formats.includes("relay")) return "relay";
   return input.formats[0] ?? "free";

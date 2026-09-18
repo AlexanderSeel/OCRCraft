@@ -118,6 +118,7 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
     mainPartCount: request.mainPartCount,
     organizationMode: request.organizationMode,
     teamSize: request.teamSize,
+    competitionStyleKey: request.competitionStyleKey,
   }, candidates);
   return finalizeDraft(request, draft, candidates, rules);
 }

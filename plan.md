@@ -94,7 +94,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] 24 unabhängige, versionierte OCRCraft-Trainingsvorlagen mit Quellen-/Provenienzreferenz bereitstellen und direkt in Quick Create wiederverwenden; gespeicherte Trainings behalten Template-Key und Provenienz.
 - [x] Erwachsenen-, Kids- und Youth-Vorlagen für Ausdauer, Koordination, Kraft, Mobility, Teamwork und Parcours ergänzen; jede der sechs Kategorien ist in allen drei Zielgruppen vertreten.
 - [x] Spiele als vollwertigen Katalogtyp `game` ausbauen: eigener Spielebereich, Anlage über denselben vollständigen Übungseditor, 12 zweisprachige OCRCraft-Eigenspiele für Kids/Youth/Erwachsene sowie direkte Berücksichtigung durch lokale/AI-Trainingsplanung über die bestehende Kandidaten- und Sicherheitslogik.
-- [ ] Ermögliche auch Teamwettkämpfe z.B. 3 Personen (3 Komplexe Kraft, Schnelligkeit, Technik) jeder aus dem Team wählt einen Komplex mit Übungen, zum Abschluss machen alle 3 noch zusammen Übungen, dies kann auch mit zusätzlichen Runden laufen kombiniert werden. Erstelle weitere solcher Wettkampfstile oder suche nach Vorlagen
+- [x] Teamwettkämpfe als reguläres Trainingsformat integrieren: 3er-Spezialisten mit Kraft/Schnelligkeit/Technik und gemeinsamem Finisher sowie 3er-Rotation, 4er Relay Gauntlet, 2er Switch-Duell und 3er Checkpoint-Endurance; Presets setzen Teamgröße, Komplexe und Runden, bleiben im Builder editierbar und laufen durch dieselben Alters-/Risiko-/Equipment-/Sicherheitsregeln.
 - [ ] Keine externen Texte/Bilder ohne passende Lizenz übernehmen.
 
 ### Medien

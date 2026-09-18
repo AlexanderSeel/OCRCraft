@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
+import { TEAM_COMPETITION_STYLES, getTeamCompetitionStyle } from "@/domain/training/team-competition-catalog";
 import {
   exerciseTrainingGoalLabels,
   exerciseTrainingGoals,
@@ -50,6 +51,7 @@ const formatLabels: Readonly<Record<TrainingFormat, string>> = {
   technique: "Technik",
   relay: "Team / Relay",
   partner: "Partner Workout",
+  "team-competition": "Teamwettkampf",
 };
 
 export interface TrainingBuilderSourceOption {
@@ -152,6 +154,7 @@ export function TrainingBuilderPanel({
   const [sourceTrainingIds, setSourceTrainingIds] = useState<readonly string[]>(initialState?.sourceTrainingIds ?? []);
   const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>(initialState?.preferredExercises ?? []);
   const [formats, setFormats] = useState<readonly string[]>(initialState?.formats ?? ["circuit"]);
+  const [competitionStyleKey, setCompetitionStyleKey] = useState("");
   const [location, setLocation] = useState(initialState?.location ?? "mixed");
   const [intensity, setIntensity] = useState(initialState?.intensity ?? "balanced");
   const [warmupExerciseCount, setWarmupExerciseCount] = useState(initialState?.warmupExerciseCount ?? 2);
@@ -181,7 +184,9 @@ export function TrainingBuilderPanel({
   const [regeneratingPhase, setRegeneratingPhase] = useState<TrainingPhaseKind | null>(null);
   const [replacingExerciseId, setReplacingExerciseId] = useState<string | null>(null);
 
-  const canGenerate = goals.length > 0 && formats.length > 0;
+  const canGenerate = goals.length > 0
+    && formats.length > 0
+    && (!formats.includes("team-competition") || competitionStyleKey.length > 0);
   const selectedGoalLabels = useMemo(() => new Set(goals), [goals]);
   const partnerWorkout = formats.includes("partner");
   const effectiveOrganizationMode: "solo" | "team" = partnerWorkout ? "team" : organizationMode;
@@ -240,9 +245,29 @@ export function TrainingBuilderPanel({
     invalidate();
   }
 
+  function applyCompetitionStyle(key: string) {
+    setCompetitionStyleKey(key);
+    const style = getTeamCompetitionStyle(key);
+    if (!style) {
+      invalidate();
+      return;
+    }
+    setFormats(style.formats);
+    setGoals(style.goals);
+    setIntensity(style.intensity);
+    setOrganizationMode("team");
+    setTeamSize(style.teamSize);
+    setGroupSplitCount(undefined);
+    setMainPartCountState(style.mainPartTitlesDe.length);
+    setMainPartExerciseCounts(style.mainPartExerciseCounts);
+    setMainPartProgramming(style.mainPartProgramming);
+    invalidate();
+  }
+
   function input(): QuickCreateDraftClientInput {
     return {
       groupId: initialState?.groupId,
+      competitionStyleKey: formats.includes("team-competition") ? competitionStyleKey || undefined : undefined,
       groupType: audience,
       ageRange,
       participantCount: participants,
@@ -563,8 +588,33 @@ export function TrainingBuilderPanel({
               setTeamSize(2);
               setGroupSplitCount(undefined);
             }
+            if (format === "team-competition" && !selecting) setCompetitionStyleKey("");
             invalidate();
           }}>{formatLabels[format]}</Toggle>)}</div>
+          {formats.includes("team-competition") ? (
+            <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+              <label className="grid gap-2 text-sm font-black">
+                Teamwettkampfstil
+                <select
+                  className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                  onChange={(event) => applyCompetitionStyle(event.target.value)}
+                  value={competitionStyleKey}
+                >
+                  <option value="">Stil auswählen</option>
+                  {TEAM_COMPETITION_STYLES.map((style) => (
+                    <option key={style.key} value={style.key}>{style.titleDe} · {style.teamSize}er-Team</option>
+                  ))}
+                </select>
+              </label>
+              {getTeamCompetitionStyle(competitionStyleKey) ? (
+                <div className="mt-3 text-xs leading-5 text-[var(--muted)]">
+                  <p>{getTeamCompetitionStyle(competitionStyleKey)?.descriptionDe}</p>
+                  <p className="mt-2 font-bold text-[var(--foreground)]">{getTeamCompetitionStyle(competitionStyleKey)?.mainPartTitlesDe.join(" → ")}</p>
+                  <p className="mt-2">Nach dem Übernehmen bleiben Hauptteile, Runden und Belastungsparameter vollständig editierbar.</p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           <div className="mt-5 grid gap-3 sm:grid-cols-3">{([ ["technique", "Technik"], ["balanced", "Ausgewogen"], ["conditioning", "Conditioning"] ] as const).map(([id, label]) => <Toggle key={id} active={intensity === id} onClick={() => { setIntensity(id); invalidate(); }}>{label}</Toggle>)}</div>
           <Disclosure className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" summaryClassName="font-black" summary="Equipment-Bestand">
             <div className="mt-4"><EquipmentAvailabilityPicker onChange={(id, value) => { setAvailableEquipment((current) => ({ ...current, [id]: value })); invalidate(); }} options={equipmentOptions} value={availableEquipment} /></div>
