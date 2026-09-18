@@ -38,7 +38,18 @@ const groupSchema = z.object({
   skillAdvancedPercent: optionalInteger(0, 100),
   preferredFormats: z.array(z.enum(TRAINING_FORMATS)).max(TRAINING_FORMATS.length),
   ruleProfile: z.enum(CLUB_RULE_PROFILE_KEYS),
+  defaultOrganizationMode: z.enum(["solo", "team"]),
+  defaultTeamSize: optionalInteger(2, 20),
+  defaultGroupSplitCount: optionalInteger(1, 20),
+  defaultStationGroupSize: optionalInteger(1, 100),
 }).superRefine((value, context) => {
+  if (value.defaultOrganizationMode === "team" && value.defaultTeamSize == null) {
+    context.addIssue({
+      code: "custom",
+      path: ["defaultTeamSize"],
+      message: "Für Teamorganisation ist eine Standard-Teamgröße erforderlich.",
+    });
+  }
   if (value.minAge != null && value.maxAge != null && value.minAge > value.maxAge) {
     context.addIssue({
       code: "custom",
@@ -126,6 +137,10 @@ function parseGroupForm(formData: FormData) {
     skillAdvancedPercent: formData.get("skillAdvancedPercent"),
     preferredFormats: formData.getAll("preferredFormats"),
     ruleProfile: formData.get("ruleProfile"),
+    defaultOrganizationMode: formData.get("defaultOrganizationMode"),
+    defaultTeamSize: formData.get("defaultTeamSize"),
+    defaultGroupSplitCount: formData.get("defaultGroupSplitCount"),
+    defaultStationGroupSize: formData.get("defaultStationGroupSize"),
   });
 }
 

@@ -71,6 +71,10 @@ export default async function QuickCreatePage({ searchParams }: PageProps) {
           defaultEquipment: group.defaultEquipment,
           skillDistribution: group.skillDistribution,
           preferredFormats: group.preferredFormats,
+          defaultOrganizationMode: group.defaultOrganizationMode,
+          defaultTeamSize: group.defaultTeamSize,
+          defaultGroupSplitCount: group.defaultGroupSplitCount,
+          defaultStationGroupSize: group.defaultStationGroupSize,
         }))}
       />
     </AppShell>

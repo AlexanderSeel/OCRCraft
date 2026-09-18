@@ -73,9 +73,9 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 - [x] Version History/Restore für Trainings.
 - [x] Trainingsvorlagen erstellen, speichern und wiederverwenden: bestehende Trainings können als persistierte Vereins-Snapshots mit konkreter Übungsauswahl, Hauptteilprogrammierung und Teamorganisation gespeichert, im Vorlagenkatalog erneut instanziiert und archiviert werden; vor Wiederverwendung werden alle Übungsreferenzen gegen den aktiven Katalog validiert.
-- [ ] Gruppen-Splits, Stationskapazität und Vereinsdefaults weiter ausbauen.
-- [ ] Kids/Youth/Beginner/Advanced/Competition/Running/Open-Presets ergänzen.
-- [ ] Club-Regelprofile, Standort-/Equipmentdefaults und Skill-Verteilung ergänzen.
+- [x] Gruppen-Splits, Stationskapazität und Vereinsdefaults weiter ausbauen: Vereinsgruppen speichern Standard-Organisation, Teamgröße, Rotationsgruppenzahl und Zielgröße je Stationsgruppe; Quick Create übernimmt diese Defaults bzw. leitet daraus die Gruppenteilung ab, während die bestehende Übungs-`stationCapacity`-Validierung weiterhin reale Engpässe meldet.
+- [x] Kids/Youth/Beginner/Advanced/Competition/Running/Open-Presets ergänzen; die sieben editierbaren Startprofile setzen Zielgruppe, Alter, Dauer, Ort, Risiko-/Regelprofil, Skill-Mix, bevorzugte Formate und Organisationsdefaults.
+- [x] Club-Regelprofile, Standort-/Equipmentdefaults und Skill-Verteilung ergänzen; Regelprofil, Ort und Equipment werden von Quick Create als Planungsdefaults übernommen, der Skill-Mix wird als Trainer-/Gruppenmetadatum persistiert und sichtbar gehalten.
 
 ### UI/UX und Zugänglichkeit
 

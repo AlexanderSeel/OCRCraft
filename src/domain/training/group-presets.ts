@@ -37,6 +37,10 @@ export interface GroupPresetDefinition {
     readonly advancedPercent: number;
   } | null;
   readonly preferredFormats: readonly TrainingFormat[];
+  readonly defaultOrganizationMode?: "solo" | "team";
+  readonly defaultTeamSize?: number | null;
+  readonly defaultGroupSplitCount?: number | null;
+  readonly defaultStationGroupSize?: number | null;
 }
 
 export const GROUP_PRESETS: readonly GroupPresetDefinition[] = [
@@ -54,6 +58,9 @@ export const GROUP_PRESETS: readonly GroupPresetDefinition[] = [
     maximumRiskLevel: "medium",
     ruleProfile: "kids-youth",
     skillDistribution: { beginnerPercent: 80, intermediatePercent: 20, advancedPercent: 0 },
+    defaultOrganizationMode: "solo",
+    defaultGroupSplitCount: 3,
+    defaultStationGroupSize: 4,
     preferredFormats: ["circuit", "technique", "relay"],
   },
   {
@@ -70,6 +77,9 @@ export const GROUP_PRESETS: readonly GroupPresetDefinition[] = [
     maximumRiskLevel: "medium",
     ruleProfile: "kids-youth",
     skillDistribution: { beginnerPercent: 40, intermediatePercent: 50, advancedPercent: 10 },
+    defaultOrganizationMode: "solo",
+    defaultGroupSplitCount: 3,
+    defaultStationGroupSize: 5,
     preferredFormats: ["circuit", "rig-run", "technique", "relay"],
   },
   {
@@ -86,6 +96,9 @@ export const GROUP_PRESETS: readonly GroupPresetDefinition[] = [
     maximumRiskLevel: "medium",
     ruleProfile: "safety-first",
     skillDistribution: { beginnerPercent: 100, intermediatePercent: 0, advancedPercent: 0 },
+    defaultOrganizationMode: "solo",
+    defaultGroupSplitCount: 3,
+    defaultStationGroupSize: 4,
     preferredFormats: ["circuit", "technique"],
   },
   {
@@ -102,6 +115,9 @@ export const GROUP_PRESETS: readonly GroupPresetDefinition[] = [
     maximumRiskLevel: "high",
     ruleProfile: "standard",
     skillDistribution: { beginnerPercent: 0, intermediatePercent: 30, advancedPercent: 70 },
+    defaultOrganizationMode: "solo",
+    defaultGroupSplitCount: 3,
+    defaultStationGroupSize: 4,
     preferredFormats: ["rig-run", "circuit", "amrap", "technique"],
   },
   {
@@ -118,6 +134,9 @@ export const GROUP_PRESETS: readonly GroupPresetDefinition[] = [
     maximumRiskLevel: "high",
     ruleProfile: "competition",
     skillDistribution: { beginnerPercent: 0, intermediatePercent: 20, advancedPercent: 80 },
+    defaultOrganizationMode: "solo",
+    defaultGroupSplitCount: 3,
+    defaultStationGroupSize: 4,
     preferredFormats: ["rig-run", "run-exercise", "amrap", "circuit"],
   },
   {
@@ -134,6 +153,9 @@ export const GROUP_PRESETS: readonly GroupPresetDefinition[] = [
     maximumRiskLevel: "medium",
     ruleProfile: "standard",
     skillDistribution: { beginnerPercent: 30, intermediatePercent: 50, advancedPercent: 20 },
+    defaultOrganizationMode: "solo",
+    defaultGroupSplitCount: 2,
+    defaultStationGroupSize: 8,
     preferredFormats: ["run-exercise", "rig-run", "relay"],
   },
   {
@@ -150,6 +172,9 @@ export const GROUP_PRESETS: readonly GroupPresetDefinition[] = [
     maximumRiskLevel: null,
     ruleProfile: "standard",
     skillDistribution: null,
+    defaultOrganizationMode: "solo",
+    defaultGroupSplitCount: 4,
+    defaultStationGroupSize: 4,
     preferredFormats: [],
   },
 ];

@@ -37,6 +37,10 @@ export interface ClubGroupInput {
   readonly skillDistribution?: ClubGroupSkillDistribution | null;
   readonly preferredFormats?: readonly TrainingFormat[];
   readonly ruleProfile?: ClubRuleProfileKey;
+  readonly defaultOrganizationMode?: "solo" | "team";
+  readonly defaultTeamSize?: number | null;
+  readonly defaultGroupSplitCount?: number | null;
+  readonly defaultStationGroupSize?: number | null;
 }
 
 export interface ClubGroup extends Omit<ClubGroupInput, "defaultLocation" | "defaultEquipment" | "skillDistribution" | "preferredFormats" | "ruleProfile"> {
@@ -46,6 +50,10 @@ export interface ClubGroup extends Omit<ClubGroupInput, "defaultLocation" | "def
   readonly skillDistribution: ClubGroupSkillDistribution | null;
   readonly preferredFormats: readonly TrainingFormat[];
   readonly ruleProfile: ClubRuleProfileKey;
+  readonly defaultOrganizationMode: "solo" | "team";
+  readonly defaultTeamSize: number | null;
+  readonly defaultGroupSplitCount: number | null;
+  readonly defaultStationGroupSize: number | null;
   readonly archived: boolean;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -74,10 +82,14 @@ function rowToGroup(row: readonly unknown[]): Omit<ClubGroup, "defaultEquipment"
       intermediatePercent: Number(row[12]),
       advancedPercent: Number(row[13]),
     },
-    archived: Boolean(row[14]),
-    createdAt: String(row[15]),
-    updatedAt: String(row[16]),
-    linkedTrainingCount: Number(row[17]),
+    defaultOrganizationMode: String(row[14] ?? "solo") as "solo" | "team",
+    defaultTeamSize: row[15] == null ? null : Number(row[15]),
+    defaultGroupSplitCount: row[16] == null ? null : Number(row[16]),
+    defaultStationGroupSize: row[17] == null ? null : Number(row[17]),
+    archived: Boolean(row[18]),
+    createdAt: String(row[19]),
+    updatedAt: String(row[20]),
+    linkedTrainingCount: Number(row[21]),
   };
 }
 
@@ -141,6 +153,10 @@ export async function listClubGroups(includeArchived = false): Promise<readonly 
         g.skill_beginner_percent,
         g.skill_intermediate_percent,
         g.skill_advanced_percent,
+        COALESCE(g.default_organization_mode,'solo'),
+        g.default_team_size,
+        g.default_group_split_count,
+        g.default_station_group_size,
         g.archived,
         g.created_at,
         g.updated_at,
@@ -211,11 +227,13 @@ export async function createClubGroup(input: ClubGroupInput): Promise<string> {
         INSERT INTO club_groups (
           id, name, audience, min_age, max_age, default_participant_count,
           default_duration_minutes, default_locale, maximum_risk_level, default_location, rule_profile,
-          skill_beginner_percent, skill_intermediate_percent, skill_advanced_percent
+          skill_beginner_percent, skill_intermediate_percent, skill_advanced_percent,
+          default_organization_mode,default_team_size,default_group_split_count,default_station_group_size
         ) VALUES (
           $id::UUID, $name, $audience, $minAge, $maxAge, $participants,
           $duration, $locale, $risk, $location, $ruleProfile,
-          $skillBeginner, $skillIntermediate, $skillAdvanced
+          $skillBeginner, $skillIntermediate, $skillAdvanced,
+          $organizationMode,$teamSize,$groupSplitCount,$stationGroupSize
         )
         `,
         {
@@ -233,6 +251,10 @@ export async function createClubGroup(input: ClubGroupInput): Promise<string> {
           skillBeginner: input.skillDistribution?.beginnerPercent ?? null,
           skillIntermediate: input.skillDistribution?.intermediatePercent ?? null,
           skillAdvanced: input.skillDistribution?.advancedPercent ?? null,
+          organizationMode: input.defaultOrganizationMode ?? "solo",
+          teamSize: input.defaultOrganizationMode === "team" ? input.defaultTeamSize ?? 2 : null,
+          groupSplitCount: input.defaultOrganizationMode === "team" ? null : input.defaultGroupSplitCount ?? null,
+          stationGroupSize: input.defaultStationGroupSize ?? null,
         },
       );
       await replaceGroupEquipmentDefaults(connection, id, input.defaultEquipment ?? []);
@@ -269,6 +291,10 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
           skill_beginner_percent=$skillBeginner,
           skill_intermediate_percent=$skillIntermediate,
           skill_advanced_percent=$skillAdvanced,
+          default_organization_mode=COALESCE($organizationMode,default_organization_mode),
+          default_team_size=$teamSize,
+          default_group_split_count=$groupSplitCount,
+          default_station_group_size=$stationGroupSize,
           updated_at=current_timestamp
         WHERE id=$id::UUID
         RETURNING id::VARCHAR
@@ -288,6 +314,10 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
           skillBeginner: input.skillDistribution?.beginnerPercent ?? null,
           skillIntermediate: input.skillDistribution?.intermediatePercent ?? null,
           skillAdvanced: input.skillDistribution?.advancedPercent ?? null,
+          organizationMode: input.defaultOrganizationMode ?? null,
+          teamSize: input.defaultOrganizationMode === "team" ? input.defaultTeamSize ?? 2 : null,
+          groupSplitCount: input.defaultOrganizationMode === "team" ? null : input.defaultGroupSplitCount ?? null,
+          stationGroupSize: input.defaultStationGroupSize ?? null,
         },
       );
       if (reader.getRows().length === 0) {

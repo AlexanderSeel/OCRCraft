@@ -150,6 +150,9 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                 <GroupMetric label="Formate" value={group.preferredFormats.length ? String(group.preferredFormats.length) : "Offen"} />
                 <GroupMetric label="Regelprofil" value={ruleProfileLabel(group.ruleProfile)} />
                 <GroupMetric label="Max. Risiko" value={riskLabel(group.maximumRiskLevel)} />
+                <GroupMetric label="Organisation" value={group.defaultOrganizationMode === "team" ? `Team · ${group.defaultTeamSize ?? 2}` : "Solo / Rotation"} />
+                <GroupMetric label="Rotationsgruppen" value={group.defaultGroupSplitCount == null ? "Automatisch" : String(group.defaultGroupSplitCount)} />
+                <GroupMetric label="Ziel Stationsgruppe" value={group.defaultStationGroupSize == null ? "Offen" : `max. ${group.defaultStationGroupSize} Pers.`} />
               </dl>
 
               <div className="mt-3 text-xs font-semibold text-[var(--muted)]">
@@ -310,6 +313,54 @@ function GroupFields({
           <option value="indoor">Indoor</option>
           <option value="outdoor">Outdoor</option>
         </select>
+      </label>
+      <label className="grid gap-1.5 text-sm font-bold">
+        Standard-Organisation
+        <select
+          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          defaultValue={group?.defaultOrganizationMode ?? preset?.defaultOrganizationMode ?? "solo"}
+          name="defaultOrganizationMode"
+        >
+          <option value="solo">Solo / Rotationsgruppen</option>
+          <option value="team">Feste Teams</option>
+        </select>
+      </label>
+      <label className="grid gap-1.5 text-sm font-bold">
+        Standard-Teamgröße
+        <input
+          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          defaultValue={group?.defaultTeamSize ?? preset?.defaultTeamSize ?? ""}
+          max={20}
+          min={2}
+          name="defaultTeamSize"
+          placeholder="nur bei Teams"
+          type="number"
+        />
+      </label>
+      <label className="grid gap-1.5 text-sm font-bold">
+        Rotationsgruppen
+        <input
+          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          defaultValue={group?.defaultGroupSplitCount ?? preset?.defaultGroupSplitCount ?? ""}
+          max={20}
+          min={1}
+          name="defaultGroupSplitCount"
+          placeholder="automatisch"
+          type="number"
+        />
+      </label>
+      <label className="grid gap-1.5 text-sm font-bold">
+        Zielgröße je Station
+        <input
+          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          defaultValue={group?.defaultStationGroupSize ?? preset?.defaultStationGroupSize ?? ""}
+          max={100}
+          min={1}
+          name="defaultStationGroupSize"
+          placeholder="z. B. 4"
+          type="number"
+        />
+        <span className="text-xs font-normal text-[var(--muted)]">Dient Quick Create als Fallback zur automatischen Gruppenteilung.</span>
       </label>
       <label className="grid gap-1.5 text-sm font-bold">
         Club-Regelprofil
