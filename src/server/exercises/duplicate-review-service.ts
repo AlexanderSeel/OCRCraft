@@ -1,6 +1,6 @@
 import "server-only";
 
-import { assessExerciseDuplicate, shouldReviewDuplicate, type DuplicateExerciseRecord } from "@/domain/exercise/duplicate-detection";
+import { assessExerciseDuplicate, shouldReviewDuplicate, type DuplicateClassification, type DuplicateExerciseRecord } from "@/domain/exercise/duplicate-detection";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { recordAuditEvent } from "@/server/db/audit-service";
@@ -13,6 +13,7 @@ export interface DuplicateReviewTask {
   readonly leftName: string;
   readonly rightName: string;
   readonly score: number;
+  readonly classification: DuplicateClassification;
   readonly reasons: readonly string[];
   readonly status: "open" | "merged" | "ignored";
 }
@@ -66,7 +67,7 @@ export async function refreshDuplicateReviewTasks(): Promise<number> {
         if (!shouldReviewDuplicate(assessment)) continue;
         const existing = await connection.runAndReadAll(`SELECT 1 FROM exercise_duplicate_tasks WHERE left_exercise_id=$left::UUID AND right_exercise_id=$right::UUID AND status='open' LIMIT 1`, { left: left.id, right: right.id });
         if (existing.getRows().length) continue;
-        await connection.run(`INSERT INTO exercise_duplicate_tasks (left_exercise_id,right_exercise_id,similarity_score,reasons) VALUES ($left::UUID,$right::UUID,$score,$reasons)`, { left: left.id, right: right.id, score: assessment.score, reasons: assessment.reasons.join("; ") });
+        await connection.run(`INSERT INTO exercise_duplicate_tasks (left_exercise_id,right_exercise_id,similarity_score,classification,reasons) VALUES ($left::UUID,$right::UUID,$score,$classification,$reasons)`, { left: left.id, right: right.id, score: assessment.score, classification: assessment.classification, reasons: assessment.reasons.join("; ") });
         created += 1;
       }
     }
@@ -79,13 +80,13 @@ export async function listDuplicateReviewTasks(limit = 100): Promise<readonly Du
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(`
       SELECT d.id::VARCHAR,d.left_exercise_id::VARCHAR,d.right_exercise_id::VARCHAR,
-        COALESCE(lt.name,''),COALESCE(rt.name,''),d.similarity_score,d.reasons,d.status
+        COALESCE(lt.name,''),COALESCE(rt.name,''),d.similarity_score,COALESCE(d.classification,'probable_duplicate'),d.reasons,d.status
       FROM exercise_duplicate_tasks d
       JOIN exercise_translations lt ON lt.exercise_id=d.left_exercise_id AND lt.locale='de'
       JOIN exercise_translations rt ON rt.exercise_id=d.right_exercise_id AND rt.locale='de'
       WHERE d.status='open' ORDER BY d.similarity_score DESC LIMIT $limit
     `, { limit });
-    return reader.getRows().map((row) => ({ id: String(row[0]), leftExerciseId: String(row[1]), rightExerciseId: String(row[2]), leftName: String(row[3]), rightName: String(row[4]), score: Number(row[5]), reasons: String(row[6]).split("; "), status: String(row[7]) as DuplicateReviewTask["status"] }));
+    return reader.getRows().map((row) => ({ id: String(row[0]), leftExerciseId: String(row[1]), rightExerciseId: String(row[2]), leftName: String(row[3]), rightName: String(row[4]), score: Number(row[5]), classification: String(row[6]) as DuplicateClassification, reasons: String(row[7]).split("; "), status: String(row[8]) as DuplicateReviewTask["status"] }));
   });
 }
 

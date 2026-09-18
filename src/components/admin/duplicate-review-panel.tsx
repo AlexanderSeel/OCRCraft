@@ -11,6 +11,7 @@ interface DuplicateReviewTask {
   readonly leftName: string;
   readonly rightName: string;
   readonly score: number;
+  readonly classification: "same" | "new" | "probable_duplicate" | "conflict";
   readonly reasons: readonly string[];
 }
 
@@ -90,7 +91,7 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <button className="text-left font-black underline-offset-2 hover:underline" onClick={() => setComparison(task)} type="button">{task.leftName} ↔ {task.rightName}</button>
-                  <span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{Math.round(task.score * 100)} %</span>
+                  <span className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{classificationLabel(task.classification)}</span><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{Math.round(task.score * 100)} %</span></span>
                 </div>
                 <p className="mt-1 text-sm text-[var(--muted)]">{task.reasons.join(" · ")}</p>
                 <button className="mt-2 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-bold" onClick={() => setComparison(task)} type="button">Side-by-Side vergleichen</button>
@@ -138,6 +139,10 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
       ) : null}
     </>
   );
+}
+
+function classificationLabel(value: DuplicateReviewTask["classification"]): string {
+  return value === "same" ? "Gleich" : value === "probable_duplicate" ? "Wahrscheinliche Dublette" : value === "conflict" ? "Konflikt" : "Neu";
 }
 
 function Info({ label, value }: { readonly label: string; readonly value: string }) {

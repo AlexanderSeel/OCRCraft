@@ -8,6 +8,7 @@ describe("exercise duplicate detection", () => {
       { id: "b", names: ["goblet-squat"], aliases: [], equipment: ["Kettlebell"], bodyRegions: ["quadriceps"] },
     );
     expect(assessment.score).toBeGreaterThanOrEqual(0.72);
+    expect(assessment.classification).toBe("same");
     expect(shouldReviewDuplicate(assessment)).toBe(true);
   });
 
@@ -17,5 +18,15 @@ describe("exercise duplicate detection", () => {
       { id: "b", names: ["Dead Hang"], aliases: [], equipment: ["rig"], bodyRegions: ["grip"] },
     );
     expect(shouldReviewDuplicate(assessment)).toBe(false);
+    expect(assessment.classification).toBe("new");
+  });
+
+  it("marks similar context with different identity as a conflict", () => {
+    const assessment = assessExerciseDuplicate(
+      { id: "a", names: ["Front Rack Carry"], aliases: [], equipment: ["Dumbbell"], bodyRegions: ["shoulders", "core"] },
+      { id: "b", names: ["Front Rack March"], aliases: [], equipment: ["Dumbbell"], bodyRegions: ["shoulders", "core"] },
+    );
+    expect(assessment.classification).toBe("conflict");
+    expect(shouldReviewDuplicate(assessment)).toBe(true);
   });
 });

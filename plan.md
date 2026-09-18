@@ -41,8 +41,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Exportoptionen für Übungen, Details, Mapping, Trainings, Gruppen, Medien und Provenienz anbieten.
 - [ ] Optional Binärmedien mit MIME-Typ, Prüfsumme und Quellenmetadaten exportieren.
 - [x] Import-Preflight, Schema-Version und transaktionalen Schreibvorgang für erlaubte portable Tabellen implementieren.
-- [ ] Dublettenklassifikation (`same`, `new`, `probable duplicate`, `conflict`) und Side-by-Side-Vergleich für Importkonflikte abschließen.
-- [ ] Feldvergleich, Bildvergleich, Bulk-Entscheidungen und `Use left / Use right / Keep both` vollständig abdecken.
+- [x] Dublettenklassifikation (`same`, `new`, `probable duplicate`, `conflict`) und Side-by-Side-Vergleich für Importkonflikte abschließen.
+- [ ] Bildvergleich, `Keep both` als explizite Entscheidung und konfliktbewusste Feldübernahme im Bulk vollständig abdecken.
 - [ ] Round-trip- und Konfliktauflösungstests ergänzen.
 
 ## P1 – Trainer-Workflow

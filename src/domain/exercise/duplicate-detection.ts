@@ -11,7 +11,10 @@ export interface DuplicateExerciseRecord {
 export interface DuplicateAssessment {
   readonly score: number;
   readonly reasons: readonly string[];
+  readonly classification: DuplicateClassification;
 }
+
+export type DuplicateClassification = "same" | "new" | "probable_duplicate" | "conflict";
 
 export function normalizeExerciseText(value: string): string {
   return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
@@ -38,9 +41,17 @@ export function assessExerciseDuplicate(left: DuplicateExerciseRecord, right: Du
   if (nameScore >= 0.8) reasons.push("sehr ähnliche Bezeichnung");
   if (contextScore >= 0.75) reasons.push("gleiches Equipment und Körperregion");
   const score = Math.min(1, (leftNames.some((name) => rightNames.includes(name)) ? 0.7 : nameScore * 0.55) + contextScore * 0.25 + (reasons.includes("gleiche externe Datensatz-ID") ? 0.3 : 0));
-  return { score, reasons };
+  const sameIdentity = reasons.includes("gleiche externe Datensatz-ID") || reasons.includes("gleicher normalisierter Name");
+  const classification: DuplicateClassification = sameIdentity
+    ? "same"
+    : score >= 0.72
+      ? "probable_duplicate"
+      : contextScore >= 0.5 && nameScore >= 0.35
+        ? "conflict"
+        : "new";
+  return { score, reasons, classification };
 }
 
 export function shouldReviewDuplicate(assessment: DuplicateAssessment): boolean {
-  return assessment.score >= 0.72 && assessment.reasons.length > 0;
+  return assessment.classification !== "new" && assessment.reasons.length > 0;
 }
