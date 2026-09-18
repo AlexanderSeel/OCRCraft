@@ -19,6 +19,12 @@ export function Dialog({
   const mounted = useSyncExternalStore(() => () => undefined, () => true, () => false);
 
   useEffect(() => {
+    if (!mounted) return;
+    document.body.dataset.dialogOpen = "true";
+    return () => { delete document.body.dataset.dialogOpen; };
+  }, [mounted]);
+
+  useEffect(() => {
     const previousActive = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     const firstFocusable = panelRef.current?.querySelector<HTMLElement>(
