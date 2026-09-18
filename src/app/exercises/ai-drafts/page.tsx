@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { Disclosure } from "@/components/ui/disclosure";
 import { exerciseCategoryLabels, exercisePhaseLabels } from "@/domain/exercise/model";
 import { getConfiguredAiExerciseDraftProvider } from "@/server/exercises/ai-exercise-draft-provider";
 import { listAiExerciseDrafts } from "@/server/exercises/ai-exercise-draft-repository";
@@ -132,10 +133,9 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
                     </div>
                   ) : null}
 
-                  <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]">
-                    <summary className="cursor-pointer px-3 py-2 text-xs font-black">Originales Trainer-Briefing</summary>
+                  <Disclosure className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]" summaryClassName="px-3 py-2 text-xs font-black" summary="Originales Trainer-Briefing">
                     <p className="border-t border-[var(--border)] p-3 text-sm leading-6 text-[var(--muted)]">{draft.requestText}</p>
-                  </details>
+                  </Disclosure>
 
                   {draft.status === "pending" ? (
                     <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-[var(--border)] pt-4">
