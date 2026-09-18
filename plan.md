@@ -109,9 +109,10 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### KI
 
-- [ ] KI-Übungsentwürfe mit separatem Trainer-Approval-Workflow abschließen.
-- [ ] KI-Ausgaben weiterhin schema-validieren und deterministisch gegen Club-/Alters-/Sicherheitsregeln prüfen.
-- [ ] Settings für die AI Auswahl OpenAI, Gemini, CoPilot, Claude, etc. und Setzen der entsprechenden Keys/Zugänge (auch per Login bei Anbieter und Freigabe möglich machen) zusätzlich das Nutzungslimit und aktuellen Verbrauch in einem Info Panel anzeigen
+- [x] KI-Übungsentwürfe mit separatem Trainer-Approval-Workflow abschließen; harte Namensdubletten blockieren die Freigabe und gruppenspezifische Alters-/Risikokonflikte werden im Review ausgewiesen.
+- [x] KI-Ausgaben schema-validieren und deterministisch gegen vorhandene Club-/Alters-/Sicherheitsregeln prüfen; Trainingsentwürfe werden nach AI-Ausgabe weiterhin serverseitig revalidiert.
+- [x] Provider-Settings für OpenAI, Gemini, Claude und OpenAI-kompatible Endpunkte mit Auswahl je Text-KI-Funktion, Environment-/verschlüsselter Key-Ablage, Monatslimits und Verbrauchspanel.
+- [ ] Provider-Login/OAuth ergänzen, sobald für den jeweiligen Anbieter eine passende App-Registrierung eingerichtet ist; GitHub Copilot besitzt keinen allgemeinen öffentlichen OCRCraft-Inference-Endpunkt und GitHub Models ist eingestellt.
 
 ## P3 – Ausbau und Qualität
 

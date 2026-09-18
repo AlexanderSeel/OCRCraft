@@ -5,11 +5,13 @@ import { DuplicateReviewPanel } from "@/components/admin/duplicate-review-panel"
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { AdminTabs, normalizeAdminTab } from "@/components/admin/admin-tabs";
+import { AiProviderSettingsPanel } from "@/components/admin/ai-provider-settings-panel";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { listRecentAuditEvents } from "@/server/db/audit-service";
 import { listDatabaseBackups } from "@/server/db/backup-service";
-import { createDatabaseBackupAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, scanDuplicateExercisesAction } from "./actions";
+import { listAiProviderSettings } from "@/server/ai/ai-provider-settings-repository";
+import { createDatabaseBackupAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, saveAiProviderSettingsAction, scanDuplicateExercisesAction } from "./actions";
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 import { listAppUsers } from "@/server/auth/identity-service";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
@@ -27,20 +29,23 @@ interface AdminPageProps {
     readonly rebuildError?: string;
     readonly restored?: string;
     readonly restoreError?: string;
+    readonly aiSaved?: string;
+    readonly aiError?: string;
   }>;
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
-  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers] = await Promise.all([
+  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers, aiProviders] = await Promise.all([
     getSearchIndexStates(),
     getSeedCompletenessReport(),
     listDuplicateReviewTasks(),
     listRecentAuditEvents(),
     listDatabaseBackups(),
     listAppUsers(),
+    listAiProviderSettings(),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
-  const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError, restored, restoreError } = await searchParams;
+  const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError } = await searchParams;
   const activeTab = normalizeAdminTab(tab);
 
   return (
@@ -136,23 +141,33 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </Disclosure>
         </section> : null}
 
-        {activeTab === "settings" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-          <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Einstellungen</div>
-          <h2 className="mt-1 text-xl font-black">Darstellung und Diagnose</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Seitenspezifische Einstellungen bleiben hier gebündelt. Änderungen werden lokal für dieses Gerät gespeichert.</p>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-              <h3 className="text-sm font-black">Darstellung</h3>
-              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Wähle zwischen hellem, dunklem und automatisch vom Betriebssystem übernommenem Theme.</p>
-              <div className="mt-3"><ThemeSwitcher /></div>
-            </div>
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-              <h3 className="text-sm font-black">Diagnose</h3>
-              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Optionale Diagnosewerkzeuge bleiben deaktiviert, solange sie nicht ausdrücklich benötigt werden.</p>
-              <div className="mt-3"><MuscleMapDebugSetting /></div>
-            </div>
-          </div>
-        </section> : null}
+        {activeTab === "settings" ? (
+          <>
+            <AiProviderSettingsPanel
+              error={aiError}
+              providers={aiProviders}
+              saveAction={saveAiProviderSettingsAction}
+              saved={aiSaved}
+            />
+            <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+              <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Einstellungen</div>
+              <h2 className="mt-1 text-xl font-black">Darstellung und Diagnose</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Seitenspezifische Einstellungen bleiben hier gebündelt. Änderungen werden lokal für dieses Gerät gespeichert.</p>
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+                  <h3 className="text-sm font-black">Darstellung</h3>
+                  <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Wähle zwischen hellem, dunklem und automatisch vom Betriebssystem übernommenem Theme.</p>
+                  <div className="mt-3"><ThemeSwitcher /></div>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+                  <h3 className="text-sm font-black">Diagnose</h3>
+                  <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Optionale Diagnosewerkzeuge bleiben deaktiviert, solange sie nicht ausdrücklich benötigt werden.</p>
+                  <div className="mt-3"><MuscleMapDebugSetting /></div>
+                </div>
+              </div>
+            </section>
+          </>
+        ) : null}
 
         {activeTab === "database" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { createAiJsonClient } from "@/server/ai/ai-json-provider";
+import { resolveAiProvider } from "@/server/ai/ai-provider-settings-repository";
 import {
   aiExerciseDraftProposalSchema,
   type AiExerciseDraftProposal,
@@ -42,37 +44,8 @@ export class OpenAiCompatibleExerciseDraftProvider implements AiExerciseDraftPro
         temperature: 0.2,
         response_format: { type: "json_object" },
         messages: [
-          {
-            role: "system",
-            content: [
-              "Create one OCRCraft exercise draft for trainer review.",
-              "Return JSON only and use exactly the requested schema.",
-              "Write independent German and English names/summaries, concise common aliases, and conservative training metadata.",
-              "Do not provide medical diagnosis, rehabilitation claims, unsafe obstacle instructions, invented certifications, or third-party copyrighted descriptions.",
-              "This is only a pending draft. A trainer must approve it before it can enter the active exercise catalogue.",
-              "Allowed category values: warmup, mobility, strength, core, running, grip-rig, carry-lift, ocr-skill, balance-agility, throw, cooldown, general.",
-              "Allowed phase values: warmup, main, cooldown. Allowed riskLevel values: low, medium, high.",
-            ].join(" "),
-          },
-          {
-            role: "user",
-            content: JSON.stringify({
-              brief: request.brief,
-              outputSchema: {
-                nameDe: "string",
-                nameEn: "string",
-                summaryDe: "string",
-                summaryEn: "string",
-                aliasesDe: ["string"],
-                aliasesEn: ["string"],
-                category: "allowed category",
-                phase: "warmup | main | cooldown",
-                riskLevel: "low | medium | high",
-                minAge: "integer 4..99 or null",
-                rationale: "optional short trainer-facing reason",
-              },
-            }),
-          },
+          { role: "system", content: exerciseDraftSystemPrompt() },
+          { role: "user", content: JSON.stringify(exerciseDraftPayload(request)) },
         ],
       }),
     });
@@ -96,14 +69,59 @@ export class OpenAiCompatibleExerciseDraftProvider implements AiExerciseDraftPro
   }
 }
 
-export function getConfiguredAiExerciseDraftProvider(): AiExerciseDraftProvider | null {
-  const baseUrl = process.env.OCRCRAFT_AI_BASE_URL?.trim();
-  const model = process.env.OCRCRAFT_AI_MODEL?.trim();
-  if (!baseUrl || !model) return null;
+class ConfiguredAiExerciseDraftProvider implements AiExerciseDraftProvider {
+  readonly id: string;
+  readonly modelId: string;
 
-  return new OpenAiCompatibleExerciseDraftProvider(
-    baseUrl,
-    model,
-    process.env.OCRCRAFT_AI_API_KEY?.trim() || undefined,
-  );
+  constructor(
+    private readonly client: ReturnType<typeof createAiJsonClient>,
+  ) {
+    this.id = client.providerId;
+    this.modelId = client.modelId;
+  }
+
+  async generateExerciseDraft(request: AiExerciseDraftRequest): Promise<AiExerciseDraftProposal> {
+    const proposal = await this.client.generateJson(
+      exerciseDraftSystemPrompt(),
+      exerciseDraftPayload(request),
+    );
+    return aiExerciseDraftProposalSchema.parse(proposal);
+  }
 }
+
+export async function getConfiguredAiExerciseDraftProvider(): Promise<AiExerciseDraftProvider | null> {
+  const config = await resolveAiProvider("exercise_draft");
+  if (!config) return null;
+  return new ConfiguredAiExerciseDraftProvider(createAiJsonClient(config, "exercise_draft"));
+}
+function exerciseDraftSystemPrompt(): string {
+  return [
+    "Create one OCRCraft exercise draft for trainer review.",
+    "Return JSON only and use exactly the requested schema.",
+    "Write independent German and English names/summaries, concise common aliases, and conservative training metadata.",
+    "Do not provide medical diagnosis, rehabilitation claims, unsafe obstacle instructions, invented certifications, or third-party copyrighted descriptions.",
+    "This is only a pending draft. A trainer must approve it before it can enter the active exercise catalogue.",
+    "Allowed category values: warmup, mobility, strength, core, running, grip-rig, carry-lift, ocr-skill, balance-agility, throw, cooldown, general.",
+    "Allowed phase values: warmup, main, cooldown. Allowed riskLevel values: low, medium, high.",
+  ].join(" ");
+}
+
+function exerciseDraftPayload(request: AiExerciseDraftRequest) {
+  return {
+    brief: request.brief,
+    outputSchema: {
+      nameDe: "string",
+      nameEn: "string",
+      summaryDe: "string",
+      summaryEn: "string",
+      aliasesDe: ["string"],
+      aliasesEn: ["string"],
+      category: "allowed category",
+      phase: "warmup | main | cooldown",
+      riskLevel: "low | medium | high",
+      minAge: "integer 4..99 or null",
+      rationale: "optional short trainer-facing reason",
+    },
+  };
+}
+

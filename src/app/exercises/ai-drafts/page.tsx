@@ -23,7 +23,7 @@ interface PageProps {
 export default async function AiExerciseDraftsPage({ searchParams }: PageProps) {
   const query = await searchParams;
   const showHistory = query.history === "1";
-  const provider = getConfiguredAiExerciseDraftProvider();
+  const provider = await getConfiguredAiExerciseDraftProvider();
   const drafts = await listAiExerciseDrafts(showHistory ? undefined : "pending");
 
   return (
@@ -133,6 +133,30 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
                     </div>
                   ) : null}
 
+                  {draft.review ? (
+                    <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-xs font-black uppercase tracking-[0.1em] text-[var(--muted)]">Deterministischer Review</span>
+                        <span className={draft.review.blocking
+                          ? "rounded-full bg-[var(--danger-bg)] px-2.5 py-1 text-xs font-black text-[var(--danger)]"
+                          : "rounded-full bg-[var(--success-bg)] px-2.5 py-1 text-xs font-black text-[var(--success-foreground)]"}>
+                          {draft.review.blocking ? "Freigabe blockiert" : "Kein harter Blocker"}
+                        </span>
+                      </div>
+                      {draft.review.issues.length ? (
+                        <ul className="mt-3 space-y-2 text-xs leading-5">
+                          {draft.review.issues.map((issue, index) => (
+                            <li className={issue.severity === "blocker" ? "font-bold text-[var(--danger)]" : "text-[var(--muted)]"} key={issue.code + "-" + index}>
+                              {issue.severity === "blocker" ? "Blocker" : "Hinweis"} · {issue.message}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-2 text-xs text-[var(--muted)]">Keine Konflikte mit aktiven Übungen oder Gruppenregeln erkannt.</p>
+                      )}
+                    </div>
+                  ) : null}
+
                   <Disclosure className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]" summaryClassName="px-3 py-2 text-xs font-black" summary="Originales Trainer-Briefing">
                     <p className="border-t border-[var(--border)] p-3 text-sm leading-6 text-[var(--muted)]">{draft.requestText}</p>
                   </Disclosure>
@@ -147,7 +171,12 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
                       </form>
                       <form action={approveAiExerciseDraftAction}>
                         <input name="id" type="hidden" value={draft.id} />
-                        <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-4 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
+                        <button
+                          className="min-h-10 rounded-lg bg-[var(--control-strong)] px-4 text-xs font-black text-[var(--control-strong-foreground)] disabled:cursor-not-allowed disabled:opacity-50"
+                          disabled={Boolean(draft.review?.blocking)}
+                          title={draft.review?.blocking ? "Harte Review-Blocker müssen zuerst aufgelöst werden." : undefined}
+                          type="submit"
+                        >
                           Freigeben & im Voll-Editor öffnen
                         </button>
                       </form>
