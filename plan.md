@@ -53,8 +53,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [ ] Zusätzliche deutsche/englische Aliase und Trainerbegriffe für alle Seeds kuratieren.
 - [ ] Fachliche Einzelprüfung und Anreicherung aller verbleibenden Seeds abschließen.
 - [ ] Weitere Katalogkohorten versioniert, zweisprachig und mit Detail-/Sicherheits-Gates aufnehmen.
-- [ ] Zusätzliche Kategorien und Facetten editierbar machen.
-- [ ] Progressionen/Regressionen als vollständige Katalogverwaltung ausbauen.
+- [x] Zusätzliche Kategorien und Facetten editierbar machen.
+- [x] Progressionen/Regressionen als Katalogverwaltung mit Editor und geschützter Archivierung ausbauen.
 - [ ] Geschützte Hard-Delete-Regeln implementieren.
 - [x] Dublettenprüfung, Bulk-Edit und Import/Export im Admin abschließen.
 
