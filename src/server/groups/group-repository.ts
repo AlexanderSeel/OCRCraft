@@ -53,7 +53,7 @@ function assertUuid(value: string): void {
   if (!UUID_PATTERN.test(value)) throw new Error("Gruppe ist ungültig.");
 }
 
-function rowToGroup(row: readonly unknown[]): Omit<ClubGroup, "defaultEquipment"> {
+function rowToGroup(row: readonly unknown[]): Omit<ClubGroup, "defaultEquipment" | "preferredFormats"> {
   return {
     id: String(row[0]),
     name: String(row[1]),
