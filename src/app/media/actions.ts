@@ -74,3 +74,27 @@ export async function queueMediaBatchAction(formData: FormData): Promise<void> {
   });
   redirect(`/media?${query.toString()}`);
 }
+
+
+export async function retryMediaGenerationJobAction(formData: FormData): Promise<void> {
+  const exerciseId = z.string().uuid().safeParse(formData.get("exerciseId"));
+  if (!exerciseId.success) redirect("/media?batchError=selection");
+  if (!process.env.OPENAI_API_KEY) redirect("/media?batchError=config");
+
+  let queued = 0;
+  try {
+    const result = await enqueueExerciseImageGenerationJobs([exerciseId.data]);
+    queued = result.queued;
+  } catch {
+    redirect("/media?batchError=save");
+  }
+
+  if (queued > 0) {
+    after(async () => {
+      await runExerciseImageGenerationQueue();
+    });
+  }
+
+  revalidatePath("/media");
+  redirect(`/media?jobRetried=${queued > 0 ? "queued" : "active"}`);
+}

@@ -5,11 +5,17 @@ import { MediaJobRefresh } from "@/components/media/media-job-refresh";
 import {
   getMediaCatalogSummary,
   listMediaCatalog,
+  listMediaGenerationCandidates,
   type MediaCatalogItem,
+  type MediaGenerationCandidate,
 } from "@/server/media/media-catalog-repository";
-import { getMediaGenerationQueueSummary } from "@/server/media/media-generation-job-repository";
+import {
+  getMediaGenerationQueueSummary,
+  listRecentMediaGenerationJobs,
+  type RecentMediaGenerationJob,
+} from "@/server/media/media-generation-job-repository";
 import { runExerciseImageGenerationQueue } from "@/server/media/media-generation-worker";
-import { queueMediaBatchAction, updateMediaReviewStatusAction } from "./actions";
+import { queueMediaBatchAction, retryMediaGenerationJobAction, updateMediaReviewStatusAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +31,8 @@ interface PageProps {
     batchQueued?: string;
     batchSkipped?: string;
     batchError?: string;
+    missingQ?: string;
+    jobRetried?: string;
   }>;
 }
 
@@ -35,8 +43,9 @@ export default async function MediaPage({ searchParams }: PageProps) {
   const generationStatus = allowed(params.generation, ["generating", "generated", "failed"]);
   const sourceType = allowed(params.source, ["ai_generated", "club_created", "external_reference"]);
   const mediaType = allowed(params.type, ["image", "video", "illustration"]);
+  const missingQuery = params.missingQ?.trim() ?? "";
 
-  const [summary, assets, generationQueue] = await Promise.all([
+  const [summary, assets, generationQueue, missingImageExercises, recentJobs] = await Promise.all([
     getMediaCatalogSummary(),
     listMediaCatalog({
       query,
@@ -46,6 +55,8 @@ export default async function MediaPage({ searchParams }: PageProps) {
       mediaType,
     }),
     getMediaGenerationQueueSummary(),
+    listMediaGenerationCandidates(missingQuery, 24),
+    listRecentMediaGenerationJobs(12),
   ]);
 
   if (generationQueue.queued > 0 && process.env.OPENAI_API_KEY) {
@@ -89,6 +100,13 @@ export default async function MediaPage({ searchParams }: PageProps) {
         {params.batchError ? (
           <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
             {batchErrorLabel(params.batchError)}
+          </p>
+        ) : null}
+        {params.jobRetried ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            {params.jobRetried === "queued"
+              ? "Der KI-Bildjob wurde erneut in die Warteschlange gestellt."
+              : "Für diese Übung läuft bereits ein KI-Bildjob."}
           </p>
         ) : null}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
@@ -153,7 +171,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
           <div>
             <h2 className="text-base font-black">Batch-Operationen</h2>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-              Markiere eine oder mehrere Medienkarten. „Neues Bild per KI erzeugen“ erstellt für die zugehörigen Übungen jeweils ein neues Bild und lässt vorhandene Medien unverändert. Die Generierung läuft nach dem Absenden im Hintergrund weiter.
+              Markiere eine oder mehrere Übungen – entweder über vorhandene Medienkarten oder über die Liste ohne verwendbares Bild. „Neues Bild per KI erzeugen“ ergänzt ein neues Bild und lässt bestehende Medien unverändert. Die Generierung läuft nach dem Absenden asynchron weiter.
             </p>
             <form action={queueMediaBatchAction} className="mt-3 flex flex-wrap items-end gap-2" id="media-batch-form">
               <label className="grid gap-1 text-sm font-bold">
@@ -176,6 +194,64 @@ export default async function MediaPage({ searchParams }: PageProps) {
               <Data label="Fehler · 24 h" value={String(generationQueue.failedRecent)} />
             </dl>
             <MediaJobRefresh active={generationQueue.queued + generationQueue.running > 0} />
+          </div>
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,1fr)]">
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-black">Übungen ohne verwendbares Bild</h2>
+                <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+                  Hier kannst du auch Übungen auswählen, die noch gar keinen Medieneintrag besitzen oder nur fehlgeschlagene bzw. abgelehnte Bilder haben.
+                </p>
+              </div>
+              <span className="rounded-full bg-[var(--surface-subtle)] px-3 py-1 text-xs font-black">
+                {missingImageExercises.length} angezeigt
+              </span>
+            </div>
+            <form className="mt-3 flex flex-wrap gap-2" method="get">
+              <label className="min-w-[260px] flex-1">
+                <span className="sr-only">Übungen ohne Bild suchen</span>
+                <input
+                  className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+                  defaultValue={missingQuery}
+                  name="missingQ"
+                  placeholder="Übung, Kategorie oder Seed-Key suchen"
+                />
+              </label>
+              <button className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black" type="submit">
+                Liste filtern
+              </button>
+              {missingQuery ? (
+                <Link className="grid min-h-11 place-items-center rounded-xl border border-[var(--border)] px-4 text-sm font-black" href="/media">
+                  Suche löschen
+                </Link>
+              ) : null}
+            </form>
+            <div className="mt-4 grid gap-2">
+              {missingImageExercises.length ? (
+                missingImageExercises.map((candidate) => <MediaGenerationCandidateRow candidate={candidate} key={candidate.exerciseId} />)
+              ) : (
+                <p className="rounded-xl bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">
+                  Keine passenden Übungen ohne verwendbares Bild gefunden.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+            <h2 className="text-base font-black">Letzte KI-Bildjobs</h2>
+            <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+              Laufende und abgeschlossene Jobs bleiben nachvollziehbar. Fehlgeschlagene Jobs können direkt erneut eingeplant werden.
+            </p>
+            <div className="mt-4 grid gap-2">
+              {recentJobs.length ? (
+                recentJobs.map((job) => <RecentMediaJobRow job={job} key={job.id} />)
+              ) : (
+                <p className="rounded-xl bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">Noch keine KI-Bildjobs vorhanden.</p>
+              )}
+            </div>
           </div>
         </section>
 
@@ -274,6 +350,65 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
           ) : null}
         </div>
       </div>
+    </article>
+  );
+}
+
+function MediaGenerationCandidateRow({ candidate }: { readonly candidate: MediaGenerationCandidate }) {
+  const state = candidate.activeJobCount > 0
+    ? "Job läuft bereits"
+    : candidate.failedImageCount > 0
+      ? `${candidate.failedImageCount} fehlgeschlagen`
+      : candidate.imageAssetCount > 0
+        ? "Nur nicht verwendbare Bilder"
+        : "Noch kein Bild";
+
+  return (
+    <article className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+      <div className="min-w-0">
+        <div className="truncate font-black">{candidate.exerciseName}</div>
+        <div className="mt-1 text-xs text-[var(--muted)]">
+          {candidate.category}{candidate.seedKey ? ` · ${candidate.seedKey}` : ""} · {state}
+        </div>
+      </div>
+      <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black">
+        <input
+          disabled={candidate.activeJobCount > 0}
+          form="media-batch-form"
+          name="exerciseId"
+          type="checkbox"
+          value={candidate.exerciseId}
+        />
+        {candidate.activeJobCount > 0 ? "Bereits eingeplant" : "Auswählen"}
+      </label>
+    </article>
+  );
+}
+
+function RecentMediaJobRow({ job }: { readonly job: RecentMediaGenerationJob }) {
+  return (
+    <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <Link className="font-black underline-offset-4 hover:underline" href={`/exercises/${job.exerciseId}`}>
+            {job.exerciseName}
+          </Link>
+          <div className="mt-1 text-xs text-[var(--muted)]">{jobStatusLabel(job.status)} · {formatJobTime(job.createdAt)}</div>
+        </div>
+        {job.status === "failed" ? (
+          <form action={retryMediaGenerationJobAction}>
+            <input name="exerciseId" type="hidden" value={job.exerciseId} />
+            <button className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black" type="submit">
+              Erneut versuchen
+            </button>
+          </form>
+        ) : null}
+      </div>
+      {job.errorMessage ? (
+        <p className="mt-2 break-words rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs font-bold text-[var(--danger)]">
+          {job.errorMessage}
+        </p>
+      ) : null}
     </article>
   );
 }
@@ -382,8 +517,25 @@ function safeHttps(value: string | null): string | null {
 }
 
 
+function jobStatusLabel(value: RecentMediaGenerationJob["status"]): string {
+  if (value === "queued") return "Wartend";
+  if (value === "running") return "Läuft";
+  if (value === "succeeded") return "Erfolgreich";
+  return "Fehlgeschlagen";
+}
+
+function formatJobTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("de-DE", {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: "Europe/Berlin",
+  }).format(date);
+}
+
 function batchErrorLabel(value: string): string {
-  if (value === "selection") return "Wähle mindestens eine Medienkarte für die Batch-Operation aus.";
+  if (value === "selection") return "Wähle mindestens eine Übung oder Medienkarte für die Batch-Operation aus.";
   if (value === "config") return "KI-Bildgenerierung ist nicht konfiguriert. OPENAI_API_KEY fehlt.";
   if (value === "action") return "Die gewählte Batch-Aktion ist ungültig.";
   return "Die Batch-Operation konnte nicht in die Warteschlange gestellt werden.";

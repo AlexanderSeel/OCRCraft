@@ -20,6 +20,18 @@ export interface ClaimedMediaGenerationJob {
   readonly exerciseId: string;
 }
 
+export interface RecentMediaGenerationJob {
+  readonly id: string;
+  readonly exerciseId: string;
+  readonly exerciseName: string;
+  readonly status: "queued" | "running" | "succeeded" | "failed";
+  readonly assetId: string | null;
+  readonly errorMessage: string | null;
+  readonly createdAt: string;
+  readonly startedAt: string | null;
+  readonly finishedAt: string | null;
+}
+
 export async function getMediaGenerationQueueSummary(): Promise<MediaGenerationQueueSummary> {
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
@@ -38,6 +50,43 @@ export async function getMediaGenerationQueueSummary(): Promise<MediaGenerationQ
       succeededRecent: Number(row[2] ?? 0),
       failedRecent: Number(row[3] ?? 0),
     };
+  });
+}
+
+export async function listRecentMediaGenerationJobs(
+  limit = 12,
+): Promise<readonly RecentMediaGenerationJob[]> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      SELECT
+        j.id::VARCHAR,
+        j.exercise_id::VARCHAR,
+        COALESCE(t.name,e.canonical_name),
+        j.status,
+        j.asset_id::VARCHAR,
+        j.error_message,
+        j.created_at,
+        j.started_at,
+        j.finished_at
+      FROM exercise_image_generation_jobs j
+      JOIN exercises e ON e.id=j.exercise_id
+      LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
+      ORDER BY j.created_at DESC,j.id DESC
+      LIMIT $limit
+    `, { limit: Math.max(1, Math.min(50, limit)) });
+
+    return reader.getRows().map((row) => ({
+      id: String(row[0]),
+      exerciseId: String(row[1]),
+      exerciseName: String(row[2]),
+      status: String(row[3]) as RecentMediaGenerationJob["status"],
+      assetId: row[4] == null ? null : String(row[4]),
+      errorMessage: row[5] == null ? null : String(row[5]),
+      createdAt: String(row[6]),
+      startedAt: row[7] == null ? null : String(row[7]),
+      finishedAt: row[8] == null ? null : String(row[8]),
+    }));
   });
 }
 
@@ -106,34 +155,21 @@ export async function requeueStaleMediaGenerationJobs(): Promise<number> {
 export async function claimNextMediaGenerationJob(): Promise<ClaimedMediaGenerationJob | null> {
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
-    await connection.run("BEGIN TRANSACTION");
-    try {
-      const reader = await connection.runAndReadAll(`
-        SELECT id::VARCHAR, exercise_id::VARCHAR
+    const reader = await connection.runAndReadAll(`
+      UPDATE exercise_image_generation_jobs
+      SET status='running', started_at=current_timestamp, error_message=NULL, updated_at=current_timestamp
+      WHERE id=(
+        SELECT id
         FROM exercise_image_generation_jobs
         WHERE status='queued'
-        ORDER BY created_at, id
+        ORDER BY created_at,id
         LIMIT 1
-      `);
-      const row = reader.getRows()[0];
-      if (!row) {
-        await connection.run("COMMIT");
-        return null;
-      }
-
-      const id = String(row[0]);
-      const exerciseId = String(row[1]);
-      await connection.run(`
-        UPDATE exercise_image_generation_jobs
-        SET status='running', started_at=current_timestamp, error_message=NULL, updated_at=current_timestamp
-        WHERE id=$id::UUID AND status='queued'
-      `, { id });
-      await connection.run("COMMIT");
-      return { id, exerciseId };
-    } catch (error) {
-      await connection.run("ROLLBACK");
-      throw error;
-    }
+      )
+        AND status='queued'
+      RETURNING id::VARCHAR,exercise_id::VARCHAR
+    `);
+    const row = reader.getRows()[0];
+    return row ? { id: String(row[0]), exerciseId: String(row[1]) } : null;
   });
 }
 

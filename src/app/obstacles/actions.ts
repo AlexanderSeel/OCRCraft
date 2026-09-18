@@ -19,6 +19,7 @@ function revalidateObstacleViews(exerciseId: string): void {
 
 export async function assignExerciseAsObstacleAction(formData: FormData): Promise<void> {
   const parsed = exerciseIdSchema.safeParse(formData.get("exerciseId"));
+  const next = formData.get("next") === "edit" ? "edit" : "catalog";
   if (!parsed.success) redirect("/obstacles?assignmentError=invalid");
 
   let result: Awaited<ReturnType<typeof assignExerciseAsObstacle>>;
@@ -30,6 +31,7 @@ export async function assignExerciseAsObstacleAction(formData: FormData): Promis
 
   if (result === "missing") redirect("/obstacles?assignmentError=missing");
   revalidateObstacleViews(parsed.data);
+  if (next === "edit") redirect(`/exercises/${parsed.data}/edit#obstacle-guidance`);
   redirect(`/obstacles?assignment=${result === "assigned" ? "added" : "already"}`);
 }
 
