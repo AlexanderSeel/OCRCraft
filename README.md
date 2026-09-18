@@ -1,184 +1,143 @@
 # OCRCraft
 
-OCRCraft ist ein Trainingsplaner für OCR-Clubs, funktionelles Training und Breitensport. Ziel ist, komplette Trainingseinheiten schnell zu erstellen, bestehende Einheiten wiederzuverwenden oder zu kombinieren und neue Sessions aus einem strukturierten Übungspool sowie optional mit KI-Unterstützung zu erzeugen.
+OCRCraft ist ein deutschsprachiger Trainingsplaner für OCR-Clubs, funktionelles Training und Breitensport. Trainer können sichere Einheiten aus einem strukturierten Übungskatalog zusammenstellen, bestehende Einheiten bearbeiten/kombinieren und Vorschläge lokal oder optional mit KI erzeugen.
 
-Die Anwendung ist primär auf Deutsch ausgelegt und wird zusätzlich Englisch unterstützen.
+Die Kernstruktur bleibt sichtbar: **Aufwärmen → Hauptteil → Cooldown & Stretching**.
 
-## Aktueller Stand
+## Status
 
-Die Implementierung hat begonnen. Auf `main` stehen bereits:
+Die produktive Grundlage steht auf `main`. Der Katalog enthält 157 validierte Startübungen, davon mehr als 25 Laufübungen. Übungen besitzen deutsche und englische Identität, Aliase, Körperregionen, Muskel- und Gegenmuskelbeziehungen, Equipment, Bewegungsmuster, Zielgruppen-, Risiko- und Coachingdaten.
 
-- Next.js / React / TypeScript / Tailwind-Grundgerüst
-- professionelles Trainer-Dashboard
-- typisiertes Trainings-Domainmodell
-- deterministische Validierung für Pflichtphasen, Dauer und Vereins-Risikoregeln
-- Quick-Create-Wizard mit fünf Schritten
-- visueller Front-/Rückseiten-Body-Selector
-- Trainingsformate wie Zirkel, Rig & Run, AMRAP, EMOM, Tabata, Run + Exercise und Technik
-- zentraler DuckDB-Lifecycle mit `@duckdb/node-api`
-- versioniertes initiales DuckDB-Schema
-- vorbereitete deutsche/englische Suchdokumente und Search-Index-Status
-- Domain-Tests mit Vitest
-- GitHub Actions CI für Lint, Typecheck, Tests und Production Build
-- projektinterne Skills für TypeScript/Clean Architecture, UI/UX und LSB-/OCR-Trainingsfachlichkeit
-- zentrale semantische UI-Tokens mit Light-, Dark- und System-Theme
+Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Betriebs- und Datensicherheit, Trainer-Workflow, Katalog/Medien und Ausbau klar voneinander.
 
-Der vollständige Produkt- und Architekturplan steht in [`plan.md`](./plan.md).
+## Funktionen
 
-## Stack
+### Übungen und Muskelkarte
 
-- Next.js 16
-- React 19
-- TypeScript 6 (aktuell für die Next.js-/typescript-eslint-Toolchain gepinnt)
-- Tailwind CSS 4
-- DuckDB + `@duckdb/node-api`
-- Zod
-- Vitest
+- Übungsübersicht mit Suche, Facetten, Bereichs- und Muskel-Mehrfachfilter
+- entfernbare Filter-Tags und zugängliche Listenalternative zur visuellen Karte
+- wiederverwendbare Front-/Rückseiten-Muskelkarte mit 89 granularen Regionen
+- primäre, sekundäre und antagonistische Muskelbeziehungen
+- Übung anlegen, bearbeiten, archivieren, wiederherstellen und auf Vollständigkeit prüfen
+- strukturierte Ausführung: Setup, Startposition, Schritte, Coaching, Fehler, Sicherheit, Level 1–3 und Dosierung
 
-## Lokaler Start
+### Training erstellen
+
+- Quick Create mit Zielgruppe, Alter, Teilnehmerzahl, Dauer, Zielen, Körperregionen und Formaten
+- lokaler deterministischer Composer mit Alters-, Risiko-, Club-, Equipment-, Hindernis- und Kapazitätsregeln
+- optionaler AI-Pfad mit denselben serverseitigen Validierungen
+- Training Builder für Warm-up, mehrere Hauptteile und Cooldown
+- Zirkel, Rig & Run, AMRAP, EMOM, Tabata, Technik, Relay und Run + Exercise
+- Teamgröße, Rotationsgruppen, Stationskapazität, Equipmentbestand und Hindernisbestand
+- Level-Auswahl, Übung ersetzen, Alternativen, Reihenfolge ändern, Duplicate und Combine
+
+### Daten und Medien
+
+- DuckDB über zentrale serverseitige Verbindungen und versionierte Migrationen
+- FTS-Status (`healthy`, `dirty`, `rebuilding`, `failed`) und zweisprachige Suchdokumente
+- externe Quellen-, Lizenz- und Generierungsmetadaten
+- OpenAI-Images-Pipeline mit `gpt-image-2`, Dry Run, stabilen Seed-Dateinamen, Reviewstatus und Dateisystem/S3-Abstraktion
+- generierte Bilder bleiben an stabile Übungs-/Seed-IDs gebunden und werden bei Reseeds nicht automatisch gelöscht
+
+### UI/UX
+
+- Light-, Dark- und System-Theme mit semantischen Tokens
+- responsive Traineroberflächen für Desktop, Tablet und mobile Nutzung
+- zentrale Dialog-Komponente mit ARIA-Rolle, Fokusfalle, Escape, Backdrop-Schließen, Scroll-Lock und Fokus-Rückgabe
+- zentrale Disclosure-Komponente für Filter, Editoren, Builder und Adminflächen
+- sichtbare Fokuszustände und Tastaturbedienung für zentrale Auswahl- und Formularpfade
+
+## Voraussetzungen
+
+- Node.js `>=20.19.0`
+- npm
+- DuckDB wird lokal als Datei unter `data/` erzeugt
+- Für Bildgenerierung: `OPENAI_API_KEY` in `.env` oder der Prozessumgebung
+
+API-Schlüssel niemals committen. Lokale Daten, WAL-Dateien und erzeugte Bilder gehören in Backups und bleiben außerhalb der Versionskontrolle.
+
+## Installation und Entwicklung
 
 ```bash
 npm install
 npm run dev
 ```
 
-Danach läuft die Anwendung standardmäßig unter `http://localhost:3000`.
+Die Anwendung läuft danach unter <http://localhost:3000>.
 
-Qualitätschecks:
+### Qualitätsprüfungen
+
+Die CI wird sequenziell ausgeführt:
 
 ```bash
-npm run lint
 npm run typecheck
-npm test
+npm test -- --run
+npm run lint
 npm run build
 ```
 
-## Architektur
+## Übungsbilder
 
-Die zentralen Verantwortlichkeiten werden getrennt gehalten:
-
-```text
-src/
-├─ app/                 Next.js routes / composition
-├─ components/          reusable UI and feature components
-├─ domain/              framework-free training model and rules
-└─ server/
-   └─ db/               DuckDB lifecycle and migrations
-```
-
-Wichtige Regeln stehen zusätzlich in [`AGENTS.md`](./AGENTS.md).
-
-## Trainingsstruktur
-
-Jede reguläre Session wird mindestens gegen diese Struktur geprüft:
-
-1. **Aufwärmen / Warm-up**
-2. **Hauptteil / Main part**
-3. **Cooldown & Stretching**
-
-Zusätzliche Blöcke wie Briefing, Movement Preparation, Technik, Obstacle Skills, Finisher oder Reflexion können später flexibel ergänzt werden.
-
-Die fachliche Orientierung folgt zielgruppenorientierter Breitensport-Planung des Landessportbund Hessen / DOSB-Kontexts. Für Kinder und Jugendliche werden Schutzkonzept und Vereinsregeln separat als harte Systemregeln modelliert. OCR-spezifische Anforderungen wie Grip, Carry, Running, Rig, Walls, Balance und Hindernisprogression werden darauf aufgebaut.
-
-## Quick Create
-
-Der aktuelle Wizard erfasst bereits:
-
-1. Zielgruppe, Alter, Teilnehmerzahl und Dauer
-2. Trainingsziele und Körperregionen
-3. Trainingsformat bzw. Formatkombination
-4. Technik-/Conditioning-Ausrichtung
-5. Zusammenfassung für den späteren Training Composer
-
-Die BodyMap ist als eigener wiederverwendbarer, tastaturbedienbarer Baustein umgesetzt.
-
-## DuckDB
-
-Die Persistenz wird über eine serverseitige DuckDB-Abstraktion gekapselt. Das initiale Schema enthält bereits:
-
-- Exercises und Übersetzungen
-- Body Regions
-- Equipment
-- Club Groups
-- Training Sessions
-- Training Phases und Items
-- deutsche und englische Search Documents
-- Search-Index-Zustand (`healthy`, `dirty`, `rebuilding`, `failed`)
-- Schema-Migrations
-
-DuckDB FTS wird bewusst nicht direkt in React-Komponenten eingebaut. Index-Rebuilds werden später über einen `SearchIndexService` und die Admin-Oberfläche gesteuert.
-
-## Exercise illustrations
-
-The exercise-image pipeline uses the OpenAI Images API with `gpt-image-2`. Set `OPENAI_API_KEY` in the process environment or `.env` file before generating images. Never put a real key in source control.
-
-Preview the prompt without making an API request or writing an image:
+Prompt prüfen, ohne API-Aufruf oder Datei zu schreiben:
 
 ```bash
 npm run exercise:image -- --exercise easy-jog --dry-run
 ```
 
-Generate one exercise illustration and save it as pending trainer review:
+Einzelbild erzeugen:
 
 ```bash
 npm run exercise:image -- --exercise easy-jog
 ```
 
-The default filesystem output goes to `public/generated/exercises/`. To use an S3-compatible bucket, set `OCRCRAFT_IMAGE_STORAGE=s3`, `OCRCRAFT_IMAGE_BUCKET`, and `OCRCRAFT_S3_ENDPOINT` when required by the provider. Configure credentials through the standard AWS credential environment or profile chain; configure `OCRCRAFT_IMAGE_PUBLIC_BASE_URL` if the bucket has a public/CDN URL. Images are never automatically approved.
-
-After the initial exercise catalog has been migrated, generate the remaining seed illustrations with:
+Seed-Bilder erzeugen:
 
 ```bash
 npm run exercise:images:seed -- --all-seeds
 ```
 
-This generates three exercise images concurrently while serializing DuckDB writes. It keeps already generated images and can be rerun to retry failures. The image rows are connected to their exercise IDs in DuckDB and remain pending trainer review.
-
-The exercise library displays stored illustrations and labels images that still need review. A full database reseed preserves media metadata for seeded exercises and reconnects each record by its stable seed key; it does not remove image files. Files are kept under `public/generated/exercises/`. The database and generated image directory are ignored by Git, so back up both together before deleting local data or moving to another machine. For shared or production use, configure S3-compatible storage.
-
-## UI-Theming
-
-OCRCraft besitzt eine zentrale Theme-Grundlage mit semantischen CSS-Tokens. Im Header kann zwischen **System**, **Hell** und **Dunkel** gewechselt werden. Die Auswahl wird lokal gespeichert; bei `System` folgt OCRCraft automatisch der Betriebssystem-/Browser-Einstellung. Ein Bootstrap-Script setzt das Theme vor dem Rendern, um einen sichtbaren Theme-Flash weitgehend zu vermeiden.
-
-## AI-Prinzip
-
-Die KI soll ein **Composer**, nicht die Datenbank sein:
+Standardmäßig landen Bilder unter `public/generated/exercises/`. Für S3-kompatiblen Speicher:
 
 ```text
-Wizard/Input
-  -> Anforderungen normalisieren
-  -> zugelassene Übungen/Trainings suchen
-  -> relevanten Kontext abrufen
-  -> strukturierten TrainingDraft erzeugen
-  -> Zod + Domainregeln validieren
-  -> Trainer prüft und speichert
+OCRCRAFT_IMAGE_STORAGE=s3
+OCRCRAFT_IMAGE_BUCKET=...
+OCRCRAFT_S3_ENDPOINT=...
+OCRCRAFT_IMAGE_PUBLIC_BASE_URL=...
 ```
 
-Neue KI-generierte Übungen werden nicht automatisch in den Master-Pool übernommen.
+Die Bilder bleiben zur Trainerprüfung auf `pending`. Für eine Wiederherstellung müssen DuckDB-Datei und Bildverzeichnis gemeinsam gesichert werden.
 
-## Projekt-Skills
+## Import und Katalogquellen
 
-Die Repository-Arbeitsweise ist in drei Skills festgehalten:
+Verfügbare Import-/Übersetzungsskripte:
+
+```bash
+npm run exercise:import:hasaneyldrm
+npm run exercise:translate:de
+npm run exercise:import:exercisedb
+```
+
+Importierte Datensätze werden normalisiert, mit stabilen Quellen-/Seed-Informationen versehen und gegen vorhandene Übungsnamen geprüft. Unsichere Dubletten bleiben zur Prüfung sichtbar.
+
+## Architektur
+
+```text
+src/
+├─ app/                 Next.js-Routen und Komposition
+├─ components/          wiederverwendbare UI- und Feature-Komponenten
+├─ domain/              frameworkfreie Trainingsmodelle und Regeln
+├─ server/              Services, Repositories, Suche, AI und DuckDB
+└─ data/                versionierte Katalog-/Mappingdaten
+```
+
+React-Komponenten greifen nicht direkt auf DuckDB zu. Server-Services validieren externe Eingaben und persistieren nur strukturierte, geprüfte Daten. AI-Ausgaben gelten als untrusted, bis Schema- und Domänenregeln erfolgreich durchlaufen wurden.
+
+Weitere Arbeitsregeln stehen in [`AGENTS.md`](./AGENTS.md). Die projektinternen Skills liegen unter:
 
 - [`skills/typescript-app-engineer/SKILL.md`](./skills/typescript-app-engineer/SKILL.md)
 - [`skills/ui-ux-designer/SKILL.md`](./skills/ui-ux-designer/SKILL.md)
 - [`skills/ocr-training-expert/SKILL.md`](./skills/ocr-training-expert/SKILL.md)
 
-## Nächste Implementierungsschritte
+## Fachliche Leitlinien
 
-Der nächste Vertical Slice baut auf dem vorhandenen Fundament auf:
-
-```text
-1. weitere Seed-Anreicherung für Übungen
-2. VIBSS-Provenance / Trainingsvorlagen
-3. BM25-Suche und erweitertes Autocomplete
-4. gespeicherte Club Groups und Vereinsregeln
-5. Training Editor mit Search-and-add
-6. Quick Create -> echter TrainingDraft
-7. AI Composer auf Basis des freigegebenen Pools
-8. Admin für Übungen, Medien, Benutzer und Search Index
-```
-
-## Fachliche und technische Referenzen
-
-Die Detailquellen und weiterführenden Links befinden sich in [`plan.md`](./plan.md). Dazu gehören insbesondere Landessportbund Hessen, Sportjugend Hessen, DOSB sowie DuckDB-Dokumentation.
+OCRCraft orientiert sich an zielgruppenorientierter Breitensportplanung und ergänzt diese um konfigurierbare OCR-Regeln für Grip, Carry, Running, Rig, Walls, Balance und Hindernisprogression. Kinder- und Jugendregeln sowie Vereinsregeln werden als harte Einschränkungen behandelt. Die Anwendung ersetzt keine medizinische Diagnose.
