@@ -9,8 +9,9 @@ import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-
 import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { listRecentAuditEvents } from "@/server/db/audit-service";
 import { listDatabaseBackups } from "@/server/db/backup-service";
-import { createDatabaseBackupAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, scanDuplicateExercisesAction } from "./actions";
+import { createDatabaseBackupAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, scanDuplicateExercisesAction } from "./actions";
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
+import { listAppUsers } from "@/server/auth/identity-service";
 
 export const dynamic = "force-dynamic";
 
@@ -23,19 +24,22 @@ interface AdminPageProps {
     readonly backupError?: string;
     readonly rebuild?: string;
     readonly rebuildError?: string;
+    readonly restored?: string;
+    readonly restoreError?: string;
   }>;
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
-  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups] = await Promise.all([
+  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers] = await Promise.all([
     getSearchIndexStates(),
     getSeedCompletenessReport(),
     listDuplicateReviewTasks(),
     listRecentAuditEvents(),
     listDatabaseBackups(),
+    listAppUsers(),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
-  const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError } = await searchParams;
+  const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError, restored, restoreError } = await searchParams;
   const activeTab = normalizeAdminTab(tab);
 
   return (
@@ -69,12 +73,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           ) : null}
           {backup ? <p aria-live="polite" className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Backup erstellt: {backup}</p> : null}
           {backupError ? <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Das Datenbank-Backup konnte nicht erstellt werden.</p> : null}
+          {restored ? <p aria-live="polite" className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Backup wiederhergestellt: {restored}. Vorher wurde automatisch ein Sicherheitsbackup erstellt.</p> : null}
+          {restoreError ? <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">{restoreError === "confirmation" ? "Zur Wiederherstellung muss der Dateiname exakt bestätigt werden." : "Das Backup konnte nicht wiederhergestellt werden."}</p> : null}
           <form action={createDatabaseBackupAction} className="mt-4">
             <ActionProgressButton className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-4 text-sm font-black" pendingLabel="Backup wird erstellt …">Datenbank sichern</ActionProgressButton>
           </form>
           <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-black">Vorhandene Backups</h3><span className="text-xs font-bold text-[var(--muted)]">{backups.length} vorhanden</span></div>
-            {backups.length === 0 ? <p className="mt-2 text-sm text-[var(--muted)]">Noch kein Backup vorhanden.</p> : <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{backups.slice(0, 5).map((item) => <li className="flex flex-wrap justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2" key={item.fileName}><span className="font-bold text-[var(--foreground)]">{item.fileName}</span><span>{formatBytes(item.bytes)} · {item.createdAt}</span></li>)}</ul>}
+            {backups.length === 0 ? <p className="mt-2 text-sm text-[var(--muted)]">Noch kein Backup vorhanden.</p> : <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{backups.slice(0, 5).map((item) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2" key={item.fileName}><span><span className="font-bold text-[var(--foreground)]">{item.fileName}</span><span className="ml-2">{formatBytes(item.bytes)} · {item.createdAt}</span></span><form action={restoreDatabaseBackupAction} className="flex items-center gap-2"><input aria-label={`${item.fileName} bestätigen`} className="h-8 w-36 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-2 text-[10px]" name="confirmation" placeholder="Dateiname bestätigen" /><input name="fileName" type="hidden" value={item.fileName} /><button className="rounded-lg border border-[var(--danger)] px-2 py-1.5 text-[10px] font-black text-[var(--danger)]" type="submit">Wiederherstellen</button></form></li>)}</ul>}
           </div>
           {reseedError ? (
             <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
@@ -161,7 +167,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         {activeTab === "overview" ? <section className="grid gap-4 md:grid-cols-3">
           <AdminArea title="Übungen" text="Create/Edit/Archive ist bereits in der Übungsbibliothek verfügbar." status="aktiv" />
           <AdminArea title="Suche" text="Status ist sichtbar. Rebuild/Search Profiles folgen nach RBAC." status="im Aufbau" />
-          <AdminArea title="Benutzer & Rollen" text="Wird vor schreibenden globalen Admin-Aktionen umgesetzt." status="offen" />
+          <AdminArea title="Benutzer & Rollen" text={`${appUsers.length} Benutzer persistiert. Schreibende globale Aktionen prüfen die Rolle serverseitig.`} status={appUsers.length ? "aktiv" : "bootstrap"} />
         </section> : null}
       </div>
     </AppShell>

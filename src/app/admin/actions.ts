@@ -13,6 +13,8 @@ import {
   enrichImportedGymExerciseForOutdoor,
   enrichImportedGymExercisesForOutdoor,
 } from "@/server/exercises/outdoor-variant-enrichment-service";
+import { requireAdmin, requireSuperAdmin } from "@/server/auth/identity-service";
+import { restoreDatabaseBackup } from "@/server/db/restore-service";
 
 const reseedConfirmationSchema = z.literal("OCRCRAFT ZURÜCKSETZEN");
 
@@ -26,9 +28,10 @@ export async function reseedDatabaseAction(formData: FormData): Promise<void> {
   }
 
   try {
+    const actor = await requireSuperAdmin();
     await ensureDatabaseReady();
     await reseedAllDatabaseData();
-    await recordAuditEvent({ action: "database.reseed", entityType: "database", metadata: { source: "admin" } });
+    await recordAuditEvent({ action: "database.reseed", entityType: "database", actorType: "user", actorId: actor.id, metadata: { source: "admin" } });
   } catch {
     redirect("/admin?tab=database&reseedError=failed#database-settings");
   }
@@ -41,8 +44,9 @@ export async function reseedDatabaseAction(formData: FormData): Promise<void> {
 
 export async function createDatabaseBackupAction(): Promise<void> {
   try {
+    const actor = await requireAdmin();
     const backup = await createDatabaseBackup();
-    await recordAuditEvent({ action: "database.backup", entityType: "database", metadata: { fileName: backup.fileName, bytes: backup.bytes } });
+    await recordAuditEvent({ action: "database.backup", entityType: "database", actorType: "user", actorId: actor.id, metadata: { fileName: backup.fileName, bytes: backup.bytes } });
     redirect(`/admin?tab=database&backup=${encodeURIComponent(backup.fileName)}`);
   } catch {
     redirect("/admin?tab=database&backupError=1");
@@ -51,17 +55,34 @@ export async function createDatabaseBackupAction(): Promise<void> {
 
 export async function rebuildSearchIndexesAction(): Promise<void> {
   try {
+    const actor = await requireAdmin();
     await rebuildSearchIndex("de");
     await rebuildSearchIndex("en");
-    await recordAuditEvent({ action: "search.rebuild", entityType: "search_index", metadata: { locales: ["de", "en"] } });
+    await recordAuditEvent({ action: "search.rebuild", entityType: "search_index", actorType: "user", actorId: actor.id, metadata: { locales: ["de", "en"] } });
     redirect("/admin?tab=database&rebuild=1");
   } catch {
     redirect("/admin?tab=database&rebuildError=1");
   }
 }
 
+export async function restoreDatabaseBackupAction(formData: FormData): Promise<void> {
+  const fileName = String(formData.get("fileName") ?? "");
+  const confirmation = String(formData.get("confirmation") ?? "");
+  if (!fileName || confirmation !== fileName) redirect("/admin?tab=database&restoreError=confirmation");
+  try {
+    const actor = await requireSuperAdmin();
+    const result = await restoreDatabaseBackup(fileName);
+    await recordAuditEvent({ action: "database.restore", entityType: "database", actorType: "user", actorId: actor.id, metadata: { fileName, safetyBackup: result.safetyBackup } });
+    revalidatePath("/admin");
+    redirect(`/admin?tab=database&restored=${encodeURIComponent(fileName)}`);
+  } catch {
+    redirect("/admin?tab=database&restoreError=1");
+  }
+}
+
 export async function runOutdoorVariantEnrichmentAction(): Promise<void> {
   try {
+    await requireAdmin();
     const report = await enrichImportedGymExercisesForOutdoor();
     revalidateOutdoorVariantPaths();
     const params = new URLSearchParams({
@@ -82,6 +103,7 @@ export async function approveOutdoorVariantCandidateAction(formData: FormData): 
   if (!exerciseId) redirect("/admin/outdoor-variants?candidate=not-found");
 
   try {
+    await requireAdmin();
     const status = await enrichImportedGymExerciseForOutdoor(exerciseId);
     revalidateOutdoorVariantPaths();
     revalidatePath(`/exercises/${exerciseId}`);
@@ -100,11 +122,13 @@ function revalidateOutdoorVariantPaths(): void {
 }
 
 export async function scanDuplicateExercisesAction(): Promise<void> {
+  await requireAdmin();
   await refreshDuplicateReviewTasks();
   revalidatePath("/admin");
 }
 
 export async function resolveDuplicateExerciseAction(formData: FormData): Promise<void> {
+  await requireAdmin();
   const taskId = String(formData.get("taskId") ?? "");
   const keepExerciseId = String(formData.get("keepExerciseId") ?? "");
   const status = String(formData.get("status") ?? "merged") === "ignored" ? "ignored" : "merged";
@@ -115,6 +139,7 @@ export async function resolveDuplicateExerciseAction(formData: FormData): Promis
 }
 
 export async function resolveDuplicateExercisesBulkAction(formData: FormData): Promise<void> {
+  await requireAdmin();
   const decision = String(formData.get("decision") ?? "left");
   const selections = formData.getAll("selection").map(String);
 

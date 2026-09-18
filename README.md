@@ -35,13 +35,15 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Bet
 ### Daten und Medien
 
 - DuckDB über zentrale serverseitige Verbindungen und versionierte Migrationen
-- lock-gesicherte Datenbank-Backups unter `data/backups/` mit JSON-Manifest und konfigurierbarer Rotation über `OCRCRAFT_BACKUP_RETENTION`; Restore bleibt ein offener Planpunkt
+- lock-gesicherte Datenbank-Backups unter `data/backups/` mit JSON-Manifest und konfigurierbarer Rotation über `OCRCRAFT_BACKUP_RETENTION`; bestätigter Restore erstellt vorher automatisch ein Sicherheitsbackup
 - FTS-Status (`healthy`, `dirty`, `rebuilding`, `failed`) und zweisprachige Suchdokumente
 - Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes mit Fortschritts- und Fehlerstatus
 - Audit-Events für Reset-, Backup- und Dublettenaktionen
 - externe Quellen-, Lizenz- und Generierungsmetadaten
 - OpenAI-Images-Pipeline mit `gpt-image-2`, Dry Run, stabilen Seed-Dateinamen, Reviewstatus und Dateisystem/S3-Abstraktion
 - generierte Bilder bleiben an stabile Übungs-/Seed-IDs gebunden und werden bei Reseeds nicht automatisch gelöscht
+
+Für den privaten Vereinsbetrieb kann die lokale Bootstrap-Identität verwendet werden. Mit `OCRCRAFT_AUTH_REQUIRED=1` und `OCRCRAFT_ACTOR_EMAIL=<email>` müssen globale Admin-Aktionen einem aktiven Benutzer mit passender Rolle zugeordnet sein. Die Rollen `trainer`, `admin` und `super_admin` werden in DuckDB persistiert; eine externe Anmeldung (zum Beispiel über einen vorgeschalteten Vereins-Login) liefert die Actor-Konfiguration.
 
 ### Administration
 

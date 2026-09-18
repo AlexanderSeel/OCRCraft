@@ -25,17 +25,17 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 ### Identität und Betrieb
 
 - [ ] Authentifizierung einführen.
-- [ ] RBAC für Trainer, Admin und Super-Admin einführen.
-- [ ] Globale Admin-Mutationen serverseitig autorisieren.
+- [x] RBAC für Trainer, Admin und Super-Admin einführen.
+- [x] Globale Admin-Mutationen serverseitig autorisieren.
 - [ ] Produktions-Deployment und Betriebsdokumentation ergänzen.
-- [ ] Authentifizierte Benutzer/Rollen persistieren.
+- [x] Benutzer und Rollen persistieren; externe Anmeldung kann per Actor-Konfiguration erzwungen werden.
 - [x] Audit-Events für zentrale Admin-/Datenbankaktionen persistieren.
 
 ### Datenbank und portable Daten
 
 - [ ] Training-Versionen mit Snapshot und Wiederherstellung.
 - [x] Lock-gesichertes DuckDB-Backup mit Zeitstempel und Manifest.
-- [ ] DuckDB-Restore und sichere Multi-Process-Betriebsanleitung.
+- [x] DuckDB-Restore mit Sicherheitsbackup und sichere Multi-Process-Betriebsanleitung.
 - [x] Konfigurierbare Backup-Rotation und Anzeige der vorhandenen Backups im Adminbereich.
 - [ ] Selektierbaren JSON-Import/Export implementieren.
 - [ ] Exportoptionen für Übungen, Details, Mapping, Trainings, Gruppen, Medien und Provenienz anbieten.

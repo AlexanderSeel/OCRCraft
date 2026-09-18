@@ -57,6 +57,7 @@ const migrations: readonly Migration[] = [
   { version: 44, fileName: "044_group_club_rule_profile.sql" },
   { version: 45, fileName: "045_audit_events.sql" },
   { version: 46, fileName: "046_exercise_image_generation_jobs.sql" },
+  { version: 47, fileName: "047_identity_users.sql" },
 ];
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {

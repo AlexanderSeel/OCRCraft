@@ -111,3 +111,10 @@ export async function withDuckDbFileLock<T>(operation: () => Promise<T>): Promis
 export function getDuckDbPath(): string {
   return databasePath;
 }
+
+/** Closes the process-local DuckDB instance before replacing the database file. */
+export async function closeDuckDbInstance(): Promise<void> {
+  const instance = await instancePromise;
+  instance?.closeSync();
+  instancePromise = undefined;
+}
