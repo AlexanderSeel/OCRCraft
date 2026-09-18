@@ -2,10 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 import type { GeneratedExerciseImage } from "./exercise-image-types";
-import { recordAiProviderUsage } from "@/server/ai/ai-provider-settings-repository";
 
 export const OPENAI_IMAGE_MODEL = "gpt-image-2";
-const endpoint = "https://api.openai.com/v1/images/generations";
 const imageResponseSchema = z.object({
   data: z.array(z.object({ b64_json: z.string().min(1) })).min(1),
 });
@@ -27,6 +25,8 @@ export interface ExerciseImageGenerator {
 
 export interface OpenAIImageGeneratorOptions {
   readonly apiKey?: string;
+  readonly baseUrl?: string;
+  readonly model?: string;
   readonly fetchImplementation?: typeof fetch;
   readonly sleep?: (milliseconds: number) => Promise<void>;
   readonly maxAttempts?: number;
@@ -54,14 +54,16 @@ async function responseError(response: Response): Promise<string> {
     const parsed = z.object({ error: z.object({ message: z.string().optional() }).optional() }).safeParse(payload);
     return parsed.success && parsed.data.error?.message
       ? parsed.data.error.message.slice(0, 500)
-      : `OpenAI image API returned HTTP ${response.status}.`;
+      : "Image API returned HTTP " + String(response.status) + ".";
   } catch {
-    return `OpenAI image API returned HTTP ${response.status}.`;
+    return "Image API returned HTTP " + String(response.status) + ".";
   }
 }
 
 export class OpenAIImageGenerator implements ExerciseImageGenerator {
   private readonly apiKey: string | undefined;
+  private readonly baseUrl: string;
+  private readonly model: string;
   private readonly fetchImplementation: typeof fetch;
   private readonly sleep: (milliseconds: number) => Promise<void>;
   private readonly maxAttempts: number;
@@ -69,6 +71,8 @@ export class OpenAIImageGenerator implements ExerciseImageGenerator {
 
   constructor(options: OpenAIImageGeneratorOptions = {}) {
     this.apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
+    this.baseUrl = (options.baseUrl ?? "https://api.openai.com/v1").replace(/\/$/, "");
+    this.model = options.model ?? OPENAI_IMAGE_MODEL;
     this.fetchImplementation = options.fetchImplementation ?? fetch;
     this.sleep = options.sleep ?? ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
     this.maxAttempts = options.maxAttempts ?? 3;
@@ -76,19 +80,19 @@ export class OpenAIImageGenerator implements ExerciseImageGenerator {
   }
 
   async generate(prompt: string): Promise<GeneratedExerciseImage> {
-    if (!this.apiKey) throw new OpenAIImageGenerationError("OPENAI_API_KEY is not set in the environment.", null, false);
+    if (!this.apiKey) throw new OpenAIImageGenerationError("Für die Bildgenerierung ist kein API-Key konfiguriert.", null, false);
 
     for (let attempt = 1; attempt <= this.maxAttempts; attempt += 1) {
       let response: Response;
       try {
-        response = await this.fetchImplementation(endpoint, {
+        response = await this.fetchImplementation(this.baseUrl + "/images/generations", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
+            Authorization: "Bearer " + this.apiKey,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: OPENAI_IMAGE_MODEL,
+            model: this.model,
             prompt,
             n: 1,
             size: "1536x1024",
@@ -103,7 +107,7 @@ export class OpenAIImageGenerator implements ExerciseImageGenerator {
           await this.sleep(Math.min(8_000, 500 * (2 ** (attempt - 1))));
           continue;
         }
-        throw new OpenAIImageGenerationError(`OpenAI image request failed after ${attempt} attempts: ${message}`, null, true);
+        throw new OpenAIImageGenerationError("Image request failed after " + String(attempt) + " attempts: " + message, null, true);
       }
 
       if (!response.ok) {
@@ -119,17 +123,11 @@ export class OpenAIImageGenerator implements ExerciseImageGenerator {
       const payload: unknown = await response.json();
       const parsed = imageResponseSchema.safeParse(payload);
       if (!parsed.success) {
-        throw new OpenAIImageGenerationError("OpenAI image response did not contain a base64 PNG image.", response.status, false);
+        throw new OpenAIImageGenerationError("Image API response did not contain a base64 PNG image.", response.status, false);
       }
       const bytes = Buffer.from(parsed.data.data[0].b64_json, "base64");
       const isPng = bytes.length >= 24 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-      if (!isPng) throw new OpenAIImageGenerationError("OpenAI image response was not a valid PNG file.", response.status, false);
-      await recordAiProviderUsage({
-        providerId: "openai",
-        capability: "image",
-        modelId: OPENAI_IMAGE_MODEL,
-        imageCount: 1,
-      }).catch(() => undefined);
+      if (!isPng) throw new OpenAIImageGenerationError("Image API response was not a valid PNG file.", response.status, false);
       return {
         bytes,
         contentType: "image/png",
@@ -138,6 +136,6 @@ export class OpenAIImageGenerator implements ExerciseImageGenerator {
       };
     }
 
-    throw new OpenAIImageGenerationError("OpenAI image request failed after all retry attempts.", null, true);
+    throw new OpenAIImageGenerationError("Image request failed after all retry attempts.", null, true);
   }
 }

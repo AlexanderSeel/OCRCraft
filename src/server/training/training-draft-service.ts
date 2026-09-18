@@ -41,6 +41,15 @@ function applySportsQualityAudit(request: TrainingDraftRequest, draft: TrainingD
   return { ...draft, warnings: [...draft.warnings, ...quality.warnings, ...goalWarnings] };
 }
 
+function assertAiDraftHasNoBlockingIssues(draft: TrainingDraft): void {
+  const blocking = draft.validationIssues.filter((issue) => issue.severity === "error");
+  if (blocking.length === 0) return;
+  throw new Error(
+    "AI-Entwurf wurde durch OCRCraft-Sicherheitsregeln blockiert: "
+      + blocking.map((issue) => issue.message).join(" | "),
+  );
+}
+
 function finalizeDraft(
   request: TrainingDraftRequest,
   draft: TrainingDraft,
@@ -77,7 +86,14 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
     const recompositionWarnings = sourceSessions.length > 0
       ? [`AI-Rekomposition verwendet ${sourceSessions.length} ausgewählte Quelltrainings als Kontext; aktuelle Trainer-Randbedingungen und der freigegebene Übungspool bleiben maßgeblich.`]
       : [];
-    return finalizeDraft(request, { ...draft, warnings: [...draft.warnings, ...recompositionWarnings] }, candidates, rules);
+    const finalized = finalizeDraft(
+      request,
+      { ...draft, warnings: [...draft.warnings, ...recompositionWarnings] },
+      candidates,
+      rules,
+    );
+    assertAiDraftHasNoBlockingIssues(finalized);
+    return finalized;
   }
 
   const draft = composeStructuredSportsTrainingDraft({
@@ -126,6 +142,7 @@ export async function persistReviewedAiTrainingDraft(input: ReviewedAiTrainingPe
   const candidates = await approvedCandidatesFor(input.request, rules);
   const reviewedDraft = composeReviewedAiTrainingDraft(input, candidates);
   const draft = finalizeDraft(input.request, reviewedDraft, candidates, rules);
+  assertAiDraftHasNoBlockingIssues(draft);
   const provider = await getConfiguredAiTrainingProvider();
   const id = await persistTrainingDraft(draft, {
     title: input.title,

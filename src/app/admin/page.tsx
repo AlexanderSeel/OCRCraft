@@ -11,7 +11,7 @@ import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { listRecentAuditEvents } from "@/server/db/audit-service";
 import { listDatabaseBackups } from "@/server/db/backup-service";
 import { listAiProviderSettings } from "@/server/ai/ai-provider-settings-repository";
-import { createDatabaseBackupAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, saveAiProviderSettingsAction, scanDuplicateExercisesAction } from "./actions";
+import { createDatabaseBackupAction, deleteAiProviderSettingsAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, saveAiProviderSettingsAction, scanDuplicateExercisesAction } from "./actions";
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 import { listAppUsers } from "@/server/auth/identity-service";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
@@ -169,6 +169,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               <div className="mt-4 grid gap-2">{appUsers.map((user) => <form action={updateUserAction} className="grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center" key={user.id}><div><div className="font-black">{user.displayName}</div><div className="text-xs text-[var(--muted)]">{user.email}</div></div><select aria-label={`Rolle für ${user.displayName}`} className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs" defaultValue={user.role} name="role"><option value="trainer">Trainer</option><option value="admin">Admin</option><option value="super_admin">Super-Admin</option></select><label className="inline-flex items-center gap-2 text-xs font-bold"><input defaultChecked={user.active} name="active" type="checkbox" />Aktiv</label><input name="id" type="hidden" value={user.id} /><button className="min-h-9 rounded-lg border border-[var(--border)] px-3 text-xs font-black" type="submit">Speichern</button></form>)}</div>
             </section>
             <AiProviderSettingsPanel
+              deleteAction={deleteAiProviderSettingsAction}
               error={aiError}
               providers={aiProviders}
               saveAction={saveAiProviderSettingsAction}
