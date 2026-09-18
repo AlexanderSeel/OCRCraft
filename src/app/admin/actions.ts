@@ -19,7 +19,6 @@ import { restoreDatabaseBackup } from "@/server/db/restore-service";
 import { aiProviderInstanceIdSchema, aiProviderKindSchema, deleteAiProviderInstance, disconnectAiProviderOAuth, saveAiProviderInstance, type AiCapability } from "@/server/ai/ai-provider-settings-repository";
 import { cancelAppTask, deleteAppTask, enqueueAppTask, retryAppTask } from "@/server/queue/app-task-repository";
 import { runAppTaskQueue } from "@/server/queue/app-task-worker";
-import { saveSearchProfile } from "@/server/search/search-profile-repository";
 
 const reseedConfirmationSchema = z.literal("OCRCRAFT ZURÜCKSETZEN");
 
@@ -151,13 +150,6 @@ export async function deleteAppTaskAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
   if (id) await deleteAppTask(id);
-  revalidatePath("/admin");
-}
-
-export async function saveSearchProfileAction(formData: FormData): Promise<void> {
-  await requireAdmin();
-  const positive = (name: string, fallback: number) => { const value = Number(formData.get(name)); return Number.isFinite(value) ? Math.max(0, Math.min(500, Math.round(value))) : fallback; };
-  await saveSearchProfile({ id: String(formData.get("id") ?? "") || null, name: String(formData.get("name") ?? "Standard").trim() || "Standard", weights: { exact: positive("exact", 100), prefix: positive("prefix", 75), alias: positive("alias", 50) }, active: formData.get("active") === "on" });
   revalidatePath("/admin");
 }
 

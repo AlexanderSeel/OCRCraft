@@ -7,7 +7,6 @@ import {
   type ExerciseListItem,
 } from "@/server/exercises/exercise-repository";
 import { runBm25ExerciseSearch } from "./exercise-search-core";
-import { getActiveSearchProfile } from "./search-profile-repository";
 import type { SearchRankingWeights } from "./search-profile-core";
 import type { SearchLocale } from "./exercise-search-documents";
 import { getActiveSearchProfile } from "./search-profile-repository";
@@ -65,7 +64,7 @@ export async function searchExercises({
 
   await ensureDatabaseReady();
   const activeProfile = rankingWeights ? null : await getActiveSearchProfile();
-  const activeWeights = rankingWeights ?? (activeProfile.id === "default"
+  const activeWeights = rankingWeights ?? (activeProfile == null || activeProfile.id === "default"
     ? environmentRankingWeights()
     : activeProfile.weights);
 
