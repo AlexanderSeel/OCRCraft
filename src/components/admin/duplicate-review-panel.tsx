@@ -68,9 +68,13 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
           {selectedTasks.length > 0 ? (
             <form action={bulkAction} className="flex flex-wrap items-center gap-2">
               {selectedTasks.map((task) => <input key={task.id} name="selection" type="hidden" value={`${task.id}:${task.leftExerciseId}:${task.rightExerciseId}`} />)}
-              <ActionProgressButton className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" name="decision" pendingLabel={`${selectedTasks.length} Einträge werden verarbeitet`} value="left">Linke übernehmen</ActionProgressButton>
-              <ActionProgressButton className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" name="decision" pendingLabel={`${selectedTasks.length} Einträge werden verarbeitet`} value="right">Rechte übernehmen</ActionProgressButton>
-              <ActionProgressButton className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black text-[var(--muted)]" name="decision" pendingLabel={`${selectedTasks.length} Einträge werden verarbeitet`} value="ignored">Ignorieren</ActionProgressButton>
+              <label className="sr-only" htmlFor="bulk-duplicate-decision">Aktion</label>
+              <select className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs font-bold" defaultValue="left" id="bulk-duplicate-decision" name="decision">
+                <option value="left">Linke übernehmen</option>
+                <option value="right">Rechte übernehmen</option>
+                <option value="ignored">Ignorieren</option>
+              </select>
+              <ActionProgressButton className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" pendingLabel={`${selectedTasks.length} Einträge werden verarbeitet`}>Ausführen</ActionProgressButton>
             </form>
           ) : null}
         </div>

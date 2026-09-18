@@ -9,31 +9,34 @@ import { authenticateAppUser, createAppUser, updateAppUser, userRoleSchema } fro
 const emailSchema = z.string().trim().toLowerCase().email();
 
 export async function loginAction(formData: FormData): Promise<void> {
-  const email = emailSchema.safeParse(formData.get("email"));
+  const identityInput = String(formData.get("identity") ?? "").trim();
+  const email = emailSchema.safeParse(identityInput);
   const password = String(formData.get("password") ?? "");
   const code = String(formData.get("code") ?? "");
   const secret = process.env.OCRCRAFT_ACTOR_ASSERTION_SECRET;
-  if (!email.success || !secret) redirect("/admin?tab=settings&loginError=1#identity");
-  const user = password ? await authenticateAppUser(email.data, password) : null;
+  if (!identityInput || !secret) redirect("/admin?tab=users&loginError=1");
+  const user = password ? await authenticateAppUser(identityInput, password) : null;
   const codeValid = Boolean(process.env.OCRCRAFT_LOGIN_CODE && code === process.env.OCRCRAFT_LOGIN_CODE);
-  if (!user && !codeValid) redirect("/admin?tab=settings&loginError=1#identity");
-  const value = `${email.data}|${Math.floor(Date.now() / 1000)}|${signActorAssertion(email.data, Math.floor(Date.now() / 1000), secret)}`;
+  if (!user && !codeValid) redirect("/admin?tab=users&loginError=1");
+  const actorEmail = user?.email ?? (email.success ? email.data : "");
+  if (!actorEmail) redirect("/admin?tab=users&loginError=1");
+  const value = `${actorEmail}|${Math.floor(Date.now() / 1000)}|${signActorAssertion(actorEmail, Math.floor(Date.now() / 1000), secret)}`;
   (await cookies()).set("ocrcraft-actor", value, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: 60 * 60 * 8, path: "/" });
-  redirect("/admin?tab=settings&loggedIn=1#identity");
+  redirect("/admin?tab=users&loggedIn=1");
 }
 
 export async function logoutAction(): Promise<void> {
   (await cookies()).delete("ocrcraft-actor");
-  redirect("/admin?tab=settings&loggedOut=1#identity");
+  redirect("/admin?tab=users&loggedOut=1");
 }
 
 export async function createUserAction(formData: FormData): Promise<void> {
   try {
-    await createAppUser({ email: String(formData.get("email") ?? ""), displayName: String(formData.get("displayName") ?? ""), role: userRoleSchema.parse(formData.get("role")), password: String(formData.get("password") ?? "") });
+    await createAppUser({ email: String(formData.get("email") ?? ""), username: String(formData.get("username") ?? ""), firstName: String(formData.get("firstName") ?? ""), lastName: String(formData.get("lastName") ?? ""), role: userRoleSchema.parse(formData.get("role")), password: String(formData.get("password") ?? "") });
   } catch {
-    redirect("/admin?tab=settings&userError=1#identity");
+    redirect("/admin?tab=users&userError=1");
   }
-  redirect("/admin?tab=settings&userSaved=1#identity");
+  redirect("/admin?tab=users&userSaved=1");
 }
 
 export async function updateUserAction(formData: FormData): Promise<void> {
@@ -48,9 +51,12 @@ export async function updateUserAction(formData: FormData): Promise<void> {
     }
     await updateAppUser({
       id: String(formData.get("id") ?? ""),
+      email: String(formData.get("email") ?? ""),
       role: userRoleSchema.parse(formData.get("role")),
       active: formData.get("active") === "on",
-      displayName: String(formData.get("displayName") ?? ""),
+      username: String(formData.get("username") ?? ""),
+      firstName: String(formData.get("firstName") ?? ""),
+      lastName: String(formData.get("lastName") ?? ""),
       education: String(formData.get("education") ?? ""),
       bio: String(formData.get("bio") ?? ""),
       specialties: String(formData.get("specialties") ?? ""),
@@ -59,7 +65,7 @@ export async function updateUserAction(formData: FormData): Promise<void> {
       profileImageContentType,
     });
   } catch {
-    redirect("/admin?tab=settings&userError=1#identity");
+    redirect("/admin?tab=users&userError=1");
   }
-  redirect("/admin?tab=settings&userSaved=1#identity");
+  redirect("/admin?tab=users&userSaved=1");
 }

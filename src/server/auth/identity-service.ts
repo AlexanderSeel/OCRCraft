@@ -14,6 +14,9 @@ export type UserRole = z.infer<typeof userRoleSchema>;
 export interface AppUser {
   readonly id: string;
   readonly email: string;
+  readonly username: string;
+  readonly firstName: string;
+  readonly lastName: string;
   readonly displayName: string;
   readonly role: UserRole;
   readonly active: boolean;
@@ -103,40 +106,45 @@ export async function listAppUsers(): Promise<readonly AppUser[]> {
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(
-      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR,education,bio,specialties,profile_image_uri,profile_image_data,profile_image_content_type
+      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR,education,bio,specialties,profile_image_uri,profile_image_data,profile_image_content_type,first_name,last_name,username
        FROM app_users ORDER BY lower(display_name), lower(email)`,
     );
     return reader.getRows().map((row) => toUser(row));
   });
 }
 
-export async function createAppUser(input: { readonly email: string; readonly displayName: string; readonly role: UserRole; readonly password?: string }): Promise<AppUser> {
+export async function createAppUser(input: { readonly email: string; readonly username: string; readonly firstName: string; readonly lastName: string; readonly role: UserRole; readonly password?: string }): Promise<AppUser> {
   await requireSuperAdmin();
   const email = emailSchema.parse(input.email);
-  const displayName = z.string().trim().min(1).max(120).parse(input.displayName);
+  const firstName = z.string().trim().min(1).max(80).parse(input.firstName);
+  const lastName = z.string().trim().min(1).max(80).parse(input.lastName);
+  const username = z.string().trim().regex(/^[a-zA-Z0-9._-]{3,40}$/).parse(input.username);
+  const displayName = `${firstName} ${lastName}`;
   const role = userRoleSchema.parse(input.role);
   const passwordHash = input.password ? hashPassword(input.password) : null;
   return withDuckDbConnection(async (connection) => {
+    const duplicate = await connection.runAndReadAll("SELECT count(*)::INTEGER FROM app_users WHERE lower(username)=lower($username) OR lower(email)=lower($email)", { username, email });
+    if (Number(duplicate.getRows()[0]?.[0] ?? 0) > 0) throw new Error("Username or email is already in use.");
     await connection.run(
-      `INSERT INTO app_users (email,display_name,role,password_hash) VALUES ($email,$displayName,$role,$passwordHash)`,
-      { email, displayName, role, passwordHash },
+      `INSERT INTO app_users (email,username,first_name,last_name,display_name,role,password_hash) VALUES ($email,$username,$firstName,$lastName,$displayName,$role,$passwordHash)`,
+      { email, username, firstName, lastName, displayName, role, passwordHash },
     );
     const reader = await connection.runAndReadAll(
-      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR,education,bio,specialties,profile_image_uri,profile_image_data,profile_image_content_type FROM app_users WHERE email=$email`,
+      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR,education,bio,specialties,profile_image_uri,profile_image_data,profile_image_content_type,first_name,last_name,username FROM app_users WHERE email=$email`,
       { email },
     );
     return toUser(reader.getRows()[0]);
   });
 }
 
-export async function authenticateAppUser(emailInput: string, password: string): Promise<AppUser | null> {
-  const email = emailSchema.parse(emailInput);
+export async function authenticateAppUser(identityInput: string, password: string): Promise<AppUser | null> {
+  const identity = z.string().trim().min(1).max(200).parse(identityInput);
   if (password.length < 1 || password.length > 200) return null;
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(
-      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR,education,bio,specialties,profile_image_uri,profile_image_data,profile_image_content_type,password_hash FROM app_users WHERE lower(email)=lower($email) LIMIT 1`,
-      { email },
+      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR,education,bio,specialties,profile_image_uri,profile_image_data,profile_image_content_type,password_hash,first_name,last_name,username FROM app_users WHERE lower(email)=lower($identity) OR lower(username)=lower($identity) LIMIT 1`,
+      { identity },
     );
     const row = reader.getRows()[0];
     if (!row || !Boolean(row[4]) || !verifyPassword(password, row[12] == null ? null : String(row[12]))) return null;
@@ -144,18 +152,24 @@ export async function authenticateAppUser(emailInput: string, password: string):
   });
 }
 
-export async function updateAppUser(input: { readonly id: string; readonly role: UserRole; readonly active: boolean; readonly displayName: string; readonly education: string; readonly bio: string; readonly specialties: string; readonly profileImageUri: string; readonly profileImageData?: string; readonly profileImageContentType?: string }): Promise<void> {
+export async function updateAppUser(input: { readonly id: string; readonly email: string; readonly role: UserRole; readonly active: boolean; readonly username: string; readonly firstName: string; readonly lastName: string; readonly education: string; readonly bio: string; readonly specialties: string; readonly profileImageUri: string; readonly profileImageData?: string; readonly profileImageContentType?: string }): Promise<void> {
   const actor = await requireSuperAdmin();
   const id = z.string().uuid().parse(input.id);
+  const email = emailSchema.parse(input.email);
   const role = userRoleSchema.parse(input.role);
-  const displayName = z.string().trim().min(1).max(120).parse(input.displayName);
+  const firstName = z.string().trim().min(1).max(80).parse(input.firstName);
+  const lastName = z.string().trim().min(1).max(80).parse(input.lastName);
+  const username = z.string().trim().regex(/^[a-zA-Z0-9._-]{3,40}$/).parse(input.username);
+  const displayName = `${firstName} ${lastName}`;
   const education = z.string().trim().max(240).parse(input.education);
   const bio = z.string().trim().max(1000).parse(input.bio);
   const specialties = z.string().trim().max(500).parse(input.specialties);
   const profileImageUri = z.string().trim().max(500).refine((value) => !value || /^(https?:\/\/|\/)/.test(value), "Invalid profile image URI.").parse(input.profileImageUri);
   if (id === actor.id && (!input.active || role !== "super_admin")) throw new Error("Cannot demote or deactivate the current super-admin.");
   await withDuckDbConnection(async (connection) => {
-    await connection.run("UPDATE app_users SET display_name=$displayName,role=$role,active=$active,education=$education,bio=$bio,specialties=$specialties,profile_image_uri=$profileImageUri,profile_image_data=COALESCE($profileImageData,profile_image_data),profile_image_content_type=COALESCE($profileImageContentType,profile_image_content_type),updated_at=current_timestamp WHERE id=$id::UUID", { id, displayName, role, active: input.active, education: education || null, bio: bio || null, specialties: specialties || null, profileImageUri: profileImageUri || null, profileImageData: input.profileImageData ?? null, profileImageContentType: input.profileImageContentType ?? null });
+    const duplicate = await connection.runAndReadAll("SELECT count(*)::INTEGER FROM app_users WHERE id<>$id::UUID AND (lower(username)=lower($username) OR lower(email)=lower($email))", { id, username, email });
+    if (Number(duplicate.getRows()[0]?.[0] ?? 0) > 0) throw new Error("Username or email is already in use.");
+    await connection.run("UPDATE app_users SET email=$email,username=$username,first_name=$firstName,last_name=$lastName,display_name=$displayName,role=$role,active=$active,education=$education,bio=$bio,specialties=$specialties,profile_image_uri=$profileImageUri,profile_image_data=COALESCE($profileImageData,profile_image_data),profile_image_content_type=COALESCE($profileImageContentType,profile_image_content_type),updated_at=current_timestamp WHERE id=$id::UUID", { id, email, username, firstName, lastName, displayName, role, active: input.active, education: education || null, bio: bio || null, specialties: specialties || null, profileImageUri: profileImageUri || null, profileImageData: input.profileImageData ?? null, profileImageContentType: input.profileImageContentType ?? null });
   });
 }
 
@@ -172,6 +186,9 @@ function toUser(row: readonly unknown[], source: CurrentActor["source"] = "confi
     specialties: row[8] == null ? null : String(row[8]),
     profileImageUri: row[9] == null ? null : String(row[9]),
     profileImageDataUrl: row[10] == null || row[11] == null ? null : `data:${String(row[11])};base64,${String(row[10])}`,
+    firstName: row[13] == null ? String(row[2]).split(/\s+/)[0] : String(row[13]),
+    lastName: row[14] == null ? String(row[2]).split(/\s+/).slice(1).join(" ") : String(row[14]),
+    username: row[15] == null ? String(row[1]).split("@")[0] : String(row[15]),
     source,
   };
 }

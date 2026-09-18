@@ -156,7 +156,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - Darstellung und optionale Diagnose sind im Administrations-Tab Einstellungen gebündelt; der globale Seitenkopf bleibt frei von doppelten Systemaktionen.
 - Adminbereich mit eigenem Tab „Benutzer & Profile“, filterbarer Mitgliederliste, Bearbeiten-Dialog, Benutzer-/Rollenverwaltung und lokalem Login-Dialog; Trainings-Readonly-Ansicht bleibt ohne Login teilbar.
 - Klassische E-Mail-/Passwort-Anmeldung mit gesalzenem scrypt-Hash und optionalem Zugangscode-Fallback.
-- Bearbeitbare Trainerprofile mit Ausbildung, Schwerpunkten, Kurzbiografie und Bildreferenz; neue Trainings übernehmen das Profil in Readonly-/Traineransichten.
+- Bearbeitbare Trainerprofile mit Vorname, Nachname, Username, E-Mail, Ausbildung, Schwerpunkten, Kurzbiografie und Bildreferenz; neue Trainings übernehmen das Profil in Readonly-/Traineransichten.
 - Profilbild-Upload (JPEG/PNG/WebP bis 2 MB) mit Speicherung in DuckDB; ohne Bild werden Initialen aus Vor- und Nachnamen angezeigt.
 
 ## CI und Definition of Done
