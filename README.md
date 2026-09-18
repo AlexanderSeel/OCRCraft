@@ -15,6 +15,7 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Bet
 ### Übungen und Muskelkarte
 
 - Übungsübersicht mit Suche, Facetten, Bereichs- und Muskel-Mehrfachfilter
+- Admin-Vollständigkeitsbericht mit getrennten Kennzahlen für Start-Seed-Bestand und gesamten (inklusive importierten) Katalog
 - entfernbare Filter-Tags und zugängliche Listenalternative zur visuellen Karte
 - wiederverwendbare Front-/Rückseiten-Muskelkarte mit 89 granularen Regionen
 - primäre, sekundäre und antagonistische Muskelbeziehungen
@@ -36,6 +37,7 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Bet
 - DuckDB über zentrale serverseitige Verbindungen und versionierte Migrationen
 - lock-gesicherte Datenbank-Backups unter `data/backups/` mit JSON-Manifest; Restore und Rotation bleiben ein offener Planpunkt
 - FTS-Status (`healthy`, `dirty`, `rebuilding`, `failed`) und zweisprachige Suchdokumente
+- Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes mit Fortschritts- und Fehlerstatus
 - Audit-Events für Reset-, Backup- und Dublettenaktionen
 - externe Quellen-, Lizenz- und Generierungsmetadaten
 - OpenAI-Images-Pipeline mit `gpt-image-2`, Dry Run, stabilen Seed-Dateinamen, Reviewstatus und Dateisystem/S3-Abstraktion

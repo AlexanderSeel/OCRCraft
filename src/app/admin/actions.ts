@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { createDatabaseBackup } from "@/server/db/backup-service";
 import { recordAuditEvent } from "@/server/db/audit-service";
+import { rebuildSearchIndex } from "@/server/search/search-index-service";
 import { reseedAllDatabaseData } from "@/server/db/reseed-service";
 import { refreshDuplicateReviewTasks, resolveDuplicateTask } from "@/server/exercises/duplicate-review-service";
 import {
@@ -45,6 +46,17 @@ export async function createDatabaseBackupAction(): Promise<void> {
     redirect(`/admin?tab=database&backup=${encodeURIComponent(backup.fileName)}`);
   } catch {
     redirect("/admin?tab=database&backupError=1");
+  }
+}
+
+export async function rebuildSearchIndexesAction(): Promise<void> {
+  try {
+    await rebuildSearchIndex("de");
+    await rebuildSearchIndex("en");
+    await recordAuditEvent({ action: "search.rebuild", entityType: "search_index", metadata: { locales: ["de", "en"] } });
+    redirect("/admin?tab=database&rebuild=1");
+  } catch {
+    redirect("/admin?tab=database&rebuildError=1");
   }
 }
 

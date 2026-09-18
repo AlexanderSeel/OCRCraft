@@ -11,6 +11,7 @@ export interface SeedCompletenessRow {
 
 export async function runSeedCompletenessQuery(
   connection: DuckDBConnection,
+  options: { readonly includeImported?: boolean } = {},
 ): Promise<readonly SeedCompletenessRow[]> {
   const reader = await connection.runAndReadAll(`
     SELECT e.id::VARCHAR, e.seed_key,
@@ -50,7 +51,7 @@ export async function runSeedCompletenessQuery(
     LEFT JOIN exercise_translations t_en ON t_en.exercise_id=e.id AND t_en.locale='en'
     LEFT JOIN exercise_details d_de ON d_de.exercise_id=e.id AND d_de.locale='de'
     LEFT JOIN exercise_details d_en ON d_en.exercise_id=e.id AND d_en.locale='en'
-    WHERE e.seed_key IS NOT NULL
+    WHERE ${options.includeImported ? "TRUE" : "e.seed_key IS NOT NULL"}
     ORDER BY e.seed_key
   `);
 

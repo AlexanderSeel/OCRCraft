@@ -12,14 +12,15 @@ export function SeedCompletenessReportView({ report }: SeedCompletenessReportPro
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Übungsdatenbank</div>
-          <h2 className="mt-1 text-xl font-black" id="seed-completeness-heading">Vollständigkeit der Startübungen</h2>
+          <h2 className="mt-1 text-xl font-black" id="seed-completeness-heading">Vollständigkeit der Übungsdatenbank</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-            Der Wert prüft strukturierte Grundfelder in beiden Sprachen. Er bewertet noch nicht, ob die Texte fachlich individuell genug formuliert sind.
+            Der Seed-Bestand und der gesamte Katalog werden getrennt geprüft. Der Wert bewertet strukturierte Grundfelder in beiden Sprachen, nicht die fachliche Qualität der Formulierungen.
           </p>
         </div>
         <div aria-label={`${report.completenessPercent} Prozent der Startübungen erfüllen die Grundfelder`} className="min-w-40 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" role="group">
           <div className="text-2xl font-black">{report.completenessPercent}%</div>
-          <div className="text-xs font-semibold text-[var(--muted)]">{report.completeExercises} von {report.totalExercises} vollständig</div>
+          <div className="text-xs font-semibold text-[var(--muted)]">{report.completeExercises} von {report.totalExercises} Seeds vollständig</div>
+          <div className="mt-1 text-xs font-semibold text-[var(--muted)]">Katalog: {report.completeCatalogExercises} von {report.totalCatalogExercises}</div>
           <div aria-valuemax={100} aria-valuemin={0} aria-valuenow={report.completenessPercent} className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--border)]" role="progressbar">
             <div className="h-full rounded-full bg-[var(--success-foreground)]" style={{ width: `${report.completenessPercent}%` }} />
           </div>

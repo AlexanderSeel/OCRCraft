@@ -143,6 +143,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - OpenAI-`gpt-image-2`-Bildpipeline mit Dry Run, stabilen Seed-Dateinamen, Quellen-/Reviewmetadaten und S3-Abstraktion.
 - Wiederverwendbare Dialog-/Disclosure-Komponenten mit Fokusmanagement, Escape, Fokusfalle, Scroll-Lock, sichtbarem Fokus und konsistenten Panels.
 - Gemeinsamer Administrationsbereich mit Tabs für Übersicht, Datenbank, Datenqualität und Einstellungen; doppelte Settings-/Admin-Navigation entfernt.
+- Dynamischer Vollständigkeitsbericht für Seed-Bestand und gesamten Übungskatalog sowie Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes.
 - Light/Dark/System-Theme, semantische UI-Tokens, responsive Layouts und laufende CI-Gates.
 
 ## CI und Definition of Done
