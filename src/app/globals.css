@@ -180,6 +180,32 @@ details > summary:focus-visible {
   outline-offset: 2px;
 }
 
+/* Consistent native validation treatment for every app form. */
+label:not(:has(.required-field-marker)):has(input:required)::after,
+label:not(:has(.required-field-marker)):has(select:required)::after,
+label:not(:has(.required-field-marker)):has(textarea:required)::after {
+  color: var(--danger);
+  content: " *";
+  font-weight: 900;
+}
+
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid,
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 ::selection {
   background: var(--accent);
   color: var(--accent-foreground);

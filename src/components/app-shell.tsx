@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { PrimaryNavigation } from "@/components/navigation/primary-navigation";
 import { CollapsibleSidebar } from "@/components/layout/collapsible-sidebar";
 import { QueueStatusIndicator } from "@/components/queue-status-indicator";
+import { FormValidation } from "@/components/forms/form-validation";
 
 interface AppShellProps {
   readonly title: string;
@@ -34,7 +35,7 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
           </div>
           <PrimaryNavigation variant="mobile" />
         </header>
-        <main className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8" id="main-content" tabIndex={-1}>{children}</main>
+        <main className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8" id="main-content" tabIndex={-1}><FormValidation />{children}</main>
       </div>
     </div>
   );

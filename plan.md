@@ -83,6 +83,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### UI/UX und Zugänglichkeit
 
+- [x] Globales Formularfeedback vereinheitlichen: native Pflichtfeld-, Format-, Bereichs- und Längenprüfungen zeigen direkt am Feld eine deutsche Fehlermeldung, markieren das Feld mit `aria-invalid`, setzen den Fokuspfad über `aria-describedby` und kennzeichnen Pflichtfelder konsistent mit `*`.
 - [x] Kontrast und Lesbarkeit in Hell-/Dunkelmodus über die globalen semantischen Tokens nachgeschärft: Muted-/Status-/Sidebar-Kontraste und Feldgrenzen wurden erhöht, Placeholder verlieren keine zusätzliche Opazität mehr und Fokuszustände bleiben in beiden Themes klar sichtbar.
 - [x] Gemeinsames erweitertes Form-Kit für Labels, Pflichtkennzeichnung, Hilfetexte, Fehlermeldungen, Controls, Statusmeldungen und Action-Zeilen eingeführt und in Übungseditor sowie Training-Item-Editor integriert.
 - [x] Globales Toast-/Feedbacksystem mit zugänglichem `aria-live`, Loading-, Erfolgs-, Info- und Fehlerzuständen, Auto-Dismiss und manuellem Schließen eingeführt; Quick Create und Training Builder verwenden es für Planung, Neuplanung, Übungsersatz und Speichern, während ausführliche Inline-Fehler erhalten bleiben.

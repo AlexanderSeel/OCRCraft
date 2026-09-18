@@ -28,7 +28,7 @@ export function FormField({
     <label className={`grid gap-1.5 text-sm font-bold ${className}`}>
       <span>
         {label}
-        {required ? <span aria-hidden="true" className="ml-1 text-[var(--danger)]">*</span> : null}
+        {required ? <span aria-hidden="true" className="required-field-marker ml-1 text-[var(--danger)]">*</span> : null}
       </span>
       {children}
       {error ? (
