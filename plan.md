@@ -50,7 +50,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 - [ ] Katalog über alle Übungen hinaus mit kuratierten Lücken erweitern.
 - [ ] Zusätzliche deutsche/englische Aliase und Trainerbegriffe für alle Seeds kuratieren.
-- [ ] Fachliche Einzelprüfung und Anreicherung aller verbleibenden Startübungen abschließen.
+- [ ] Fachliche Einzelprüfung und Anreicherung aller verbleibenden Seeds abschließen.
 - [ ] Weitere Katalogkohorten versioniert, zweisprachig und mit Detail-/Sicherheits-Gates aufnehmen.
 - [ ] Zusätzliche Kategorien und Facetten editierbar machen.
 - [ ] Progressionen/Regressionen als vollständige Katalogverwaltung ausbauen.
@@ -134,7 +134,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 - Next.js App Router, React, TypeScript, Tailwind und modulare Domain-/Service-/Repository-Architektur.
 - DuckDB-Migrationen, WAL-Recovery/Schreibserialisierung, FTS-Zustände und In-Memory-Migrationstests.
-- 157 validierte Startübungen, 25+ Laufübungen, zweisprachige Identität, Aliase, Mapping, Sicherheits- und Detailfelder.
+- Dynamisch validierter Seed- und Importkatalog mit zweisprachiger Identität, Aliases, Mapping, Sicherheits- und Detailfeldern.
 - Exercise Library mit Suche, Filtern, Muskelkarte, Create/Edit, Archivieren/Wiederherstellen und Vollständigkeitsbericht.
 - Granulare 89-Muskel-/Körperregionen-Taxonomie, primär/sekundär/Gegenmuskel-Beziehungen und zugängliche Listenalternative.
 - Quick Create und Training Builder mit lokalem deterministischem Composer, optionalem AI-Pfad, Zielgruppen-/Alters-/Risiko-/Equipment-/Hindernisregeln und Trainerprüfung.

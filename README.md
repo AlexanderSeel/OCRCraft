@@ -6,7 +6,7 @@ Die Kernstruktur bleibt sichtbar: **Aufwärmen → Hauptteil → Cooldown & Stre
 
 ## Status
 
-Die produktive Grundlage steht auf `main`. Der Katalog enthält 157 validierte Startübungen, davon mehr als 25 Laufübungen. Übungen besitzen deutsche und englische Identität, Aliase, Körperregionen, Muskel- und Gegenmuskelbeziehungen, Equipment, Bewegungsmuster, Zielgruppen-, Risiko- und Coachingdaten.
+Die produktive Grundlage steht auf `main`. Der Katalog wird dynamisch aus versionierten Seeds und importierten Datensätzen aufgebaut. Übungen besitzen deutsche und englische Identität, Aliase, Körperregionen, Muskel- und Gegenmuskelbeziehungen, Equipment, Bewegungsmuster, Zielgruppen-, Risiko- und Coachingdaten.
 
 Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Betriebs- und Datensicherheit, Trainer-Workflow, Katalog/Medien und Ausbau klar voneinander.
 
@@ -15,7 +15,7 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Bet
 ### Übungen und Muskelkarte
 
 - Übungsübersicht mit Suche, Facetten, Bereichs- und Muskel-Mehrfachfilter
-- Admin-Vollständigkeitsbericht mit getrennten Kennzahlen für Start-Seed-Bestand und gesamten (inklusive importierten) Katalog
+- Admin-Vollständigkeitsbericht mit getrennten Kennzahlen für versionierte Seeds und den gesamten (inklusive importierten) Katalog
 - entfernbare Filter-Tags und zugängliche Listenalternative zur visuellen Karte
 - wiederverwendbare Front-/Rückseiten-Muskelkarte mit 89 granularen Regionen
 - primäre, sekundäre und antagonistische Muskelbeziehungen

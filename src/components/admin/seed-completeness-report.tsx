@@ -17,7 +17,7 @@ export function SeedCompletenessReportView({ report }: SeedCompletenessReportPro
             Der Seed-Bestand und der gesamte Katalog werden getrennt geprüft. Der Wert bewertet strukturierte Grundfelder in beiden Sprachen, nicht die fachliche Qualität der Formulierungen.
           </p>
         </div>
-        <div aria-label={`${report.completenessPercent} Prozent der Startübungen erfüllen die Grundfelder`} className="min-w-40 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" role="group">
+        <div aria-label={`${report.completenessPercent} Prozent der versionierten Seeds erfüllen die Grundfelder`} className="min-w-40 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" role="group">
           <div className="text-2xl font-black">{report.completenessPercent}%</div>
           <div className="text-xs font-semibold text-[var(--muted)]">{report.completeExercises} von {report.totalExercises} Seeds vollständig</div>
           <div className="mt-1 text-xs font-semibold text-[var(--muted)]">Katalog: {report.completeCatalogExercises} von {report.totalCatalogExercises}</div>
@@ -29,11 +29,11 @@ export function SeedCompletenessReportView({ report }: SeedCompletenessReportPro
 
       {report.totalExercises === 0 ? (
         <p className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">
-          Es sind noch keine Startübungen in der Datenbank vorhanden.
+          Es sind noch keine versionierten Seeds in der Datenbank vorhanden.
         </p>
       ) : report.incompleteExercises.length === 0 ? (
         <p className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-semibold text-[var(--success-foreground)]">
-          Alle Startübungen erfüllen die geprüften Grundfelder.
+          Alle versionierten Seeds erfüllen die geprüften Grundfelder.
         </p>
       ) : (
         <Disclosure

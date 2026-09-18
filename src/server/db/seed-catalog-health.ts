@@ -1,17 +1,13 @@
 import { withDuckDbConnection } from "./duckdb";
 
-const EXPECTED_SEED_COUNT = 157;
-
-/** Fails fast when a database starts without the versioned initial catalog. */
+/** Fails fast when a database starts without a usable versioned seed catalog. */
 export async function validateInitialSeedCatalog(): Promise<void> {
   await withDuckDbConnection(async (connection) => {
     const countReader = await connection.runAndReadAll(
       "SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL",
     );
     const count = Number(countReader.getRows()[0]?.[0] ?? 0);
-    if (count !== EXPECTED_SEED_COUNT) {
-      throw new Error(`Initial seed catalog incomplete: expected ${EXPECTED_SEED_COUNT} exercises, found ${count}. Run the confirmed database reseed.`);
-    }
+    if (count === 0) throw new Error("Initial seed catalog is empty. Run the confirmed database reseed.");
 
     const gapReader = await connection.runAndReadAll(`
       SELECT count(*) FROM exercises e
