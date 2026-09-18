@@ -467,7 +467,7 @@ export async function getAiProviderDiscoveryConnection(input: {
 }> {
   let stored: readonly unknown[] | null = null;
   if (input.instanceId) {
-    aiProviderInstanceIdSchema.parse(input.instanceId);
+    const instanceId = aiProviderInstanceIdSchema.parse(input.instanceId);
     await ensureDatabaseReady();
     stored = await withDuckDbConnection(async (connection) => {
       const reader = await connection.runAndReadAll(`
@@ -475,7 +475,7 @@ export async function getAiProviderDiscoveryConnection(input: {
         FROM ai_provider_instances
         WHERE id=$id::UUID
         LIMIT 1
-      `, { id: input.instanceId });
+      `, { id: instanceId });
       return reader.getRows()[0] ?? null;
     });
   }
