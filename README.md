@@ -59,6 +59,8 @@ Im Datenbank-Tab können Übungen, Details, Zuordnungen, Trainings, Gruppen, Med
 
 Beim Medienexport können Binärdateien optional als Base64 eingebettet werden. Der Export ergänzt MIME-Typ, SHA-256-Prüfsumme sowie Speicher- und Quellenmetadaten; standardmäßig bleiben Binärdaten aus Platzgründen außen vor.
 
+Übungskarten verwenden für nicht erreichbare externe Quellen (einschließlich veralteter `static.exercisedb.dev`-GIFs) automatisch eine lokale Platzhaltergrafik. Dadurch bleiben Listen, Detailansichten und Layouts stabil sichtbar, bis eine geprüfte lokale oder KI-generierte Medienquelle hinterlegt ist.
+
 Der Tab **Datenqualität** klassifiziert erkannte Übungspaare als gleich, wahrscheinliche Dublette, Konflikt oder neu. Side-by-Side-Feldvergleich und Bulk-Entscheidungen bleiben trainerbestätigt; Datensätze werden nicht automatisch gelöscht.
 
 Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit einer Admin-Rolle wiederhergestellt werden. Die Wiederherstellung ersetzt Training, Phasen und Items innerhalb einer Transaktion.

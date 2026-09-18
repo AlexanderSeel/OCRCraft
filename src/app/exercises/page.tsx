@@ -1,10 +1,10 @@
 import { OverviewLayout } from "@/components/overview-layout";
 import Link from "next/link";
-import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
 import { MuscleMap } from "@/components/body/muscle-map";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import { ExerciseFilterPopover } from "@/components/exercises/exercise-filter-popover";
+import { ExerciseImagePreview } from "@/components/exercises/exercise-image-preview";
 import { expandBodyRegionIds } from "@/domain/body-regions";
 import {
   exerciseCategoryLabels,
@@ -205,15 +205,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             >
               {exercise.imageUrl ? (
                 <div className="exercise-card-image relative w-full overflow-hidden bg-[var(--surface-subtle)]">
-                  <Image
-                    alt={`Übungsillustration: ${exercise.name}`}
-                    className="object-contain"
-                    fill
-                    loading={index === 0 ? "eager" : "lazy"}
-                    sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
-                    src={exercise.imageUrl}
-                    unoptimized
-                  />
+                  <ExerciseImagePreview alt={`Übungsillustration: ${exercise.name}`} key={exercise.imageUrl} priority={index === 0} src={exercise.imageUrl} />
                   {exercise.imageReviewStatus === "pending" ? (
                     <span className="absolute left-3 top-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]/95 px-2.5 py-1 text-xs font-bold text-[var(--foreground)] shadow-sm">
                       KI-Bild · noch zu prüfen

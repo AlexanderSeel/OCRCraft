@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Keine Übungsillustration verfügbar</title>
+  <desc id="desc">Neutrale Platzhaltergrafik für eine Übung ohne erreichbare Bildquelle</desc>
+  <rect width="640" height="420" rx="28" fill="#20282d"/>
+  <circle cx="320" cy="150" r="52" fill="#b7c1c6"/>
+  <path d="M215 335c8-78 49-119 105-119s97 41 105 119" fill="#b7c1c6"/>
+  <path d="M180 337h280" stroke="#d7ff3f" stroke-width="10" stroke-linecap="round"/>
+  <text x="320" y="390" fill="#eef2f3" font-family="Arial,sans-serif" font-size="22" text-anchor="middle">Bildquelle nicht erreichbar</text>
+</svg>
