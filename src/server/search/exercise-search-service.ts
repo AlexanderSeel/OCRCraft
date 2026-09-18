@@ -8,6 +8,7 @@ import {
 } from "@/server/exercises/exercise-repository";
 import { runBm25ExerciseSearch, type SearchRankingWeights } from "./exercise-search-core";
 import type { SearchLocale } from "./exercise-search-documents";
+import { getActiveSearchProfile } from "./search-profile-repository";
 
 export interface ExerciseSearchOptions {
   readonly query?: string;
@@ -61,6 +62,7 @@ export async function searchExercises({
   }
 
   await ensureDatabaseReady();
+  const configuredWeights = rankingWeights ?? await getActiveSearchProfile();
 
   try {
     const result = await withDuckDbConnection(async (connection) => {
@@ -77,7 +79,7 @@ export async function searchExercises({
         locale,
         limit: safeLimit,
         offset,
-        rankingWeights: rankingWeights ?? environmentRankingWeights(),
+        rankingWeights: configuredWeights ?? environmentRankingWeights(),
       });
     });
 

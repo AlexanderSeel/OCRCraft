@@ -61,9 +61,9 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Suche und Planung
 
-- [ ] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten (Ranking-Core unterstützt Exact/Prefix/Alias-Gewichte per Suchoption und `OCRCRAFT_SEARCH_WEIGHT_*`; persistente Admin-Profile bleiben offen).
+- [x] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten: Exact/Prefix/Alias-Gewichte sind als persistente Admin-Suchprofile verfügbar und werden beim Übungskatalog verwendet; Umgebungsvariablen bleiben als Fallback erhalten.
 - [x] Autocomplete aus Übungs-, Trainingsziel-, Equipment-, Tag-, Bewegungsmuster- und Körperregionsdaten ergänzen.
-- [ ] Suchprofile und Feldgewichte konfigurierbar machen.
+- [x] Suchprofile und Feldgewichte konfigurierbar machen.
 - [ ] Favoriten und „zuletzt verwendet“ ergänzen.
 - [x] Authentifizierte DE/EN-FTS-Rebuild-Aktionen bereitstellen.
 - [ ] Partner-Workout und weitere offene Formatregeln ergänzen.
