@@ -95,6 +95,13 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           >
             ← Trainings
           </Link>
+          <Link
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            href={`/training/${session.id}/trainer`}
+            target="_blank"
+          >
+            Readonly teilen
+          </Link>
         </div>
       }
     >

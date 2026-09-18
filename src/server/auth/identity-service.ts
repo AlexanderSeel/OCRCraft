@@ -1,6 +1,6 @@
 import "server-only";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { z } from "zod";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
@@ -76,7 +76,10 @@ async function resolveAssertedActorEmail(): Promise<{ readonly email: string } |
   try {
     const requestHeaders = await headers();
     const assertion = verifyActorAssertion(requestHeaders.get(headerName) ?? "", secret);
-    return assertion ? { email: assertion.email } : null;
+    if (assertion) return { email: assertion.email };
+    const session = (await cookies()).get("ocrcraft-actor")?.value;
+    const cookieAssertion = verifyActorAssertion(session ?? "", secret);
+    return cookieAssertion ? { email: cookieAssertion.email } : null;
   } catch {
     return null;
   }
@@ -112,6 +115,16 @@ export async function createAppUser(input: { readonly email: string; readonly di
       { email },
     );
     return toUser(reader.getRows()[0]);
+  });
+}
+
+export async function updateAppUser(input: { readonly id: string; readonly role: UserRole; readonly active: boolean }): Promise<void> {
+  const actor = await requireSuperAdmin();
+  const id = z.string().uuid().parse(input.id);
+  const role = userRoleSchema.parse(input.role);
+  if (id === actor.id && (!input.active || role !== "super_admin")) throw new Error("Cannot demote or deactivate the current super-admin.");
+  await withDuckDbConnection(async (connection) => {
+    await connection.run("UPDATE app_users SET role=$role,active=$active,updated_at=current_timestamp WHERE id=$id::UUID", { id, role, active: input.active });
   });
 }
 
