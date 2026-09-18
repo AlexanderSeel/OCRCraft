@@ -4,6 +4,10 @@ import { Disclosure } from "@/components/ui/disclosure";
 import type { ClubGroup } from "@/server/groups/group-repository";
 import { listClubGroups } from "@/server/groups/group-repository";
 import {
+  listTrainingEquipmentOptions,
+  type TrainingEquipmentOption,
+} from "@/server/training/training-draft-repository";
+import {
   createClubGroupAction,
   setClubGroupArchivedAction,
   updateClubGroupAction,
@@ -18,13 +22,16 @@ interface PageProps {
 export default async function GroupsPage({ searchParams }: PageProps) {
   const query = await searchParams;
   const archivedView = query.archived === "1";
-  const allGroups = await listClubGroups(archivedView);
+  const [allGroups, equipmentOptions] = await Promise.all([
+    listClubGroups(archivedView),
+    listTrainingEquipmentOptions("de"),
+  ]);
   const groups = archivedView ? allGroups.filter((group) => group.archived) : allGroups;
 
   return (
     <AppShell
       title={archivedView ? "Gruppen · Archiv" : "Gruppen"}
-      subtitle="Trainingsgruppen mit Alter, Teilnehmerzahl, Standarddauer und Risikorahmen verwalten."
+      subtitle="Trainingsgruppen mit Alter, Teilnehmerzahl, Standarddauer, Trainingsort, Materialbestand und Risikorahmen verwalten."
       actions={
         <Link
           className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
@@ -49,7 +56,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         {!archivedView ? (
           <Disclosure className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]" summaryClassName="px-5 py-4 font-black" summary="+ Neue Gruppe anlegen">
             <form action={createClubGroupAction} className="border-t border-[var(--border)] p-5">
-              <GroupFields />
+              <GroupFields equipmentOptions={equipmentOptions} />
               <div className="mt-4 flex justify-end">
                 <button
                   className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
@@ -84,6 +91,8 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                 <GroupMetric label="Alter" value={ageLabel(group)} />
                 <GroupMetric label="Teilnehmer" value={String(group.defaultParticipantCount)} />
                 <GroupMetric label="Dauer" value={group.defaultDurationMinutes ? `${group.defaultDurationMinutes} Min.` : "–"} />
+                <GroupMetric label="Ort" value={locationLabel(group.defaultLocation)} />
+                <GroupMetric label="Equipment" value={group.defaultEquipment.length ? `${group.defaultEquipment.length} Overrides` : "Global"} />
                 <GroupMetric label="Max. Risiko" value={riskLabel(group.maximumRiskLevel)} />
               </dl>
 
@@ -96,7 +105,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                   <Disclosure className="min-w-[280px] flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]" summaryClassName="px-4 py-3 text-sm font-black" summary="Gruppe bearbeiten">
                     <form action={updateClubGroupAction} className="border-t border-[var(--border)] p-4">
                       <input name="id" type="hidden" value={group.id} />
-                      <GroupFields group={group} />
+                      <GroupFields equipmentOptions={equipmentOptions} group={group} />
                       <div className="mt-4 flex justify-end">
                         <button
                           className="rounded-lg bg-[var(--control-strong)] px-4 py-2 text-xs font-black text-[var(--control-strong-foreground)]"
@@ -141,8 +150,16 @@ export default async function GroupsPage({ searchParams }: PageProps) {
   );
 }
 
-function GroupFields({ group }: { readonly group?: ClubGroup }) {
+function GroupFields({
+  group,
+  equipmentOptions,
+}: {
+  readonly group?: ClubGroup;
+  readonly equipmentOptions: readonly TrainingEquipmentOption[];
+}) {
+  const equipmentById = new Map(group?.defaultEquipment.map((item) => [item.equipmentId, item.quantityAvailable]) ?? []);
   return (
+    <>
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <label className="grid gap-1.5 text-sm font-bold md:col-span-2">
         Name
@@ -224,7 +241,19 @@ function GroupFields({ group }: { readonly group?: ClubGroup }) {
           type="number"
         />
       </label>
-      <label className="grid gap-1.5 text-sm font-bold md:col-span-2">
+      <label className="grid gap-1.5 text-sm font-bold">
+        Standard-Trainingsort
+        <select
+          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          defaultValue={group?.defaultLocation ?? "mixed"}
+          name="defaultLocation"
+        >
+          <option value="mixed">Flexibel</option>
+          <option value="indoor">Indoor</option>
+          <option value="outdoor">Outdoor</option>
+        </select>
+      </label>
+      <label className="grid gap-1.5 text-sm font-bold">
         Maximales Risikoniveau
         <select
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
@@ -238,6 +267,32 @@ function GroupFields({ group }: { readonly group?: ClubGroup }) {
         </select>
       </label>
     </div>
+
+    <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={Boolean(group?.defaultEquipment.length)}>
+      <summary className="cursor-pointer text-sm font-black">
+        Standard-Equipment für Quick Create ({group?.defaultEquipment.length ?? 0} Overrides)
+      </summary>
+      <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+        Leeres Feld nutzt den globalen OCRCraft-Bestand. 0 bedeutet für diese Gruppe bewusst nicht verfügbar; positive Werte überschreiben den globalen Bestand.
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {equipmentOptions.map((option) => (
+          <label className="grid gap-1 text-xs font-bold" key={option.id}>
+            {option.name}
+            <input
+              className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal"
+              defaultValue={equipmentById.get(option.id) ?? ""}
+              max={500}
+              min={0}
+              name={`equipmentQty:${option.id}`}
+              placeholder={option.quantityAvailable == null ? "Global: unbekannt" : `Global: ${option.quantityAvailable}`}
+              type="number"
+            />
+          </label>
+        ))}
+      </div>
+    </details>
+    </>
   );
 }
 
@@ -262,6 +317,12 @@ function ageLabel(group: ClubGroup): string {
   if (group.minAge != null) return `ab ${group.minAge}`;
   if (group.maxAge != null) return `bis ${group.maxAge}`;
   return "offen";
+}
+
+function locationLabel(location: ClubGroup["defaultLocation"]): string {
+  if (location === "indoor") return "Indoor";
+  if (location === "outdoor") return "Outdoor";
+  return "Flexibel";
 }
 
 function riskLabel(risk: ClubGroup["maximumRiskLevel"]): string {
