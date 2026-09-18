@@ -27,6 +27,7 @@ import {
 } from "./exercise-autocomplete-picker";
 import { MainPartProgrammingEditor } from "./main-part-programming-editor";
 import { Disclosure } from "@/components/ui/disclosure";
+import { useToast } from "@/components/ui/toast";
 import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
 import {
@@ -140,6 +141,7 @@ export function TrainingBuilderPanel({
   sourceTrainingOptions = [],
   initialState,
 }: TrainingBuilderPanelProps) {
+  const { pushToast, updateToast } = useToast();
   const [builderMode, setBuilderMode] = useState<QuickCreateBuilderMode>(initialState?.builderMode ?? "local");
   const [audience, setAudience] = useState(initialState?.audience ?? "mixed");
   const [ageRange, setAgeRange] = useState(
@@ -299,14 +301,18 @@ export function TrainingBuilderPanel({
   }
 
   async function generate() {
+    const toastId = pushToast({ tone: "loading", title: "Training wird geplant" });
     setPending(true);
     setError(null);
     setSavedId(null);
     try {
       setDraft(await requestTrainingDraft(input()));
+      updateToast(toastId, { tone: "success", title: "Trainingsentwurf bereit", message: "Planung und Sicherheitsprüfung sind abgeschlossen." });
     } catch (cause) {
       setDraft(null);
-      setError(cause instanceof Error ? cause.message : "Trainingsentwurf konnte nicht erstellt werden.");
+      const message = cause instanceof Error ? cause.message : "Trainingsentwurf konnte nicht erstellt werden.";
+      setError(message);
+      updateToast(toastId, { tone: "error", title: "Planung fehlgeschlagen", message });
     } finally {
       setPending(false);
     }
@@ -314,13 +320,17 @@ export function TrainingBuilderPanel({
 
   async function regeneratePhase(phase: TrainingPhaseKind) {
     if (!draft) return;
+    const toastId = pushToast({ tone: "loading", title: "Phase wird neu geplant" });
     setRegeneratingPhase(phase);
     setError(null);
     setSavedId(null);
     try {
       setDraft(await regenerateTrainingDraftPhase(input(), draft, phase));
+      updateToast(toastId, { tone: "success", title: "Phase aktualisiert" });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Phase konnte nicht neu geplant werden.");
+      const message = cause instanceof Error ? cause.message : "Phase konnte nicht neu geplant werden.";
+      setError(message);
+      updateToast(toastId, { tone: "error", title: "Neuplanung fehlgeschlagen", message });
     } finally {
       setRegeneratingPhase(null);
     }
@@ -328,13 +338,17 @@ export function TrainingBuilderPanel({
 
   async function replaceExercise(exerciseId: string, mode: DraftAlternativeMode) {
     if (!draft) return;
+    const toastId = pushToast({ tone: "loading", title: "Alternative wird gesucht" });
     setReplacingExerciseId(exerciseId);
     setError(null);
     setSavedId(null);
     try {
       setDraft(await replaceTrainingDraftExercise(input(), draft, exerciseId, mode));
+      updateToast(toastId, { tone: "success", title: "Übung ersetzt" });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Keine passende Übungsalternative gefunden.");
+      const message = cause instanceof Error ? cause.message : "Keine passende Übungsalternative gefunden.";
+      setError(message);
+      updateToast(toastId, { tone: "error", title: "Keine Alternative angewendet", message });
     } finally {
       setReplacingExerciseId(null);
     }
@@ -342,14 +356,18 @@ export function TrainingBuilderPanel({
 
   async function save() {
     if (!draft) return;
+    const toastId = pushToast({ tone: "loading", title: "Training wird gespeichert" });
     setPending(true);
     setError(null);
     try {
       const result = await persistTrainingDraft(input(), title, draft);
       setDraft(result.draft);
       setSavedId(result.id);
+      updateToast(toastId, { tone: "success", title: "Training gespeichert" });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Training konnte nicht gespeichert werden.");
+      const message = cause instanceof Error ? cause.message : "Training konnte nicht gespeichert werden.";
+      setError(message);
+      updateToast(toastId, { tone: "error", title: "Speichern fehlgeschlagen", message });
     } finally {
       setPending(false);
     }

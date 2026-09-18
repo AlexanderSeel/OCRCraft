@@ -22,6 +22,7 @@ import {
 } from "./quick-create-draft-client";
 import { TrainingDraftPreview } from "./training-draft-preview";
 import { Disclosure } from "@/components/ui/disclosure";
+import { useToast } from "@/components/ui/toast";
 
 const groupOptions = [
   ["kids", "Kids", "Spielerisch, altersgerecht, klare Sicherheitsregeln"],
@@ -146,6 +147,7 @@ export function QuickCreateWizard({
   obstacleOptions = [],
   groupPresets = [],
 }: QuickCreateWizardProps) {
+  const { pushToast, updateToast } = useToast();
   const [step, setStep] = useState(1);
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [groupType, setGroupType] = useState(initialTemplate?.audience ?? "mixed");
@@ -315,6 +317,11 @@ export function QuickCreateWizard({
   }
 
   async function generateDraft() {
+    const toastId = pushToast({
+      tone: "loading",
+      title: "Training wird geplant",
+      message: "OCRCraft stellt den Entwurf zusammen und prüft die Sicherheitsregeln.",
+    });
     setGenerating(true);
     setGenerationError(null);
     setPersistenceError(null);
@@ -322,9 +329,16 @@ export function QuickCreateWizard({
     try {
       const nextDraft = await requestTrainingDraft(currentDraftInput());
       setDraft(nextDraft);
+      updateToast(toastId, {
+        tone: "success",
+        title: "Trainingsentwurf bereit",
+        message: "Der Entwurf wurde erstellt und kann jetzt geprüft oder gespeichert werden.",
+      });
     } catch (error) {
       setDraft(null);
-      setGenerationError(error instanceof Error ? error.message : "Trainingsentwurf konnte nicht erstellt werden.");
+      const message = error instanceof Error ? error.message : "Trainingsentwurf konnte nicht erstellt werden.";
+      setGenerationError(message);
+      updateToast(toastId, { tone: "error", title: "Planung fehlgeschlagen", message });
     } finally {
       setGenerating(false);
     }
@@ -332,14 +346,22 @@ export function QuickCreateWizard({
 
   async function saveDraft() {
     if (!draft) return;
+    const toastId = pushToast({ tone: "loading", title: "Training wird gespeichert" });
     setPersisting(true);
     setPersistenceError(null);
     try {
       const result = await persistTrainingDraft(currentDraftInput(), sessionTitle);
       setDraft(result.draft);
       setPersistedId(result.id);
+      updateToast(toastId, {
+        tone: "success",
+        title: "Training gespeichert",
+        message: "Die geprüfte Einheit wurde im Trainingskatalog gespeichert.",
+      });
     } catch (error) {
-      setPersistenceError(error instanceof Error ? error.message : "Trainingsentwurf konnte nicht gespeichert werden.");
+      const message = error instanceof Error ? error.message : "Trainingsentwurf konnte nicht gespeichert werden.";
+      setPersistenceError(message);
+      updateToast(toastId, { tone: "error", title: "Speichern fehlgeschlagen", message });
     } finally {
       setPersisting(false);
     }
