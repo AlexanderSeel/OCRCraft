@@ -187,6 +187,15 @@ label:not(:has(.required-field-marker)):has(textarea:required)::after {
   color: var(--danger);
   content: " *";
   font-weight: 900;
+  position: absolute;
+  right: 0.25rem;
+  top: 0;
+}
+
+label:has(input:required),
+label:has(select:required),
+label:has(textarea:required) {
+  position: relative;
 }
 
 input:user-invalid,
