@@ -90,9 +90,9 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Quellen und Vorlagen
 
-- [ ] VIBSS-inspirierte Quellen-/Provenienzstruktur ergänzen.
-- [ ] 20–40 unabhängige Trainingsvorlagen mit Quellenreferenz erstellen.
-- [ ] Erwachsenen- und Kids/Youth-Vorlagen für Ausdauer, Koordination, Kraft, Mobility, Teamwork und Parcours ergänzen.
+- [x] VIBSS-inspirierte Quellen-/Provenienzstruktur für Trainingsvorlagen ergänzen: Zielgruppe/Alter, Intention/Schwerpunkt, Materialhinweise, Ort und Phasenstruktur werden versioniert geführt; die externe Referenz ist ausdrücklich nur Taxonomie-Inspiration.
+- [x] 24 unabhängige, versionierte OCRCraft-Trainingsvorlagen mit Quellen-/Provenienzreferenz bereitstellen und direkt in Quick Create wiederverwenden; gespeicherte Trainings behalten Template-Key und Provenienz.
+- [x] Erwachsenen-, Kids- und Youth-Vorlagen für Ausdauer, Koordination, Kraft, Mobility, Teamwork und Parcours ergänzen; jede der sechs Kategorien ist in allen drei Zielgruppen vertreten.
 - [ ] suche auch nach Spielen für Kinder und Erwachsene die als Training genutzt werden können, erstelle hierfür eine eigene Bereich und ermögliche alles wie bei einer Übung, aber als Typ Spiel, es wird auch im Trainingsengine mit berücksichtig
 - [ ] Ermögliche auch Teamwettkämpfe z.B. 3 Personen (3 Komplexe Kraft, Schnelligkeit, Technik) jeder aus dem Team wählt einen Komplex mit Übungen, zum Abschluss machen alle 3 noch zusammen Übungen, dies kann auch mit zusätzlichen Runden laufen kombiniert werden. Erstelle weitere solcher Wettkampfstile oder suche nach Vorlagen
 - [ ] Keine externen Texte/Bilder ohne passende Lizenz übernehmen.

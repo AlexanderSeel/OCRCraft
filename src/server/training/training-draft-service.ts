@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { TrainingDraft, TrainingDraftExerciseCandidate } from "@/domain/training/draft";
+import { getTrainingTemplateByKey } from "@/domain/training/training-template-catalog";
 import { validateTrainingSession } from "@/domain/training/validation";
 import { composeAiTrainingDraft, composeReviewedAiTrainingDraft } from "./ai-training-composer";
 import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
@@ -126,13 +127,32 @@ export async function createDeterministicTrainingDraft(request: TrainingDraftReq
 }
 
 export async function createAndPersistDeterministicTrainingDraft(input: TrainingDraftPersistenceRequest): Promise<{ readonly id: string; readonly draft: TrainingDraft }> {
+  const templateDefinition = input.request.templateKey ? getTrainingTemplateByKey(input.request.templateKey) : undefined;
+  if (input.request.templateKey && !templateDefinition) {
+    throw new Error("Die gewählte Trainingsvorlage ist nicht mehr im versionierten OCRCraft-Katalog vorhanden.");
+  }
+
   const draft = await createDeterministicTrainingDraft(input.request);
+  const generationRequest = templateDefinition
+    ? {
+        ...input.request,
+        templateProvenance: {
+          key: templateDefinition.key,
+          titleDe: templateDefinition.titleDe,
+          focus: templateDefinition.focus,
+          provenance: templateDefinition.provenance,
+        },
+      }
+    : input.request;
   const id = await persistTrainingDraft(draft, {
     title: input.title,
     locale: input.request.locale,
     groupId: input.groupId,
-    source: "manual",
-    generation: { builderMode: "local", request: input.request, trainerReviewed: true },
+    source: templateDefinition ? "template" : "manual",
+    notes: templateDefinition
+      ? `OCRCraft Trainingsvorlage · ${templateDefinition.key} · Strukturreferenz: ${templateDefinition.provenance.referenceUrl}`
+      : undefined,
+    generation: { builderMode: "local", request: generationRequest, trainerReviewed: true },
   });
   return { id, draft };
 }

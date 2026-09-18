@@ -35,6 +35,12 @@ export default async function TrainingPage({ searchParams }: PageProps) {
         <div className="flex flex-wrap gap-2">
           <Link
             className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            href="/training/templates"
+          >
+            Vorlagen
+          </Link>
+          <Link
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
             href="/training/builder"
           >
             Training Builder
@@ -50,7 +56,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
     >
       <div className="space-y-6">
         {!archived ? (
-          <section className="grid gap-3 lg:grid-cols-2">
+          <section className="grid gap-3 lg:grid-cols-3">
             <Link
               className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] transition hover:border-[var(--accent-strong)] hover:bg-[var(--surface-subtle)]"
               href="/training/builder"
@@ -59,6 +65,16 @@ export default async function TrainingPage({ searchParams }: PageProps) {
               <h2 className="mt-1 text-lg font-black">Training Builder</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                 Wähle Ziele, Übungstypen, Muskeln, Gegenmuskeln, Formate, Ort, Intensität und Equipment. Plane lokal deterministisch oder lasse aus demselben freigegebenen Pool einen AI-Vorschlag erstellen.
+              </p>
+            </Link>
+            <Link
+              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] transition hover:border-[var(--accent-strong)] hover:bg-[var(--surface-subtle)]"
+              href="/training/templates"
+            >
+              <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Wiederverwendbare Planung</div>
+              <h2 className="mt-1 text-lg font-black">Trainingsvorlagen</h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                24 kuratierte OCRCraft-Startvorlagen für Erwachsene, Kids und Youth mit Ausdauer, Koordination, Kraft, Mobility, Teamwork und Parcours.
               </p>
             </Link>
             <Link

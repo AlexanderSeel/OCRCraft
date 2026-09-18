@@ -11,7 +11,7 @@ import { getOptionalCurrentActor } from "@/server/auth/identity-service";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type TrainingSessionStatus = "draft" | "ready" | "completed" | "archived";
-export type PersistedTrainingSource = "manual" | "ai";
+export type PersistedTrainingSource = "manual" | "ai" | "template";
 
 export interface TrainingGenerationContext {
   readonly builderMode: "local" | "ai";

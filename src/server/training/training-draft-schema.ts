@@ -51,6 +51,7 @@ export const mainPartProgrammingSchema = z.object({
 });
 
 export const trainingDraftRequestSchema = z.object({
+  templateKey: z.string().regex(/^[a-z0-9][a-z0-9-]{2,79}$/).optional(),
   groupId: z.string().uuid().optional(),
   audience: z.enum(AUDIENCES),
   participantCount: z.number().int().min(1).max(200),
