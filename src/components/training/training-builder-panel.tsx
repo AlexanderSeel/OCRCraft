@@ -60,6 +60,7 @@ export interface TrainingBuilderSourceOption {
 export interface TrainingBuilderInitialState {
   readonly sourceTrainingId: string;
   readonly sourceTitle: string;
+  readonly groupId?: string;
   readonly builderMode: QuickCreateBuilderMode;
   readonly audience: string;
   readonly minAge?: number;
@@ -235,6 +236,7 @@ export function TrainingBuilderPanel({
 
   function input(): QuickCreateDraftClientInput {
     return {
+      groupId: initialState?.groupId,
       groupType: audience,
       ageRange,
       participantCount: participants,
