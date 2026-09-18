@@ -49,6 +49,13 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ## P1 – Trainer-Workflow
 
+### Architektur- und UI-Review 2026-09
+
+- [ ] Gemeinsame Kataloglisten vollständig auf `OverviewLayout` migrieren: Games, Hindernisse, Medien, Gruppen, AI-Entwürfe und Outdoor erhalten dieselbe Ansichtsauswahl, Filter-/Suchzustand, Ergebniszähler und Pagination wie Übungen.
+- [ ] Listen- und Detaildatenquellen auf statische Legacy-Platzhalter prüfen; insbesondere Dashboard-Kennzahlen und Vorschaukarten dürfen ausschließlich aus Repository-/Service-Daten entstehen.
+- [ ] Quick-Create- und Builder-E2E um Vorlagenauswahl, leeren Trainingsbestand und Template-Provenienz ergänzen.
+- [ ] Übrig gebliebene Legacy-UI-Texte und feste Katalogzähler in CI als Review-Gate erkennen.
+
 ### Übungskatalog
 
 - [x] Katalog mit einer kuratierten Lücken-Kohorte erweitern: acht zusätzliche Core-, Mobilitäts-, Koordinations- und OCR-Übergangsdrills schließen bodennahe Stabilitäts-, Sprunggelenk-/Hüft-/BWS-Mobilitäts- und kontrollierte Richtungswechsel-Lücken.
@@ -98,7 +105,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 ### Quellen und Vorlagen
 
 - [x] VIBSS-inspirierte Quellen-/Provenienzstruktur für Trainingsvorlagen ergänzen: Zielgruppe/Alter, Intention/Schwerpunkt, Materialhinweise, Ort und Phasenstruktur werden versioniert geführt; die externe Referenz ist ausdrücklich nur Taxonomie-Inspiration.
-- [x] 24 unabhängige, versionierte OCRCraft-Trainingsvorlagen mit Quellen-/Provenienzreferenz bereitstellen und direkt in Quick Create wiederverwenden; gespeicherte Trainings behalten Template-Key und Provenienz.
+- [x] Versionierte OCRCraft-Trainingsvorlagen mit Quellen-/Provenienzreferenz bereitstellen; gespeicherte Trainings behalten Template-Key und Provenienz. (Umgesetzt; Feature in README dokumentiert.)
 - [x] Erwachsenen-, Kids- und Youth-Vorlagen für Ausdauer, Koordination, Kraft, Mobility, Teamwork und Parcours ergänzen; jede der sechs Kategorien ist in allen drei Zielgruppen vertreten.
 - [x] Spiele als vollwertigen Katalogtyp `game` ausbauen: eigener Spielebereich, Anlage über denselben vollständigen Übungseditor, 12 zweisprachige OCRCraft-Eigenspiele für Kids/Youth/Erwachsene sowie direkte Berücksichtigung durch lokale/AI-Trainingsplanung über die bestehende Kandidaten- und Sicherheitslogik.
 - [x] Teamwettkämpfe als reguläres Trainingsformat integrieren: 3er-Spezialisten mit Kraft/Schnelligkeit/Technik und gemeinsamem Finisher sowie 3er-Rotation, 4er Relay Gauntlet, 2er Switch-Duell und 3er Checkpoint-Endurance; Presets setzen Teamgröße, Komplexe und Runden, bleiben im Builder editierbar und laufen durch dieselben Alters-/Risiko-/Equipment-/Sicherheitsregeln.

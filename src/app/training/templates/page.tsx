@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { OverviewLayout } from "@/components/overview-layout";
 import {
   TRAINING_TEMPLATES,
   TRAINING_TEMPLATE_FOCUS_KEYS,
@@ -45,7 +46,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
         </div>
       )}
     >
-      <div className="space-y-6">
+      <OverviewLayout storageKey="ocrcraft-template-view"><div className="space-y-6">
         {params.saved === "archived" ? (
           <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">
             Vereinsvorlage wurde archiviert.
@@ -136,7 +137,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
             <h2 className="text-lg font-black">{templates.length} Vorlagen</h2>
             <p className="mt-1 text-sm text-[var(--muted)]">Jede Vorlage definiert Planungsparameter; konkrete Übungen kommen erst beim Erzeugen aus dem freigegebenen Katalog.</p>
           </div>
-          <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs font-black">24 versionierte Startvorlagen</span>
+          <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs font-black">{templates.length} versionierte Startvorlagen</span>
         </section>
 
         <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
@@ -175,7 +176,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
             </article>
           ))}
         </section>
-      </div>
+      </div></OverviewLayout>
     </AppShell>
   );
 }

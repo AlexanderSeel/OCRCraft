@@ -31,6 +31,9 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Bet
 - Zirkel, Rig & Run, AMRAP, EMOM, Tabata, Technik, Relay und Run + Exercise
 - Teamgröße, Rotationsgruppen, Stationskapazität, Equipmentbestand und Hindernisbestand
 - Level-Auswahl, Übung ersetzen, Alternativen, Reihenfolge ändern, Duplicate und Combine
+- versionierte OCRCraft-Trainingsvorlagen mit Zielgruppen-/Schwerpunktfiltern und Provenienz
+- Vorlagenauswahl direkt im Quick-Create-Wizard; Vorlagen setzen editierbare Startwerte und bleiben beim Speichern nachvollziehbar
+- datengetriebene Trainingsübersicht mit aktuellen Einheiten, Empty State und realen Status-/Dauermetriken statt Demo-Training
 
 ### Daten und Medien
 
@@ -76,6 +79,7 @@ Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit e
 - große Muskel- und Facettenfilter öffnen als zentrierte Dialoge und halten die Sidepanels kompakt
 - zentrale Disclosure-Komponente für Filter, Editoren, Builder und Adminflächen
 - sichtbare Fokuszustände und Tastaturbedienung für zentrale Auswahl- und Formularpfade
+- gemeinsames Ansichts-Pattern für Training und Vorlagen mit Liste/Klein/Mittel/Groß/Detail und persistierter Auswahl
 
 ## Voraussetzungen
 

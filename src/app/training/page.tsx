@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { OverviewLayout } from "@/components/overview-layout";
 import { listTrainingSessions } from "@/server/training/training-session-repository";
 
 export const dynamic = "force-dynamic";
@@ -54,7 +55,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
         </div>
       )}
     >
-      <div className="space-y-6">
+      <OverviewLayout storageKey="ocrcraft-training-view"><div className="space-y-6">
         {!archived ? (
           <section className="grid gap-3 lg:grid-cols-3">
             <Link
@@ -200,7 +201,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
             ) : null}
           </section>
         )}
-      </div>
+      </div></OverviewLayout>
     </AppShell>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { QuickCreateWizard } from "@/components/training/quick-create-wizard";
 import { getTrainingTemplateByKey } from "@/domain/training/training-template-catalog";
+import { TRAINING_TEMPLATES } from "@/domain/training/training-template-catalog";
 import { listClubGroups } from "@/server/groups/group-repository";
 import {
   listTrainingEquipmentOptions,
@@ -43,6 +44,20 @@ export default async function QuickCreatePage({ searchParams }: PageProps) {
       )}
     >
       <QuickCreateWizard
+        templatePresets={TRAINING_TEMPLATES.map((template) => ({
+          key: template.key,
+          title: template.titleDe,
+          audience: template.audience,
+          minAge: template.minAge,
+          maxAge: template.maxAge,
+          participantCount: template.defaultParticipants,
+          durationMinutes: template.durationMinutes,
+          goals: template.goals,
+          bodyRegions: template.bodyRegions,
+          formats: template.formats,
+          location: template.location,
+          intensity: template.intensity,
+        }))}
         initialTemplate={initialTemplate ? {
           key: initialTemplate.key,
           title: initialTemplate.titleDe,

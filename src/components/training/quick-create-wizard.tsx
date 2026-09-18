@@ -107,6 +107,7 @@ export interface QuickCreateGroupPreset {
 
 interface QuickCreateWizardProps {
   readonly initialTemplate?: QuickCreateTemplatePreset;
+  readonly templatePresets?: readonly QuickCreateTemplatePreset[];
   readonly equipmentOptions: readonly EquipmentAvailabilityOption[];
   readonly obstacleOptions?: readonly TrainingObstacleOption[];
   readonly groupPresets?: readonly QuickCreateGroupPreset[];
@@ -143,6 +144,7 @@ function ageRangeForPreset(preset: QuickCreateGroupPreset): string {
 
 export function QuickCreateWizard({
   initialTemplate,
+  templatePresets = [],
   equipmentOptions,
   obstacleOptions = [],
   groupPresets = [],
@@ -150,6 +152,7 @@ export function QuickCreateWizard({
   const { pushToast, updateToast } = useToast();
   const [step, setStep] = useState(1);
   const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState(initialTemplate?.key ?? "");
   const [groupType, setGroupType] = useState(initialTemplate?.audience ?? "mixed");
   const [ageRange, setAgeRange] = useState(() => initialTemplate ? ageRangeForTemplate(initialTemplate) : "16+");
   const [participantCount, setParticipantCount] = useState(initialTemplate?.participantCount ?? 16);
@@ -183,6 +186,7 @@ export function QuickCreateWizard({
 
   const selectedGroup = groupOptions.find(([id]) => id === groupType);
   const selectedPreset = groupPresets.find((preset) => preset.id === selectedGroupId);
+  const selectedTemplate = templatePresets.find((template) => template.key === selectedTemplateKey);
   const selectedLocation = locationOptions.find(([id]) => id === location);
   const selectedObstacleNames = useMemo(
     () => obstacleOptions.filter((option) => availableObstacleExerciseIds.includes(option.id)).map((option) => option.name),
@@ -245,6 +249,26 @@ export function QuickCreateWizard({
     invalidateDraft();
   }
 
+  function applyTemplate(key: string) {
+    setSelectedTemplateKey(key);
+    const template = templatePresets.find((candidate) => candidate.key === key);
+    if (!template) {
+      invalidateDraft();
+      return;
+    }
+    setGroupType(template.audience);
+    setAgeRange(ageRangeForTemplate(template));
+    setParticipantCount(template.participantCount);
+    setDuration(template.durationMinutes);
+    setGoals(template.goals);
+    setBodyRegions(template.bodyRegions);
+    setFormats(template.formats);
+    setLocation(template.location);
+    setIntensity(template.intensity);
+    setSessionTitle(template.title);
+    invalidateDraft();
+  }
+
   function toggleFocusRegion(regionId: string) {
     const selecting = !bodyRegions.includes(regionId);
     setBodyRegions(toggleValue(bodyRegions, regionId));
@@ -281,7 +305,7 @@ export function QuickCreateWizard({
     const competitionStyle = getTeamCompetitionStyle(competitionStyleKey);
     const competitionActive = formats.includes("team-competition") && competitionStyle != null;
     return {
-      templateKey: initialTemplate?.key,
+      templateKey: selectedTemplateKey || undefined,
       competitionStyleKey: competitionActive ? competitionStyle.key : undefined,
       groupId: selectedGroupId || undefined,
       groupType,
@@ -399,20 +423,31 @@ export function QuickCreateWizard({
         </header>
 
         <div className="min-h-[500px] p-5 sm:p-6">
-          {initialTemplate ? (
+          {selectedTemplate ? (
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--accent-strong)] bg-[var(--accent-soft)] p-4">
               <div>
                 <div className="text-xs font-black uppercase tracking-[0.1em]">Vorlage geladen</div>
-                <div className="mt-1 font-black">{initialTemplate.title}</div>
+                <div className="mt-1 font-black">{selectedTemplate.title}</div>
                 <p className="mt-1 text-xs opacity-80">Alle Werte bleiben anpassbar; der Template-Key wird beim Speichern als Provenienz erhalten.</p>
               </div>
-              <Link className="rounded-lg border border-current px-3 py-2 text-xs font-black" href="/training/templates">Andere Vorlage</Link>
+              <Link className="rounded-lg border border-current px-3 py-2 text-xs font-black" href="/training/templates">Vorlagenkatalog</Link>
             </div>
           ) : null}
           {step === 1 ? (
             <div>
               <h3 className="text-lg font-black">Für wen und wie lange?</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Diese Angaben steuern Skalierung, Umfang und spätere Vereinsregeln.</p>
+
+              {templatePresets.length > 0 ? (
+                <label className="mt-5 grid gap-2 rounded-xl border border-[var(--accent-strong)] bg-[var(--accent-soft)] p-4 text-sm font-black">
+                  Trainingsvorlage auswählen
+                  <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" value={selectedTemplateKey} onChange={(event) => applyTemplate(event.target.value)}>
+                    <option value="">Ohne Vorlage starten</option>
+                    {templatePresets.map((template) => <option key={template.key} value={template.key}>{template.title} · {ageRangeForTemplate(template)} · {template.durationMinutes} Min.</option>)}
+                  </select>
+                  <span className="text-xs font-normal text-[var(--muted)]">Die Vorlage setzt sichere Startwerte. Alle Angaben bleiben anpassbar.</span>
+                </label>
+              ) : null}
 
               {groupPresets.length > 0 ? (
                 <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
