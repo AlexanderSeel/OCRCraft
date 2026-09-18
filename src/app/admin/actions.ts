@@ -6,9 +6,8 @@ import { z } from "zod";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { createDatabaseBackup } from "@/server/db/backup-service";
 import { recordAuditEvent } from "@/server/db/audit-service";
-import { rebuildSearchIndex } from "@/server/search/search-index-service";
 import { reseedAllDatabaseData } from "@/server/db/reseed-service";
-import { refreshDuplicateReviewTasks, resolveDuplicateTask } from "@/server/exercises/duplicate-review-service";
+import { resolveDuplicateTask } from "@/server/exercises/duplicate-review-service";
 import {
   enrichImportedGymExerciseForOutdoor,
   enrichImportedGymExercisesForOutdoor,
@@ -16,6 +15,8 @@ import {
 import { requireAdmin, requireSuperAdmin } from "@/server/auth/identity-service";
 import { restoreDatabaseBackup } from "@/server/db/restore-service";
 import { aiProviderInstanceIdSchema, aiProviderKindSchema, deleteAiProviderInstance, disconnectAiProviderOAuth, saveAiProviderInstance, type AiCapability } from "@/server/ai/ai-provider-settings-repository";
+import { cancelAppTask, deleteAppTask, enqueueAppTask, retryAppTask } from "@/server/queue/app-task-repository";
+import { runAppTaskQueue } from "@/server/queue/app-task-worker";
 
 const reseedConfirmationSchema = z.literal("OCRCRAFT ZURÜCKSETZEN");
 
@@ -57,10 +58,10 @@ export async function createDatabaseBackupAction(): Promise<void> {
 export async function rebuildSearchIndexesAction(): Promise<void> {
   try {
     const actor = await requireAdmin();
-    await rebuildSearchIndex("de");
-    await rebuildSearchIndex("en");
+    await enqueueAppTask({ type: "search_rebuild", title: "Deutsche und englische Suchindizes aufbauen", requestedBy: actor.id });
+    void runAppTaskQueue();
     await recordAuditEvent({ action: "search.rebuild", entityType: "search_index", actorType: "user", actorId: actor.id, metadata: { locales: ["de", "en"] } });
-    redirect("/admin?tab=database&rebuild=1");
+    redirect("/admin?tab=queue&queued=search");
   } catch {
     redirect("/admin?tab=database&rebuildError=1");
   }
@@ -123,8 +124,30 @@ function revalidateOutdoorVariantPaths(): void {
 }
 
 export async function scanDuplicateExercisesAction(): Promise<void> {
+  const actor = await requireAdmin();
+  await enqueueAppTask({ type: "duplicate_scan", title: "Übungen auf Doppelungen prüfen", requestedBy: actor.id });
+  void runAppTaskQueue();
+  revalidatePath("/admin");
+}
+
+export async function cancelAppTaskAction(formData: FormData): Promise<void> {
   await requireAdmin();
-  await refreshDuplicateReviewTasks();
+  const id = String(formData.get("id") ?? "");
+  if (id) await cancelAppTask(id);
+  revalidatePath("/admin");
+}
+
+export async function retryAppTaskAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (id) { await retryAppTask(id); void runAppTaskQueue(); }
+  revalidatePath("/admin");
+}
+
+export async function deleteAppTaskAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (id) await deleteAppTask(id);
   revalidatePath("/admin");
 }
 

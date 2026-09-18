@@ -30,6 +30,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Produktions-Deployment und Betriebsdokumentation ergänzen.
 - [x] Benutzer und Rollen persistieren; externe Anmeldung kann per Actor-Konfiguration erzwungen werden.
 - [x] Audit-Events für zentrale Admin-/Datenbankaktionen persistieren.
+- [x] Persistente Hintergrund-Task-Queue mit globalem Statusindikator, Admin-Steuerung, Abbruch und Wiederholung für blockierende Prüf- und Indexaufgaben.
 
 ### Datenbank und portable Daten
 

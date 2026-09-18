@@ -11,12 +11,13 @@ import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { listRecentAuditEvents } from "@/server/db/audit-service";
 import { listDatabaseBackups } from "@/server/db/backup-service";
 import { listAiProviderSettings } from "@/server/ai/ai-provider-settings-repository";
-import { createDatabaseBackupAction, deleteAiProviderSettingsAction, disconnectAiProviderOAuthAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, saveAiProviderSettingsAction, scanDuplicateExercisesAction } from "./actions";
+import { cancelAppTaskAction, createDatabaseBackupAction, deleteAiProviderSettingsAction, disconnectAiProviderOAuthAction, deleteAppTaskAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, retryAppTaskAction, saveAiProviderSettingsAction, scanDuplicateExercisesAction } from "./actions";
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 import { listAppUsers } from "@/server/auth/identity-service";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
 import { createUserAction, loginAction, logoutAction, updateUserAction } from "./identity-actions";
 import { IdentityManagementPanel } from "@/components/admin/identity-management-panel";
+import { listAppTasks } from "@/server/queue/app-task-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ interface AdminPageProps {
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
-  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers, aiProviders] = await Promise.all([
+  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers, aiProviders, appTasks] = await Promise.all([
     getSearchIndexStates(),
     getSeedCompletenessReport(),
     listDuplicateReviewTasks(),
@@ -50,6 +51,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     listDatabaseBackups(),
     listAppUsers(),
     listAiProviderSettings(),
+    listAppTasks(),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
   const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved } = await searchParams;
@@ -69,6 +71,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <form action={scanDuplicateExercisesAction}><ActionProgressButton className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" pendingLabel="Vergleiche Namen, Aliase und Zuordnungen …">Jetzt prüfen</ActionProgressButton></form>
           </div>
           {duplicateTasks.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Keine offenen Doppelungsaufgaben.</p> : <DuplicateReviewPanel bulkAction={resolveDuplicateExercisesBulkAction} comparisonRecords={Object.fromEntries(comparisonRecords)} resolveAction={resolveDuplicateExerciseAction} tasks={duplicateTasks} />}
+        </section> : null}
+        {activeTab === "queue" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+          <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Betrieb</div><h2 className="mt-1 text-xl font-black">Hintergrundaufgaben</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Laufende Prüfungen und Wartungsaktionen blockieren die Oberfläche nicht. Fehlgeschlagene Aufgaben können erneut gestartet oder abgeschlossene Einträge gelöscht werden.</p></div>
+          <div className="mt-5 grid gap-3">{appTasks.length === 0 ? <p className="rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Noch keine Aufgaben vorhanden.</p> : appTasks.map((task) => <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={task.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-black">{task.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">{task.status} · {task.createdAt}</p></div><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{task.progress}%</span></div>{task.progressMessage ? <p className="mt-2 text-sm text-[var(--muted)]">{task.progressMessage}</p> : null}{task.errorMessage ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{task.errorMessage}</p> : null}<div className="mt-3 flex flex-wrap gap-2">{task.status === "running" || task.status === "queued" ? <form action={cancelAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--danger)] px-3 py-1.5 text-xs font-black text-[var(--danger)]">Abbrechen</button></form> : null}{task.status === "failed" || task.status === "cancelled" ? <form action={retryAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Erneut starten</button></form> : null}{task.status === "succeeded" || task.status === "failed" || task.status === "cancelled" ? <form action={deleteAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Löschen</button></form> : null}</div></article>)}</div>
         </section> : null}
         {activeTab === "database" ? <section id="database-settings" className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="max-w-3xl">
