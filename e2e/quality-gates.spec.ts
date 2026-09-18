@@ -111,6 +111,14 @@ test("media keeps filter state in the URL and exposes a compact result count", a
   await expect(page.locator("[aria-live='polite']").first()).toBeVisible();
 });
 
+test("training templates keep their audience and focus filters compact", async ({ page }) => {
+  await page.goto("/training/templates?audience=kids&focus=mobility", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("filter-side-panel")).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Zielgruppe" })).toHaveValue("kids");
+  await expect(page.getByRole("combobox", { name: "Schwerpunkt" })).toHaveValue("mobility");
+  await expect(page.getByRole("link", { name: "Zurücksetzen" })).toHaveAttribute("href", "/training/templates");
+});
+
 test("catalog view controls change the rendered result layout", async ({ page }) => {
   await page.goto("/games", { waitUntil: "domcontentloaded" });
   const overview = page.getByTestId("overview-layout");

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
+import { FilterSidePanel } from "@/components/layout/filter-side-panel";
+import { CatalogResultCount } from "@/components/catalog/catalog-controls";
 import {
   TRAINING_TEMPLATES,
   TRAINING_TEMPLATE_FOCUS_KEYS,
@@ -109,8 +111,8 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
           )}
         </section>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-          <div className="grid gap-4 md:grid-cols-2">
+        <FilterSidePanel title="Vorlagenfilter">
+          <div className="grid min-w-0 gap-4">
             <label className="grid gap-2 text-sm font-bold">
               Zielgruppe
               <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={audience} form="template-filter" name="audience">
@@ -130,11 +132,11 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
             <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-black" href="/training/templates">Zurücksetzen</Link>
             <button className="rounded-lg bg-[var(--control-strong)] px-4 py-2 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Filtern</button>
           </form>
-        </section>
+        </FilterSidePanel>
 
         <section className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-black">{templates.length} Vorlagen</h2>
+            <h2 className="text-lg font-black"><CatalogResultCount from={templates.length ? 1 : 0} label={templates.length === 1 ? "Vorlage" : "Vorlagen"} to={templates.length} total={templates.length} /></h2>
             <p className="mt-1 text-sm text-[var(--muted)]">Jede Vorlage definiert Planungsparameter; konkrete Übungen kommen erst beim Erzeugen aus dem freigegebenen Katalog.</p>
           </div>
           <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs font-black">{templates.length} versionierte Startvorlagen</span>

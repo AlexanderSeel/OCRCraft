@@ -88,6 +88,7 @@ Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit e
 - Gruppenkatalog mit gemeinsamem Filter-Sidepanel, URL-basierter Namenssuche, Zielgruppenfilter und getrenntem Erstellungsdialog
 - AI-Entwürfe und Outdoor-Review mit gemeinsamen URL-basierten Such-/Statusfiltern und kompakten Reset-Zuständen
 - Medienkatalog mit gemeinsamem Ergebniszähler sowie URL-basierten Review-, Generierungs-, Quellen- und Medientypfiltern
+- Vorlagenkatalog mit kompaktem gemeinsamem Filterpanel für Zielgruppe und Schwerpunkt, getrennt vom Vereinsvorlagenbereich
 
 ## Voraussetzungen
 

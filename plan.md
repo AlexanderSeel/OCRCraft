@@ -58,6 +58,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Gruppenkatalog auf das gemeinsame `FilterSidePanel`-Muster mit URL-basierter Namenssuche, Zielgruppenfilter und Reset-Link migrieren; Erstellung und Listenfilter bleiben bewusst getrennte Interaktionen.
 - [x] AI-Entwürfe und Outdoor-Review auf gemeinsame URL-basierte Filterpanels migrieren: Entwurfssuche sowie Outdoor-Suche/Statusfilter besitzen kompakte Filter- und Reset-Zustände mit Playwright-Gates.
 - [x] Medienkatalog an die gemeinsamen Ergebniszähler anbinden und Filter-/Reset- sowie URL-Zustand mit Playwright absichern; Review-, Generierungs-, Quellen- und Medientypfilter bleiben fachlich getrennt.
+- [x] Vorlagenkatalog auf das gemeinsame `FilterSidePanel`-Muster umstellen: Zielgruppe und Schwerpunkt bleiben URL-basiert, kompakt und getrennt vom Vereinsvorlagen-/Erstellungsbereich.
 - [ ] Listen- und Detaildatenquellen auf statische Legacy-Platzhalter prüfen; insbesondere Dashboard-Kennzahlen und Vorschaukarten dürfen ausschließlich aus Repository-/Service-Daten entstehen.
 - [ ] Quick-Create- und Builder-E2E weiter ausbauen: Vorlagenauswahl und responsive Empty-/Shell-/Overflow-Gates sind abgedeckt; Training-Editor und Kids/Youth-Schutzpfade fehlen noch.
 - [ ] Übrig gebliebene Legacy-UI-Texte und feste Katalogzähler in CI als Review-Gate erkennen.
