@@ -86,6 +86,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [ ] Undo/Redo für geeignete Editoraktionen.
 - [ ] Fullscreen-Traineransicht und Druckansicht.
 - [ ] Vollständiges Accessibility-Audit inklusive E2E-Tastaturpfaden.
+- [x] Medienauswahl und KI-Bildgenerierung direkt im Übungs-/Spiel-/Hindernis-Editor anbieten; ausgewählte Medien werden als primäres Bild persistiert.
 
 ## P2 – Katalogquellen, Medien und KI
 

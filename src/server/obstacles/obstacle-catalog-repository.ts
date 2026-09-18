@@ -115,8 +115,7 @@ export async function listObstacleCatalog({
           SELECT m.storage_uri
           FROM exercise_media_assets m
           WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
-          ORDER BY m.created_at DESC,m.id DESC
-          LIMIT 1
+          ORDER BY COALESCE(m.is_primary,false) DESC,m.created_at DESC,m.id DESC\n          LIMIT 1
         )
       FROM exercises e
       JOIN exercise_obstacle_guidance g ON g.exercise_id=e.id AND g.locale='de'
@@ -170,3 +169,4 @@ export async function listObstacleCatalog({
     }));
   });
 }
+

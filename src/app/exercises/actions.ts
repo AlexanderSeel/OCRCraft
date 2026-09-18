@@ -13,6 +13,9 @@ import {
   toExerciseDraft,
 } from "@/server/exercises/exercise-validation";
 import { requireTrainer } from "@/server/auth/identity-service";
+import { enqueueExerciseImageGenerationJobs } from "@/server/media/media-generation-job-repository";
+import { runExerciseImageGenerationQueue } from "@/server/media/media-generation-worker";
+import { setPrimaryExerciseMedia } from "@/server/media/media-catalog-repository";
 
 export interface ExerciseFormState {
   readonly message?: string;
@@ -100,6 +103,23 @@ export async function setExerciseArchivedAction(
   revalidatePath("/games");
   revalidatePath(`/exercises/${id}/edit`);
   redirect(archived ? "/exercises" : `/exercises/${id}/edit?restored=1`);
+}
+
+export async function selectExerciseImageAction(id: string, formData: FormData): Promise<void> {
+  await requireTrainer();
+  const assetId = String(formData.get("assetId") ?? "");
+  if (assetId) await setPrimaryExerciseMedia(id, assetId);
+  revalidatePath(`/exercises/${id}/edit`);
+  revalidatePath(`/exercises/${id}`);
+  redirect(`/exercises/${id}/edit?mediaSaved=1`);
+}
+
+export async function generateExerciseImageAction(id: string): Promise<void> {
+  await requireTrainer();
+  await enqueueExerciseImageGenerationJobs([id]);
+  void runExerciseImageGenerationQueue();
+  revalidatePath(`/exercises/${id}/edit`);
+  redirect(`/exercises/${id}/edit?mediaQueued=1`);
 }
 
 export async function hardDeleteExerciseAction(id: string, formData: FormData): Promise<void> {

@@ -77,6 +77,7 @@ const migrations: readonly Migration[] = [
   { version: 64, fileName: "064_seed_trainer_search_terms.sql" },
   { version: 65, fileName: "065_app_task_queue.sql" },
   { version: 66, fileName: "066_search_profiles.sql" },
+  { version: 67, fileName: "067_exercise_media_primary.sql" },
 ];
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {

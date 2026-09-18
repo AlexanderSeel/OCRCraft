@@ -387,27 +387,27 @@ export async function listExercises({
         (
           SELECT m.storage_uri FROM exercise_media_assets m
           WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
-          ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+          ORDER BY COALESCE(m.is_primary,false) DESC, m.created_at DESC, m.id DESC LIMIT 1
         ) AS image_uri,
         (
           SELECT m.review_status FROM exercise_media_assets m
           WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
-          ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+          ORDER BY COALESCE(m.is_primary,false) DESC, m.created_at DESC, m.id DESC LIMIT 1
         ),
         (
           SELECT m.illustration_format FROM exercise_media_assets m
           WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
-          ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+          ORDER BY COALESCE(m.is_primary,false) DESC, m.created_at DESC, m.id DESC LIMIT 1
         ),
         (
           SELECT m.sequence_step_count FROM exercise_media_assets m
           WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
-          ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+          ORDER BY COALESCE(m.is_primary,false) DESC, m.created_at DESC, m.id DESC LIMIT 1
         ) AS image_review_status
         ,(
           SELECT m.license_label FROM exercise_media_assets m
           WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
-          ORDER BY m.created_at DESC, m.id DESC LIMIT 1
+          ORDER BY COALESCE(m.is_primary,false) DESC, m.created_at DESC, m.id DESC LIMIT 1
         ) AS image_license_label
       FROM exercises e
       JOIN exercise_translations t ON t.exercise_id = e.id AND t.locale = $locale
@@ -580,3 +580,4 @@ export async function countExercises(options: Pick<ListExercisesOptions, "query"
     return Number(reader.getRows()[0]?.[0] ?? 0);
   });
 }
+

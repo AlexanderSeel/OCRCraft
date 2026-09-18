@@ -30,6 +30,8 @@ import { updateExerciseGuidanceListsAction } from "../guidance-actions";
 import { updateExerciseOutdoorVariantAction } from "../outdoor-variant-actions";
 import { updateExerciseObstacleGuidanceAction } from "../obstacle-actions";
 import { addExerciseProgressionRelationAction, deleteExerciseProgressionRelationAction } from "../progression-actions";
+import { listExerciseMediaChoices } from "@/server/media/media-catalog-repository";
+import { generateExerciseImageAction, selectExerciseImageAction } from "../../actions";
 
 interface PageProps {
   readonly params: Promise<{ id: string }>;
@@ -54,6 +56,8 @@ interface PageProps {
     obstacleSaved?: string;
     obstacleError?: string;
     hardDeleteError?: string;
+    mediaSaved?: string;
+    mediaQueued?: string;
   }>;
 }
 
@@ -64,7 +68,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   if (!exercise) notFound();
   const actor = await getOptionalCurrentActor();
 
-  const [classification, facets, outdoorVariant, obstacleGuidance, guidanceDeMap, guidanceEnMap, progressionRelations, relationOptions] = await Promise.all([
+  const [classification, facets, outdoorVariant, obstacleGuidance, guidanceDeMap, guidanceEnMap, progressionRelations, relationOptions, mediaChoices] = await Promise.all([
     getExerciseClassificationEditorData(exercise.id),
     getExerciseFacetEditorData(exercise.id),
     getExerciseOutdoorVariantEditorData(exercise.id),
@@ -73,6 +77,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
     getTrainingExerciseGuidanceMap([exercise.id], "en"),
     getExerciseProgressionRelations(exercise.id),
     listExerciseRelationOptions(exercise.id),
+    listExerciseMediaChoices(exercise.id),
   ]);
   if (!classification) notFound();
 
@@ -90,6 +95,8 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const hardDeleteAction = hardDeleteExerciseAction.bind(null, exercise.id);
   const addProgressionAction = addExerciseProgressionRelationAction.bind(null, exercise.id);
   const deleteProgressionAction = deleteExerciseProgressionRelationAction.bind(null, exercise.id);
+  const selectImageAction = selectExerciseImageAction.bind(null, exercise.id);
+  const generateImageAction = generateExerciseImageAction.bind(null, exercise.id);
   const manualExercise = exercise.seedKey == null;
   const fullEditorOpen = manualExercise || Boolean(
     status.created
@@ -144,6 +151,8 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         {status.outdoorSaved ? <Notice>Outdoor-Variante und alternatives Equipment wurden gespeichert und stehen der Outdoor-Trainingsplanung zur Verfügung.</Notice> : null}
         {status.progressionSaved ? <Notice>Progressionsbeziehung gespeichert.</Notice> : null}
         {status.obstacleSaved ? <Notice>Hindernis-Guidance, Stationskapazität und Sicherheitszone wurden gespeichert.</Notice> : null}
+        {status.mediaSaved ? <Notice>Das Bild wurde als primäres Übungsbild ausgewählt.</Notice> : null}
+        {status.mediaQueued ? <Notice>Die Bildgenerierung wurde im Hintergrund eingeplant.</Notice> : null}
         {status.progressionError ? <ErrorNotice>Die Progressionsbeziehung ist ungültig oder konnte nicht gespeichert werden.</ErrorNotice> : null}
         {status.classificationError === "invalid" ? <ErrorNotice>Die Klassifikation ist unvollständig oder ungültig. Wähle mindestens ein Trainingsziel.</ErrorNotice> : null}
         {status.classificationError === "save" ? <ErrorNotice>Die Klassifikation konnte nicht gespeichert werden.</ErrorNotice> : null}
@@ -164,6 +173,11 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
           <summary className="min-h-8 cursor-pointer font-bold">Stammdaten bearbeiten</summary>
           <ExerciseForm action={updateAction} exercise={exercise} submitLabel="Änderungen speichern" />
         </details>
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-black">Medien</h2><p className="mt-1 text-sm text-[var(--muted)]">Wähle ein vorhandenes Bild als Standard oder plane eine neue KI-Sequenz ein.</p></div><form action={generateImageAction}><button className="min-h-10 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Neues Bild per KI erzeugen</button></form></div>
+          {mediaChoices.length ? <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{mediaChoices.map((media) => <form action={selectImageAction} className={`rounded-xl border p-3 ${media.isPrimary ? "border-[var(--accent)]" : "border-[var(--border)]"}`} key={media.id}><input name="assetId" type="hidden" value={media.id} />{media.url ? <img alt="" className="h-32 w-full rounded-lg bg-white object-contain" src={media.url} /> : <div className="grid h-32 place-items-center rounded-lg bg-[var(--surface-subtle)] text-xs text-[var(--muted)]">Kein Vorschaubild</div>}<div className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="font-bold">{media.sourceType === "ai_generated" ? "KI" : "Extern"} · {media.reviewStatus}</span>{media.generationStatus === "generated" ? <button className="rounded-lg border border-[var(--border)] px-2 py-1 font-black" type="submit">{media.isPrimary ? "Ausgewählt" : "Auswählen"}</button> : <span className="text-[var(--muted)]">{media.generationStatus}</span>}</div></form>)}</div> : <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Noch kein Bild vorhanden.</p>}
+        </section>
 
         <details open={fullEditorOpen} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <summary className="min-h-8 cursor-pointer font-bold">Trainingsziele, Zielgruppe & Bewegungsprofil</summary>
