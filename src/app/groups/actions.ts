@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { CLUB_RULE_PROFILE_KEYS } from "@/domain/training/club-rules";
 import { TRAINING_FORMATS } from "@/domain/training/model";
 import {
   createClubGroup,
@@ -36,6 +37,7 @@ const groupSchema = z.object({
   skillIntermediatePercent: optionalInteger(0, 100),
   skillAdvancedPercent: optionalInteger(0, 100),
   preferredFormats: z.array(z.enum(TRAINING_FORMATS)).max(TRAINING_FORMATS.length),
+  ruleProfile: z.enum(CLUB_RULE_PROFILE_KEYS),
 }).superRefine((value, context) => {
   if (value.minAge != null && value.maxAge != null && value.minAge > value.maxAge) {
     context.addIssue({
@@ -123,6 +125,7 @@ function parseGroupForm(formData: FormData) {
     skillIntermediatePercent: formData.get("skillIntermediatePercent"),
     skillAdvancedPercent: formData.get("skillAdvancedPercent"),
     preferredFormats: formData.getAll("preferredFormats"),
+    ruleProfile: formData.get("ruleProfile"),
   });
 }
 
