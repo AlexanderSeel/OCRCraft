@@ -51,6 +51,16 @@ export interface MediaCatalogSummary {
   readonly failed: number;
 }
 
+export interface MediaGenerationCandidate {
+  readonly exerciseId: string;
+  readonly exerciseName: string;
+  readonly seedKey: string | null;
+  readonly category: string;
+  readonly imageAssetCount: number;
+  readonly failedImageCount: number;
+  readonly activeJobCount: number;
+}
+
 export async function getMediaCatalogSummary(): Promise<MediaCatalogSummary> {
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
@@ -166,6 +176,81 @@ export async function listMediaCatalog({
   });
 }
 
+
+export async function listMediaGenerationCandidates(
+  query = "",
+  limit = 24,
+): Promise<readonly MediaGenerationCandidate[]> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      SELECT
+        e.id::VARCHAR,
+        COALESCE(t.name,e.canonical_name),
+        e.seed_key,
+        COALESCE(e.category,'general'),
+        (
+          SELECT count(*)
+          FROM exercise_media_assets m
+          WHERE m.exercise_id=e.id
+            AND m.media_type IN ('image','illustration')
+        ),
+        (
+          SELECT count(*)
+          FROM exercise_media_assets m
+          WHERE m.exercise_id=e.id
+            AND m.media_type IN ('image','illustration')
+            AND m.generation_status='failed'
+        ),
+        (
+          SELECT count(*)
+          FROM exercise_image_generation_jobs j
+          WHERE j.exercise_id=e.id
+            AND j.status IN ('queued','running')
+        )
+      FROM exercises e
+      LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
+      WHERE e.archived=false
+        AND NOT EXISTS (
+          SELECT 1
+          FROM exercise_media_assets m
+          WHERE m.exercise_id=e.id
+            AND m.media_type IN ('image','illustration')
+            AND m.generation_status='generated'
+            AND m.review_status<>'rejected'
+        )
+        AND (
+          $query=''
+          OR COALESCE(t.name,e.canonical_name) ILIKE '%' || $query || '%'
+          OR COALESCE(t.summary,'') ILIKE '%' || $query || '%'
+          OR COALESCE(e.seed_key,'') ILIKE '%' || $query || '%'
+          OR COALESCE(e.category,'') ILIKE '%' || $query || '%'
+        )
+      ORDER BY
+        CASE WHEN (
+          SELECT count(*)
+          FROM exercise_image_generation_jobs j
+          WHERE j.exercise_id=e.id AND j.status IN ('queued','running')
+        ) > 0 THEN 1 ELSE 0 END,
+        COALESCE(t.name,e.canonical_name),
+        e.id
+      LIMIT $limit
+    `, {
+      query: query.trim(),
+      limit: Math.max(1, Math.min(100, limit)),
+    });
+
+    return reader.getRows().map((row) => ({
+      exerciseId: String(row[0]),
+      exerciseName: String(row[1]),
+      seedKey: row[2] == null ? null : String(row[2]),
+      category: String(row[3]),
+      imageAssetCount: Number(row[4] ?? 0),
+      failedImageCount: Number(row[5] ?? 0),
+      activeJobCount: Number(row[6] ?? 0),
+    }));
+  });
+}
 
 export async function setMediaReviewStatus(
   assetId: string,

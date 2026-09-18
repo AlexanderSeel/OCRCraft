@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
+import { RemoveObstacleAssignmentForm } from "@/components/obstacles/remove-obstacle-assignment-form";
 import {
   getObstacleCatalogSummary,
   listObstacleCatalog,
   type ObstacleCatalogItem,
 } from "@/server/obstacles/obstacle-catalog-repository";
 import { listObstacleCandidates, type ObstacleCandidate } from "@/server/obstacles/obstacle-assignment-repository";
-import { assignExerciseAsObstacleAction, removeExerciseFromObstaclesAction } from "./actions";
+import { assignExerciseAsObstacleAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -248,12 +249,7 @@ function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) 
             <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/exercises/${obstacle.exerciseId}/edit#obstacle-guidance`}>
               Hindernis bearbeiten
             </Link>
-            <form action={removeExerciseFromObstaclesAction}>
-              <input name="exerciseId" type="hidden" value={obstacle.exerciseId} />
-              <button className="min-h-9 rounded-lg border border-[var(--danger)] px-3 py-2 text-xs font-black text-[var(--danger)]" type="submit">
-                Aus Hindernissen entfernen
-              </button>
-            </form>
+            <RemoveObstacleAssignmentForm exerciseId={obstacle.exerciseId} exerciseName={obstacle.name} />
           </div>
         </div>
       </div>
@@ -279,10 +275,13 @@ function ObstacleCandidateRow({ candidate }: { readonly candidate: ObstacleCandi
           {candidate.seedKey ? ` · ${candidate.seedKey}` : ""}
         </div>
       </div>
-      <form action={assignExerciseAsObstacleAction}>
+      <form action={assignExerciseAsObstacleAction} className="flex flex-wrap justify-end gap-2">
         <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
-        <button className="min-h-11 rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
-          Als Hindernis übernehmen
+        <button className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black" name="next" type="submit" value="catalog">
+          Übernehmen
+        </button>
+        <button className="min-h-11 rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" name="next" type="submit" value="edit">
+          Übernehmen & prüfen
         </button>
       </form>
     </article>
