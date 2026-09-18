@@ -98,6 +98,10 @@ export interface QuickCreateGroupPreset {
     readonly advancedPercent: number;
   } | null;
   readonly preferredFormats: readonly string[];
+  readonly defaultOrganizationMode: "solo" | "team";
+  readonly defaultTeamSize: number | null;
+  readonly defaultGroupSplitCount: number | null;
+  readonly defaultStationGroupSize: number | null;
 }
 
 interface QuickCreateWizardProps {
@@ -149,6 +153,9 @@ export function QuickCreateWizard({
   const [participantCount, setParticipantCount] = useState(initialTemplate?.participantCount ?? 16);
   const [duration, setDuration] = useState(initialTemplate?.durationMinutes ?? 75);
   const [groupSplitCount, setGroupSplitCount] = useState<number | undefined>();
+  const [groupOrganizationMode, setGroupOrganizationMode] = useState<"solo" | "team">("solo");
+  const [groupTeamSize, setGroupTeamSize] = useState<number | undefined>();
+  const [stationGroupSizeTarget, setStationGroupSizeTarget] = useState<number | undefined>();
   const [goals, setGoals] = useState<readonly string[]>(initialTemplate?.goals ?? ["Ganzkörper", "OCR-Technik"]);
   const [bodyRegions, setBodyRegions] = useState<readonly string[]>(initialTemplate?.bodyRegions ?? ["forearms-grip", "core"]);
   const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>([]);
@@ -183,9 +190,13 @@ export function QuickCreateWizard({
     () => [...new Set([45, 60, 75, 90, 120, duration])].sort((a, b) => a - b),
     [duration],
   );
-  const effectiveGroupSplitCount = groupSplitCount == null
-    ? undefined
-    : Math.max(1, Math.min(20, participantCount, groupSplitCount));
+  const derivedGroupSplitCount = groupOrganizationMode === "solo" && groupSplitCount == null && stationGroupSizeTarget != null
+    ? Math.ceil(participantCount / stationGroupSizeTarget)
+    : undefined;
+  const requestedGroupSplitCount = groupSplitCount ?? derivedGroupSplitCount;
+  const effectiveGroupSplitCount = groupOrganizationMode === "solo" && requestedGroupSplitCount != null
+    ? Math.max(1, Math.min(20, participantCount, requestedGroupSplitCount))
+    : undefined;
   const maxRotationGroupSize = effectiveGroupSplitCount == null
     ? undefined
     : Math.ceil(participantCount / effectiveGroupSplitCount);
@@ -206,6 +217,10 @@ export function QuickCreateWizard({
     setSelectedGroupId(groupId);
     const preset = groupPresets.find((candidate) => candidate.id === groupId);
     if (!preset) {
+      setGroupOrganizationMode("solo");
+      setGroupTeamSize(undefined);
+      setGroupSplitCount(undefined);
+      setStationGroupSizeTarget(undefined);
       invalidateDraft();
       return;
     }
@@ -221,6 +236,10 @@ export function QuickCreateWizard({
         : equipmentStateFromCatalog(equipmentOptions),
     );
     setFormats(preset.preferredFormats.length > 0 ? preset.preferredFormats : DEFAULT_FORMATS);
+    setGroupOrganizationMode(preset.defaultOrganizationMode);
+    setGroupTeamSize(preset.defaultTeamSize ?? undefined);
+    setGroupSplitCount(preset.defaultGroupSplitCount ?? undefined);
+    setStationGroupSizeTarget(preset.defaultStationGroupSize ?? undefined);
     invalidateDraft();
   }
 
@@ -272,9 +291,17 @@ export function QuickCreateWizard({
       avoidBodyRegions,
       formats,
       location,
-      organizationMode: competitionActive || formats.includes("partner") ? "team" : "solo",
-      teamSize: competitionActive ? competitionStyle.teamSize : formats.includes("partner") ? 2 : undefined,
-      groupSplitCount: competitionActive || formats.includes("partner") ? undefined : effectiveGroupSplitCount,
+      organizationMode: competitionActive || formats.includes("partner") ? "team" : groupOrganizationMode,
+      teamSize: competitionActive
+        ? competitionStyle.teamSize
+        : formats.includes("partner")
+          ? 2
+          : groupOrganizationMode === "team"
+            ? groupTeamSize ?? 2
+            : undefined,
+      groupSplitCount: competitionActive || formats.includes("partner") || groupOrganizationMode === "team"
+        ? undefined
+        : effectiveGroupSplitCount,
       mainPartCount: competitionActive ? competitionStyle.mainPartTitlesDe.length : undefined,
       mainPartExerciseCounts: competitionActive ? competitionStyle.mainPartExerciseCounts : undefined,
       mainPartProgramming: competitionActive ? competitionStyle.mainPartProgramming : undefined,
@@ -633,7 +660,10 @@ export function QuickCreateWizard({
                   />
                 </label>
                 <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-                  Leer = automatische Verteilung auf die aktiven Stationen. Eine feste Zahl steuert Stationskapazität und parallelen Equipmentbedarf. {effectiveGroupSplitCount != null ? `Aktuell: ${effectiveGroupSplitCount} Gruppen mit bis zu ${maxRotationGroupSize} Personen.` : ""}
+                  Leer = automatische Verteilung auf die aktiven Stationen. Eine feste Zahl steuert Stationskapazität und parallelen Equipmentbedarf.
+                  {stationGroupSizeTarget != null && groupSplitCount == null ? ` Vereinsdefault: maximal ${stationGroupSizeTarget} Personen je Stationsgruppe.` : ""}
+                  {effectiveGroupSplitCount != null ? ` Aktuell: ${effectiveGroupSplitCount} Gruppen mit bis zu ${maxRotationGroupSize} Personen.` : ""}
+                  {groupOrganizationMode === "team" ? ` Vereinsdefault ist Teammodus mit ${groupTeamSize ?? 2} Personen pro Team; Rotationsgruppen werden deshalb nicht verwendet.` : ""}
                 </p>
               </div>
 

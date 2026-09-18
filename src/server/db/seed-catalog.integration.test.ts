@@ -32,6 +32,8 @@ const migrationFiles = [
   "026_external_media_licensing.sql",
   "027_exercise_source_references.sql",
   "028_seed_quality_expansion.sql",
+  "063_curated_catalog_gap_cohort.sql",
+  "064_seed_trainer_search_terms.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -67,6 +69,65 @@ describe("initial exercise catalog", () => {
       const movementTeamworkCohort = await scalar(connection, `
         SELECT count(*) FROM exercises WHERE seed_key IN (
           'partner-mirror-movement','cooperative-cone-collect','quiet-landing-practice'
+        )
+      `);
+      const curatedGapCohort = await scalar(connection, `
+        SELECT count(*) FROM exercises WHERE seed_key IN (
+          'dead-bug-heel-tap','supported-side-plank-knee','bear-plank-shoulder-tap','hip-90-90-switch',
+          'ankle-rocker-mobility','thoracic-open-book','lateral-shuffle-stick','crawl-to-stand-transition'
+        )
+      `);
+      const incompleteCuratedGapCohort = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        WHERE e.seed_key IN (
+          'dead-bug-heel-tap','supported-side-plank-knee','bear-plank-shoulder-tap','hip-90-90-switch',
+          'ankle-rocker-mobility','thoracic-open-book','lateral-shuffle-stick','crawl-to-stand-transition'
+        )
+        AND (
+          (SELECT count(*) FROM exercise_translations t WHERE t.exercise_id=e.id)<>2
+          OR (SELECT count(*) FROM exercise_details d WHERE d.exercise_id=e.id)<>2
+          OR (SELECT count(*) FROM exercise_execution_steps s WHERE s.exercise_id=e.id)<>6
+          OR NOT EXISTS (SELECT 1 FROM exercise_body_regions b WHERE b.exercise_id=e.id AND b.emphasis='primary')
+          OR NOT EXISTS (SELECT 1 FROM exercise_movement_patterns p WHERE p.exercise_id=e.id)
+          OR NOT EXISTS (SELECT 1 FROM exercise_training_goals g WHERE g.exercise_id=e.id)
+          OR NOT EXISTS (SELECT 1 FROM exercise_training_phases p WHERE p.exercise_id=e.id)
+        )
+      `);
+      const missingTrainerTerms = await scalar(connection, `
+        SELECT count(*) FROM exercises e
+        WHERE e.seed_key IS NOT NULL AND (
+          NOT EXISTS (
+            SELECT 1 FROM exercise_aliases a
+            WHERE a.exercise_id=e.id AND a.locale='de' AND a.alias=CASE e.category
+              WHEN 'warmup' THEN 'Aufwärmübung'
+              WHEN 'mobility' THEN 'Mobilitätstraining'
+              WHEN 'strength' THEN 'Kraftübung'
+              WHEN 'core' THEN 'Rumpfübung'
+              WHEN 'running' THEN 'Lauftraining'
+              WHEN 'grip-rig' THEN 'Grip- und Rig-Training'
+              WHEN 'carry-lift' THEN 'Trage- und Hebeübung'
+              WHEN 'ocr-skill' THEN 'OCR Hindernistechnik'
+              WHEN 'balance-agility' THEN 'Koordinationsübung'
+              WHEN 'throw' THEN 'Wurftraining'
+              WHEN 'cooldown' THEN 'Regenerationsübung'
+              ELSE 'Trainerübung' END
+          )
+          OR NOT EXISTS (
+            SELECT 1 FROM exercise_aliases a
+            WHERE a.exercise_id=e.id AND a.locale='en' AND a.alias=CASE e.category
+              WHEN 'warmup' THEN 'Warm-up exercise'
+              WHEN 'mobility' THEN 'Mobility training'
+              WHEN 'strength' THEN 'Strength exercise'
+              WHEN 'core' THEN 'Core exercise'
+              WHEN 'running' THEN 'Running training'
+              WHEN 'grip-rig' THEN 'Grip and rig training'
+              WHEN 'carry-lift' THEN 'Carry and lift exercise'
+              WHEN 'ocr-skill' THEN 'OCR obstacle technique'
+              WHEN 'balance-agility' THEN 'Coordination drill'
+              WHEN 'throw' THEN 'Throwing training'
+              WHEN 'cooldown' THEN 'Recovery exercise'
+              ELSE 'Trainer exercise' END
+          )
         )
       `);
       const unsafeLandingDefaults = await scalar(connection, `
@@ -211,6 +272,9 @@ describe("initial exercise catalog", () => {
 
       expect(total).toBeGreaterThan(0);
       expect(movementTeamworkCohort).toBe(3);
+      expect(curatedGapCohort).toBe(8);
+      expect(incompleteCuratedGapCohort).toBe(0);
+      expect(missingTrainerTerms).toBe(0);
       expect(unsafeLandingDefaults).toBe(0);
       expect(coneEquipmentQuantity).toBe(1);
       expect(completenessRows).toHaveLength(total);

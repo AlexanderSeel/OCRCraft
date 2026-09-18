@@ -49,10 +49,10 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Übungskatalog
 
-- [ ] Katalog über alle Übungen hinaus mit kuratierten Lücken erweitern.
-- [ ] Zusätzliche deutsche/englische Aliase und Trainerbegriffe für alle Seeds kuratieren.
+- [x] Katalog mit einer kuratierten Lücken-Kohorte erweitern: acht zusätzliche Core-, Mobilitäts-, Koordinations- und OCR-Übergangsdrills schließen bodennahe Stabilitäts-, Sprunggelenk-/Hüft-/BWS-Mobilitäts- und kontrollierte Richtungswechsel-Lücken.
+- [x] Zusätzliche deutsche/englische Aliase und Trainerbegriffe für alle Seeds ergänzen: bewegungsmuster- und kategoriebasierte Trainerbegriffe werden versioniert in die Suche aufgenommen und durch Integrationstests auf vollständige Seed-Abdeckung geprüft.
 - [ ] Fachliche Einzelprüfung und Anreicherung aller verbleibenden Seeds abschließen.
-- [ ] Weitere Katalogkohorten versioniert, zweisprachig und mit Detail-/Sicherheits-Gates aufnehmen.
+- [x] Weitere Katalogkohorten versioniert, zweisprachig und mit Detail-/Sicherheits-Gates aufnehmen; die neue Gap-Kohorte besitzt DE/EN-Details, Ausführungsschritte, Coaching, Fehlerkorrektur, Körperregionen, Bewegungsmuster, Ziele, Phasen und Suchdokumente.
 - [x] Zusätzliche Kategorien und Facetten editierbar machen.
 - [x] Progressionen/Regressionen als Katalogverwaltung mit Editor und geschützter Archivierung ausbauen.
 - [x] Geschützte Hard-Delete-Regeln implementieren (nur Super-Admin, archivierte Nicht-Seed-Übung, exakte Bestätigung und keine Betriebsreferenzen).
@@ -73,9 +73,9 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 - [x] Version History/Restore für Trainings.
 - [x] Trainingsvorlagen erstellen, speichern und wiederverwenden: bestehende Trainings können als persistierte Vereins-Snapshots mit konkreter Übungsauswahl, Hauptteilprogrammierung und Teamorganisation gespeichert, im Vorlagenkatalog erneut instanziiert und archiviert werden; vor Wiederverwendung werden alle Übungsreferenzen gegen den aktiven Katalog validiert.
-- [ ] Gruppen-Splits, Stationskapazität und Vereinsdefaults weiter ausbauen.
-- [ ] Kids/Youth/Beginner/Advanced/Competition/Running/Open-Presets ergänzen.
-- [ ] Club-Regelprofile, Standort-/Equipmentdefaults und Skill-Verteilung ergänzen.
+- [x] Gruppen-Splits, Stationskapazität und Vereinsdefaults weiter ausbauen: Vereinsgruppen speichern Standard-Organisation, Teamgröße, Rotationsgruppenzahl und Zielgröße je Stationsgruppe; Quick Create übernimmt diese Defaults bzw. leitet daraus die Gruppenteilung ab, während die bestehende Übungs-`stationCapacity`-Validierung weiterhin reale Engpässe meldet.
+- [x] Kids/Youth/Beginner/Advanced/Competition/Running/Open-Presets ergänzen; die sieben editierbaren Startprofile setzen Zielgruppe, Alter, Dauer, Ort, Risiko-/Regelprofil, Skill-Mix, bevorzugte Formate und Organisationsdefaults.
+- [x] Club-Regelprofile, Standort-/Equipmentdefaults und Skill-Verteilung ergänzen; Regelprofil, Ort und Equipment werden von Quick Create als Planungsdefaults übernommen, der Skill-Mix wird als Trainer-/Gruppenmetadatum persistiert und sichtbar gehalten.
 
 ### UI/UX und Zugänglichkeit
 
