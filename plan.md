@@ -156,6 +156,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - Darstellung und optionale Diagnose sind im Administrations-Tab Einstellungen gebündelt; der globale Seitenkopf bleibt frei von doppelten Systemaktionen.
 - Adminbereich mit Benutzer-/Rollenverwaltung und lokalem Login-Dialog; Trainings-Readonly-Ansicht bleibt ohne Login teilbar.
 - Klassische E-Mail-/Passwort-Anmeldung mit gesalzenem scrypt-Hash und optionalem Zugangscode-Fallback.
+- Bearbeitbare Trainerprofile mit Ausbildung, Schwerpunkten, Kurzbiografie und Bildreferenz; neue Trainings übernehmen das Profil in Readonly-/Traineransichten.
 
 ## CI und Definition of Done
 

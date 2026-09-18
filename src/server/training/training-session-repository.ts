@@ -6,6 +6,7 @@ import type { MainPartProgramming, TrainingOrganizationMode, TrainingPhaseKind }
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { mainPartProgrammingSchema } from "./training-draft-schema";
+import { getOptionalCurrentActor } from "@/server/auth/identity-service";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -48,6 +49,15 @@ export interface TrainingSessionListItem {
   readonly locale: "de" | "en";
   readonly itemCount: number;
   readonly createdAt: string;
+  readonly trainerProfile: TrainerProfile | null;
+}
+
+export interface TrainerProfile {
+  readonly name: string;
+  readonly education: string | null;
+  readonly bio: string | null;
+  readonly specialties: string | null;
+  readonly imageUri: string | null;
 }
 
 export interface PersistedTrainingItem {
@@ -111,6 +121,7 @@ export async function persistTrainingDraft(
   }
 
   const sessionId = randomUUID();
+  const creator = await getOptionalCurrentActor();
   const sessionTitle = title?.trim() || draft.session.title;
   const organizationMode = draft.session.group.organizationMode ?? "solo";
   const teamSize = organizationMode === "team" ? draft.session.group.teamSize ?? null : null;
@@ -133,10 +144,10 @@ export async function persistTrainingDraft(
         `
         INSERT INTO training_sessions (
           id, title, group_id, status, source, total_duration_minutes, locale, notes,
-          organization_mode, team_size, group_split_count
+          organization_mode, team_size, group_split_count, created_by
         ) VALUES (
           $id::UUID, $title, $groupId::UUID, 'draft', $source, $duration, $locale, $notes,
-          $organizationMode, $teamSize, $groupSplitCount
+          $organizationMode, $teamSize, $groupSplitCount, $createdBy::UUID
         )
         `,
         {
@@ -150,6 +161,7 @@ export async function persistTrainingDraft(
           organizationMode,
           teamSize,
           groupSplitCount,
+          createdBy: creator?.id ?? null,
         },
       );
 
@@ -262,8 +274,10 @@ export async function listTrainingSessions(
           JOIN training_items i ON i.training_phase_id=p.id
           WHERE p.training_session_id=s.id
         ),
-        s.created_at
+        s.created_at,
+        u.display_name,u.education,u.bio,u.specialties,u.profile_image_uri
       FROM training_sessions s
+      LEFT JOIN app_users u ON u.id=s.created_by
       WHERE $includeArchived OR s.status <> 'archived'
       ORDER BY s.created_at DESC
       LIMIT $limit
@@ -280,6 +294,7 @@ export async function listTrainingSessions(
       locale: String(row[5]) as "de" | "en",
       itemCount: Number(row[6]),
       createdAt: String(row[7]),
+      trainerProfile: row[8] == null ? null : { name: String(row[8]), education: row[9] == null ? null : String(row[9]), bio: row[10] == null ? null : String(row[10]), specialties: row[11] == null ? null : String(row[11]), imageUri: row[12] == null ? null : String(row[12]) },
     }));
   });
 }
@@ -296,8 +311,10 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
         (SELECT count(*) FROM training_phases p JOIN training_items i ON i.training_phase_id=p.id WHERE p.training_session_id=s.id),
         s.created_at,s.notes,s.updated_at,
         s.route_name,s.route_distance_metres,s.route_surface,s.route_gps_reference,s.route_notes,
-        COALESCE(s.organization_mode,'solo'),s.team_size,s.group_split_count,s.group_id::VARCHAR
+        COALESCE(s.organization_mode,'solo'),s.team_size,s.group_split_count,s.group_id::VARCHAR,
+        u.display_name,u.education,u.bio,u.specialties,u.profile_image_uri
       FROM training_sessions s
+      LEFT JOIN app_users u ON u.id=s.created_by
       WHERE s.id=$id::UUID
       `,
       { id },
@@ -379,6 +396,7 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
       organizationMode: String(sessionRow[15] ?? "solo") as TrainingOrganizationMode,
       teamSize: sessionRow[16] == null ? null : Number(sessionRow[16]),
       groupSplitCount: sessionRow[17] == null ? null : Number(sessionRow[17]),
+      trainerProfile: sessionRow[19] == null ? null : { name: String(sessionRow[19]), education: sessionRow[20] == null ? null : String(sessionRow[20]), bio: sessionRow[21] == null ? null : String(sessionRow[21]), specialties: sessionRow[22] == null ? null : String(sessionRow[22]), imageUri: sessionRow[23] == null ? null : String(sessionRow[23]) },
       phases,
     };
   });

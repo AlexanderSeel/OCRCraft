@@ -38,7 +38,16 @@ export async function createUserAction(formData: FormData): Promise<void> {
 
 export async function updateUserAction(formData: FormData): Promise<void> {
   try {
-    await updateAppUser({ id: String(formData.get("id") ?? ""), role: userRoleSchema.parse(formData.get("role")), active: formData.get("active") === "on" });
+    await updateAppUser({
+      id: String(formData.get("id") ?? ""),
+      role: userRoleSchema.parse(formData.get("role")),
+      active: formData.get("active") === "on",
+      displayName: String(formData.get("displayName") ?? ""),
+      education: String(formData.get("education") ?? ""),
+      bio: String(formData.get("bio") ?? ""),
+      specialties: String(formData.get("specialties") ?? ""),
+      profileImageUri: String(formData.get("profileImageUri") ?? ""),
+    });
   } catch {
     redirect("/admin?tab=settings&userError=1#identity");
   }

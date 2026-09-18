@@ -18,6 +18,10 @@ export interface AppUser {
   readonly role: UserRole;
   readonly active: boolean;
   readonly createdAt: string;
+  readonly education: string | null;
+  readonly bio: string | null;
+  readonly specialties: string | null;
+  readonly profileImageUri: string | null;
 }
 
 export interface CurrentActor extends AppUser {
@@ -90,11 +94,15 @@ export const requireTrainer = () => requireRole("trainer");
 export const requireAdmin = () => requireRole("admin");
 export const requireSuperAdmin = () => requireRole("super_admin");
 
+export async function getOptionalCurrentActor(): Promise<CurrentActor | null> {
+  try { return await requireTrainer(); } catch { return null; }
+}
+
 export async function listAppUsers(): Promise<readonly AppUser[]> {
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(
-      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR
+      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR,education,bio,specialties,profile_image_uri
        FROM app_users ORDER BY lower(display_name), lower(email)`,
     );
     return reader.getRows().map((row) => toUser(row));
@@ -113,7 +121,7 @@ export async function createAppUser(input: { readonly email: string; readonly di
       { email, displayName, role, passwordHash },
     );
     const reader = await connection.runAndReadAll(
-      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR FROM app_users WHERE email=$email`,
+      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR,education,bio,specialties,profile_image_uri FROM app_users WHERE email=$email`,
       { email },
     );
     return toUser(reader.getRows()[0]);
@@ -126,22 +134,27 @@ export async function authenticateAppUser(emailInput: string, password: string):
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(
-      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR,password_hash FROM app_users WHERE lower(email)=lower($email) LIMIT 1`,
+      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR,education,bio,specialties,profile_image_uri,password_hash FROM app_users WHERE lower(email)=lower($email) LIMIT 1`,
       { email },
     );
     const row = reader.getRows()[0];
-    if (!row || !Boolean(row[4]) || !verifyPassword(password, row[6] == null ? null : String(row[6]))) return null;
+    if (!row || !Boolean(row[4]) || !verifyPassword(password, row[10] == null ? null : String(row[10]))) return null;
     return toUser(row);
   });
 }
 
-export async function updateAppUser(input: { readonly id: string; readonly role: UserRole; readonly active: boolean }): Promise<void> {
+export async function updateAppUser(input: { readonly id: string; readonly role: UserRole; readonly active: boolean; readonly displayName: string; readonly education: string; readonly bio: string; readonly specialties: string; readonly profileImageUri: string }): Promise<void> {
   const actor = await requireSuperAdmin();
   const id = z.string().uuid().parse(input.id);
   const role = userRoleSchema.parse(input.role);
+  const displayName = z.string().trim().min(1).max(120).parse(input.displayName);
+  const education = z.string().trim().max(240).parse(input.education);
+  const bio = z.string().trim().max(1000).parse(input.bio);
+  const specialties = z.string().trim().max(500).parse(input.specialties);
+  const profileImageUri = z.string().trim().max(500).refine((value) => !value || /^(https?:\/\/|\/)/.test(value), "Invalid profile image URI.").parse(input.profileImageUri);
   if (id === actor.id && (!input.active || role !== "super_admin")) throw new Error("Cannot demote or deactivate the current super-admin.");
   await withDuckDbConnection(async (connection) => {
-    await connection.run("UPDATE app_users SET role=$role,active=$active,updated_at=current_timestamp WHERE id=$id::UUID", { id, role, active: input.active });
+    await connection.run("UPDATE app_users SET display_name=$displayName,role=$role,active=$active,education=$education,bio=$bio,specialties=$specialties,profile_image_uri=$profileImageUri,updated_at=current_timestamp WHERE id=$id::UUID", { id, displayName, role, active: input.active, education: education || null, bio: bio || null, specialties: specialties || null, profileImageUri: profileImageUri || null });
   });
 }
 
@@ -153,6 +166,10 @@ function toUser(row: readonly unknown[], source: CurrentActor["source"] = "confi
     role: userRoleSchema.parse(String(row[3])),
     active: Boolean(row[4]),
     createdAt: String(row[5]),
+    education: row[6] == null ? null : String(row[6]),
+    bio: row[7] == null ? null : String(row[7]),
+    specialties: row[8] == null ? null : String(row[8]),
+    profileImageUri: row[9] == null ? null : String(row[9]),
     source,
   };
 }

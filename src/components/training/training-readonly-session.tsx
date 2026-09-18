@@ -47,6 +47,12 @@ export function TrainingReadonlySession({
             {session.notes}
           </p>
         ) : null}
+        {session.trainerProfile ? (
+          <div className={printMode ? "mt-4 flex items-center gap-3 text-sm text-slate-600" : "mt-4 flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]"}>
+            {session.trainerProfile.imageUri ? <img alt="" className="size-10 rounded-full object-cover" src={session.trainerProfile.imageUri} /> : <div aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-[var(--surface-elevated)] font-black">{session.trainerProfile.name.slice(0, 1).toUpperCase()}</div>}
+            <div><div className={printMode ? "font-black text-slate-900" : "font-black text-[var(--foreground)]"}>{session.trainerProfile.name}</div><div>{[session.trainerProfile.education, session.trainerProfile.specialties].filter(Boolean).join(" · ") || "Trainerprofil"}</div></div>
+          </div>
+        ) : null}
       </header>
 
       {session.phases.map((phase) => (

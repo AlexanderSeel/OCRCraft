@@ -48,6 +48,8 @@ Für den privaten Vereinsbetrieb kann die lokale Bootstrap-Identität verwendet 
 
 Trainings können über `/training/<id>/trainer` als schreibgeschützte Ansicht ohne Login geteilt werden. Diese Ansicht enthält keine Bearbeitungsaktionen.
 
+Trainerprofile lassen sich im Adminbereich mit Anzeigename, Ausbildung, Schwerpunkten, Kurzprofil und Bildreferenz pflegen. Bei neu erstellten Trainings wird das Profil kompakt in der Trainer- und Readonly-Ansicht angezeigt.
+
 ### Administration
 
 Administration und Einstellungen liegen in einem gemeinsamen Bereich mit vier Tabs: Übersicht, Datenbank, Datenqualität und Einstellungen. Dort sind Seed-Vollständigkeit, Dublettenprüfung, DuckDB-/FTS-Status, der bestätigungspflichtige Datenbank-Reset und das optionale Muskelkarten-Debugging getrennt erreichbar.
