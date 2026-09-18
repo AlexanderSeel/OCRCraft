@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
+import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import {
   aiCapabilityLabel,
   aiPriorityLabel,
@@ -514,9 +515,7 @@ function AiProviderEditor({
         </div>
         <div className="flex gap-2">
           <button className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black" onClick={onClose} type="button">Abbrechen</button>
-          <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
-            Speichern
-          </button>
+          <ActionProgressButton className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" pendingLabel="AI-Einstellungen werden gespeichert …">Speichern</ActionProgressButton>
         </div>
       </div>
     </form>
