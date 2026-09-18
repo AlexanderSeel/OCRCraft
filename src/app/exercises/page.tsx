@@ -96,7 +96,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       }
     >
       <div className="space-y-6">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-start">
+        <div className="grid gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
         <FilterSidePanel title="Übungsfilter">
         <form
           className="grid min-w-0 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1"
