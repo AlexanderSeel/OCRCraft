@@ -65,6 +65,21 @@ export async function withDuckDbConnection<T>(
   });
 }
 
+/** Read-only connection that does not wait behind the application write lock. */
+export async function withDuckDbReadConnection<T>(
+  operation: (connection: DuckDBConnection) => Promise<T>,
+): Promise<T> {
+  await mkdir(path.dirname(databasePath), { recursive: true });
+  const instance = await DuckDBInstance.create(databasePath, { access_mode: "READ_ONLY" });
+  const connection = await instance.connect();
+  try {
+    return await operation(connection);
+  } finally {
+    connection.closeSync();
+    instance.closeSync();
+  }
+}
+
 interface LockHandle {
   readonly close: () => Promise<void>;
 }
