@@ -233,7 +233,9 @@ export default async function MediaPage({ searchParams }: PageProps) {
           ) : null}
         </div>
 
-        <section className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
+        <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+          <summary className="cursor-pointer text-base font-black">Batch-Operationen <span className="ml-2 text-xs font-normal text-[var(--muted)]">Auswahl starten und KI-Jobstatus</span></summary>
+          <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
           <div>
             <h2 className="text-base font-black">Batch-Operationen</h2>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
@@ -261,10 +263,13 @@ export default async function MediaPage({ searchParams }: PageProps) {
             </dl>
             <MediaJobRefresh active={generationQueue.queued + generationQueue.running > 0} />
           </div>
-        </section>
+          </div>
+        </details>
 
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,1fr)]">
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+          <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+            <summary className="cursor-pointer text-base font-black">Übungen ohne verwendbares Bild <span className="ml-2 text-xs font-normal text-[var(--muted)]">{missingImageExercises.length} angezeigt</span></summary>
+            <div className="mt-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-base font-black">Übungen ohne verwendbares Bild</h2>
@@ -304,10 +309,13 @@ export default async function MediaPage({ searchParams }: PageProps) {
                 </p>
               )}
             </div>
-          </div>
+            </div>
+          </details>
 
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
-            <h2 className="text-base font-black">Letzte KI-Bildjobs</h2>
+          <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+            <summary className="cursor-pointer text-base font-black">Letzte KI-Bildjobs <span className="ml-2 text-xs font-normal text-[var(--muted)]">{recentJobs.length} Einträge</span></summary>
+            <div className="mt-4">
+            <h2 className="sr-only">Letzte KI-Bildjobs</h2>
             <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
               Laufende und abgeschlossene Jobs bleiben nachvollziehbar. Fehlgeschlagene Jobs können direkt erneut eingeplant werden.
             </p>
@@ -318,10 +326,13 @@ export default async function MediaPage({ searchParams }: PageProps) {
                 <p className="rounded-xl bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">Noch keine KI-Bildjobs vorhanden.</p>
               )}
             </div>
-          </div>
+            </div>
+          </details>
         </section>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+        <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+          <summary className="cursor-pointer text-base font-black">Legacy-Triptychon → Sequenzbild <span className="ml-2 text-xs font-normal text-[var(--muted)]">{legacyCandidates.length} offen</span></summary>
+          <div className="mt-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-black">Legacy-Triptychon → Sequenzbild</h2>
@@ -340,9 +351,12 @@ export default async function MediaPage({ searchParams }: PageProps) {
               </p>
             )}
           </div>
-        </section>
+          </div>
+        </details>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+        <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+          <summary className="cursor-pointer text-base font-black">Medien-Wartung <span className="ml-2 text-xs font-normal text-[var(--muted)]">{maintenance.orphanedObjectCount} verwaist · {maintenance.missingObjectCount} fehlen</span></summary>
+          <div className="mt-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 className="text-base font-black">Medien-Wartung</h2>
@@ -384,7 +398,8 @@ export default async function MediaPage({ searchParams }: PageProps) {
               </ul>
             </div>
           ) : null}
-        </section>
+          </div>
+        </details>
 
         {assets.length ? (
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
