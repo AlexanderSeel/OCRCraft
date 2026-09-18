@@ -1,8 +1,8 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { mkdir, rename, rm, writeFile } from "node:fs/promises";
+import { DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { mkdir, readdir, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { StoredExerciseImage } from "./exercise-image-types";
 
@@ -18,6 +18,7 @@ export interface ExerciseImageStorage {
   readonly provider: StoredExerciseImage["storageProvider"];
   save(input: SaveExerciseImageInput): Promise<StoredExerciseImage>;
   delete(storageKey: string): Promise<void>;
+  listKeys?(): Promise<readonly string[]>;
   close?(): void;
 }
 
@@ -59,6 +60,26 @@ export class FileSystemExerciseImageStorage implements ExerciseImageStorage {
     if (!destination.startsWith(`${this.root}${path.sep}`)) throw new Error("Invalid exercise image storage key.");
     await rm(destination, { force: true });
   }
+
+  async listKeys(): Promise<readonly string[]> {
+    const keys: string[] = [];
+    const walk = async (directory: string): Promise<void> => {
+      const entries = await readdir(directory, { withFileTypes: true }).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") return [];
+        throw error;
+      });
+      for (const entry of entries) {
+        const absolute = path.join(directory, entry.name);
+        if (entry.isDirectory()) {
+          await walk(absolute);
+        } else if (entry.isFile()) {
+          keys.push(path.relative(this.root, absolute).split(path.sep).join("/"));
+        }
+      }
+    };
+    await walk(this.root);
+    return keys.sort();
+  }
 }
 
 export interface S3CompatibleExerciseImageStorageOptions {
@@ -96,6 +117,23 @@ export class S3CompatibleExerciseImageStorage implements ExerciseImageStorage {
 
   async delete(storageKey: string): Promise<void> {
     await this.options.client.send(new DeleteObjectCommand({ Bucket: this.options.bucket, Key: storageKey }));
+  }
+
+  async listKeys(): Promise<readonly string[]> {
+    const keys: string[] = [];
+    let continuationToken: string | undefined;
+    do {
+      const result = await this.options.client.send(new ListObjectsV2Command({
+        Bucket: this.options.bucket,
+        Prefix: this.prefix ? this.prefix + "/" : undefined,
+        ContinuationToken: continuationToken,
+      }));
+      for (const item of result.Contents ?? []) {
+        if (item.Key) keys.push(item.Key);
+      }
+      continuationToken = result.IsTruncated ? result.NextContinuationToken : undefined;
+    } while (continuationToken);
+    return keys.sort();
   }
 
   close(): void {
