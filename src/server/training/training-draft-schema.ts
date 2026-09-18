@@ -7,6 +7,7 @@ import {
   MAIN_PART_EVERY_UNITS,
   MAIN_PART_PROGRAMMING_MODES,
   MAIN_PART_SCORE_MODES,
+  PARTNER_WORK_MODES,
   TRAINING_FORMATS,
   TRAINING_LOCATIONS,
 } from "../../domain/training/model";
@@ -20,11 +21,17 @@ export const mainPartProgrammingSchema = z.object({
   restSeconds: z.number().int().min(0).max(1800).optional(),
   rounds: z.number().int().min(1).max(50).optional(),
   scoreMode: z.enum(MAIN_PART_SCORE_MODES).optional(),
+  roundRestSeconds: z.number().int().min(0).max(600).optional(),
   ladderStart: z.number().int().min(1).max(100).optional(),
   ladderEnd: z.number().int().min(1).max(200).optional(),
   ladderStep: z.number().int().min(1).max(50).optional(),
+  chipperRepsPerExercise: z.number().int().min(1).max(500).optional(),
   everyValue: z.number().int().min(1).max(10000).optional(),
   everyUnit: z.enum(MAIN_PART_EVERY_UNITS).optional(),
+  everyWorkSeconds: z.number().int().min(5).max(1800).optional(),
+  everyRestSeconds: z.number().int().min(0).max(1800).optional(),
+  partnerMode: z.enum(PARTNER_WORK_MODES).optional(),
+  partnerSwitchSeconds: z.number().int().min(5).max(1800).optional(),
 }).superRefine((value, context) => {
   if (value.mode === "interval") {
     if (value.workSeconds == null) context.addIssue({ code: "custom", path: ["workSeconds"], message: "Intervallblöcke benötigen eine Arbeitszeit." });
@@ -48,6 +55,13 @@ export const mainPartProgrammingSchema = z.object({
   if (value.mode === "every") {
     if (value.everyValue == null) context.addIssue({ code: "custom", path: ["everyValue"], message: "Every-X benötigt einen Abstand/Wert." });
     if (value.everyUnit == null) context.addIssue({ code: "custom", path: ["everyUnit"], message: "Every-X benötigt eine Einheit." });
+    if (value.everyUnit === "minutes" && value.everyValue != null && value.everyWorkSeconds != null && value.everyRestSeconds != null
+      && value.everyWorkSeconds + value.everyRestSeconds >= value.everyValue * 60) {
+      context.addIssue({ code: "custom", path: ["everyWorkSeconds"], message: "Arbeit plus Pause muss kürzer als das Every-X-Minutenintervall sein." });
+    }
+  }
+  if (value.partnerMode === "alternating" && value.partnerSwitchSeconds == null) {
+    context.addIssue({ code: "custom", path: ["partnerSwitchSeconds"], message: "Alternierende Partnerarbeit benötigt ein Wechselintervall." });
   }
 });
 
@@ -134,6 +148,10 @@ export const trainingDraftRequestSchema = z.object({
   (value) => !value.formats.includes("partner")
     || (value.organizationMode === "team" && value.teamSize === 2),
   { message: "Partner Workout wird verbindlich in 2er-Teams geplant.", path: ["teamSize"] },
+).refine(
+  (value) => value.formats.includes("partner")
+    || !value.mainPartProgramming.some((programming) => programming.partnerMode != null || programming.partnerSwitchSeconds != null),
+  { message: "Partner-Arbeitsweisen dürfen nur im Format Partner Workout verwendet werden.", path: ["mainPartProgramming"] },
 ).refine(
   (value) => value.organizationMode !== "team" || value.groupSplitCount == null,
   { message: "Rotationsgruppen werden nur im Solo-/Rotationsmodus verwendet.", path: ["groupSplitCount"] },

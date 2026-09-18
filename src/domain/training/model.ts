@@ -46,6 +46,14 @@ export type MainPartScoreMode = (typeof MAIN_PART_SCORE_MODES)[number];
 export const MAIN_PART_EVERY_UNITS = ["metres", "minutes", "checkpoint"] as const;
 export type MainPartEveryUnit = (typeof MAIN_PART_EVERY_UNITS)[number];
 
+export const PARTNER_WORK_MODES = [
+  "you-go-i-go",
+  "synchronized",
+  "alternating",
+  "shared-target",
+] as const;
+export type PartnerWorkMode = (typeof PARTNER_WORK_MODES)[number];
+
 export interface MainPartProgramming {
   readonly mode: MainPartProgrammingMode;
   /** Work/rest prescription for generic interval blocks. */
@@ -54,13 +62,24 @@ export interface MainPartProgramming {
   /** Fixed rounds for time or quality. */
   readonly rounds?: number;
   readonly scoreMode?: MainPartScoreMode;
+  /** Planned recovery between completed rounds. */
+  readonly roundRestSeconds?: number;
   /** Repetition range for ladder/reverse-ladder/pyramid programming. */
   readonly ladderStart?: number;
   readonly ladderEnd?: number;
   readonly ladderStep?: number;
+  /** Target repetitions per exercise in a chipper block. */
+  readonly chipperRepsPerExercise?: number;
   /** Trigger cadence for running/checkpoint combinations. */
   readonly everyValue?: number;
   readonly everyUnit?: MainPartEveryUnit;
+  /** Work and reset time performed at each Every-X trigger. */
+  readonly everyWorkSeconds?: number;
+  readonly everyRestSeconds?: number;
+  /** Pair-specific work sharing when the Partner Workout format is active. */
+  readonly partnerMode?: PartnerWorkMode;
+  /** Work switch cadence for alternating partner blocks. */
+  readonly partnerSwitchSeconds?: number;
 }
 
 export const TRAINING_ORGANIZATION_MODES = ["solo", "team"] as const;

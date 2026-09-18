@@ -1,5 +1,7 @@
 import type { TrainingDraft } from "@/domain/training/draft";
 import type { MainPartProgramming, TrainingItem, TrainingPhase, TrainingPhaseKind } from "@/domain/training/model";
+import { mainPartProgrammingLabel } from "@/server/training/main-part-programming";
+import { analyzeMainPartProgramming } from "@/domain/training/programming-math";
 
 export type DraftPreviewAlternativeMode = "easier" | "harder" | "equipment";
 
@@ -128,7 +130,15 @@ function PhasePreview({
 
       {phase.kind === "main" ? (
         <div className="mt-3 space-y-3">
-          {mainBlocks.map((block) => (
+          {mainBlocks.map((block) => {
+            const analysis = block.programming
+              ? analyzeMainPartProgramming(
+                  block.programming,
+                  block.items.reduce((sum, item) => sum + item.durationMinutes * 60, 0),
+                  block.items.length,
+                )
+              : null;
+            return (
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" key={block.index}>
               <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] pb-2">
                 <span className="text-xs font-black uppercase tracking-[0.08em]">{block.title}</span>
@@ -136,9 +146,10 @@ function PhasePreview({
                   {block.items.reduce((sum, item) => sum + item.durationMinutes, 0)} Min. · {block.items.length} Übungen
                 </span>
               </div>
-              {block.programming && block.programming.mode !== "standard" ? (
-                <div className="mt-2 rounded-lg border border-[var(--accent-strong)] bg-[var(--accent-soft)] px-3 py-2 text-xs font-black">
-                  {programmingLabel(block.programming)}
+              {block.programming && (block.programming.mode !== "standard" || block.programming.partnerMode) ? (
+                <div className="mt-2 rounded-lg border border-[var(--accent-strong)] bg-[var(--accent-soft)] px-3 py-2 text-xs">
+                  <div className="font-black">{mainPartProgrammingLabel(block.programming)}</div>
+                  {analysis?.summary ? <div className="mt-1 font-semibold opacity-80">{analysis.summary}</div> : null}
                 </div>
               ) : null}
               <ol className="mt-2 space-y-2">
@@ -155,7 +166,8 @@ function PhasePreview({
                 ))}
               </ol>
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <ol className="mt-3 space-y-2">
@@ -283,18 +295,4 @@ function participantsAtItem(
   if (item.format !== "circuit") return participantCount;
   const circuitStationCount = blockItems.filter((candidate) => candidate.format === "circuit").length;
   return Math.ceil(participantCount / Math.max(1, circuitStationCount));
-}
-
-function programmingLabel(programming: MainPartProgramming): string {
-  if (programming.mode === "interval") return `${programming.workSeconds ?? 0}s Arbeit / ${programming.restSeconds ?? 0}s Pause`;
-  if (programming.mode === "rounds") return `${programming.rounds ?? 1} Runden · ${programming.scoreMode === "time" ? "auf Zeit" : "auf Qualität"}`;
-  if (programming.mode === "ladder") return `Ladder ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1} · +${programming.ladderStep ?? 1}`;
-  if (programming.mode === "reverse-ladder") return `Reverse Ladder ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1} · -${programming.ladderStep ?? 1}`;
-  if (programming.mode === "pyramid") return `Pyramide ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}→${programming.ladderStart ?? 1} · Schritt ${programming.ladderStep ?? 1}`;
-  if (programming.mode === "chipper") return "Chipper · Übungen nacheinander vollständig abarbeiten";
-  if (programming.mode === "every") {
-    if (programming.everyUnit === "checkpoint") return `An jedem ${programming.everyValue ?? 1}. Checkpoint`;
-    return `Alle ${programming.everyValue ?? 1} ${programming.everyUnit === "minutes" ? "Min." : "m"}`;
-  }
-  return "Standard / frei programmiert";
 }

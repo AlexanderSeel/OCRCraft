@@ -163,4 +163,56 @@ describe("training draft request equipment, obstacles, groups and location", () 
       availableObstacleExerciseIds: ["wall"],
     }).success).toBe(false);
   });
+  it("validates partner work modes and alternating switch cadence", () => {
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["partner"],
+      organizationMode: "team",
+      teamSize: 2,
+      mainPartProgramming: [{ mode: "rounds", rounds: 3, scoreMode: "quality", partnerMode: "you-go-i-go" }],
+    }).success).toBe(true);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["partner"],
+      organizationMode: "team",
+      teamSize: 2,
+      mainPartProgramming: [{ mode: "standard", partnerMode: "alternating" }],
+    }).success).toBe(false);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["circuit"],
+      mainPartProgramming: [{ mode: "standard", partnerMode: "shared-target" }],
+    }).success).toBe(false);
+  });
+
+
+  it("validates minute-based Every-X work/rest arithmetic when explicitly supplied", () => {
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["run-exercise"],
+      mainPartProgramming: [{
+        mode: "every",
+        everyValue: 2,
+        everyUnit: "minutes",
+        everyWorkSeconds: 40,
+        everyRestSeconds: 20,
+      }],
+    }).success).toBe(true);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["run-exercise"],
+      mainPartProgramming: [{
+        mode: "every",
+        everyValue: 1,
+        everyUnit: "minutes",
+        everyWorkSeconds: 40,
+        everyRestSeconds: 20,
+      }],
+    }).success).toBe(false);
+  });
+
+
 });

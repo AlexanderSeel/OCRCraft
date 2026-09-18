@@ -66,9 +66,9 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Suchprofile und Feldgewichte konfigurierbar machen: Administration bietet versionierte Startprofile sowie Anlegen, Bearbeiten, Aktivieren und geschütztes Löschen; das aktive Profil steuert Übungssuche und Autocomplete und Profiländerungen werden auditiert.
 - [x] Favoriten und „zuletzt verwendet“ ergänzen: Favoriten werden trainerbezogen persistiert; die Übungsbibliothek kann nach Favoriten und den real zuletzt in eigenen Trainings verwendeten Übungen filtern und zeigt beide Zustände direkt auf den Karten.
 - [x] Authentifizierte DE/EN-FTS-Rebuild-Aktionen bereitstellen.
-- [ ] Partner-Workout und weitere offene Formatregeln ergänzen.
-- [ ] Intervall-/Runden-/Ladder-/Pyramid-/Chipper-/Partner-Regeln vollständig ausbauen.
-- [ ] Laufregeln wie „alle X Meter/Minuten/Checkpoint“ und Arbeits-/Pausenarithmetik vervollständigen.
+- [x] Partner-Workout als echte 2er-Team-Programmierung ausbauen: Hauptteile unterstützen You-go-I-go, synchrones Arbeiten, zeitgesteuertes Alternieren und gemeinsame Zielmengen; Partnerregeln werden serverseitig validiert, persistiert, in Vorschau/Builder angezeigt und bleiben bei Neuplanung bzw. Übungsersatz erhalten.
+- [x] Intervall-/Runden-/Ladder-/Pyramid-/Chipper-/Partner-Regeln vollständig ausbauen: Arbeits-/Pausenzyklen, Rundenpausen und Zeit pro Runde, Ladder-/Pyramid-Wiederholungsfolgen, Chipper-Zielmengen sowie Partner-Arbeitsweisen werden deterministisch berechnet, validiert und in Entwurf/Trainer-/Druckansicht transparent angezeigt.
+- [x] Laufregeln „alle X Meter/Minuten/Checkpoint“ und Arbeits-/Pausenarithmetik vervollständigen: Every-X speichert Trigger, Arbeit und Reset; Minuten-Trigger werden gegen die Blockzeit gerechnet, Meter/Checkpoint bleiben streckenabhängig gekennzeichnet und Run+Exercise erhält bei fehlender Detailprogrammierung einen sicheren 500-m-Standard.
 
 ### Training Editor und Gruppen
 
