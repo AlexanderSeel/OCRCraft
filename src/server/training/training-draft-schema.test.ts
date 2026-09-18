@@ -81,6 +81,41 @@ describe("training draft request equipment, obstacles, groups and location", () 
     }).success).toBe(false);
   });
 
+  it("validates structured team competition presets", () => {
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["team-competition"],
+      competitionStyleKey: "triad-specialists",
+      organizationMode: "team",
+      teamSize: 3,
+      mainPartCount: 4,
+      mainPartExerciseCounts: [2, 2, 2, 2],
+      mainPartProgramming: [
+        { mode: "rounds", rounds: 2, scoreMode: "quality" },
+        { mode: "interval", workSeconds: 30, restSeconds: 30 },
+        { mode: "rounds", rounds: 2, scoreMode: "quality" },
+        { mode: "chipper" },
+      ],
+    }).success).toBe(true);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["team-competition"],
+      organizationMode: "team",
+      teamSize: 3,
+      mainPartCount: 4,
+    }).success).toBe(false);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["team-competition"],
+      competitionStyleKey: "triad-specialists",
+      organizationMode: "team",
+      teamSize: 4,
+      mainPartCount: 4,
+    }).success).toBe(false);
+  });
+
   it("accepts explicit zero stock and rejects duplicate or invalid stock entries", () => {
     expect(trainingDraftRequestSchema.safeParse({
       ...request,

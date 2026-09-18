@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
+import { TEAM_COMPETITION_STYLES, getTeamCompetitionStyle } from "@/domain/training/team-competition-catalog";
 import type { TrainingObstacleOption } from "@/server/training/training-draft-repository";
 import { BodyFocusSelector } from "./body-focus-selector";
 import {
@@ -52,6 +53,7 @@ const formatOptions = [
   ["technique", "Technik", "Qualität und Hindernisprogression im Fokus"],
   ["relay", "Team / Relay", "Gruppen- und Staffelvarianten"],
   ["partner", "Partner Workout", "Verbindliche 2er-Teams mit Partner-/Teamwork-Übungen"],
+  ["team-competition", "Teamwettkampf", "Strukturierte Team-Komplexe mit Rollen, Runden und gemeinsamem Finisher"],
 ] as const;
 
 const DEFAULT_FORMATS: readonly string[] = ["rig-run"];
@@ -152,6 +154,7 @@ export function QuickCreateWizard({
   const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>([]);
   const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>([]);
   const [formats, setFormats] = useState<readonly string[]>(initialTemplate?.formats ?? DEFAULT_FORMATS);
+  const [competitionStyleKey, setCompetitionStyleKey] = useState("");
   const [location, setLocation] = useState(initialTemplate?.location ?? "mixed");
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
     equipmentStateFromCatalog(equipmentOptions),
@@ -188,9 +191,9 @@ export function QuickCreateWizard({
     : Math.ceil(participantCount / effectiveGroupSplitCount);
   const canContinue = useMemo(() => {
     if (step === 2) return goals.length > 0;
-    if (step === 3) return formats.length > 0;
+    if (step === 3) return formats.length > 0 && (!formats.includes("team-competition") || competitionStyleKey.length > 0);
     return true;
-  }, [formats.length, goals.length, step]);
+  }, [competitionStyleKey, formats, goals.length, step]);
 
   function invalidateDraft() {
     setDraft(null);
@@ -239,9 +242,26 @@ export function QuickCreateWizard({
     invalidateDraft();
   }
 
+  function applyCompetitionStyle(key: string) {
+    setCompetitionStyleKey(key);
+    const style = getTeamCompetitionStyle(key);
+    if (!style) {
+      invalidateDraft();
+      return;
+    }
+    setFormats(style.formats);
+    setGoals(style.goals);
+    setIntensity(style.intensity);
+    setGroupSplitCount(undefined);
+    invalidateDraft();
+  }
+
   function currentDraftInput(): QuickCreateDraftClientInput {
+    const competitionStyle = getTeamCompetitionStyle(competitionStyleKey);
+    const competitionActive = formats.includes("team-competition") && competitionStyle != null;
     return {
       templateKey: initialTemplate?.key,
+      competitionStyleKey: competitionActive ? competitionStyle.key : undefined,
       groupId: selectedGroupId || undefined,
       groupType,
       ageRange,
@@ -252,9 +272,12 @@ export function QuickCreateWizard({
       avoidBodyRegions,
       formats,
       location,
-      organizationMode: formats.includes("partner") ? "team" : "solo",
-      teamSize: formats.includes("partner") ? 2 : undefined,
-      groupSplitCount: formats.includes("partner") ? undefined : effectiveGroupSplitCount,
+      organizationMode: competitionActive || formats.includes("partner") ? "team" : "solo",
+      teamSize: competitionActive ? competitionStyle.teamSize : formats.includes("partner") ? 2 : undefined,
+      groupSplitCount: competitionActive || formats.includes("partner") ? undefined : effectiveGroupSplitCount,
+      mainPartCount: competitionActive ? competitionStyle.mainPartTitlesDe.length : undefined,
+      mainPartExerciseCounts: competitionActive ? competitionStyle.mainPartExerciseCounts : undefined,
+      mainPartProgramming: competitionActive ? competitionStyle.mainPartProgramming : undefined,
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
         quantity.trim() === "" ? [] : [{ equipmentId, quantityAvailable: Number(quantity) }]
       ),
@@ -550,7 +573,9 @@ export function QuickCreateWizard({
                       }`}
                       key={id}
                       onClick={() => {
-                        setFormats(toggleValue(formats, id));
+                        const next = toggleValue(formats, id);
+                        setFormats(next);
+                        if (id === "team-competition" && !next.includes("team-competition")) setCompetitionStyleKey("");
                         invalidateDraft();
                       }}
                       type="button"
@@ -560,6 +585,33 @@ export function QuickCreateWizard({
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+                <label className="grid gap-2 text-sm font-black sm:max-w-xl">
+                  Teamwettkampfstil
+                  <select
+                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                    disabled={!formats.includes("team-competition")}
+                    onChange={(event) => applyCompetitionStyle(event.target.value)}
+                    value={competitionStyleKey}
+                  >
+                    <option value="">Wettkampfstil auswählen</option>
+                    {TEAM_COMPETITION_STYLES.map((style) => (
+                      <option key={style.key} value={style.key}>{style.titleDe} · {style.teamSize}er-Team</option>
+                    ))}
+                  </select>
+                </label>
+                {competitionStyleKey && getTeamCompetitionStyle(competitionStyleKey) ? (
+                  <div className="mt-3 text-xs leading-5 text-[var(--muted)]">
+                    <strong className="text-[var(--foreground)]">{getTeamCompetitionStyle(competitionStyleKey)?.descriptionDe}</strong>
+                    <div className="mt-2">{getTeamCompetitionStyle(competitionStyleKey)?.mainPartTitlesDe.join(" → ")}</div>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                    Aktiviert automatisch Teamgröße, Komplexe und Standardrunden. Im Training Builder können die Runden anschließend weiter angepasst werden.
+                  </p>
+                )}
               </div>
 
               <div className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">

@@ -8,11 +8,13 @@ import {
   type TrainingTemplateFocus,
 } from "@/domain/training/training-template-catalog";
 import type { Audience } from "@/domain/training/model";
+import { listClubTrainingTemplates } from "@/server/training/saved-training-template-service";
+import { archiveClubTrainingTemplateAction, instantiateClubTrainingTemplateAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  readonly searchParams: Promise<{ audience?: string; focus?: string }>;
+  readonly searchParams: Promise<{ audience?: string; focus?: string; saved?: string; error?: string }>;
 }
 
 const audiences: readonly Audience[] = ["adults", "kids", "youth"];
@@ -26,6 +28,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
   const templates = TRAINING_TEMPLATES.filter((item) =>
     (!audience || item.audience === audience) && (!focus || item.focus === focus)
   );
+  const clubTemplates = await listClubTrainingTemplates(false, 100);
 
   return (
     <AppShell
@@ -43,6 +46,68 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
       )}
     >
       <div className="space-y-6">
+        {params.saved === "archived" ? (
+          <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">
+            Vereinsvorlage wurde archiviert.
+          </div>
+        ) : null}
+        {params.error ? (
+          <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">
+            {params.error === "use"
+              ? "Vereinsvorlage konnte nicht verwendet werden. Prüfe, ob alle referenzierten Übungen noch aktiv sind."
+              : "Vereinsvorlage konnte nicht archiviert werden."}
+          </div>
+        ) : null}
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-black">Vereinsvorlagen</h2>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+                Konkrete Snapshots aus bereits geplanten Trainings. Beim Verwenden entsteht ein neuer Entwurf; die Vorlage selbst bleibt unverändert.
+              </p>
+            </div>
+            <span className="rounded-full bg-[var(--surface-subtle)] px-3 py-1 text-xs font-black">{clubTemplates.length} gespeichert</span>
+          </div>
+          {clubTemplates.length ? (
+            <div className="mt-4 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+              {clubTemplates.map((item) => (
+                <article className="flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={item.id}>
+                  <div className="flex flex-wrap gap-2 text-xs font-black text-[var(--muted)]">
+                    <span>{item.totalDurationMinutes} Min.</span>
+                    <span>· {item.itemCount} Übungen</span>
+                    <span>· {item.organizationMode === "team" ? `Team ${item.teamSize ?? 2}` : "Solo/Rotation"}</span>
+                  </div>
+                  <h3 className="mt-2 text-base font-black">{item.name}</h3>
+                  {item.description ? <p className="mt-2 text-sm leading-5 text-[var(--muted)]">{item.description}</p> : null}
+                  <div className="mt-3 text-xs text-[var(--muted)]">
+                    {item.sourceTrainingTitle ? <>Quelle: <strong className="text-[var(--foreground)]">{item.sourceTrainingTitle}</strong> · </> : null}
+                    {item.createdBy ? `${item.createdBy} · ` : ""}{formatTemplateDate(item.createdAt)}
+                  </div>
+                  <div className="mt-auto flex flex-wrap gap-2 pt-4">
+                    <form action={instantiateClubTrainingTemplateAction} className="flex-1">
+                      <input name="templateId" type="hidden" value={item.id} />
+                      <button className="min-h-10 w-full rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
+                        Als neues Training verwenden
+                      </button>
+                    </form>
+                    <form action={archiveClubTrainingTemplateAction}>
+                      <input name="templateId" type="hidden" value={item.id} />
+                      <button className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" type="submit">
+                        Archivieren
+                      </button>
+                    </form>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-xl bg-[var(--surface-subtle)] p-4 text-sm text-[var(--muted)]">
+              Noch keine Vereinsvorlage gespeichert. Öffne ein bestehendes Training und nutze „Als Vereinsvorlage speichern“.
+            </p>
+          )}
+        </section>
+
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2 text-sm font-bold">
@@ -113,6 +178,15 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
       </div>
     </AppShell>
   );
+}
+
+function formatTemplateDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("de-DE", {
+    dateStyle: "medium",
+    timeZone: "Europe/Berlin",
+  }).format(date);
 }
 
 function Phase({ label, value }: { readonly label: string; readonly value: string }) {

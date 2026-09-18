@@ -153,6 +153,15 @@ npm run exercise:import:exercisedb
 
 Importierte Datensätze werden normalisiert, mit stabilen Quellen-/Seed-Informationen versehen und gegen vorhandene Übungsnamen geprüft. Unsichere Dubletten bleiben zur Prüfung sichtbar.
 
+Externe Instruktionstexte und Medien werden standardmäßig **nicht** übernommen, solange für den Datensatz kein expliziter und geprüft bestätigter Lizenz-/Rechtenachweis vorliegt. Beim ExerciseDB-Import kann ein Betreiber nach eigener Rechteprüfung beides bewusst freischalten:
+
+```text
+OCRCRAFT_EXERCISEDB_LICENSE_LABEL=<geprüfter Lizenz-/Rechtenachweis>
+OCRCRAFT_EXERCISEDB_LICENSE_VERIFIED=1
+```
+
+Ohne diese Bestätigung speichert OCRCraft nur Quellen-/Katalogmetadaten und erzeugt eigene neutrale Review-Hinweise; externe Medien werden nicht angelegt.
+
 ## Architektur
 
 ```text

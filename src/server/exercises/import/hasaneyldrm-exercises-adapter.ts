@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { evaluateExternalContentLicense } from "./external-content-license-policy";
 
 /** The public dataset is treated as untrusted input and media is metadata only. */
 // The repository JSON uses relative paths (images/... and videos/...). Keep
@@ -25,6 +26,7 @@ export const hasaneyldrmExerciseSchema = z.object({
   source_provider: z.string().optional(),
   source_url: optionalUrl,
   license_label: z.string().optional(),
+  license_verified: z.boolean().optional().default(false),
 });
 
 export type HasaneyldrmExercise = z.infer<typeof hasaneyldrmExerciseSchema>;
@@ -53,7 +55,8 @@ export interface ExerciseImportDraft {
     readonly gif?: string;
     readonly video?: string;
     readonly attribution?: string;
-    readonly licenseLabel: string;
+    readonly licenseLabel: string | null;
+    readonly licenseVerified: boolean;
     readonly usage: "template_only";
   };
   readonly warnings: readonly string[];
@@ -83,16 +86,35 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
   const bodyRegionIds = [...new Set([record.body_part, record.muscle_group, record.target]
     .flatMap(values).map((value) => BODY_PART_MAP[value] ?? (value.includes("glute") ? "glutes" : value.includes("quad") ? "quadriceps" : value.includes("hamstring") ? "hamstrings" : undefined)).filter((value): value is string => Boolean(value)))];
   const equipmentSeedKeys = [...new Set(values(record.equipment).map((value) => EQUIPMENT_MAP[value] ?? value))];
-  const steps = record.instruction_steps.en?.filter((step) => step.trim()) ?? [];
-  const summary = record.instructions.en?.trim() || `${record.name} exercise imported from the external catalogue.`;
+  const license = evaluateExternalContentLicense(record.license_label, record.license_verified);
+  const sourceSteps = record.instruction_steps.en?.filter((step) => step.trim()) ?? [];
+  const sourceSummary = record.instructions.en?.trim();
+  const summary = license.licensedCopyAllowed && sourceSummary
+    ? sourceSummary
+    : `External catalogue reference for ${record.name}. Original source instructions were not copied because OCRCraft has no verified content license for this record.`;
+  const steps = license.licensedCopyAllowed && sourceSteps.length >= 3
+    ? sourceSteps
+    : [
+        "Trainer checks the setup, equipment and source reference before use.",
+        "Use only an OCRCraft-reviewed, pain-free execution variant appropriate for the group.",
+        "Stop if technique, spacing or control cannot be maintained.",
+      ];
   const warnings = [
     ...(bodyRegionIds.length ? [] : ["No OCRCraft body region could be mapped"]),
     ...(equipmentSeedKeys.some((key) => !Object.values(EQUIPMENT_MAP).includes(key)) ? ["One or more equipment values need catalogue review"] : []),
-    ...(record.image || record.gif_url || record.video || record.video_url || record.videoUrl ? ["Media is a template reference only and requires license/source review before approval"] : []),
+    ...(!license.licensedCopyAllowed && (sourceSummary || sourceSteps.length > 0)
+      ? ["External instruction text was not copied because no explicitly verified usable license/right label was supplied"]
+      : []),
+    ...(!license.licensedCopyAllowed && (record.image || record.gif_url || record.video || record.video_url || record.videoUrl)
+      ? ["External media reference was suppressed because no explicitly verified usable license/right label was supplied"]
+      : []),
+    ...(license.licensedCopyAllowed && (record.image || record.gif_url || record.video || record.video_url || record.videoUrl)
+      ? ["External media remains pending until source/license review is approved"]
+      : []),
     "German translation and trainer review are required before publishing",
   ];
   const sourceProvider = record.source_provider ?? "hasaneyldrm/exercises-dataset";
-  const licenseLabel = record.license_label ?? "Gym-Visual-Lizenz";
+  const licenseLabel = license.normalizedLicenseLabel;
   return {
     sourceProvider,
     sourceRecordId: String(record.id),
@@ -113,11 +135,12 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
       retrievedAt: new Date().toISOString(),
     },
     mediaReference: {
-      image: record.image,
-      gif: record.gif_url,
-      video: record.video ?? record.video_url ?? record.videoUrl,
+      image: license.licensedCopyAllowed ? record.image : undefined,
+      gif: license.licensedCopyAllowed ? record.gif_url : undefined,
+      video: license.licensedCopyAllowed ? record.video ?? record.video_url ?? record.videoUrl : undefined,
       attribution: record.attribution,
       licenseLabel,
+      licenseVerified: license.licensedCopyAllowed,
       usage: "template_only",
     },
     warnings,
