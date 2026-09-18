@@ -28,6 +28,7 @@ interface DuplicateComparisonRecord {
   readonly purpose: string;
   readonly setup: string;
   readonly safetyNotes: string;
+  readonly imageUrl: string | null;
 }
 
 interface DuplicateReviewPanelProps {
@@ -115,6 +116,7 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
                     return <>
                   <h4 className="text-lg font-black">{record?.name ?? side.name}</h4>
                   <p className="mt-1 break-all text-xs text-[var(--muted)]">ID: {side.id}</p>
+                  {record?.imageUrl ? <div className="mt-3 overflow-hidden rounded-lg border border-[var(--border)] bg-white"><img alt={`Vorschau: ${record.name}`} className="h-32 w-full object-contain" loading="lazy" src={record.imageUrl} /></div> : <div className="mt-3 rounded-lg border border-dashed border-[var(--border)] p-3 text-xs text-[var(--muted)]">Kein verwendbares Bild hinterlegt.</div>}
                   {record ? (
                     <div className="mt-4 space-y-3 text-sm">
                       <p className="text-[var(--muted)]">{record.summary || "Keine Kurzbeschreibung hinterlegt."}</p>

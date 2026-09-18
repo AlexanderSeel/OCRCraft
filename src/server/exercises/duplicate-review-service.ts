@@ -4,6 +4,7 @@ import { assessExerciseDuplicate, shouldReviewDuplicate, type DuplicateClassific
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { recordAuditEvent } from "@/server/db/audit-service";
+import { safeExerciseImageUri } from "@/server/exercises/exercise-image-uri";
 import type { DuckDBConnection } from "@duckdb/node-api";
 
 export interface DuplicateReviewTask {
@@ -31,6 +32,7 @@ export interface DuplicateComparisonRecord {
   readonly purpose: string;
   readonly setup: string;
   readonly safetyNotes: string;
+  readonly imageUrl: string | null;
 }
 
 interface DuplicateRow extends DuplicateExerciseRecord { readonly name: string; }
@@ -105,7 +107,10 @@ export async function getDuplicateComparisonRecords(
           FROM exercise_equipment ee JOIN equipment eq ON eq.id=ee.equipment_id WHERE ee.exercise_id=e.id), ''),
         COALESCE((SELECT string_agg(DISTINCT ebr.body_region_id, ' | ')
           FROM exercise_body_regions ebr WHERE ebr.exercise_id=e.id), ''),
-        COALESCE(d.purpose, ''), COALESCE(d.setup, ''), COALESCE(d.safety_notes, '')
+        COALESCE(d.purpose, ''), COALESCE(d.setup, ''), COALESCE(d.safety_notes, ''),
+        (SELECT m.storage_uri FROM exercise_media_assets m
+          WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
+          ORDER BY m.created_at DESC, m.id DESC LIMIT 1)
       FROM exercises e
       LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
       LEFT JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de'
@@ -117,7 +122,7 @@ export async function getDuplicateComparisonRecords(
         id: String(row[0]), name: String(row[1]), summary: String(row[2]), category: String(row[3]),
         phase: String(row[4]), riskLevel: String(row[5]), minAge: row[6] == null ? null : Number(row[6]),
         equipment: String(row[7]).split(" | ").filter(Boolean), bodyRegions: String(row[8]).split(" | ").filter(Boolean),
-        purpose: String(row[9]), setup: String(row[10]), safetyNotes: String(row[11]),
+        purpose: String(row[9]), setup: String(row[10]), safetyNotes: String(row[11]), imageUrl: safeExerciseImageUri(row[12]),
       });
     }
     return result;

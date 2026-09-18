@@ -42,8 +42,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Optional Binärmedien mit MIME-Typ, Prüfsumme und Quellenmetadaten exportieren.
 - [x] Import-Preflight, Schema-Version und transaktionalen Schreibvorgang für erlaubte portable Tabellen implementieren.
 - [x] Dublettenklassifikation (`same`, `new`, `probable duplicate`, `conflict`) und Side-by-Side-Vergleich für Importkonflikte abschließen.
-- [ ] Bildvergleich, `Keep both` als explizite Entscheidung und konfliktbewusste Feldübernahme im Bulk vollständig abdecken.
-- [ ] Round-trip- und Konfliktauflösungstests ergänzen.
+- [ ] Konfliktbewusste Feldübernahme im Bulk vollständig abdecken (Bildvergleich und `Keep both` als explizite Entscheidung sind umgesetzt).
+- [ ] Konfliktauflösungstests ergänzen (Portable-Medien-Round-trip ist abgedeckt).
 
 ## P1 – Trainer-Workflow
 
