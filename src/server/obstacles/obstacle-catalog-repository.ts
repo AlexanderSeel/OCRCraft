@@ -114,7 +114,7 @@ export async function listObstacleCatalog({
         (
           SELECT m.storage_uri
           FROM exercise_media_assets m
-          WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
           ORDER BY m.created_at DESC,m.id DESC
           LIMIT 1
         )
