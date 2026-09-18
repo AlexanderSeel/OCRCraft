@@ -51,6 +51,8 @@ const formatOptions = [
   ["relay", "Team / Relay", "Gruppen- und Staffelvarianten"],
 ] as const;
 
+const DEFAULT_FORMATS: readonly string[] = ["rig-run"];
+
 const locationOptions = [
   ["mixed", "Flexibel", "Indoor- und Outdoor-geeignete Übungen zulassen"],
   ["indoor", "Indoor", "Nur Übungen verwenden, die für Indoor-Training geeignet sind"],
@@ -70,6 +72,12 @@ export interface QuickCreateGroupPreset {
     readonly equipmentId: string;
     readonly quantityAvailable: number;
   }[];
+  readonly skillDistribution: {
+    readonly beginnerPercent: number;
+    readonly intermediatePercent: number;
+    readonly advancedPercent: number;
+  } | null;
+  readonly preferredFormats: readonly string[];
 }
 
 interface QuickCreateWizardProps {
@@ -119,7 +127,7 @@ export function QuickCreateWizard({
   const [bodyRegions, setBodyRegions] = useState<readonly string[]>(["forearms-grip", "core"]);
   const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>([]);
   const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>([]);
-  const [formats, setFormats] = useState<readonly string[]>(["rig-run"]);
+  const [formats, setFormats] = useState<readonly string[]>(DEFAULT_FORMATS);
   const [location, setLocation] = useState("mixed");
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
     equipmentStateFromCatalog(equipmentOptions),
@@ -185,6 +193,7 @@ export function QuickCreateWizard({
         ? Object.fromEntries(preset.defaultEquipment.map((item) => [item.equipmentId, String(item.quantityAvailable)]))
         : equipmentStateFromCatalog(equipmentOptions),
     );
+    setFormats(preset.preferredFormats.length > 0 ? preset.preferredFormats : DEFAULT_FORMATS);
     invalidateDraft();
   }
 
@@ -640,6 +649,9 @@ export function QuickCreateWizard({
                     ? `${effectiveGroupSplitCount} Gruppen · bis zu ${maxRotationGroupSize} Personen/Gruppe`
                     : "Automatische Stationsverteilung"],
                   ["Dauer", `${duration} Minuten`],
+                  ["Skill-Mix", selectedPreset?.skillDistribution
+                    ? `${selectedPreset.skillDistribution.beginnerPercent}% Beginner · ${selectedPreset.skillDistribution.intermediatePercent}% Intermediate · ${selectedPreset.skillDistribution.advancedPercent}% Advanced`
+                    : "Keine Gruppenverteilung hinterlegt"],
                   ["Ziele", goals.join(", ")],
                   ["Körperregionen", bodyRegions.length ? bodyRegions.join(", ") : "Keine Vorgabe"],
                   ["Nicht belasten", avoidBodyRegions.length ? avoidBodyRegions.join(", ") : "Keine Ausschlüsse"],
