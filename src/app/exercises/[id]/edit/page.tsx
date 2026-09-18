@@ -10,11 +10,13 @@ import { ExerciseFacetForm } from "@/components/exercises/exercise-facet-form";
 import { ExerciseForm } from "@/components/exercises/exercise-form";
 import { ExerciseGuidanceListEditor } from "@/components/exercises/exercise-guidance-list-editor";
 import { ExerciseOutdoorVariantEditor } from "@/components/exercises/exercise-outdoor-variant-editor";
+import { ExerciseObstacleGuidanceEditor } from "@/components/exercises/exercise-obstacle-guidance-editor";
 import { ExerciseProgressionEditor } from "@/components/exercises/exercise-progression-editor";
 import { getExerciseClassificationEditorData } from "@/server/exercises/exercise-classification-repository";
 import { getExerciseById, getExerciseProgressionRelations, listExerciseRelationOptions } from "@/server/exercises/exercise-repository";
 import { getExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
 import { getExerciseOutdoorVariantEditorData } from "@/server/exercises/exercise-outdoor-variant-repository";
+import { getObstacleGuidanceEditorData } from "@/server/obstacles/obstacle-editor-repository";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 import { setExerciseArchivedAction, updateExerciseAction } from "../../actions";
 import { updateExerciseClassificationAction } from "../classification-actions";
@@ -25,6 +27,7 @@ import {
 import { updateExerciseFacetsAction } from "../facet-actions";
 import { updateExerciseGuidanceListsAction } from "../guidance-actions";
 import { updateExerciseOutdoorVariantAction } from "../outdoor-variant-actions";
+import { updateExerciseObstacleGuidanceAction } from "../obstacle-actions";
 import { addExerciseProgressionRelationAction, deleteExerciseProgressionRelationAction } from "../progression-actions";
 
 interface PageProps {
@@ -47,6 +50,8 @@ interface PageProps {
     outdoorError?: string;
     progressionSaved?: string;
     progressionError?: string;
+    obstacleSaved?: string;
+    obstacleError?: string;
   }>;
 }
 
@@ -56,10 +61,11 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const exercise = await getExerciseById(id);
   if (!exercise) notFound();
 
-  const [classification, facets, outdoorVariant, guidanceDeMap, guidanceEnMap, progressionRelations, relationOptions] = await Promise.all([
+  const [classification, facets, outdoorVariant, obstacleGuidance, guidanceDeMap, guidanceEnMap, progressionRelations, relationOptions] = await Promise.all([
     getExerciseClassificationEditorData(exercise.id),
     getExerciseFacetEditorData(exercise.id),
     getExerciseOutdoorVariantEditorData(exercise.id),
+    getObstacleGuidanceEditorData(exercise.id),
     getTrainingExerciseGuidanceMap([exercise.id], "de"),
     getTrainingExerciseGuidanceMap([exercise.id], "en"),
     getExerciseProgressionRelations(exercise.id),
@@ -73,6 +79,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const updateClassificationAction = updateExerciseClassificationAction.bind(null, exercise.id);
   const updateFacetsAction = updateExerciseFacetsAction.bind(null, exercise.id);
   const updateOutdoorVariantAction = updateExerciseOutdoorVariantAction.bind(null, exercise.id);
+  const updateObstacleAction = updateExerciseObstacleGuidanceAction.bind(null, exercise.id);
   const updateGuidanceAction = updateExerciseGuidanceListsAction.bind(null, exercise.id);
   const updateDetailAction = updateLocalizedExerciseDetailsAction.bind(null, exercise.id);
   const updateLogisticsAction = updateExerciseLogisticsAction.bind(null, exercise.id);
@@ -91,7 +98,9 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
     || status.guidanceError
     || status.guidanceSaved
     || status.outdoorError
-    || status.outdoorSaved,
+    || status.outdoorSaved
+    || status.obstacleError
+    || status.obstacleSaved,
   );
 
   return (
@@ -130,6 +139,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         {status.logisticsSaved ? <Notice>Schwierigkeit, Aufsicht und Stationslogistik wurden gespeichert.</Notice> : null}
         {status.outdoorSaved ? <Notice>Outdoor-Variante und alternatives Equipment wurden gespeichert und stehen der Outdoor-Trainingsplanung zur Verfügung.</Notice> : null}
         {status.progressionSaved ? <Notice>Progressionsbeziehung gespeichert.</Notice> : null}
+        {status.obstacleSaved ? <Notice>Hindernis-Guidance, Stationskapazität und Sicherheitszone wurden gespeichert.</Notice> : null}
         {status.progressionError ? <ErrorNotice>Die Progressionsbeziehung ist ungültig oder konnte nicht gespeichert werden.</ErrorNotice> : null}
         {status.classificationError === "invalid" ? <ErrorNotice>Die Klassifikation ist unvollständig oder ungültig. Wähle mindestens ein Trainingsziel.</ErrorNotice> : null}
         {status.classificationError === "save" ? <ErrorNotice>Die Klassifikation konnte nicht gespeichert werden.</ErrorNotice> : null}
@@ -142,6 +152,8 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         {status.logisticsError === "invalid" ? <ErrorNotice>Die Logistikwerte sind ungültig. Prüfe Zeiten, Kapazität und Pflichtfelder.</ErrorNotice> : null}
         {status.logisticsError === "save" ? <ErrorNotice>Die Logistikwerte konnten nicht gespeichert werden.</ErrorNotice> : null}
         {status.outdoorError === "save" ? <ErrorNotice>Die Outdoor-Variante konnte nicht gespeichert werden. Prüfe Texte und Equipment-Auswahl.</ErrorNotice> : null}
+        {status.obstacleError === "invalid" ? <ErrorNotice>Die Hindernis-Guidance ist unvollständig oder enthält ungültige Werte.</ErrorNotice> : null}
+        {status.obstacleError === "save" ? <ErrorNotice>Die Hindernis-Guidance konnte nicht gespeichert werden.</ErrorNotice> : null}
 
         <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" open={Boolean(status.created || status.saved)}>
           <summary className="min-h-8 cursor-pointer font-bold">Stammdaten bearbeiten</summary>
@@ -162,6 +174,26 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
           <p className="mt-3 max-w-4xl text-sm leading-6 text-[var(--muted)]">Verknüpfe eine Übung mit einer leichteren, anspruchsvolleren oder gleichwertigen Variante. Die Beziehung wird separat von den Freitext-Leveln gespeichert.</p>
           <div className="mt-4"><ExerciseProgressionEditor addAction={addProgressionAction} deleteAction={deleteProgressionAction} disabled={exercise.archived} options={relationOptions} relations={progressionRelations} /></div>
         </details>
+
+        {obstacleGuidance && (obstacleGuidance.hasGuidance || exercise.category === "ocr-skill" || exercise.category === "grip-rig") ? (
+          <details
+            className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
+            id="obstacle-guidance"
+            open={Boolean(status.obstacleSaved || status.obstacleError || obstacleGuidance.hasGuidance)}
+          >
+            <summary className="min-h-8 cursor-pointer font-bold">Hindernis-Guidance & Sicherheitszone</summary>
+            <p className="mt-3 max-w-4xl text-sm leading-6 text-[var(--muted)]">
+              Pflege obstacle-spezifischen Aufbau, Annäherung, Ausführung, Ausstieg und Regression zweisprachig. Stationskapazität und Freizone gelten für beide Sprachen und werden mit der allgemeinen Übungslogistik synchronisiert.
+            </p>
+            <div className="mt-4">
+              <ExerciseObstacleGuidanceEditor
+                action={updateObstacleAction}
+                data={obstacleGuidance}
+                disabled={exercise.archived}
+              />
+            </div>
+          </details>
+        ) : null}
 
         <details
           className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"

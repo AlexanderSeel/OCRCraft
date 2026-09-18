@@ -4,6 +4,8 @@ import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { safeExerciseImageUri } from "@/server/exercises/exercise-image-uri";
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export interface MediaCatalogFilters {
   readonly query?: string;
   readonly reviewStatus?: string;
@@ -161,5 +163,23 @@ export async function listMediaCatalog({
       createdAt: String(row[22]),
       errorMessage: row[23] == null ? null : String(row[23]),
     }));
+  });
+}
+
+
+export async function setMediaReviewStatus(
+  assetId: string,
+  reviewStatus: "pending" | "approved" | "rejected",
+): Promise<boolean> {
+  if (!UUID_PATTERN.test(assetId)) return false;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      UPDATE exercise_media_assets
+      SET review_status=$reviewStatus, updated_at=current_timestamp
+      WHERE id=$assetId::UUID
+      RETURNING id::VARCHAR
+    `, { assetId, reviewStatus });
+    return reader.getRows().length === 1;
   });
 }

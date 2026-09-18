@@ -337,27 +337,27 @@ export async function listExercises({
         ), '') AS equipment_names,
         (
           SELECT m.storage_uri FROM exercise_media_assets m
-          WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
           ORDER BY m.created_at DESC, m.id DESC LIMIT 1
         ) AS image_uri,
         (
           SELECT m.review_status FROM exercise_media_assets m
-          WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
           ORDER BY m.created_at DESC, m.id DESC LIMIT 1
         ),
         (
           SELECT m.illustration_format FROM exercise_media_assets m
-          WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
           ORDER BY m.created_at DESC, m.id DESC LIMIT 1
         ),
         (
           SELECT m.sequence_step_count FROM exercise_media_assets m
-          WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
           ORDER BY m.created_at DESC, m.id DESC LIMIT 1
         ) AS image_review_status
         ,(
           SELECT m.license_label FROM exercise_media_assets m
-          WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
           ORDER BY m.created_at DESC, m.id DESC LIMIT 1
         ) AS image_license_label
       FROM exercises e
