@@ -8,9 +8,9 @@ html[data-theme="light"] {
   --surface-elevated: #ffffff;
   --surface-subtle: #eef1f4;
   --foreground: #171a1d;
-  --muted: #66717c;
+  --muted: #5d6872;
   --border: #dbe1e6;
-  --border-strong: #b9c2ca;
+  --border-strong: #aeb9c2;
   --accent: #d9f65a;
   --accent-strong: #b9dc27;
   --accent-soft: #f0f4db;
@@ -18,22 +18,22 @@ html[data-theme="light"] {
   --dark: #161b1f;
   --sidebar: #161b1f;
   --sidebar-foreground: #ffffff;
-  --sidebar-muted: rgba(255, 255, 255, 0.62);
-  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-muted: rgba(255, 255, 255, 0.72);
+  --sidebar-border: rgba(255, 255, 255, 0.16);
   --sidebar-hover: rgba(255, 255, 255, 0.08);
   --header: rgba(255, 255, 255, 0.92);
   --control-strong: #161b1f;
   --control-strong-hover: #050708;
   --control-strong-foreground: #ffffff;
-  --focus: #4d75ff;
-  --warning: #9a5b00;
+  --focus: #345fe8;
+  --warning: #875000;
   --warning-bg: #fff4d6;
-  --danger: #a12626;
+  --danger: #921f1f;
   --danger-bg: #fff0f0;
-  --success: #526517;
+  --success: #455713;
   --success-bg: #f0f7d7;
   --success-border: #b8d56c;
-  --success-foreground: #53622b;
+  --success-foreground: #455713;
   --muscle-canvas: #f8fafb;
   --muscle-primary: #d92d20;
   --muscle-primary-soft: #fff0ee;
@@ -51,9 +51,9 @@ html[data-theme="dark"] {
   --surface-elevated: #1d2328;
   --surface-subtle: #242b31;
   --foreground: #f2f5f6;
-  --muted: #a4afb8;
+  --muted: #b2bdc5;
   --border: #343d45;
-  --border-strong: #505c66;
+  --border-strong: #5d6973;
   --accent: #d9f65a;
   --accent-strong: #c4e33a;
   --accent-soft: #30391f;
@@ -61,22 +61,22 @@ html[data-theme="dark"] {
   --dark: #101417;
   --sidebar: #0b0e10;
   --sidebar-foreground: #f8fafb;
-  --sidebar-muted: rgba(248, 250, 251, 0.62);
+  --sidebar-muted: rgba(248, 250, 251, 0.74);
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-hover: rgba(255, 255, 255, 0.08);
   --header: rgba(15, 19, 22, 0.92);
   --control-strong: #eef2f3;
   --control-strong-hover: #ffffff;
   --control-strong-foreground: #111518;
-  --focus: #82a1ff;
+  --focus: #91adff;
   --warning: #ffd58a;
   --warning-bg: #3a2b12;
-  --danger: #ffaaaa;
+  --danger: #ffb9b9;
   --danger-bg: #3c1f22;
   --success: #d8ef89;
   --success-bg: #28321d;
   --success-border: #617a2f;
-  --success-foreground: #dceca5;
+  --success-foreground: #e3efb7;
   --muscle-canvas: #11171b;
   --muscle-primary: #ff5c52;
   --muscle-primary-soft: #3a2020;
@@ -147,7 +147,7 @@ textarea {
 input::placeholder,
 textarea::placeholder {
   color: var(--muted);
-  opacity: 0.78;
+  opacity: 1;
 }
 
 option {

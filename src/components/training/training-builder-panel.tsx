@@ -27,6 +27,7 @@ import {
 } from "./exercise-autocomplete-picker";
 import { MainPartProgrammingEditor } from "./main-part-programming-editor";
 import { Disclosure } from "@/components/ui/disclosure";
+import { useToast } from "@/components/ui/toast";
 import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
 import {
@@ -140,6 +141,7 @@ export function TrainingBuilderPanel({
   sourceTrainingOptions = [],
   initialState,
 }: TrainingBuilderPanelProps) {
+  const { pushToast, updateToast } = useToast();
   const [builderMode, setBuilderMode] = useState<QuickCreateBuilderMode>(initialState?.builderMode ?? "local");
   const [audience, setAudience] = useState(initialState?.audience ?? "mixed");
   const [ageRange, setAgeRange] = useState(
@@ -177,6 +179,8 @@ export function TrainingBuilderPanel({
     initialState?.availableObstacleExerciseIds ?? obstacleOptions.map((option) => option.id),
   );
   const [draft, setDraft] = useState<TrainingDraft | null>(null);
+  const [undoDrafts, setUndoDrafts] = useState<readonly TrainingDraft[]>([]);
+  const [redoDrafts, setRedoDrafts] = useState<readonly TrainingDraft[]>([]);
   const [title, setTitle] = useState(initialState ? `${initialState.sourceTitle} – angepasst` : "");
   const [error, setError] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -204,8 +208,36 @@ export function TrainingBuilderPanel({
 
   function invalidate() {
     setDraft(null);
+    setUndoDrafts([]);
+    setRedoDrafts([]);
     setSavedId(null);
     setError(null);
+  }
+
+  function commitDraft(nextDraft: TrainingDraft) {
+    if (draft) setUndoDrafts((current) => [...current, draft].slice(-20));
+    setRedoDrafts([]);
+    setDraft(nextDraft);
+  }
+
+  function undoDraft() {
+    if (!draft || undoDrafts.length === 0) return;
+    const previous = undoDrafts[undoDrafts.length - 1];
+    setUndoDrafts((current) => current.slice(0, -1));
+    setRedoDrafts((current) => [...current, draft].slice(-20));
+    setDraft(previous);
+    setSavedId(null);
+    pushToast({ tone: "info", title: "Änderung rückgängig gemacht" });
+  }
+
+  function redoDraft() {
+    if (!draft || redoDrafts.length === 0) return;
+    const next = redoDrafts[redoDrafts.length - 1];
+    setRedoDrafts((current) => current.slice(0, -1));
+    setUndoDrafts((current) => [...current, draft].slice(-20));
+    setDraft(next);
+    setSavedId(null);
+    pushToast({ tone: "info", title: "Änderung wiederhergestellt" });
   }
 
   function updateMainPartCount(value: number) {
@@ -299,14 +331,19 @@ export function TrainingBuilderPanel({
   }
 
   async function generate() {
+    const toastId = pushToast({ tone: "loading", title: "Training wird geplant" });
     setPending(true);
     setError(null);
     setSavedId(null);
     try {
-      setDraft(await requestTrainingDraft(input()));
+      const nextDraft = await requestTrainingDraft(input());
+      commitDraft(nextDraft);
+      updateToast(toastId, { tone: "success", title: "Trainingsentwurf bereit", message: "Planung und Sicherheitsprüfung sind abgeschlossen." });
     } catch (cause) {
       setDraft(null);
-      setError(cause instanceof Error ? cause.message : "Trainingsentwurf konnte nicht erstellt werden.");
+      const message = cause instanceof Error ? cause.message : "Trainingsentwurf konnte nicht erstellt werden.";
+      setError(message);
+      updateToast(toastId, { tone: "error", title: "Planung fehlgeschlagen", message });
     } finally {
       setPending(false);
     }
@@ -314,13 +351,18 @@ export function TrainingBuilderPanel({
 
   async function regeneratePhase(phase: TrainingPhaseKind) {
     if (!draft) return;
+    const toastId = pushToast({ tone: "loading", title: "Phase wird neu geplant" });
     setRegeneratingPhase(phase);
     setError(null);
     setSavedId(null);
     try {
-      setDraft(await regenerateTrainingDraftPhase(input(), draft, phase));
+      const nextDraft = await regenerateTrainingDraftPhase(input(), draft, phase);
+      commitDraft(nextDraft);
+      updateToast(toastId, { tone: "success", title: "Phase aktualisiert" });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Phase konnte nicht neu geplant werden.");
+      const message = cause instanceof Error ? cause.message : "Phase konnte nicht neu geplant werden.";
+      setError(message);
+      updateToast(toastId, { tone: "error", title: "Neuplanung fehlgeschlagen", message });
     } finally {
       setRegeneratingPhase(null);
     }
@@ -328,13 +370,18 @@ export function TrainingBuilderPanel({
 
   async function replaceExercise(exerciseId: string, mode: DraftAlternativeMode) {
     if (!draft) return;
+    const toastId = pushToast({ tone: "loading", title: "Alternative wird gesucht" });
     setReplacingExerciseId(exerciseId);
     setError(null);
     setSavedId(null);
     try {
-      setDraft(await replaceTrainingDraftExercise(input(), draft, exerciseId, mode));
+      const nextDraft = await replaceTrainingDraftExercise(input(), draft, exerciseId, mode);
+      commitDraft(nextDraft);
+      updateToast(toastId, { tone: "success", title: "Übung ersetzt" });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Keine passende Übungsalternative gefunden.");
+      const message = cause instanceof Error ? cause.message : "Keine passende Übungsalternative gefunden.";
+      setError(message);
+      updateToast(toastId, { tone: "error", title: "Keine Alternative angewendet", message });
     } finally {
       setReplacingExerciseId(null);
     }
@@ -342,14 +389,18 @@ export function TrainingBuilderPanel({
 
   async function save() {
     if (!draft) return;
+    const toastId = pushToast({ tone: "loading", title: "Training wird gespeichert" });
     setPending(true);
     setError(null);
     try {
       const result = await persistTrainingDraft(input(), title, draft);
       setDraft(result.draft);
       setSavedId(result.id);
+      updateToast(toastId, { tone: "success", title: "Training gespeichert" });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Training konnte nicht gespeichert werden.");
+      const message = cause instanceof Error ? cause.message : "Training konnte nicht gespeichert werden.";
+      setError(message);
+      updateToast(toastId, { tone: "error", title: "Speichern fehlgeschlagen", message });
     } finally {
       setPending(false);
     }
@@ -643,13 +694,38 @@ export function TrainingBuilderPanel({
           {error ? <div className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm text-[var(--danger)]">{error}</div> : null}
           {savedId ? <div className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold"><Link className="underline underline-offset-4" href={`/training/${savedId}`}>Gespeichertes Training öffnen</Link></div> : null}
           {draft ? (
-            <TrainingDraftPreview
+            <>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+                <span className="text-xs font-semibold text-[var(--muted)]">
+                  Entwurfshistorie · bis zu 20 Neuplanungen und Ersetzungen
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={undoDrafts.length === 0 || busy}
+                    onClick={undoDraft}
+                    type="button"
+                  >
+                    Rückgängig
+                  </button>
+                  <button
+                    className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={redoDrafts.length === 0 || busy}
+                    onClick={redoDraft}
+                    type="button"
+                  >
+                    Wiederholen
+                  </button>
+                </div>
+              </div>
+              <TrainingDraftPreview
               draft={draft}
               onRegeneratePhase={(phase) => void regeneratePhase(phase)}
               onReplaceExercise={(exerciseId, mode) => void replaceExercise(exerciseId, mode)}
               regeneratingPhase={regeneratingPhase}
               replacingExerciseId={replacingExerciseId}
             />
+            </>
           ) : null}
         </section>
       </div>

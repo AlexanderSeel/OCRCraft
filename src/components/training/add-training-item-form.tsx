@@ -4,6 +4,12 @@ import { useState } from "react";
 import { addTrainingItemAction } from "@/app/training/[id]/actions";
 import { Disclosure } from "@/components/ui/disclosure";
 import {
+  FormActions,
+  FormField,
+  PrimaryFormButton,
+  formControlClass,
+} from "@/components/ui/form";
+import {
   ExerciseAutocompletePicker,
   type SelectedExerciseReference,
 } from "./exercise-autocomplete-picker";
@@ -32,27 +38,14 @@ export function AddTrainingItemForm({ sessionId, phaseId }: AddTrainingItemFormP
         />
 
         <div className="grid gap-4 md:grid-cols-3">
-          <label className="grid gap-2 text-sm font-bold">
-            Dauer
+          <FormField label="Dauer" required>
             <div className="flex items-center gap-2">
-              <input
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
-                defaultValue={5}
-                min={1}
-                name="durationMinutes"
-                required
-                type="number"
-              />
-              <span className="text-sm text-[var(--muted)]">Min.</span>
+              <input className={formControlClass} defaultValue={5} min={1} name="durationMinutes" required type="number" />
+              <span className="text-sm font-normal text-[var(--muted)]">Min.</span>
             </div>
-          </label>
-          <label className="grid gap-2 text-sm font-bold">
-            Format
-            <select
-              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
-              defaultValue=""
-              name="format"
-            >
+          </FormField>
+          <FormField label="Format">
+            <select className={formControlClass} defaultValue="" name="format">
               <option value="">Kein spezielles Format</option>
               <option value="free">Frei</option>
               <option value="circuit">Zirkel</option>
@@ -65,16 +58,10 @@ export function AddTrainingItemForm({ sessionId, phaseId }: AddTrainingItemFormP
               <option value="relay">Team / Relay</option>
               <option value="partner">Partner Workout</option>
             </select>
-          </label>
-          <label className="grid gap-2 text-sm font-bold">
-            Level / Variante
-            <input
-              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
-              maxLength={120}
-              name="levelLabel"
-              placeholder="z. B. Level 2"
-            />
-          </label>
+          </FormField>
+          <FormField hint="Optional, z. B. Level 2" label="Level / Variante">
+            <input className={formControlClass} maxLength={120} name="levelLabel" placeholder="z. B. Level 2" />
+          </FormField>
         </div>
 
         <Disclosure className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" summaryClassName="text-sm font-black" summary="Hauptteil-Zuordnung">
@@ -82,48 +69,22 @@ export function AddTrainingItemForm({ sessionId, phaseId }: AddTrainingItemFormP
             Wird nur ausgewertet, wenn diese Übung in der Hauptphase hinzugefügt wird. Leer lassen übernimmt den letzten vorhandenen Hauptteil bzw. Hauptteil 1.
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm font-bold">
-              Hauptteil Nr.
-              <input
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
-                max={12}
-                min={1}
-                name="mainPartIndex"
-                placeholder="z. B. 2"
-                type="number"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-bold">
-              Bezeichnung
-              <input
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
-                maxLength={120}
-                name="mainPartTitle"
-                placeholder="z. B. Hauptteil 2 · Griff & Rig"
-              />
-            </label>
+            <FormField label="Hauptteil Nr.">
+              <input className={formControlClass} max={12} min={1} name="mainPartIndex" placeholder="z. B. 2" type="number" />
+            </FormField>
+            <FormField label="Bezeichnung">
+              <input className={formControlClass} maxLength={120} name="mainPartTitle" placeholder="z. B. Hauptteil 2 · Griff & Rig" />
+            </FormField>
           </div>
         </Disclosure>
 
-        <label className="grid gap-2 text-sm font-bold">
-          Trainingshinweis
-          <textarea
-            className="min-h-24 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 font-normal leading-6 outline-none focus:border-[var(--focus)]"
-            maxLength={4000}
-            name="instructions"
-            placeholder="Optionaler Hinweis speziell für diese Einheit …"
-          />
-        </label>
+        <FormField hint="Optionaler Hinweis nur für diese konkrete Einheit." label="Trainingshinweis">
+          <textarea className={`${formControlClass} min-h-24 py-3 leading-6`} maxLength={4000} name="instructions" placeholder="Optionaler Hinweis speziell für diese Einheit …" />
+        </FormField>
 
-        <div className="flex justify-end">
-          <button
-            className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-45"
-            disabled={selected.length !== 1}
-            type="submit"
-          >
-            Zur Phase hinzufügen
-          </button>
-        </div>
+        <FormActions>
+          <PrimaryFormButton disabled={selected.length !== 1}>Zur Phase hinzufügen</PrimaryFormButton>
+        </FormActions>
       </form>
     </Disclosure>
   );
