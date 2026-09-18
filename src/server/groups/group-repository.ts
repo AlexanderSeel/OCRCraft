@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import type { ClubRuleProfileKey } from "@/domain/training/club-rules";
 import type { TrainingFormat, TrainingLocation } from "@/domain/training/model";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
@@ -35,14 +36,16 @@ export interface ClubGroupInput {
   readonly defaultEquipment?: readonly ClubGroupEquipmentDefault[];
   readonly skillDistribution?: ClubGroupSkillDistribution | null;
   readonly preferredFormats?: readonly TrainingFormat[];
+  readonly ruleProfile?: ClubRuleProfileKey;
 }
 
-export interface ClubGroup extends Omit<ClubGroupInput, "defaultLocation" | "defaultEquipment" | "skillDistribution" | "preferredFormats"> {
+export interface ClubGroup extends Omit<ClubGroupInput, "defaultLocation" | "defaultEquipment" | "skillDistribution" | "preferredFormats" | "ruleProfile"> {
   readonly id: string;
   readonly defaultLocation: TrainingLocation;
   readonly defaultEquipment: readonly ClubGroupEquipmentDefault[];
   readonly skillDistribution: ClubGroupSkillDistribution | null;
   readonly preferredFormats: readonly TrainingFormat[];
+  readonly ruleProfile: ClubRuleProfileKey;
   readonly archived: boolean;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -65,15 +68,16 @@ function rowToGroup(row: readonly unknown[]): Omit<ClubGroup, "defaultEquipment"
     defaultLocale: String(row[7]) as "de" | "en",
     maximumRiskLevel: row[8] == null ? null : String(row[8]) as ClubGroupRiskLevel,
     defaultLocation: String(row[9] ?? "mixed") as TrainingLocation,
-    skillDistribution: row[10] == null || row[11] == null || row[12] == null ? null : {
-      beginnerPercent: Number(row[10]),
-      intermediatePercent: Number(row[11]),
-      advancedPercent: Number(row[12]),
+    ruleProfile: String(row[10] ?? "standard") as ClubRuleProfileKey,
+    skillDistribution: row[11] == null || row[12] == null || row[13] == null ? null : {
+      beginnerPercent: Number(row[11]),
+      intermediatePercent: Number(row[12]),
+      advancedPercent: Number(row[13]),
     },
-    archived: Boolean(row[13]),
-    createdAt: String(row[14]),
-    updatedAt: String(row[15]),
-    linkedTrainingCount: Number(row[16]),
+    archived: Boolean(row[14]),
+    createdAt: String(row[15]),
+    updatedAt: String(row[16]),
+    linkedTrainingCount: Number(row[17]),
   };
 }
 
@@ -133,6 +137,7 @@ export async function listClubGroups(includeArchived = false): Promise<readonly 
         g.default_locale,
         g.maximum_risk_level,
         COALESCE(g.default_location,'mixed'),
+        COALESCE(g.rule_profile,'standard'),
         g.skill_beginner_percent,
         g.skill_intermediate_percent,
         g.skill_advanced_percent,
@@ -205,11 +210,11 @@ export async function createClubGroup(input: ClubGroupInput): Promise<string> {
         `
         INSERT INTO club_groups (
           id, name, audience, min_age, max_age, default_participant_count,
-          default_duration_minutes, default_locale, maximum_risk_level, default_location,
+          default_duration_minutes, default_locale, maximum_risk_level, default_location, rule_profile,
           skill_beginner_percent, skill_intermediate_percent, skill_advanced_percent
         ) VALUES (
           $id::UUID, $name, $audience, $minAge, $maxAge, $participants,
-          $duration, $locale, $risk, $location,
+          $duration, $locale, $risk, $location, $ruleProfile,
           $skillBeginner, $skillIntermediate, $skillAdvanced
         )
         `,
@@ -224,6 +229,7 @@ export async function createClubGroup(input: ClubGroupInput): Promise<string> {
           locale: input.defaultLocale,
           risk: input.maximumRiskLevel,
           location: input.defaultLocation ?? "mixed",
+          ruleProfile: input.ruleProfile ?? "standard",
           skillBeginner: input.skillDistribution?.beginnerPercent ?? null,
           skillIntermediate: input.skillDistribution?.intermediatePercent ?? null,
           skillAdvanced: input.skillDistribution?.advancedPercent ?? null,
@@ -259,6 +265,7 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
           default_locale=$locale,
           maximum_risk_level=$risk,
           default_location=COALESCE($location, default_location),
+          rule_profile=COALESCE($ruleProfile, rule_profile),
           skill_beginner_percent=$skillBeginner,
           skill_intermediate_percent=$skillIntermediate,
           skill_advanced_percent=$skillAdvanced,
@@ -277,6 +284,7 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
           locale: input.defaultLocale,
           risk: input.maximumRiskLevel,
           location: input.defaultLocation ?? null,
+          ruleProfile: input.ruleProfile ?? null,
           skillBeginner: input.skillDistribution?.beginnerPercent ?? null,
           skillIntermediate: input.skillDistribution?.intermediatePercent ?? null,
           skillAdvanced: input.skillDistribution?.advancedPercent ?? null,
@@ -298,6 +306,32 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
       await connection.run("ROLLBACK");
       throw error;
     }
+  });
+}
+
+export interface ClubGroupRuleSettings {
+  readonly ruleProfile: ClubRuleProfileKey;
+  readonly maximumRiskLevel: ClubGroupRiskLevel | null;
+}
+
+export async function getClubGroupRuleSettings(id: string): Promise<ClubGroupRuleSettings | null> {
+  if (!UUID_PATTERN.test(id)) return null;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `
+      SELECT COALESCE(rule_profile,'standard'),maximum_risk_level
+      FROM club_groups
+      WHERE id=$id::UUID AND archived=false
+      `,
+      { id },
+    );
+    const row = reader.getRows()[0];
+    if (!row) return null;
+    return {
+      ruleProfile: String(row[0] ?? "standard") as ClubRuleProfileKey,
+      maximumRiskLevel: row[1] == null ? null : String(row[1]) as ClubGroupRiskLevel,
+    };
   });
 }
 
