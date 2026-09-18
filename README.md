@@ -85,6 +85,9 @@ Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit e
 - Playwright-Quality-Gates für Seiten-Shell, genau eine Hauptüberschrift/Main-Landmark, horizontale Überläufe auf Desktop/Mobil, gemeinsame Listenansicht, Hindernis-Filter-Nesting und Quick-Create-Vorlagenauswahl
 - gemeinsame serverseitige Ergebniszähler- und Pagination-Komponenten für Übungen und Spiele mit responsiver Seitennavigation
 - Spielekatalog mit gemeinsamem Filter-Sidepanel, URL-basiertem Such-/Status-/Seitengrößenfilter und Reset-Zustand
+- Gruppenkatalog mit gemeinsamem Filter-Sidepanel, URL-basierter Namenssuche, Zielgruppenfilter und getrenntem Erstellungsdialog
+- AI-Entwürfe und Outdoor-Review mit gemeinsamen URL-basierten Such-/Statusfiltern und kompakten Reset-Zuständen
+- Medienkatalog mit gemeinsamem Ergebniszähler sowie URL-basierten Review-, Generierungs-, Quellen- und Medientypfiltern
 
 ## Voraussetzungen
 

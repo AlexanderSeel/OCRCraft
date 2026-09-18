@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
+import { CatalogResultCount } from "@/components/catalog/catalog-controls";
 import { MediaJobRefresh } from "@/components/media/media-job-refresh";
 import { OrphanedMediaCleanupForm } from "@/components/media/orphaned-media-cleanup-form";
 import { ExternalMediaManager } from "@/components/media/external-media-manager";
@@ -232,7 +233,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
         <div className="min-w-0 space-y-6">
 
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
-          <span>{assets.length} Medien im aktuellen Filter</span>
+          <CatalogResultCount from={assets.length ? 1 : 0} label="Medien im aktuellen Filter" to={assets.length} total={assets.length} />
           {(query || reviewStatus || generationStatus || sourceType || mediaType) ? (
             <Link className="font-black underline underline-offset-4" href="/media">Filter zurücksetzen</Link>
           ) : null}

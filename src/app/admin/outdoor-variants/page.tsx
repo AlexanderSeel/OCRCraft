@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
+import { FilterSidePanel } from "@/components/layout/filter-side-panel";
+import { CatalogResultCount } from "@/components/catalog/catalog-controls";
 import {
   listOutdoorVariantCandidates,
   type OutdoorVariantCandidatePreview,
@@ -21,6 +23,8 @@ interface PageProps {
     missingDetails?: string;
     candidate?: string;
     error?: string;
+    q?: string;
+    status?: string;
   }>;
 }
 
@@ -30,6 +34,13 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
     listOutdoorVariantCandidates(),
   ]);
   const hasResult = result.scanned != null;
+  const searchQuery = result.q?.trim().toLocaleLowerCase("de-DE") ?? "";
+  const statusFilter = ["ready", "existing", "review"].includes(result.status ?? "") ? result.status : "";
+  const filteredCandidates = candidates.filter((candidate) => {
+    if (searchQuery && !candidate.name.toLocaleLowerCase("de-DE").includes(searchQuery)) return false;
+    if (statusFilter === "review") return candidate.status === "unmappable" || candidate.status === "missing-details";
+    return !statusFilter || candidate.status === statusFilter;
+  });
   const ready = candidates.filter((candidate) => candidate.status === "ready");
   const existing = candidates.filter((candidate) => candidate.status === "existing");
   const needsReview = candidates.filter((candidate) => candidate.status === "unmappable" || candidate.status === "missing-details");
@@ -118,15 +129,39 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
             <span className="text-sm font-bold text-[var(--muted)]">{candidates.length} betroffene Übungen</span>
           </div>
 
-          {candidates.length === 0 ? (
+          <div className="grid min-w-0 gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
+          <FilterSidePanel title="Outdoor-Filter">
+            <form className="grid min-w-0 gap-3" method="get">
+              <label className="grid gap-1 text-sm font-bold">
+                Suchen
+                <input className="h-11 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={result.q ?? ""} name="q" placeholder="z. B. Cable, Bench ..." />
+              </label>
+              <label className="grid gap-1 text-sm font-bold">
+                Status
+                <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={statusFilter} name="status">
+                  <option value="">Alle</option>
+                  <option value="ready">Bereit</option>
+                  <option value="existing">Bereits vorhanden</option>
+                  <option value="review">Manuell prüfen</option>
+                </select>
+              </label>
+              <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 py-3 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Filtern</button>
+              {(searchQuery || statusFilter) ? <Link className="text-center text-xs font-black underline underline-offset-4" href="/admin/outdoor-variants">Filter zurücksetzen</Link> : null}
+            </form>
+          </FilterSidePanel>
+          <div className="min-w-0">
+          <div className="mb-4 text-sm text-[var(--muted)]"><CatalogResultCount from={filteredCandidates.length ? 1 : 0} label={filteredCandidates.length === 1 ? "Übung" : "Übungen"} to={filteredCandidates.length} total={filteredCandidates.length} /></div>
+          {filteredCandidates.length === 0 ? (
             <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] p-5 text-sm text-[var(--muted)]">
               Keine importierte aktive Übung mit erkannter Studio-Equipment-Abhängigkeit gefunden.
             </div>
           ) : (
             <div className="catalog-results mt-5 space-y-3">
-              {candidates.map((candidate) => <CandidateCard candidate={candidate} key={candidate.exerciseId} />)}
+              {filteredCandidates.map((candidate) => <CandidateCard candidate={candidate} key={candidate.exerciseId} />)}
             </div>
           )}
+          </div>
+          </div>
         </section>
       </div></OverviewLayout>
     </AppShell>

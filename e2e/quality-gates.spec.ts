@@ -79,6 +79,38 @@ test("games use the shared filter panel with URL-reset semantics", async ({ page
   await expect(page.getByRole("textbox", { name: "Suchen" })).toHaveValue("team");
 });
 
+test("groups use URL-based search and audience filters", async ({ page }) => {
+  await page.goto("/groups?q=kids&audience=kids", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("filter-side-panel")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Suchen" })).toHaveValue("kids");
+  await expect(page.getByRole("combobox", { name: "Zielgruppe" })).toHaveValue("kids");
+  await expect(page.getByRole("link", { name: "Filter zurücksetzen" })).toHaveAttribute("href", "/groups");
+});
+
+test("AI drafts use a compact URL-based search filter", async ({ page }) => {
+  await page.goto("/exercises/ai-drafts?q=carry", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("filter-side-panel")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Suchen" })).toHaveValue("carry");
+  await expect(page.getByRole("link", { name: "Filter zurücksetzen" })).toHaveAttribute("href", "/exercises/ai-drafts");
+});
+
+test("outdoor review uses shared status and search filters", async ({ page }) => {
+  await page.goto("/admin/outdoor-variants?q=bench&status=review", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("filter-side-panel")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Suchen" })).toHaveValue("bench");
+  await expect(page.getByRole("combobox", { name: "Status" })).toHaveValue("review");
+  await expect(page.getByRole("link", { name: "Filter zurücksetzen" })).toHaveAttribute("href", "/admin/outdoor-variants");
+});
+
+test("media keeps filter state in the URL and exposes a compact result count", async ({ page }) => {
+  await page.goto("/media?q=cargo&type=video&review=pending", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("filter-side-panel")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Suchen" })).toHaveValue("cargo");
+  await expect(page.getByRole("combobox", { name: "Medientyp" })).toHaveValue("video");
+  await expect(page.getByRole("link", { name: "Filter zurücksetzen" })).toHaveAttribute("href", "/media");
+  await expect(page.locator("[aria-live='polite']").first()).toBeVisible();
+});
+
 test("catalog view controls change the rendered result layout", async ({ page }) => {
   await page.goto("/games", { waitUntil: "domcontentloaded" });
   const overview = page.getByTestId("overview-layout");

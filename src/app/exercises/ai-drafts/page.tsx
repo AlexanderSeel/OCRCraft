@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
+import { FilterSidePanel } from "@/components/layout/filter-side-panel";
+import { CatalogResultCount } from "@/components/catalog/catalog-controls";
 import { Disclosure } from "@/components/ui/disclosure";
 import { exerciseCategoryLabels, exercisePhaseLabels } from "@/domain/exercise/model";
 import { getConfiguredAiExerciseDraftProvider } from "@/server/exercises/ai-exercise-draft-provider";
@@ -18,14 +20,17 @@ interface PageProps {
     saved?: string;
     error?: string;
     history?: string;
+    q?: string;
   }>;
 }
 
 export default async function AiExerciseDraftsPage({ searchParams }: PageProps) {
   const query = await searchParams;
   const showHistory = query.history === "1";
+  const searchQuery = query.q?.trim().toLocaleLowerCase("de-DE") ?? "";
   const provider = await getConfiguredAiExerciseDraftProvider();
-  const drafts = await listAiExerciseDrafts(showHistory ? undefined : "pending");
+  const allDrafts = await listAiExerciseDrafts(showHistory ? undefined : "pending");
+  const drafts = allDrafts.filter((draft) => !searchQuery || [draft.proposal.nameDe, draft.proposal.nameEn, draft.providerId].some((value) => value.toLocaleLowerCase("de-DE").includes(searchQuery)));
 
   return (
     <AppShell
@@ -98,6 +103,20 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
             <h2 className="mt-1 text-xl font-black">{showHistory ? "Alle AI-Entwürfe" : "Offene AI-Entwürfe"}</h2>
           </div>
 
+          <div className="grid min-w-0 gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
+          <FilterSidePanel title="Entwurfsfilter">
+            <form className="grid min-w-0 gap-3" method="get">
+              {showHistory ? <input name="history" type="hidden" value="1" /> : null}
+              <label className="grid gap-1 text-sm font-bold">
+                Suchen
+                <input className="h-11 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={query.q ?? ""} name="q" placeholder="z. B. Carry, Partner, Grip ..." />
+              </label>
+              <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 py-3 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Filtern</button>
+              {searchQuery ? <Link className="text-center text-xs font-black underline underline-offset-4" href={showHistory ? "/exercises/ai-drafts?history=1" : "/exercises/ai-drafts"}>Filter zurücksetzen</Link> : null}
+            </form>
+          </FilterSidePanel>
+          <div className="min-w-0 space-y-4">
+          <div className="text-sm text-[var(--muted)]"><CatalogResultCount from={drafts.length ? 1 : 0} label={drafts.length === 1 ? "Entwurf" : "Entwürfe"} to={drafts.length} total={drafts.length} /></div>
           {drafts.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center text-sm text-[var(--muted)]">
               {showHistory ? "Noch keine AI-Übungsentwürfe vorhanden." : "Keine offenen AI-Übungsentwürfe."}
@@ -193,6 +212,8 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
               ))}
             </div>
           )}
+          </div>
+          </div>
         </section>
       </div></OverviewLayout>
     </AppShell>
