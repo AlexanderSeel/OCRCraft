@@ -19,6 +19,9 @@ import {
 } from "@/server/exercises/exercise-facet-repository";
 import { countExercises, getExerciseCategoryCounts } from "@/server/exercises/exercise-repository";
 import { searchExercises } from "@/server/search/exercise-search-service";
+import { getOptionalCurrentActor } from "@/server/auth/identity-service";
+import { getExerciseLibraryPersonalization } from "@/server/exercises/exercise-personalization-repository";
+import { setExerciseFavoriteAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +34,7 @@ interface PageProps {
     page?: string;
     size?: string;
     facet?: string | string[];
+    collection?: string;
   }>;
 }
 
@@ -41,12 +45,24 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   const archived = params.status === "archived";
   const selectedMuscles = parameterList(params.muscle);
   const selectedFacets = parameterList(params.facet);
+  const collection = params.collection === "favorites" || params.collection === "recent" ? params.collection : "";
+  const actor = await getOptionalCurrentActor();
+  const personalization = actor
+    ? await getExerciseLibraryPersonalization(actor.id)
+    : { favoriteExerciseIds: [] as readonly string[], recentExercises: [] as readonly { exerciseId: string; useCount: number; lastUsedAt: string }[] };
+  const favoriteIds = new Set(personalization.favoriteExerciseIds);
+  const recentById = new Map(personalization.recentExercises.map((item) => [item.exerciseId,item]));
+  const personalFilterIds = collection === "favorites"
+    ? favoriteIds
+    : collection === "recent"
+      ? new Set(personalization.recentExercises.map((item) => item.exerciseId))
+      : null;
   const requestedSize = Number.parseInt(params.size ?? "80", 10) || 80;
   const pageSize = [20, 40, 80, 120].includes(requestedSize) ? requestedSize : 80;
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
 
   const [searchResult, categoryCounts, baseFilteredTotal, bodyRegionOptions, tagOptions] = await Promise.all([
-    searchExercises({ query, category, archived, limit: selectedMuscles.length || selectedFacets.length ? 200 : pageSize + 1, offset: selectedMuscles.length || selectedFacets.length ? 0 : (page - 1) * pageSize }),
+    searchExercises({ query, category, archived, limit: selectedMuscles.length || selectedFacets.length || personalFilterIds ? 200 : pageSize + 1, offset: selectedMuscles.length || selectedFacets.length || personalFilterIds ? 0 : (page - 1) * pageSize }),
     getExerciseCategoryCounts(),
     countExercises({ query, category, archived }),
     listBodyRegionOptions(),
@@ -57,11 +73,15 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     ? new Set(await listExerciseIdsForBodyRegions(expandBodyRegionIds(selectedMuscles)))
     : null;
   const matchingFacetIds = selectedFacets.length > 0 ? new Set(await listExerciseIdsForTags(selectedFacets)) : null;
-  const matchingIds = matchingMuscleIds || matchingFacetIds
-    ? new Set(searchResult.filter((exercise) => (!matchingMuscleIds || matchingMuscleIds.has(exercise.id)) && (!matchingFacetIds || matchingFacetIds.has(exercise.id))).map((exercise) => exercise.id))
+  const matchingIds = matchingMuscleIds || matchingFacetIds || personalFilterIds
+    ? new Set(searchResult.filter((exercise) =>
+        (!matchingMuscleIds || matchingMuscleIds.has(exercise.id))
+        && (!matchingFacetIds || matchingFacetIds.has(exercise.id))
+        && (!personalFilterIds || personalFilterIds.has(exercise.id))
+      ).map((exercise) => exercise.id))
     : null;
-  const filteredTotal = matchingIds && !query && !category && !archived ? matchingIds.size : baseFilteredTotal;
   const filteredResults = matchingIds ? searchResult.filter((exercise) => matchingIds.has(exercise.id)) : null;
+  const filteredTotal = filteredResults ? filteredResults.length : baseFilteredTotal;
   const hasNextPage = matchingIds
     ? page * pageSize < filteredTotal
     : searchResult.length > pageSize;
@@ -138,6 +158,14 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             </select>
           </label>
           <label className="grid gap-1 text-sm font-bold">
+            Sammlung
+            <select className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={collection} name="collection">
+              <option value="">Alle Übungen</option>
+              <option value="favorites">Meine Favoriten ({favoriteIds.size})</option>
+              <option value="recent">Zuletzt verwendet ({recentById.size})</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm font-bold">
             Pro Seite
             <select className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={String(pageSize)} name="size">
               {[20, 40, 80, 120].map((size) => <option key={size} value={size}>{size}</option>)}
@@ -182,6 +210,8 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             <span>{filteredTotal === 0 ? "0" : `${Math.min((page - 1) * pageSize + 1, filteredTotal)}–${Math.min(page * pageSize, filteredTotal)}`} von {filteredTotal} Übungen</span>
             <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">Laufen {runningCount}</span>
             <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">{categoryCounts.length} Kategorien</span>
+            <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">★ {favoriteIds.size} Favoriten</span>
+            <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">{recentById.size} zuletzt verwendet</span>
           </div>
           {archived ? (
             <Link className="font-bold text-[var(--foreground)]" href="/exercises">
@@ -275,6 +305,14 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                       Initialkatalog
                     </span>
                   ) : null}
+                  {favoriteIds.has(exercise.id) ? (
+                    <span className="rounded-full border border-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1">★ Favorit</span>
+                  ) : null}
+                  {recentById.has(exercise.id) ? (
+                    <span className="rounded-full border border-[var(--border)] px-2.5 py-1">
+                      Zuletzt genutzt · {recentById.get(exercise.id)?.useCount}×
+                    </span>
+                  ) : null}
                   {exercise.equipment.slice(0, 3).map((item) => (
                     <span className="rounded-full border border-[var(--border)] px-2.5 py-1" key={item}>
                       {item}
@@ -282,6 +320,17 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                   ))}
                 </div>
                 <div className="exercise-card-actions mt-auto flex flex-wrap gap-2 pt-3">
+                  <form action={setExerciseFavoriteAction}>
+                    <input name="exerciseId" type="hidden" value={exercise.id} />
+                    <input name="favorite" type="hidden" value={favoriteIds.has(exercise.id) ? "0" : "1"} />
+                    <button
+                      aria-label={favoriteIds.has(exercise.id) ? `${exercise.name} aus Favoriten entfernen` : `${exercise.name} zu Favoriten hinzufügen`}
+                      className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-black hover:bg-[var(--surface-subtle)]"
+                      type="submit"
+                    >
+                      {favoriteIds.has(exercise.id) ? "★ Favorit" : "☆ Favorit"}
+                    </button>
+                  </form>
                   <Link
                     className="inline-flex min-h-10 items-center rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
                     href={`/exercises/${exercise.id}`}
@@ -339,6 +388,7 @@ type ExerciseSearchParams = {
   readonly size?: string;
   readonly page?: string;
   readonly facet?: string | string[];
+  readonly collection?: string;
 };
 
 function pageHref(page: number, params: ExerciseSearchParams): string {
@@ -347,6 +397,7 @@ function pageHref(page: number, params: ExerciseSearchParams): string {
   if (params.category) query.set("category", params.category);
   if (params.status) query.set("status", params.status);
   if (params.size) query.set("size", params.size);
+  if (params.collection) query.set("collection", params.collection);
   for (const muscle of parameterList(params.muscle)) query.append("muscle", muscle);
   for (const facet of parameterList(params.facet)) query.append("facet", facet);
   query.set("page", String(page));

@@ -63,7 +63,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten: Exact/Prefix/Alias, Kurzbeschreibung, Ziele/Tags/Bewegungsmuster, Körperregionen, Equipment und Instruktionen werden über das aktive persistierte Suchprofil gewichtet; DuckDB-BM25 bleibt die Volltextbasis und ENV-Gewichte dienen nur als Fallback.
 - [x] Autocomplete aus Übungs-, Trainingsziel-, Equipment-, Tag-, Bewegungsmuster- und Körperregionsdaten ergänzen.
 - [x] Suchprofile und Feldgewichte konfigurierbar machen: Administration bietet versionierte Startprofile sowie Anlegen, Bearbeiten, Aktivieren und geschütztes Löschen; das aktive Profil steuert Übungssuche und Autocomplete und Profiländerungen werden auditiert.
-- [ ] Favoriten und „zuletzt verwendet“ ergänzen.
+- [x] Favoriten und „zuletzt verwendet“ ergänzen: Favoriten werden trainerbezogen persistiert; die Übungsbibliothek kann nach Favoriten und den real zuletzt in eigenen Trainings verwendeten Übungen filtern und zeigt beide Zustände direkt auf den Karten.
 - [x] Authentifizierte DE/EN-FTS-Rebuild-Aktionen bereitstellen.
 - [ ] Partner-Workout und weitere offene Formatregeln ergänzen.
 - [ ] Intervall-/Runden-/Ladder-/Pyramid-/Chipper-/Partner-Regeln vollständig ausbauen.

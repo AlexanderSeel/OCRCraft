@@ -13,6 +13,7 @@ import {
   toExerciseDraft,
 } from "@/server/exercises/exercise-validation";
 import { requireTrainer } from "@/server/auth/identity-service";
+import { setExerciseFavorite } from "@/server/exercises/exercise-personalization-repository";
 
 export interface ExerciseFormState {
   readonly message?: string;
@@ -109,4 +110,16 @@ export async function hardDeleteExerciseAction(id: string, formData: FormData): 
   await hardDeleteExercise(id);
   revalidatePath("/exercises");
   redirect("/exercises");
+}
+
+
+const EXERCISE_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export async function setExerciseFavoriteAction(formData: FormData): Promise<void> {
+  const actor = await requireTrainer();
+  const exerciseId = String(formData.get("exerciseId") ?? "");
+  if (!EXERCISE_ID_PATTERN.test(exerciseId)) return;
+  const favorite = formData.get("favorite") === "1";
+  await setExerciseFavorite(actor.id,exerciseId,favorite);
+  revalidatePath("/exercises");
 }
