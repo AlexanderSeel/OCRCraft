@@ -51,7 +51,10 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Architektur- und UI-Review 2026-09
 
-- [ ] Gemeinsame Kataloglisten fachlich vollständig vereinheitlichen: Die gemeinsame `OverviewLayout`-Ansicht und responsive Ergebnisdichte sind für Games, Hindernisse, Medien, Gruppen, AI-Entwürfe und Outdoor umgesetzt; ein gemeinsames Filter-Sidepanel, URL-Suchzustand, Ergebniszähler und Pagination-Primitive stehen noch aus.
+- [x] Gemeinsame Kataloglisten visuell und interaktiv vereinheitlichen: `OverviewLayout`, persistierte Liste/Klein/Groß/Detail-Umschaltung, responsive Ergebnisdichte, begrenzte Kartenbreiten und Playwright-Gates sind für Training, Vorlagen, Übungen, Games, Hindernisse, Medien, Gruppen, AI-Entwürfe und Outdoor umgesetzt. (Die überladene Mittelansicht wurde entfernt; Feature in README dokumentiert.)
+- [ ] Gemeinsame Kataloglisten fachlich weiter vereinheitlichen: ein gemeinsames Filter-Sidepanel, URL-Suchzustand, Ergebniszähler und Pagination-Primitive stehen noch aus.
+- [x] Gemeinsame Ergebniszähler- und Pagination-Primitive für paginierte Kataloge einführen und in Übungen sowie Spiele migrieren; Seitennavigation bleibt responsiv, zugänglich und serverseitig URL-basiert. (Feature in README dokumentiert.)
+- [x] Spielekatalog auf das gemeinsame `FilterSidePanel`-Muster mit URL-basiertem Such-/Status-/Seitengrößenfilter und Reset-Link migrieren; weitere Kataloge folgen mit ihren fachlichen Filterfeldern.
 - [ ] Listen- und Detaildatenquellen auf statische Legacy-Platzhalter prüfen; insbesondere Dashboard-Kennzahlen und Vorschaukarten dürfen ausschließlich aus Repository-/Service-Daten entstehen.
 - [ ] Quick-Create- und Builder-E2E weiter ausbauen: Vorlagenauswahl und responsive Empty-/Shell-/Overflow-Gates sind abgedeckt; Training-Editor und Kids/Youth-Schutzpfade fehlen noch.
 - [ ] Übrig gebliebene Legacy-UI-Texte und feste Katalogzähler in CI als Review-Gate erkennen.
@@ -69,7 +72,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Suche und Planung
 
-- [ ] Gemeinsame Katalogansicht für Training, Spiele, Hindernisse, Übungen, Medien, AI-Entwürfe, Gruppen und Outdoor mit Liste/Klein/Mittel/Groß/Detail, einheitlichem Filter-Sidepanel, Suchzustand, Ergebniszähler, Seitengröße und serverseitiger Pagination; bestehende Einzelimplementierungen werden auf gemeinsame Komponenten migriert.
+- [ ] Gemeinsame Katalogansicht für Training, Spiele, Hindernisse, Übungen, Medien, AI-Entwürfe, Gruppen und Outdoor mit Liste/Klein/Groß/Detail, einheitlichem Filter-Sidepanel, Suchzustand, Ergebniszähler, Seitengröße und serverseitiger Pagination; Ergebniszähler und Pagination sind für Übungen und Spiele migriert, Filter-/URL-State sowie die übrigen Kataloge folgen.
 
 - [x] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten: Exact/Prefix/Alias, Kurzbeschreibung, Ziele/Tags/Bewegungsmuster, Körperregionen, Equipment und Instruktionen werden über das aktive persistierte Suchprofil gewichtet; DuckDB-BM25 bleibt die Volltextbasis und ENV-Gewichte dienen nur als Fallback.
 - [x] Autocomplete aus Übungs-, Trainingsziel-, Equipment-, Tag-, Bewegungsmuster- und Körperregionsdaten ergänzen.
@@ -145,7 +148,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Qualität und Analysen
 
-- [ ] Quick-Create-, Training-Editor-, Kids/Youth- und Theme-E2E-Tests (Quick-Create-Tastaturwahl und Theme-Persistenz sind jetzt in Playwright/CI abgedeckt; Training-Editor und Kids/Youth-Schutzpfade fehlen noch).
+- [x] Playwright-Quality-Gates für gemeinsame Katalog-Shell, Main/H1-Landmarks, horizontale Überläufe, echte View-Umschaltung, Hindernis-Panel-Nesting und Quick-Create-Vorlagenauswahl ergänzen. (Feature in README dokumentiert.)
+- [ ] Quick-Create-, Training-Editor-, Kids/Youth- und Theme-E2E-Tests weiter ausbauen: Quick-Create-Tastaturwahl und Theme-Persistenz sind abgedeckt; Training-Editor und Kids/Youth-Schutzpfade fehlen noch.
 - [ ] Übungsnutzung, Körperregionen, Hindernisabdeckung, Laufvolumen, Wiederholungswarnungen und Nulltreffer analysieren.
 - [ ] Vollständigkeits- und KI-Ersetzungsanalysen ergänzen.
 

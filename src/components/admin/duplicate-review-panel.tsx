@@ -107,7 +107,7 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
         ))}
       </div>
       {comparison ? (
-        <Dialog eyebrow="Dublettenprüfung" onClose={() => setComparison(null)} title="Side-by-Side-Vergleich">
+        <Dialog eyebrow="Dublettenprüfung" onClose={() => setComparison(null)} size="wide" title="Side-by-Side-Vergleich">
             <div className="grid gap-3 md:grid-cols-2">
               {[{ name: comparison.leftName, id: comparison.leftExerciseId, primary: true }, { name: comparison.rightName, id: comparison.rightExerciseId, primary: false }].map((side) => (
                 <section className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={side.id}>

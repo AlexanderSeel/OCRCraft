@@ -105,7 +105,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
           ) : (
             <div className="catalog-results grid gap-4 xl:grid-cols-2">
               {drafts.map((draft) => (
-                <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" key={draft.id}>
+                <article className="catalog-card min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" key={draft.id}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="text-xs font-black uppercase tracking-[0.1em] text-[var(--muted)]">
@@ -119,23 +119,23 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
                     </span>
                   </div>
 
-                  <p className="mt-4 text-sm leading-6">{draft.proposal.summaryDe}</p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{draft.proposal.summaryEn}</p>
+                  <p className="view-summary mt-4 text-sm leading-6">{draft.proposal.summaryDe}</p>
+                  <p className="view-detail mt-2 text-sm leading-6 text-[var(--muted)]">{draft.proposal.summaryEn}</p>
 
-                  <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-3">
+                  <dl className="view-secondary mt-4 grid gap-2 text-sm sm:grid-cols-3">
                     <Meta label="Risiko" value={riskLabel(draft.proposal.riskLevel)} />
                     <Meta label="Mindestalter" value={draft.proposal.minAge == null ? "–" : `${draft.proposal.minAge}+`} />
                     <Meta label="Aliase" value={String(draft.proposal.aliasesDe.length + draft.proposal.aliasesEn.length)} />
                   </dl>
 
                   {draft.proposal.rationale ? (
-                    <div className="mt-4 rounded-xl bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--muted)]">
+                    <div className="view-detail mt-4 rounded-xl bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--muted)]">
                       <span className="font-black text-[var(--foreground)]">AI-Begründung: </span>{draft.proposal.rationale}
                     </div>
                   ) : null}
 
                   {draft.review ? (
-                    <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+                    <div className="view-secondary mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="text-xs font-black uppercase tracking-[0.1em] text-[var(--muted)]">Deterministischer Review</span>
                         <span className={draft.review.blocking
@@ -158,12 +158,12 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
                     </div>
                   ) : null}
 
-                  <Disclosure className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]" summaryClassName="px-3 py-2 text-xs font-black" summary="Originales Trainer-Briefing">
+                  <Disclosure className="view-detail mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]" summaryClassName="px-3 py-2 text-xs font-black" summary="Originales Trainer-Briefing">
                     <p className="border-t border-[var(--border)] p-3 text-sm leading-6 text-[var(--muted)]">{draft.requestText}</p>
                   </Disclosure>
 
                   {draft.status === "pending" ? (
-                    <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-[var(--border)] pt-4">
+                    <div className="view-actions mt-4 flex flex-wrap justify-end gap-2 border-t border-[var(--border)] pt-4">
                       <form action={rejectAiExerciseDraftAction}>
                         <input name="id" type="hidden" value={draft.id} />
                         <button className="min-h-10 rounded-lg border border-[var(--danger)] px-4 text-xs font-black text-[var(--danger)]" type="submit">

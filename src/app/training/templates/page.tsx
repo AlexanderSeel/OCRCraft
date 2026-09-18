@@ -73,15 +73,15 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
           {clubTemplates.length ? (
             <div className="mt-4 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
               {clubTemplates.map((item) => (
-                <article className="flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={item.id}>
+                <article className="catalog-card min-w-0 flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={item.id}>
                   <div className="flex flex-wrap gap-2 text-xs font-black text-[var(--muted)]">
                     <span>{item.totalDurationMinutes} Min.</span>
                     <span>· {item.itemCount} Übungen</span>
                     <span>· {item.organizationMode === "team" ? `Team ${item.teamSize ?? 2}` : "Solo/Rotation"}</span>
                   </div>
                   <h3 className="mt-2 text-base font-black">{item.name}</h3>
-                  {item.description ? <p className="mt-2 text-sm leading-5 text-[var(--muted)]">{item.description}</p> : null}
-                  <div className="mt-3 text-xs text-[var(--muted)]">
+                  {item.description ? <p className="view-secondary mt-2 text-sm leading-5 text-[var(--muted)]">{item.description}</p> : null}
+                  <div className="view-detail mt-3 text-xs text-[var(--muted)]">
                     {item.sourceTrainingTitle ? <>Quelle: <strong className="text-[var(--foreground)]">{item.sourceTrainingTitle}</strong> · </> : null}
                     {item.createdBy ? `${item.createdBy} · ` : ""}{formatTemplateDate(item.createdAt)}
                   </div>
@@ -142,25 +142,25 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
 
         <section className="catalog-results grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {templates.map((item) => (
-            <article className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" key={item.key}>
+            <article className="catalog-card min-w-0 flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" key={item.key}>
               <div className="flex flex-wrap gap-2 text-xs font-black">
                 <span className="rounded-full bg-[var(--surface-subtle)] px-2.5 py-1">{trainingTemplateAudienceLabel(item.audience)}</span>
                 <span className="rounded-full bg-[var(--surface-subtle)] px-2.5 py-1">{trainingTemplateFocusLabel(item.focus)}</span>
                 <span className="rounded-full bg-[var(--surface-subtle)] px-2.5 py-1">{item.durationMinutes} Min.</span>
               </div>
               <h2 className="mt-4 text-lg font-black">{item.titleDe}</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{item.descriptionDe}</p>
+              <p className="view-summary mt-2 text-sm leading-6 text-[var(--muted)]">{item.descriptionDe}</p>
 
-              <dl className="mt-4 grid gap-2 text-xs">
+              <dl className="view-detail mt-4 grid gap-2 text-xs">
                 <Phase label="Aufwärmen" value={item.structureDe.warmup} />
                 <Phase label="Hauptteil" value={item.structureDe.main} />
                 <Phase label="Cooldown" value={item.structureDe.cooldown} />
               </dl>
 
-              <div className="mt-4 text-xs text-[var(--muted)]">
+              <div className="view-detail mt-4 text-xs text-[var(--muted)]">
                 <strong className="text-[var(--foreground)]">Materialhinweise:</strong> {item.materialHintsDe.join(", ")}
               </div>
-              <div className="mt-3 text-xs text-[var(--muted)]">
+              <div className="view-detail mt-3 text-xs text-[var(--muted)]">
                 Strukturreferenz: <a className="font-bold underline underline-offset-2" href={item.provenance.referenceUrl} rel="noreferrer" target="_blank">{item.provenance.referenceProvider}</a>.
                 {" "}Die Vorlage selbst ist OCRCraft-Eigeninhalt; keine externen Texte oder Bilder werden übernommen.
               </div>

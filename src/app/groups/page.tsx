@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
+import { FilterSidePanel } from "@/components/layout/filter-side-panel";
+import { CatalogResultCount } from "@/components/catalog/catalog-controls";
 import { CLUB_RULE_PROFILES } from "@/domain/training/club-rules";
 import {
   GROUP_PRESETS,
@@ -40,19 +42,26 @@ const GROUP_FORMAT_OPTIONS: readonly (readonly [TrainingFormat, string])[] = [
 ];
 
 interface PageProps {
-  readonly searchParams: Promise<{ archived?: string; saved?: string; error?: string; preset?: string }>;
+  readonly searchParams: Promise<{ archived?: string; saved?: string; error?: string; preset?: string; q?: string; audience?: string }>;
 }
 
 export default async function GroupsPage({ searchParams }: PageProps) {
   const query = await searchParams;
   const archivedView = query.archived === "1";
   const selectedPreset = archivedView ? undefined : getGroupPreset(query.preset);
+  const searchQuery = query.q?.trim().toLocaleLowerCase("de-DE") ?? "";
+  const audienceFilter = ["adults", "kids", "youth", "mixed"].includes(query.audience ?? "") ? query.audience : "";
   const [allGroups, equipmentOptions, safetyProfiles] = await Promise.all([
     listClubGroups(archivedView),
     listTrainingEquipmentOptions("de"),
     listYouthSafetyProfiles(false),
   ]);
-  const groups = archivedView ? allGroups.filter((group) => group.archived) : allGroups;
+  const groups = allGroups.filter((group) => {
+    if (Boolean(group.archived) !== archivedView) return false;
+    if (audienceFilter && group.audience !== audienceFilter) return false;
+    if (searchQuery && !group.name.toLocaleLowerCase("de-DE").includes(searchQuery)) return false;
+    return true;
+  });
 
   return (
     <AppShell
@@ -136,10 +145,36 @@ export default async function GroupsPage({ searchParams }: PageProps) {
           </Disclosure>
         ) : null}
 
+        <div className="grid min-w-0 gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
+        <FilterSidePanel title="Gruppenfilter">
+          <form className="grid min-w-0 gap-3" method="get">
+            <input name="archived" type="hidden" value={archivedView ? "1" : "0"} />
+            <label className="grid gap-1 text-sm font-bold">
+              Suchen
+              <input className="h-11 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={query.q ?? ""} name="q" placeholder="z. B. Kids Mittwoch" />
+            </label>
+            <label className="grid gap-1 text-sm font-bold">
+              Zielgruppe
+              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={audienceFilter} name="audience">
+                <option value="">Alle</option>
+                <option value="kids">Kids</option>
+                <option value="youth">Youth</option>
+                <option value="adults">Erwachsene</option>
+                <option value="mixed">Gemischt</option>
+              </select>
+            </label>
+            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 py-3 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Filtern</button>
+            {(searchQuery || audienceFilter) ? <Link className="text-center text-xs font-black underline underline-offset-4" href={archivedView ? "/groups?archived=1" : "/groups"}>Filter zurücksetzen</Link> : null}
+          </form>
+        </FilterSidePanel>
+        <div className="min-w-0 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
+          <CatalogResultCount from={groups.length ? 1 : 0} label={groups.length === 1 ? "Gruppe" : "Gruppen"} to={groups.length} total={groups.length} />
+        </div>
         <section className="catalog-results grid gap-4 xl:grid-cols-2">
           {groups.map((group) => (
             <article
-              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
+              className="catalog-card min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
               key={group.id}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -154,7 +189,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                 </span>
               </div>
 
-              <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
+              <dl className="view-secondary mt-4 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
                 <GroupMetric label="Alter" value={ageLabel(group)} />
                 <GroupMetric label="Teilnehmer" value={String(group.defaultParticipantCount)} />
                 <GroupMetric label="Dauer" value={group.defaultDurationMinutes ? `${group.defaultDurationMinutes} Min.` : "–"} />
@@ -170,11 +205,11 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                 <GroupMetric label="Ziel Stationsgruppe" value={group.defaultStationGroupSize == null ? "Offen" : `max. ${group.defaultStationGroupSize} Pers.`} />
               </dl>
 
-              <div className="mt-3 text-xs font-semibold text-[var(--muted)]">
+              <div className="view-secondary mt-3 text-xs font-semibold text-[var(--muted)]">
                 {group.linkedTrainingCount} verknüpfte Trainings · Standardsprache {group.defaultLocale.toUpperCase()}
               </div>
 
-              <div className="mt-4 flex flex-wrap items-start gap-2 border-t border-[var(--border)] pt-4">
+              <div className="view-actions mt-4 flex flex-wrap items-start gap-2 border-t border-[var(--border)] pt-4">
                 {!group.archived ? (
                   <Disclosure className="min-w-[280px] flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]" summaryClassName="px-4 py-3 text-sm font-black" summary="Gruppe bearbeiten">
                     <form action={updateClubGroupAction} className="border-t border-[var(--border)] p-4">
@@ -219,6 +254,8 @@ export default async function GroupsPage({ searchParams }: PageProps) {
             </p>
           </section>
         ) : null}
+        </div>
+        </div>
       </div></OverviewLayout>
     </AppShell>
   );

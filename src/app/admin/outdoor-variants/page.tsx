@@ -135,7 +135,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
 
 function CandidateCard({ candidate }: { readonly candidate: OutdoorVariantCandidatePreview }) {
   return (
-    <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+    <article className="catalog-card min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="font-black">{candidate.name}</div>
@@ -156,27 +156,27 @@ function CandidateCard({ candidate }: { readonly candidate: OutdoorVariantCandid
         <StatusBadge status={candidate.status} />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+      <div className="view-secondary mt-4 grid gap-4 lg:grid-cols-3">
         <DataBlock title="Original-Equipment" values={candidate.originalEquipment} empty="Kein Equipment hinterlegt" />
         <DataBlock title="Erkannte Ersetzungen" values={candidate.substitutions} empty="Keine automatische Ersetzung" />
         <DataBlock title="Outdoor-Equipment" values={candidate.outdoorEquipment} empty="Noch nicht vollständig abbildbar" />
       </div>
 
       {candidate.missingReplacements.length > 0 ? (
-        <div className="mt-4 rounded-lg border border-[var(--warning)] bg-[var(--warning-bg)] p-3 text-sm">
+        <div className="view-secondary mt-4 rounded-lg border border-[var(--warning)] bg-[var(--warning-bg)] p-3 text-sm">
           <span className="font-black">Fehlende Ersatzabbildung:</span> {candidate.missingReplacements.join(", ")}
         </div>
       ) : null}
 
       {candidate.variantText ? (
-        <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 text-sm leading-6">
+        <div className="view-detail mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 text-sm leading-6">
           <div className="mb-1 text-xs font-black uppercase tracking-[0.08em] text-[var(--muted)]">Varianten-Vorschau</div>
           {candidate.variantText}
         </div>
       ) : null}
 
       {candidate.status === "unmappable" || candidate.status === "missing-details" ? (
-        <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
+        <p className="view-secondary mt-3 text-xs leading-5 text-[var(--muted)]">
           Keine automatische Übernahme. Öffne die Übung und hinterlege die Outdoor-Variante sowie das tatsächlich verfügbare Ersatz-Equipment manuell.
         </p>
       ) : null}

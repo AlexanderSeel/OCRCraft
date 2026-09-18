@@ -112,6 +112,8 @@ body[data-dialog-open="true"] > *:not([role="dialog"]) {
   filter: brightness(0.62) saturate(0.82);
   pointer-events: none;
 }
+.dialog-content,
+.dialog-content > * { min-width: 0; }
 
 body,
 header,
@@ -269,18 +271,33 @@ html[data-theme="dark"] [class~="hover:bg-[#e5e9ed]"]:hover {
 }
 .exercise-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
 .catalog-results { min-width: 0; }
-.overview-layout[data-view="list"] .catalog-results { grid-template-columns: minmax(0, 1fr); }
-.overview-layout[data-view="small"] .catalog-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
-.overview-layout[data-view="medium"] .catalog-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
-.overview-layout[data-view="large"] .catalog-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+.overview-layout[data-view="list"] .catalog-results { grid-template-columns: minmax(0, 1fr) !important; }
+.overview-layout[data-view="small"] .catalog-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)) !important; }
+.overview-layout[data-view="large"] .catalog-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)) !important; }
+.catalog-card { min-width: 0; }
+.catalog-card > * { min-width: 0; }
+.view-secondary,
+.view-detail,
+.view-summary { min-width: 0; }
+.overview-layout[data-view="list"] .view-secondary,
+.overview-layout[data-view="list"] .view-detail,
+.overview-layout[data-view="small"] .view-detail,
+.overview-layout[data-view="large"] .view-detail { display: none; }
+.overview-layout[data-view="list"] .catalog-card { gap: 0.5rem; }
+.overview-layout[data-view="list"] .catalog-card .view-actions { margin-top: 0.75rem; }
+.overview-layout[data-view="list"] .catalog-card .view-actions > *:not(:last-child) { display: none; }
+.overview-layout[data-view="small"] .catalog-card .view-secondary { display: none; }
+.overview-layout[data-view="list"] .catalog-card { min-height: 0; }
+@media (min-width: 640px) {
+  .overview-layout[data-view="list"] .catalog-card { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); }
+  .overview-layout[data-view="list"] .catalog-card > :only-child { grid-column: 1 / -1; }
+}
 .exercise-card-image { height: 120px; }
 .overview-layout[data-view="small"] .exercise-card-muscles,
 .overview-layout[data-view="small"] .exercise-card-tags,
 .overview-layout[data-view="list"] .exercise-card-muscles,
 .overview-layout[data-view="list"] .exercise-card-tags { display: none; }
 .overview-layout[data-view="small"] .exercise-card-image span { font-size: 10px; padding: 2px 5px; }
-.overview-layout[data-view="medium"] .exercise-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr)); }
-.overview-layout[data-view="medium"] .exercise-card-image { height: 180px; }
 .overview-layout[data-view="large"] .exercise-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
 .overview-layout[data-view="large"] .exercise-card-image { height: 270px; }
 .overview-layout[data-view="detail"] .exercise-results,

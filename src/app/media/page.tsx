@@ -434,7 +434,7 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
     textMatchReview: asset.textMatchReview,
   });
   return (
-    <article className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
+    <article className="catalog-card min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
       <div className="aspect-[16/10] bg-[var(--surface-subtle)]">
         {asset.mediaType === "video" && asset.thumbnailUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -467,7 +467,7 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
           </div>
         </div>
 
-        <dl className="grid gap-2 text-xs sm:grid-cols-2">
+        <dl className="view-secondary grid gap-2 text-xs sm:grid-cols-2">
           <Data label="Review" value={reviewLabel(asset.reviewStatus)} />
           <Data label="Status" value={generationLabel(asset.generationStatus)} />
           <Data label="Format" value={asset.illustrationFormat ?? "–"} />
@@ -479,17 +479,17 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
         </dl>
 
         {(asset.provider || asset.model || asset.styleProfile) ? (
-          <p className="text-xs leading-5 text-[var(--muted)]">
+          <p className="view-detail text-xs leading-5 text-[var(--muted)]">
             {[asset.provider, asset.model, asset.styleProfile].filter(Boolean).join(" · ")}
           </p>
         ) : null}
-        {asset.licenseLabel ? <p className="text-xs font-bold">Lizenz: {asset.licenseLabel}</p> : null}
-        {asset.attributionText ? <p className="text-xs text-[var(--muted)]">Attribution: {asset.attributionText}</p> : null}
-        {asset.usageNote ? <p className="text-xs text-[var(--muted)]">{asset.usageNote}</p> : null}
-        {asset.errorMessage ? <p className="rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs font-bold text-[var(--danger)]">{asset.errorMessage}</p> : null}
+        {asset.licenseLabel ? <p className="view-detail text-xs font-bold">Lizenz: {asset.licenseLabel}</p> : null}
+        {asset.attributionText ? <p className="view-detail text-xs text-[var(--muted)]">Attribution: {asset.attributionText}</p> : null}
+        {asset.usageNote ? <p className="view-detail text-xs text-[var(--muted)]">{asset.usageNote}</p> : null}
+        {asset.errorMessage ? <p className="view-secondary rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs font-bold text-[var(--danger)]">{asset.errorMessage}</p> : null}
 
         {asset.sourceType === "ai_generated" && asset.illustrationFormat === "exercise_sequence" && asset.generationStatus === "generated" ? (
-          <form action={updateSequenceMediaAssessmentAction} className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+          <form action={updateSequenceMediaAssessmentAction} className="view-detail grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
             <input name="assetId" type="hidden" value={asset.id} />
             <input name="exerciseId" type="hidden" value={asset.exerciseId} />
             <div>
@@ -523,7 +523,7 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
           </form>
         ) : null}
 
-        <div className="flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
+        <div className="view-actions flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
           <form action={updateMediaReviewStatusAction} className="flex flex-wrap gap-2">
             <input name="assetId" type="hidden" value={asset.id} />
             <input name="exerciseId" type="hidden" value={asset.exerciseId} />

@@ -79,9 +79,12 @@ Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit e
 - große Muskel- und Facettenfilter öffnen als zentrierte Dialoge und halten die Sidepanels kompakt
 - zentrale Disclosure-Komponente für Filter, Editoren, Builder und Adminflächen
 - sichtbare Fokuszustände und Tastaturbedienung für zentrale Auswahl- und Formularpfade
-- gemeinsames Ansichts-Pattern für Training und Vorlagen mit Liste/Klein/Mittel/Groß/Detail und persistierter Auswahl
+- gemeinsames Ansichts-Pattern für Training und Vorlagen mit Liste/Klein/Groß/Detail und persistierter Auswahl
 - gemeinsame Ansichtsumschaltung und responsive Ergebnisdichte für Spiele, Hindernisse, Medien, Gruppen, AI-Entwürfe und Outdoor-Varianten
-- Playwright-Quality-Gates für Seiten-Shell, genau eine Hauptüberschrift/Main-Landmark, horizontale Überläufe auf Desktop/Mobil, gemeinsame Listenansicht und Quick-Create-Vorlagenauswahl
+- gemeinsame Ansichtsumschaltung mit echter Liste/Klein/Groß/Detail-Geometrie, persistierter Auswahl und begrenzten Kartenbreiten über alle Katalogseiten
+- Playwright-Quality-Gates für Seiten-Shell, genau eine Hauptüberschrift/Main-Landmark, horizontale Überläufe auf Desktop/Mobil, gemeinsame Listenansicht, Hindernis-Filter-Nesting und Quick-Create-Vorlagenauswahl
+- gemeinsame serverseitige Ergebniszähler- und Pagination-Komponenten für Übungen und Spiele mit responsiver Seitennavigation
+- Spielekatalog mit gemeinsamem Filter-Sidepanel, URL-basiertem Such-/Status-/Seitengrößenfilter und Reset-Zustand
 
 ## Voraussetzungen
 

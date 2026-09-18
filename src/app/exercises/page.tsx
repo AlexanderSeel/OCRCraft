@@ -1,4 +1,5 @@
 import { OverviewLayout } from "@/components/overview-layout";
+import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { MuscleMap } from "@/components/body/muscle-map";
@@ -82,9 +83,6 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     : null;
   const filteredResults = matchingIds ? searchResult.filter((exercise) => matchingIds.has(exercise.id)) : null;
   const filteredTotal = filteredResults ? filteredResults.length : baseFilteredTotal;
-  const hasNextPage = matchingIds
-    ? page * pageSize < filteredTotal
-    : searchResult.length > pageSize;
   const pagedResults = (filteredResults ?? searchResult).slice((matchingIds ? page - 1 : 0) * pageSize, (matchingIds ? page : 1) * pageSize);
   const exercises = pagedResults;
   const bodyRegionMap = await getExerciseBodyRegionMap(exercises.map((exercise) => exercise.id));
@@ -207,7 +205,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
 
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
           <div className="flex flex-wrap items-center gap-2">
-            <span>{filteredTotal === 0 ? "0" : `${Math.min((page - 1) * pageSize + 1, filteredTotal)}–${Math.min(page * pageSize, filteredTotal)}`} von {filteredTotal} Übungen</span>
+            <CatalogResultCount from={Math.min((page - 1) * pageSize + 1, filteredTotal)} label="Übungen" to={Math.min(page * pageSize, filteredTotal)} total={filteredTotal} />
             <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">Laufen {runningCount}</span>
             <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">{categoryCounts.length} Kategorien</span>
             <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">★ {favoriteIds.size} Favoriten</span>
@@ -351,17 +349,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         </section>
         </OverviewLayout>
 
-        {(page > 1 || hasNextPage) ? (
-          <nav aria-label="Seitennavigation Übungen" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">
-            <span className="text-[var(--muted)]">Seite {page} von {Math.max(1, Math.ceil(filteredTotal / pageSize))}</span>
-            <div className="flex min-w-0 flex-wrap justify-end gap-2">
-              {page > 1 ? <Link className="rounded-xl border border-[var(--border)] px-3 py-2 font-bold" href={pageHref(page - 1, params)}>Zurück</Link> : null}
-              {pageNumbers(page, Math.ceil(filteredTotal / pageSize)).map((number) => <Link className={`rounded-xl border px-3 py-2 font-bold ${number === page ? "border-[var(--accent)] bg-[var(--accent)]/15" : "border-[var(--border)]"}`} href={pageHref(number, params)} key={number}>{number}</Link>)}
-              {hasNextPage ? <Link className="rounded-xl bg-[var(--control-strong)] px-3 py-2 font-bold text-[var(--control-strong-foreground)]" href={pageHref(page + 1, params)}>Weiter</Link> : null}
-              <form action="/exercises" className="flex items-center gap-1" method="get"><input aria-label="Zu Seite springen" className="h-9 w-16 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-center" min="1" max={Math.max(1, Math.ceil(filteredTotal / pageSize))} name="page" type="number" /><input name="size" type="hidden" value={pageSize} /><button className="rounded-lg border border-[var(--border)] px-2 py-2 text-xs font-bold" type="submit">Springen</button></form>
-            </div>
-          </nav>
-        ) : null}
+        <CatalogPagination href={(nextPage) => pageHref(nextPage, params)} label="Übungen" page={page} totalPages={Math.max(1, Math.ceil(filteredTotal / pageSize))} />
 
         {exercises.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--muted)]">
@@ -406,12 +394,6 @@ function pageHref(page: number, params: ExerciseSearchParams): string {
 
 function removeFacetHref(params: ExerciseSearchParams, facet: string): string {
   return pageHref(1, { ...params, facet: parameterList(params.facet).filter((item) => item !== facet), page: undefined });
-}
-
-function pageNumbers(current: number, total: number): readonly number[] {
-  const safeTotal = Math.max(1, total);
-  const start = Math.max(1, Math.min(current - 2, safeTotal - 4));
-  return Array.from({ length: Math.min(5, safeTotal) }, (_, index) => start + index);
 }
 
 function removeMuscleHref(params: ExerciseSearchParams, muscle: string): string {

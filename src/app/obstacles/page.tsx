@@ -80,47 +80,27 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
           <Metric label="Mit Club-Maßen" value={summary.withClubDimensions} />
         </section>
 
-        <div className="grid gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
-        <FilterSidePanel title="Hindernisfilter">
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-black">Bestehende Übung als Hindernis übernehmen</h2>
-              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-                Suche im gesamten aktiven Übungskatalog. Beim Übernehmen wird die Übung nicht dupliziert: Sie erhält lediglich eine Hindernis-Guidance und erscheint danach zusätzlich hier.
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="text-lg font-black">Bestehende Übung als Hindernis übernehmen</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+                Suche im aktiven Übungskatalog. Die Übung wird nicht dupliziert, sondern erhält strukturierte Hindernis-Guidance.
               </p>
             </div>
-            <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href="/exercises">
-              Gesamten Übungskatalog öffnen
+            <Link className="shrink-0 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-black" href="/exercises">
+              Übungskatalog öffnen
             </Link>
           </div>
-          <form className="mt-3 flex flex-wrap gap-2" method="get">
-            <label className="min-w-[260px] flex-1">
-              <span className="sr-only">Bestehende Übung suchen</span>
-              <input
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
-                defaultValue={candidateQuery}
-                name="candidateQ"
-                placeholder="Übung suchen, z. B. Box, Hang, Carry ..."
-              />
-            </label>
-            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
-              Übungen suchen
-            </button>
+          <form className="mt-4 flex min-w-0 flex-col gap-2 sm:flex-row" method="get">
+            <label className="min-w-0 flex-1"><span className="sr-only">Bestehende Übung suchen</span><input className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" defaultValue={candidateQuery} name="candidateQ" placeholder="Übung suchen, z. B. Box, Hang, Carry ..." /></label>
+            <button className="min-h-11 shrink-0 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Übungen suchen</button>
           </form>
-          {candidateQuery ? (
-            candidates.length ? (
-              <div className="mt-4 grid gap-2">
-                {candidates.map((candidate) => <ObstacleCandidateRow candidate={candidate} key={candidate.exerciseId} />)}
-              </div>
-            ) : (
-              <p className="mt-4 rounded-xl bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">
-                Keine noch nicht zugeordneten aktiven Übungen für „{candidateQuery}“ gefunden.
-              </p>
-            )
-          ) : null}
+          {candidateQuery ? candidates.length ? <div className="mt-4 grid gap-2">{candidates.map((candidate) => <ObstacleCandidateRow candidate={candidate} key={candidate.exerciseId} />)}</div> : <p className="mt-4 rounded-xl bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">Keine noch nicht zugeordneten aktiven Übungen für „{candidateQuery}“ gefunden.</p> : null}
         </section>
 
+        <div className="grid gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
+        <FilterSidePanel title="Hindernisfilter">
         <form
           className="grid min-w-0 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1"
           method="get"
@@ -185,7 +165,7 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
 
 function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) {
   return (
-    <article className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
+    <article className="catalog-card min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
       <div className="grid md:grid-cols-[180px_minmax(0,1fr)]">
         <div className="min-h-44 bg-[var(--surface-subtle)]">
           {obstacle.imageUrl ? (
@@ -214,7 +194,7 @@ function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) 
             </div>
           </div>
 
-          <dl className="grid gap-2 text-xs sm:grid-cols-2 lg:grid-cols-4">
+          <dl className="view-secondary grid gap-2 text-xs sm:grid-cols-2 lg:grid-cols-4">
             <Data label="Stationskapazität" value={String(obstacle.stationCapacity)} />
             <Data label="Freizone" value={`${obstacle.clearZoneMetres.toFixed(1)} m`} />
             <Data label="Mindestalter" value={obstacle.minAge == null ? "–" : `ab ${obstacle.minAge}`} />
@@ -222,17 +202,17 @@ function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) 
           </dl>
 
           {obstacle.equipment.length ? (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="view-secondary flex flex-wrap gap-1.5">
               {obstacle.equipment.map((item) => <Badge key={item}>{item}</Badge>)}
             </div>
           ) : null}
 
-          <section className="rounded-xl bg-[var(--surface-subtle)] p-3">
+          <section className="view-detail rounded-xl bg-[var(--surface-subtle)] p-3">
             <h3 className="text-xs font-black uppercase tracking-[0.08em] text-[var(--muted)]">Aufbau</h3>
             <p className="mt-1 text-sm leading-6">{obstacle.equipmentConfiguration}</p>
           </section>
 
-          <details className="rounded-xl border border-[var(--border)] p-3">
+          <details className="view-detail rounded-xl border border-[var(--border)] p-3">
             <summary className="cursor-pointer text-sm font-black">Ablauf, Voraussetzung & Regression</summary>
             <div className="mt-3 space-y-3 text-sm leading-6">
               <Guidance label="Voraussetzung" value={obstacle.prerequisites} />
@@ -243,7 +223,7 @@ function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) 
             </div>
           </details>
 
-          <div className="flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
+          <div className="view-actions flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
             <Link className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" href={`/exercises/${obstacle.exerciseId}`}>
               Übung öffnen
             </Link>
