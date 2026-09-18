@@ -10,6 +10,8 @@ import type {
   ExerciseImageGenerationRepositoryPort,
   ExerciseImageLocale,
 } from "./exercise-image-types";
+import { normalizeImageExecutionSteps } from "./exercise-image-generation-core";
+export { normalizeImageExecutionSteps } from "./exercise-image-generation-core";
 
 const contextSchema = z.object({
   exerciseId: z.string().uuid(),
@@ -166,7 +168,7 @@ export class ExerciseImageGenerationRepository implements ExerciseImageGeneratio
           name: String(row[1]), summary: String(row[2] ?? ""), purpose: String(row[3] ?? ""), setup: String(row[4] ?? ""),
           startPosition: String(row[5] ?? ""), finishReset: String(row[6] ?? ""), breathingCue: String(row[7] ?? ""), tempoCue: String(row[8] ?? ""),
           safetyNotes: String(row[9] ?? ""), qualityCriteria: String(row[10] ?? ""), prerequisites: String(row[11] ?? ""), fallbackExercise: String(row[12] ?? ""),
-          executionSteps: rowsForLocale(stepRows.getRows()).map((item) => String(item[1])),
+          executionSteps: normalizeImageExecutionSteps(rowsForLocale(stepRows.getRows()).map((item) => String(item[1]))),
           coachingCues: rowsForLocale(cueRows.getRows()).map((item) => String(item[1])),
           commonMistakes: rowsForLocale(mistakeRows.getRows()).map((item) => ({ mistake: String(item[1]), correction: String(item[2]) })),
           specializedGuidance: specializedGuidance[locale],

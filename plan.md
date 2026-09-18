@@ -152,7 +152,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - Gemeinsamer Administrationsbereich mit Tabs für Übersicht, Datenbank, Datenqualität und Einstellungen; doppelte Settings-/Admin-Navigation entfernt.
 - Dynamischer Vollständigkeitsbericht für Seed-Bestand und gesamten Übungskatalog sowie Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes.
 - Light/Dark/System-Theme, semantische UI-Tokens, responsive Layouts und laufende CI-Gates.
-- AppShell zeigt im Seitenkopf nur kontextbezogene Aktionen; Administration, Darstellung und Diagnose sind über die Hauptnavigation und den Einstellungen-Tab erreichbar.
+- AppShell zeigt im Seitenkopf nur kontextbezogene Aktionen; der Seitenkopf ist pro Seite ein- und ausklappbar. Administration, Darstellung und Diagnose sind über die Hauptnavigation und den Einstellungen-Tab erreichbar.
 - Darstellung und optionale Diagnose sind im Administrations-Tab Einstellungen gebündelt; der globale Seitenkopf bleibt frei von doppelten Systemaktionen.
 - Adminbereich mit eigenem Tab „Benutzer & Profile“, filterbarer Mitgliederliste, Bearbeiten-Dialog, Benutzer-/Rollenverwaltung und lokalem Login-Dialog; Trainings-Readonly-Ansicht bleibt ohne Login teilbar.
 - Klassische E-Mail-/Passwort-Anmeldung mit gesalzenem scrypt-Hash und optionalem Zugangscode-Fallback.
