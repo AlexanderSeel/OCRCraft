@@ -585,8 +585,8 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [x] DB foundation
 - [x] Group CRUD UI with archive/restore
 - [x] age/participant/duration defaults
-- [ ] location/equipment defaults
-- [ ] skill distribution + preferred formats
+- [x] location/equipment defaults
+- [x] skill distribution + preferred formats
 - [ ] club-rule profile
 - [ ] Kids/Youth/Beginner/Advanced/Competition/Running/Open presets
 
