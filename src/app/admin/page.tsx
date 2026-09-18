@@ -47,21 +47,22 @@ interface AdminPageProps {
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
+  const params = await searchParams;
+  const activeTab = normalizeAdminTab(params.tab);
   const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers, aiProviders, appTasks, searchProfiles, queueIssues] = await Promise.all([
-    getSearchIndexStates(),
-    getSeedCompletenessReport(),
-    listDuplicateReviewTasks(),
-    listRecentAuditEvents(),
-    listDatabaseBackups(),
-    listAppUsers(),
-    listAiProviderSettings(),
-    listAppTasks(),
-    listSearchProfiles(),
-    listQueueIssues(),
+    activeTab === "database" ? getSearchIndexStates() : Promise.resolve([]),
+    activeTab === "overview" ? getSeedCompletenessReport() : Promise.resolve(null),
+    activeTab === "quality" ? listDuplicateReviewTasks() : Promise.resolve([]),
+    activeTab === "overview" ? listRecentAuditEvents() : Promise.resolve([]),
+    activeTab === "database" ? listDatabaseBackups() : Promise.resolve([]),
+    activeTab === "users" || activeTab === "overview" ? listAppUsers() : Promise.resolve([]),
+    activeTab === "settings" ? listAiProviderSettings() : Promise.resolve([]),
+    activeTab === "queue" ? listAppTasks() : Promise.resolve([]),
+    activeTab === "settings" || activeTab === "overview" ? listSearchProfiles() : Promise.resolve([]),
+    activeTab === "queue" ? listQueueIssues() : Promise.resolve([]),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
-  const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved, searchSaved, searchError, queueDeleted } = await searchParams;
-  const activeTab = normalizeAdminTab(tab);
+  const { reseeded, reseedError, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved, searchSaved, searchError, queueDeleted } = params;
 
   return (
     <AppShell
@@ -72,7 +73,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <AdminTabs active={activeTab} />
         {queueDeleted === "1" ? <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Der fehlgeschlagene Medienjob wurde gelöscht.</p> : null}
         {queueDeleted === "0" ? <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Der Fehler konnte nicht gelöscht werden. Der Eintrag ist möglicherweise bereits entfernt oder noch nicht fehlgeschlagen.</p> : null}
-        {activeTab === "overview" ? <SeedCompletenessReportView report={seedCompleteness} /> : null}
+        {activeTab === "overview" && seedCompleteness ? <SeedCompletenessReportView report={seedCompleteness} /> : null}
         {activeTab === "quality" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität</div><h2 className="mt-1 text-xl font-black">Doppelungen prüfen</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Die Engine vergleicht normalisierte Namen, Aliase, Equipment, Körperregionen und externe IDs. Zusammenführen archiviert den überzähligen Datensatz und erhält die Trainingshistorie.</p></div>

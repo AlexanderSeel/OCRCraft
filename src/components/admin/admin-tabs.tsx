@@ -7,6 +7,7 @@ export const ADMIN_TABS = [
   ["queue", "Aufgabenqueue"],
   ["users", "Benutzer & Profile"],
   ["settings", "Einstellungen"],
+  ["outdoor", "Outdoor-Varianten"],
 ] as const;
 
 export type AdminTab = (typeof ADMIN_TABS)[number][0];
@@ -26,7 +27,7 @@ export function AdminTabs({ active }: { readonly active: AdminTab }) {
               ? "border-[var(--accent)] text-[var(--foreground)]"
               : "border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:text-[var(--foreground)]"
           }`}
-          href={`/admin?tab=${id}`}
+          href={id === "outdoor" ? "/admin/outdoor-variants" : `/admin?tab=${id}`}
           key={id}
           role="tab"
         >
