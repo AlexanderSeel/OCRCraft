@@ -15,8 +15,8 @@ import { createDatabaseBackupAction, rebuildSearchIndexesAction, reseedDatabaseA
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 import { listAppUsers } from "@/server/auth/identity-service";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
-import { IdentityLoginDialog } from "@/components/admin/identity-login-dialog";
 import { createUserAction, loginAction, logoutAction, updateUserAction } from "./identity-actions";
+import { IdentityManagementPanel } from "@/components/admin/identity-management-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -148,37 +148,24 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </Disclosure>
         </section> : null}
 
+        {activeTab === "users" ? (
+          <>
+            {loginError ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Anmeldung fehlgeschlagen. Prüfe E-Mail und Vereinszugangscode.</p> : null}
+            {loggedIn || loggedOut ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">{loggedIn ? "Anmeldung erfolgreich." : "Abmeldung erfolgreich."}</p> : null}
+            {userError ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Benutzeränderung nicht möglich. Prüfe Berechtigung und Eingaben.</p> : null}
+            {userSaved ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Benutzeränderung gespeichert.</p> : null}
+            <IdentityManagementPanel
+              createAction={createUserAction}
+              loginAction={loginAction}
+              logoutAction={logoutAction}
+              updateAction={updateUserAction}
+              users={appUsers}
+            />
+          </>
+        ) : null}
+
         {activeTab === "settings" ? (
           <>
-            <section id="identity" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Identität und Betrieb</div><h2 className="mt-1 text-xl font-black">Benutzer und Rollen</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Super-Admins verwalten Vereinszugänge. Readonly-Trainingslinks bleiben ohne Anmeldung teilbar.</p></div>
-                <div className="flex items-center gap-2"><IdentityLoginDialog action={loginAction} /><form action={logoutAction}><button className="min-h-10 rounded-lg border border-[var(--border)] px-3 text-xs font-black" type="submit">Abmelden</button></form></div>
-              </div>
-              {loginError ? <p className="mt-4 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Anmeldung fehlgeschlagen. Prüfe E-Mail und Vereinszugangscode.</p> : null}
-              {loggedIn || loggedOut ? <p className="mt-4 rounded-lg border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">{loggedIn ? "Anmeldung erfolgreich." : "Abmeldung erfolgreich."}</p> : null}
-              {userError ? <p className="mt-4 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Benutzeränderung nicht möglich. Prüfe Berechtigung und Eingaben.</p> : null}
-              {userSaved ? <p className="mt-4 rounded-lg border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Benutzeränderung gespeichert.</p> : null}
-              <form action={createUserAction} className="mt-5 grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 md:grid-cols-[1fr_1fr_1fr_auto_auto] md:items-end">
-                <label className="grid gap-1 text-xs font-black">Name<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" name="displayName" required /></label>
-                <label className="grid gap-1 text-xs font-black">E-Mail<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" name="email" required type="email" /></label>
-                <label className="grid gap-1 text-xs font-black">Passwort (min. 8)<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" minLength={8} name="password" required type="password" /></label>
-                <label className="grid gap-1 text-xs font-black">Rolle<select className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm" defaultValue="trainer" name="role"><option value="trainer">Trainer</option><option value="admin">Admin</option><option value="super_admin">Super-Admin</option></select></label>
-                <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">Benutzer anlegen</button>
-              </form>
-              <div className="mt-4 grid gap-2">{appUsers.map((user) => <form action={updateUserAction} className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 md:grid-cols-[1fr_1fr_auto_auto] md:items-end" encType="multipart/form-data" key={user.id}>
-                <input name="id" type="hidden" value={user.id} />
-                <label className="grid gap-1 text-xs font-black">Anzeigename<input className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs font-normal" defaultValue={user.displayName} name="displayName" required /></label>
-                <label className="grid gap-1 text-xs font-black">Ausbildung<input className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs font-normal" defaultValue={user.education ?? ""} name="education" placeholder="z. B. DOSB C-Lizenz" /></label>
-                <label className="grid gap-1 text-xs font-black">Rolle<select aria-label={`Rolle für ${user.displayName}`} className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs" defaultValue={user.role} name="role"><option value="trainer">Trainer</option><option value="admin">Admin</option><option value="super_admin">Super-Admin</option></select></label>
-                <label className="inline-flex items-center gap-2 text-xs font-bold"><input defaultChecked={user.active} name="active" type="checkbox" />Aktiv</label>
-                <label className="grid gap-1 text-xs font-black md:col-span-2">Schwerpunkte<input className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs font-normal" defaultValue={user.specialties ?? ""} name="specialties" placeholder="OCR, Kraft, Lauftechnik" /></label>
-                <label className="grid gap-1 text-xs font-black md:col-span-2">Profilbild-URL<input className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs font-normal" defaultValue={user.profileImageUri ?? ""} name="profileImageUri" placeholder="/uploads/trainer.jpg oder https://…" /></label>
-                <label className="grid gap-1 text-xs font-black md:col-span-2">Profilbild hochladen<input accept="image/jpeg,image/png,image/webp" className="min-h-9 max-w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-normal" name="profileImage" type="file" /><span className="font-normal text-[var(--muted)]">JPEG, PNG oder WebP · maximal 2 MB</span></label>
-                <label className="grid gap-1 text-xs font-black md:col-span-3">Kurzprofil<textarea className="min-h-16 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 text-xs font-normal" defaultValue={user.bio ?? ""} name="bio" /></label>
-                <button className="min-h-9 rounded-lg border border-[var(--border)] px-3 text-xs font-black" type="submit">Profil speichern</button>
-              </form>)}</div>
-            </section>
             <AiProviderSettingsPanel
               error={aiError}
               providers={aiProviders}

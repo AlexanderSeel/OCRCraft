@@ -48,12 +48,12 @@ Für den privaten Vereinsbetrieb kann die lokale Bootstrap-Identität verwendet 
 
 Trainings können über `/training/<id>/trainer` als schreibgeschützte Ansicht ohne Login geteilt werden. Diese Ansicht enthält keine Bearbeitungsaktionen.
 
-Trainerprofile lassen sich im Adminbereich mit Anzeigename, Ausbildung, Schwerpunkten, Kurzprofil und Bildreferenz pflegen. Bei neu erstellten Trainings wird das Profil kompakt in der Trainer- und Readonly-Ansicht angezeigt.
+Trainerprofile lassen sich im eigenen Tab „Benutzer & Profile“ mit Filter, Anzeigename, Ausbildung, Schwerpunkten, Kurzprofil und Bildreferenz pflegen; bestehende Profile werden über einen Bearbeiten-Dialog aktualisiert. Bei neu erstellten Trainings wird das Profil kompakt in der Trainer- und Readonly-Ansicht angezeigt.
 Profilbilder können als JPEG, PNG oder WebP bis 2 MB hochgeladen und in DuckDB gespeichert werden. Fehlt ein Bild, erscheinen automatisch die Initialen aus Vor- und Nachnamen.
 
 ### Administration
 
-Administration und Einstellungen liegen in einem gemeinsamen Bereich mit vier Tabs: Übersicht, Datenbank, Datenqualität und Einstellungen. Dort sind Seed-Vollständigkeit, Dublettenprüfung, DuckDB-/FTS-Status, der bestätigungspflichtige Datenbank-Reset und das optionale Muskelkarten-Debugging getrennt erreichbar.
+Administration und Einstellungen liegen in einem gemeinsamen Bereich mit fünf Tabs: Übersicht, Datenbank, Datenqualität, Benutzer & Profile und Einstellungen. Dort sind Seed-Vollständigkeit, Dublettenprüfung, DuckDB-/FTS-Status, der bestätigungspflichtige Datenbank-Reset und das optionale Muskelkarten-Debugging getrennt erreichbar.
 
 Im Datenbank-Tab können Übungen, Details, Zuordnungen, Trainings, Gruppen, Medien und Provenienz selektiv als versioniertes JSON exportiert werden. `ocrcraft-portable`-Dateien werden vor dem transaktionalen Import auf Schema, erlaubte Tabellen und Spalten geprüft; der Import ist auf Super-Admins begrenzt.
 

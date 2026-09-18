@@ -4,6 +4,7 @@ export const ADMIN_TABS = [
   ["overview", "Übersicht"],
   ["database", "Datenbank"],
   ["quality", "Datenqualität"],
+  ["users", "Benutzer & Profile"],
   ["settings", "Einstellungen"],
 ] as const;
 
