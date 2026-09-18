@@ -51,7 +51,7 @@ export function Dialog({
   if (!mounted) return null;
 
   return createPortal(
-    <div aria-labelledby={titleId} aria-modal="true" className="fixed inset-0 z-[2147483000] isolate flex items-center justify-center bg-black/70 p-4 shadow-[inset_0_0_120px_rgba(0,0,0,0.28)] backdrop-blur-[2px]" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }} role="dialog">
+    <div aria-labelledby={titleId} aria-modal="true" className="fixed inset-0 z-[2147483000] isolate flex items-center justify-center bg-black/[.52] p-4 shadow-[inset_0_0_120px_rgba(0,0,0,0.28)] backdrop-blur-[2px]" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }} role="dialog">
       <div className="relative z-[2147483001] max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.42)]" ref={panelRef}>
         <div className="flex items-start justify-between gap-3">
           <div>{eyebrow ? <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">{eyebrow}</div> : null}<h2 className="mt-1 text-xl font-black" id={titleId}>{title}</h2></div>
