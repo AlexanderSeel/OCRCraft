@@ -92,6 +92,7 @@ async function buildInitialState(trainingId: string): Promise<TrainingBuilderIni
   return {
     sourceTrainingId: session.id,
     sourceTitle: session.title,
+    groupId: session.groupId ?? request.groupId,
     builderMode: generation.builderMode,
     audience: request.audience,
     minAge: request.minAge,
