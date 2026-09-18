@@ -35,7 +35,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 - [ ] Training-Versionen mit Snapshot und Wiederherstellung.
 - [x] Lock-gesichertes DuckDB-Backup mit Zeitstempel und Manifest.
-- [ ] DuckDB-Restore, Backup-Rotation und sichere Multi-Process-Betriebsanleitung.
+- [ ] DuckDB-Restore und sichere Multi-Process-Betriebsanleitung.
+- [x] Konfigurierbare Backup-Rotation und Anzeige der vorhandenen Backups im Adminbereich.
 - [ ] Selektierbaren JSON-Import/Export implementieren.
 - [ ] Exportoptionen für Übungen, Details, Mapping, Trainings, Gruppen, Medien und Provenienz anbieten.
 - [ ] Optional Binärmedien mit MIME-Typ, Prüfsumme und Quellenmetadaten exportieren.

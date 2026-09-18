@@ -35,7 +35,7 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Bet
 ### Daten und Medien
 
 - DuckDB über zentrale serverseitige Verbindungen und versionierte Migrationen
-- lock-gesicherte Datenbank-Backups unter `data/backups/` mit JSON-Manifest; Restore und Rotation bleiben ein offener Planpunkt
+- lock-gesicherte Datenbank-Backups unter `data/backups/` mit JSON-Manifest und konfigurierbarer Rotation über `OCRCRAFT_BACKUP_RETENTION`; Restore bleibt ein offener Planpunkt
 - FTS-Status (`healthy`, `dirty`, `rebuilding`, `failed`) und zweisprachige Suchdokumente
 - Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes mit Fortschritts- und Fehlerstatus
 - Audit-Events für Reset-, Backup- und Dublettenaktionen

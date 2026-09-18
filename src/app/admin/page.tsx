@@ -8,6 +8,7 @@ import { AdminTabs, normalizeAdminTab } from "@/components/admin/admin-tabs";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { listRecentAuditEvents } from "@/server/db/audit-service";
+import { listDatabaseBackups } from "@/server/db/backup-service";
 import { createDatabaseBackupAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, scanDuplicateExercisesAction } from "./actions";
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 
@@ -26,11 +27,12 @@ interface AdminPageProps {
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
-  const [searchStates, seedCompleteness, duplicateTasks, auditEvents] = await Promise.all([
+  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups] = await Promise.all([
     getSearchIndexStates(),
     getSeedCompletenessReport(),
     listDuplicateReviewTasks(),
     listRecentAuditEvents(),
+    listDatabaseBackups(),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
   const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError } = await searchParams;
@@ -70,6 +72,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <form action={createDatabaseBackupAction} className="mt-4">
             <ActionProgressButton className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-4 text-sm font-black" pendingLabel="Backup wird erstellt …">Datenbank sichern</ActionProgressButton>
           </form>
+          <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-black">Vorhandene Backups</h3><span className="text-xs font-bold text-[var(--muted)]">{backups.length} vorhanden</span></div>
+            {backups.length === 0 ? <p className="mt-2 text-sm text-[var(--muted)]">Noch kein Backup vorhanden.</p> : <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{backups.slice(0, 5).map((item) => <li className="flex flex-wrap justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2" key={item.fileName}><span className="font-bold text-[var(--foreground)]">{item.fileName}</span><span>{formatBytes(item.bytes)} · {item.createdAt}</span></li>)}</ul>}
+          </div>
           {reseedError ? (
             <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
               {reseedError === "confirmation"
@@ -174,4 +180,9 @@ function AdminArea({ title, text, status }: { readonly title: string; readonly t
       <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{text}</p>
     </article>
   );
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
