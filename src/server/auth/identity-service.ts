@@ -223,6 +223,23 @@ export async function updateAppUser(input: {
   });
 }
 
+export async function setAppUserPassword(userId: string, password: string): Promise<void> {
+  await requireSuperAdmin();
+  const id = z.string().uuid().parse(userId);
+  const passwordHash = hashPassword(z.string().min(8).max(200).parse(password));
+  await withDuckDbConnection((connection) => connection.run(
+    "UPDATE app_users SET password_hash=$passwordHash,updated_at=current_timestamp WHERE id=$id::UUID",
+    { id, passwordHash },
+  ));
+}
+
+export async function deleteAppUser(userId: string): Promise<void> {
+  const actor = await requireSuperAdmin();
+  const id = z.string().uuid().parse(userId);
+  if (id === actor.id) throw new Error("Cannot delete the current super-admin.");
+  await withDuckDbConnection((connection) => connection.run("DELETE FROM app_users WHERE id=$id::UUID", { id }));
+}
+
 function toUser(row: readonly unknown[], source: CurrentActor["source"] = "configured"): CurrentActor {
   return {
     id: String(row[0]),

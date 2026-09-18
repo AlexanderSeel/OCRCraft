@@ -590,7 +590,9 @@ function Metric({ label, value }: { readonly label: string; readonly value: stri
 }
 
 function ErrorNotice({ code }: { readonly code: string }) {
-  const message = code === "secret"
+  const message = code === "permission"
+    ? "Keine Berechtigung. AI-Einstellungen dürfen nur Admins oder Super-Admins ändern."
+    : code === "secret"
     ? "API-Key oder OAuth-Token konnte nicht gespeichert werden, weil OCRCRAFT_AI_SECRET_KEY nicht gesetzt ist."
     : code === "provider"
       ? "Provider oder AI-Instanz ist ungültig."

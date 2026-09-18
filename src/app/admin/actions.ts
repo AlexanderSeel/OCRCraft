@@ -209,7 +209,8 @@ function assignmentFrom(formData: FormData, capability: AiCapability) {
 }
 
 export async function saveAiProviderSettingsAction(formData: FormData): Promise<void> {
-  const actor = await requireAdmin();
+  let actor;
+  try { actor = await requireAdmin(); } catch { redirect("/admin?tab=settings&aiError=permission#ai-provider-settings"); }
   const providerKind = aiProviderKindSchema.safeParse(formData.get("providerKind"));
   if (!providerKind.success) redirect("/admin?tab=settings&aiError=provider#ai-provider-settings");
   const idValue = String(formData.get("id") ?? "").trim();

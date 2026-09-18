@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { signActorAssertion } from "@/server/auth/identity-assertion";
-import { authenticateAppUser, createAppUser, trainerQualificationSchema, updateAppUser, userRoleSchema } from "@/server/auth/identity-service";
+import { authenticateAppUser, createAppUser, deleteAppUser, setAppUserPassword, trainerQualificationSchema, updateAppUser, userRoleSchema } from "@/server/auth/identity-service";
 
 const emailSchema = z.string().trim().toLowerCase().email();
 
@@ -77,4 +77,24 @@ export async function updateUserAction(formData: FormData): Promise<void> {
     redirect("/admin?tab=users&userError=1");
   }
   redirect("/admin?tab=users&userSaved=1");
+}
+
+export async function setUserPasswordAction(formData: FormData): Promise<void> {
+  try {
+    await setAppUserPassword(String(formData.get("id") ?? ""), String(formData.get("password") ?? ""));
+  } catch (error) {
+    const code = error instanceof Error && error.message.includes("authorized") ? "permission" : "invalid";
+    redirect(`/admin?tab=users&userError=${code}`);
+  }
+  redirect("/admin?tab=users&userSaved=password");
+}
+
+export async function deleteUserAction(formData: FormData): Promise<void> {
+  try {
+    await deleteAppUser(String(formData.get("id") ?? ""));
+  } catch (error) {
+    const code = error instanceof Error && error.message.includes("authorized") ? "permission" : "delete";
+    redirect(`/admin?tab=users&userError=${code}`);
+  }
+  redirect("/admin?tab=users&userSaved=deleted");
 }

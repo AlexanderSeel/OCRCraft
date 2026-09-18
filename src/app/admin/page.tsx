@@ -17,7 +17,7 @@ import { activateSearchProfileAction, cancelAppTaskAction, createDatabaseBackupA
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 import { listAppUsers } from "@/server/auth/identity-service";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
-import { createUserAction, loginAction, logoutAction, updateUserAction } from "./identity-actions";
+import { createUserAction, deleteUserAction, loginAction, logoutAction, setUserPasswordAction, updateUserAction } from "./identity-actions";
 import { IdentityManagementPanel } from "@/components/admin/identity-management-panel";
 import { listAppTasks, listQueueIssues } from "@/server/queue/app-task-repository";
 export const dynamic = "force-dynamic";
@@ -167,12 +167,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <>
             {loginError ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Anmeldung fehlgeschlagen. Prüfe E-Mail und Vereinszugangscode.</p> : null}
             {loggedIn || loggedOut ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">{loggedIn ? "Anmeldung erfolgreich." : "Abmeldung erfolgreich."}</p> : null}
-            {userError ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Benutzeränderung nicht möglich. Prüfe Berechtigung und Eingaben.</p> : null}
-            {userSaved ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Benutzeränderung gespeichert.</p> : null}
+            {userError ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">{userError === "permission" ? "Keine Berechtigung. Benutzer, Rollen und Passwörter dürfen nur Super-Admins ändern." : userError === "delete" ? "Benutzer konnte nicht gelöscht werden. Prüfe Verknüpfungen und Berechtigung." : "Benutzeränderung nicht möglich. Prüfe Eingaben."}</p> : null}
+            {userSaved ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">{userSaved === "password" ? "Passwort wurde gesetzt." : userSaved === "deleted" ? "Benutzer wurde gelöscht." : "Benutzeränderung gespeichert."}</p> : null}
             <IdentityManagementPanel
               createAction={createUserAction}
+              deleteAction={deleteUserAction}
               loginAction={loginAction}
               logoutAction={logoutAction}
+              setPasswordAction={setUserPasswordAction}
               updateAction={updateUserAction}
               users={appUsers}
             />

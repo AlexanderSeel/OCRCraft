@@ -29,6 +29,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Globale Admin-Mutationen serverseitig autorisieren.
 - [x] Produktions-Deployment und Betriebsdokumentation ergänzen.
 - [x] Benutzer und Rollen persistieren; externe Anmeldung kann per Actor-Konfiguration erzwungen werden.
+- [ ] Erweiterbare Rollen- und Rechteverwaltung: benutzerdefinierte Rollen mit bereichsbezogenen Lese-/Schreib-/Adminrechten, UI-Verwaltung und serverseitiger Durchsetzung.
 - [x] Audit-Events für zentrale Admin-/Datenbankaktionen persistieren.
 - [x] Persistente Hintergrund-Task-Queue mit globalem Statusindikator, Admin-Steuerung, Abbruch, Wiederholung und Löschung fehlgeschlagener Einträge für Prüf-, Dubletten-Merge-, Index- und Medienaufgaben; Detailstatus wird im Header-Popover und in der Admin-Queue angezeigt.
 

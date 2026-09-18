@@ -7,14 +7,17 @@ import {
   TRAINER_QUALIFICATION_LEVELS,
 } from "@/domain/training/trainer-qualification";
 import { Dialog } from "@/components/ui/dialog";
+import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import { IdentityLoginDialog } from "./identity-login-dialog";
 
 type Action = (formData: FormData) => Promise<void>;
 
-export function IdentityManagementPanel({ users, createAction, updateAction, loginAction, logoutAction }: {
+export function IdentityManagementPanel({ users, createAction, updateAction, loginAction, logoutAction, setPasswordAction, deleteAction }: {
   readonly users: readonly AppUser[];
   readonly createAction: Action;
   readonly updateAction: Action;
+  readonly setPasswordAction: Action;
+  readonly deleteAction: Action;
   readonly loginAction: Action;
   readonly logoutAction: Action;
 }) {
@@ -41,7 +44,7 @@ export function IdentityManagementPanel({ users, createAction, updateAction, log
         <label className="grid gap-1 text-xs font-black">Startpasswort<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" minLength={8} name="password" required type="password" /></label>
         <label className="grid gap-1 text-xs font-black">Qualifikation<select className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm" defaultValue="none" name="trainerQualificationLevel">{TRAINER_QUALIFICATION_LEVELS.map((level) => <option key={level} value={level}>{TRAINER_QUALIFICATION_LABELS[level]}</option>)}</select></label>
         <label className="grid gap-1 text-xs font-black">Rolle<select className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm" defaultValue="trainer" name="role"><option value="trainer">Trainer</option><option value="admin">Admin</option><option value="super_admin">Super-Admin</option></select></label>
-        <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)] md:col-span-4 md:justify-self-end" type="submit">Benutzer anlegen</button>
+        <ActionProgressButton className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)] md:col-span-4 md:justify-self-end" pendingLabel="Benutzer wird gespeichert …">Benutzer anlegen</ActionProgressButton>
       </form>
       <div className="mt-5 grid gap-2">{filtered.map((user) => <article className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" key={user.id}>
         {user.profileImageDataUrl || user.profileImageUri ? <img alt="" className="size-12 shrink-0 rounded-full object-cover" src={user.profileImageDataUrl ?? user.profileImageUri ?? ""} /> : <div aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--surface-elevated)] text-sm font-black">{initials(user.displayName)}</div>}
@@ -65,8 +68,10 @@ export function IdentityManagementPanel({ users, createAction, updateAction, log
         <label className="grid gap-1 text-sm font-bold">Profilbild-URL<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.profileImageUri ?? ""} name="profileImageUri" /></label>
         <label className="grid gap-1 text-sm font-bold">Rolle<select className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.role} name="role"><option value="trainer">Trainer</option><option value="admin">Admin</option><option value="super_admin">Super-Admin</option></select></label>
         <label className="inline-flex items-center gap-2 text-sm font-bold"><input defaultChecked={editing.active} name="active" type="checkbox" />Aktiv</label>
-        <button className="min-h-11 rounded-lg bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Profil speichern</button>
+        <ActionProgressButton className="min-h-11 rounded-lg bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" pendingLabel="Profil wird gespeichert …">Profil speichern</ActionProgressButton>
       </form>
+      <form action={setPasswordAction} className="mt-4 flex flex-wrap items-end gap-2 border-t border-[var(--border)] pt-4"><input name="id" type="hidden" value={editing.id} /><label className="grid min-w-56 flex-1 gap-1 text-sm font-bold">Neues Passwort<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" minLength={8} name="password" required type="password" /></label><ActionProgressButton className="min-h-10 rounded-lg border border-[var(--border)] px-3 text-sm font-black" pendingLabel="Passwort wird gesetzt …">Passwort setzen</ActionProgressButton></form>
+      <form action={deleteAction} className="mt-3"><input name="id" type="hidden" value={editing.id} /><ActionProgressButton className="min-h-10 rounded-lg border border-[var(--danger)] px-3 text-sm font-black text-[var(--danger)]" pendingLabel="Benutzer wird gelöscht …">Benutzer löschen</ActionProgressButton></form>
     </Dialog> : null}
   </section>;
 }
