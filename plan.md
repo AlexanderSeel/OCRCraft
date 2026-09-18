@@ -120,8 +120,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 - [x] Gespeicherte Kids/Youth-Schutzprofile ergänzen: wiederverwendbare Profile mit Zielgruppe, Altersbereich, maximalem Risiko/Impact, Aufsicht und expliziten Hindernissperren können Gruppen zugeordnet und versioniert in DuckDB verwaltet werden.
 - [x] Eingeschränkte Hindernisregeln, Aufsicht und Maximalrisiken nach Alter als harte Planungsgrenzen anwenden: lokale und AI-Planung filtern gesperrte Übungen sowie Risiko/Impact vorab; die finale Trainingsvalidierung prüft dieselben Regeln erneut und zeigt den Aufsichtsbedarf verständlich an.
-- [ ] Trainerqualifikation, Medienfreigaben und verständliche Blockierungsgründe.
-- [ ] Kinder-/Jugendformulierungen und Vereinsregeln als harte Priorität.
+- [x] Trainerqualifikation, Medienfreigaben und verständliche Blockierungsgründe: Benutzer besitzen einen strukturierten Qualifikationslevel (keine/Assistenz/Trainer C/B/A), Kids/Youth-Schutzprofile definieren eine Mindestqualifikation, Trainingserzeugung wird bei Unterschreitung mit konkretem Grund blockiert und fachliche Medien-/Sequenzfreigaben verlangen mindestens Trainer C.
+- [x] Kinder-/Jugendformulierungen und Vereinsregeln als harte Priorität: aufgelöste Schutzprofilgrenzen werden vor lokaler/AI-Planung deterministisch angewendet, nach der Planung erneut validiert und zusätzlich als nicht verhandelbare `hardSafetyConstraints` an AI-Provider übergeben; Performance-, Vorlagen- und Wunschübungskontext darf sie nicht abschwächen.
 
 ### Internationalisierung
 

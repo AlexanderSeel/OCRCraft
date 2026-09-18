@@ -30,6 +30,7 @@ describe("club rule profiles", () => {
       restrictedExerciseIds: ["rope-climb"],
       minimumParticipantAge: 7,
       maximumParticipantAge: 11,
+      minimumTrainerQualification: "trainer_c",
     });
 
     expect(rules.maximumRiskLevel).toBe("medium");
@@ -39,6 +40,7 @@ describe("club rule profiles", () => {
     expect(rules.safetyProfileName).toBe("Kids Safety");
     expect(rules.safetyProfileAudience).toBe("kids");
     expect(rules.safetyMinimumAge).toBe(7);
+    expect(rules.requiredTrainerQualification).toBe("trainer_c");
   });
 
   it("keeps audience impact limits active for kids and youth", () => {

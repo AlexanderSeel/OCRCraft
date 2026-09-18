@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireAdmin } from "@/server/auth/identity-service";
+import { requireAdmin, trainerQualificationSchema } from "@/server/auth/identity-service";
 import {
   createYouthSafetyProfile,
   setYouthSafetyProfileArchived,
@@ -18,6 +18,7 @@ const profileSchema = z.object({
   maximumRiskLevel: z.enum(["low","medium","high"]),
   maximumImpactLevel: z.enum(["low","moderate","high"]),
   supervisionRequirement: z.enum(["normal","increased","direct"]),
+  minimumTrainerQualification: trainerQualificationSchema,
   notes: z.string().trim().max(1200),
   restrictedExerciseIds: z.array(z.string().uuid()).max(150),
 }).refine((value) => value.minAge <= value.maxAge, {
@@ -34,6 +35,7 @@ function parseProfile(formData: FormData) {
     maximumRiskLevel: formData.get("maximumRiskLevel"),
     maximumImpactLevel: formData.get("maximumImpactLevel"),
     supervisionRequirement: formData.get("supervisionRequirement"),
+    minimumTrainerQualification: formData.get("minimumTrainerQualification"),
     notes: String(formData.get("notes") ?? ""),
     restrictedExerciseIds: formData.getAll("restrictedExerciseIds"),
   });

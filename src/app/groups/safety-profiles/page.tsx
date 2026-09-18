@@ -3,6 +3,10 @@ import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Disclosure } from "@/components/ui/disclosure";
 import {
+  TRAINER_QUALIFICATION_LABELS,
+  TRAINER_QUALIFICATION_LEVELS,
+} from "@/domain/training/trainer-qualification";
+import {
   listYouthSafetyProfiles,
   type YouthSafetyProfile,
 } from "@/server/groups/youth-safety-profile-repository";
@@ -90,6 +94,7 @@ export default async function SafetyProfilesPage({ searchParams }: PageProps) {
                 <Metric label="Max. Risiko" value={riskLabel(profile.maximumRiskLevel)} />
                 <Metric label="Max. Impact" value={impactLabel(profile.maximumImpactLevel)} />
                 <Metric label="Aufsicht" value={supervisionLabel(profile.supervisionRequirement)} />
+                <Metric label="Mindestqualifikation" value={TRAINER_QUALIFICATION_LABELS[profile.minimumTrainerQualification]} />
               </dl>
               <div className="mt-3 rounded-xl bg-[var(--surface-subtle)] p-3 text-sm">
                 <strong>{profile.restrictions.length} gesperrte Hindernisse</strong>
@@ -157,6 +162,12 @@ function ProfileFields({
             <option value="normal">Normale Aufsicht</option>
             <option value="increased">Erhöhte Aufsicht</option>
             <option value="direct">Direkte Traineraufsicht</option>
+          </select>
+        </label>
+        <label className="grid gap-1.5 text-sm font-bold">
+          Mindestqualifikation Trainer
+          <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={profile?.minimumTrainerQualification ?? "assistant"} name="minimumTrainerQualification">
+            {TRAINER_QUALIFICATION_LEVELS.map((level) => <option key={level} value={level}>{TRAINER_QUALIFICATION_LABELS[level]}</option>)}
           </select>
         </label>
         <label className="grid gap-1.5 text-sm font-bold">Mindestalter<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={profile?.minAge ?? 7} max={17} min={3} name="minAge" type="number" /></label>

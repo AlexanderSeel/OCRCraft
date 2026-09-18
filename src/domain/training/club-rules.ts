@@ -1,4 +1,5 @@
 import type { RiskLevel } from "./model";
+import type { TrainerQualificationLevel } from "./trainer-qualification";
 import {
   DEFAULT_CLUB_TRAINING_RULES,
   type ClubTrainingRules,
@@ -22,6 +23,7 @@ export interface YouthSafetyRuleOverlay {
   readonly restrictedExerciseIds: readonly string[];
   readonly minimumParticipantAge: number;
   readonly maximumParticipantAge: number;
+  readonly minimumTrainerQualification: TrainerQualificationLevel;
 }
 
 export interface ClubRuleProfileDefinition {
@@ -141,6 +143,7 @@ export function combineClubTrainingRules(
     safetyProfileAudience: youthSafety?.audience,
     safetyMinimumAge: youthSafety?.minimumParticipantAge,
     safetyMaximumAge: youthSafety?.maximumParticipantAge,
+    requiredTrainerQualification: youthSafety?.minimumTrainerQualification,
   };
 }
 

@@ -12,6 +12,7 @@ import { deleteOrphanedMediaObjects } from "@/server/media/media-maintenance-ser
 import { normalizeMediaBatchExerciseIds } from "@/server/media/media-generation-job-core";
 import { enqueueExerciseImageGenerationJobs } from "@/server/media/media-generation-job-repository";
 import { runExerciseImageGenerationQueue } from "@/server/media/media-generation-worker";
+import { trainerQualificationBlockReason } from "@/domain/training/trainer-qualification";
 
 const reviewSchema = z.object({
   assetId: z.string().uuid(),
@@ -27,6 +28,12 @@ export async function updateMediaReviewStatusAction(formData: FormData): Promise
     reviewStatus: formData.get("reviewStatus"),
   });
   if (!parsed.success) redirect("/media?reviewError=invalid");
+  if (
+    parsed.data.reviewStatus === "approved"
+    && trainerQualificationBlockReason(actor.trainerQualificationLevel, "trainer_c", "Medienfreigabe")
+  ) {
+    redirect("/media?reviewError=qualification");
+  }
 
   let updated = false;
   try {
@@ -285,6 +292,12 @@ export async function updateSequenceMediaAssessmentAction(formData: FormData): P
     reviewNotes: String(formData.get("reviewNotes") ?? ""),
   });
   if (!parsed.success) redirect("/media?sequenceError=invalid");
+  if (
+    (parsed.data.biomechanicsReview === "pass" || parsed.data.textMatchReview === "pass")
+    && trainerQualificationBlockReason(actor.trainerQualificationLevel, "trainer_c", "Fachliche Sequenzfreigabe")
+  ) {
+    redirect("/media?sequenceError=qualification");
+  }
 
   let updated = false;
   try {

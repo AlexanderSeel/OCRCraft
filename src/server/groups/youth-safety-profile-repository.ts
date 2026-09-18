@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import type { DuckDBConnection } from "@duckdb/node-api";
 import type { YouthSafetyRuleOverlay } from "@/domain/training/club-rules";
 import { assessYouthSafetyProfileCompatibility } from "@/domain/training/youth-safety-profile";
+import type { TrainerQualificationLevel } from "@/domain/training/trainer-qualification";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 
@@ -24,6 +25,7 @@ export interface YouthSafetyProfile {
   readonly maximumRiskLevel: "low" | "medium" | "high";
   readonly maximumImpactLevel: "low" | "moderate" | "high";
   readonly supervisionRequirement: "normal" | "increased" | "direct";
+  readonly minimumTrainerQualification: TrainerQualificationLevel;
   readonly notes: string | null;
   readonly archived: boolean;
   readonly createdAt: string;
@@ -39,6 +41,7 @@ export interface YouthSafetyProfileInput {
   readonly maximumRiskLevel: "low" | "medium" | "high";
   readonly maximumImpactLevel: "low" | "moderate" | "high";
   readonly supervisionRequirement: "normal" | "increased" | "direct";
+  readonly minimumTrainerQualification: TrainerQualificationLevel;
   readonly notes?: string | null;
   readonly restrictedExerciseIds: readonly string[];
 }
@@ -85,7 +88,8 @@ export async function listYouthSafetyProfiles(
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(`
       SELECT id::VARCHAR,name,audience,min_age,max_age,maximum_risk_level,
-        maximum_impact_level,supervision_requirement,notes,archived,created_at,updated_at
+        maximum_impact_level,supervision_requirement,notes,archived,created_at,updated_at,
+        COALESCE(minimum_trainer_qualification,'assistant')
       FROM club_youth_safety_profiles
       WHERE $includeArchived OR archived=false
       ORDER BY archived,audience,min_age,name
@@ -105,6 +109,7 @@ export async function listYouthSafetyProfiles(
       archived: Boolean(row[9]),
       createdAt: String(row[10]),
       updatedAt: String(row[11]),
+      minimumTrainerQualification: String(row[12] ?? "assistant") as TrainerQualificationLevel,
       restrictions: restrictions.get(String(row[0])) ?? [],
     }));
   });
@@ -147,10 +152,10 @@ export async function createYouthSafetyProfile(input: YouthSafetyProfileInput): 
       await connection.run(`
         INSERT INTO club_youth_safety_profiles (
           id,name,audience,min_age,max_age,maximum_risk_level,maximum_impact_level,
-          supervision_requirement,notes
+          supervision_requirement,notes,minimum_trainer_qualification
         ) VALUES (
           $id::UUID,$name,$audience,$minAge,$maxAge,$maximumRisk,$maximumImpact,
-          $supervision,$notes
+          $supervision,$notes,$minimumTrainerQualification
         )
       `, {
         id,
@@ -162,6 +167,7 @@ export async function createYouthSafetyProfile(input: YouthSafetyProfileInput): 
         maximumImpact: input.maximumImpactLevel,
         supervision: input.supervisionRequirement,
         notes: input.notes?.trim() || null,
+        minimumTrainerQualification: input.minimumTrainerQualification,
       });
       await replaceRestrictions(connection, id, input.restrictedExerciseIds);
       await connection.run("COMMIT");
@@ -204,7 +210,8 @@ export async function updateYouthSafetyProfile(
         UPDATE club_youth_safety_profiles
         SET name=$name,audience=$audience,min_age=$minAge,max_age=$maxAge,
           maximum_risk_level=$maximumRisk,maximum_impact_level=$maximumImpact,
-          supervision_requirement=$supervision,notes=$notes,updated_at=current_timestamp
+          supervision_requirement=$supervision,notes=$notes,
+          minimum_trainer_qualification=$minimumTrainerQualification,updated_at=current_timestamp
         WHERE id=$id::UUID
         RETURNING id::VARCHAR
       `, {
@@ -217,6 +224,7 @@ export async function updateYouthSafetyProfile(
         maximumImpact: input.maximumImpactLevel,
         supervision: input.supervisionRequirement,
         notes: input.notes?.trim() || null,
+        minimumTrainerQualification: input.minimumTrainerQualification,
       });
       if (reader.getRows().length === 0) {
         await connection.run("ROLLBACK");
@@ -263,7 +271,8 @@ export async function getYouthSafetyProfileForGroup(
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(`
       SELECT p.id::VARCHAR,p.name,p.audience,p.maximum_risk_level,
-        p.maximum_impact_level,p.supervision_requirement,g.min_age,g.max_age
+        p.maximum_impact_level,p.supervision_requirement,g.min_age,g.max_age,
+        COALESCE(p.minimum_trainer_qualification,'assistant')
       FROM club_groups g
       JOIN club_youth_safety_profiles p ON p.id=g.youth_safety_profile_id
       WHERE g.id=$groupId::UUID AND g.archived=false AND p.archived=false
@@ -283,6 +292,7 @@ export async function getYouthSafetyProfileForGroup(
       restrictedExerciseIds: restrictionReader.getRows().map((item) => String(item[0])),
       minimumParticipantAge: Number(row[6]),
       maximumParticipantAge: Number(row[7]),
+      minimumTrainerQualification: String(row[8] ?? "assistant") as TrainerQualificationLevel,
     };
   });
 }

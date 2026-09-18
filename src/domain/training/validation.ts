@@ -1,3 +1,4 @@
+import type { TrainerQualificationLevel } from "./trainer-qualification";
 import type {
   RiskLevel,
   TrainingEquipmentAvailability,
@@ -46,6 +47,7 @@ export interface ClubTrainingRules {
   readonly safetyProfileAudience?: "kids" | "youth";
   readonly safetyMinimumAge?: number;
   readonly safetyMaximumAge?: number;
+  readonly requiredTrainerQualification?: TrainerQualificationLevel;
   readonly audienceSafety?: Partial<Record<"kids" | "youth" | "adults" | "mixed", {
     readonly maximumImpactLevel?: "low" | "moderate" | "high";
     readonly requireDirectSupervision?: boolean;

@@ -7,11 +7,15 @@ import {
 } from "@/domain/training/club-rules";
 import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import {
+  trainerQualificationBlockReason,
+} from "@/domain/training/trainer-qualification";
+import {
   DEFAULT_CLUB_TRAINING_RULES,
   type ClubTrainingRules,
 } from "@/domain/training/validation";
 import { getClubGroupRuleSettings } from "@/server/groups/group-repository";
 import { getYouthSafetyProfileForGroup } from "@/server/groups/youth-safety-profile-repository";
+import { requireTrainer } from "@/server/auth/identity-service";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 
 export async function resolveTrainingClubRules(
@@ -53,4 +57,19 @@ export function filterCandidatesForClubRules(
       rules,
     )
   );
+}
+
+
+export async function assertTrainerQualificationForRules(
+  rules: ClubTrainingRules,
+): Promise<void> {
+  const required = rules.requiredTrainerQualification;
+  if (!required || required === "none") return;
+  const actor = await requireTrainer();
+  const reason = trainerQualificationBlockReason(
+    actor.trainerQualificationLevel,
+    required,
+    `Training mit Schutzprofil „${rules.safetyProfileName ?? "Kids/Youth"}“`,
+  );
+  if (reason) throw new Error(reason);
 }

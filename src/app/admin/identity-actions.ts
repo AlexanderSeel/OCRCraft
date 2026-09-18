@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { signActorAssertion } from "@/server/auth/identity-assertion";
-import { authenticateAppUser, createAppUser, updateAppUser, userRoleSchema } from "@/server/auth/identity-service";
+import { authenticateAppUser, createAppUser, trainerQualificationSchema, updateAppUser, userRoleSchema } from "@/server/auth/identity-service";
 
 const emailSchema = z.string().trim().toLowerCase().email();
 
@@ -32,7 +32,15 @@ export async function logoutAction(): Promise<void> {
 
 export async function createUserAction(formData: FormData): Promise<void> {
   try {
-    await createAppUser({ email: String(formData.get("email") ?? ""), username: String(formData.get("username") ?? ""), firstName: String(formData.get("firstName") ?? ""), lastName: String(formData.get("lastName") ?? ""), role: userRoleSchema.parse(formData.get("role")), password: String(formData.get("password") ?? "") });
+    await createAppUser({
+      email: String(formData.get("email") ?? ""),
+      username: String(formData.get("username") ?? ""),
+      firstName: String(formData.get("firstName") ?? ""),
+      lastName: String(formData.get("lastName") ?? ""),
+      role: userRoleSchema.parse(formData.get("role")),
+      trainerQualificationLevel: trainerQualificationSchema.parse(formData.get("trainerQualificationLevel") ?? "none"),
+      password: String(formData.get("password") ?? ""),
+    });
   } catch {
     redirect("/admin?tab=users&userError=1");
   }
@@ -58,6 +66,7 @@ export async function updateUserAction(formData: FormData): Promise<void> {
       firstName: String(formData.get("firstName") ?? ""),
       lastName: String(formData.get("lastName") ?? ""),
       education: String(formData.get("education") ?? ""),
+      trainerQualificationLevel: trainerQualificationSchema.parse(formData.get("trainerQualificationLevel") ?? "none"),
       bio: String(formData.get("bio") ?? ""),
       specialties: String(formData.get("specialties") ?? ""),
       profileImageUri: String(formData.get("profileImageUri") ?? ""),

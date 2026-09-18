@@ -108,6 +108,17 @@ describe("OpenAI-compatible training provider", () => {
       request,
       approvedExercises: [exercise],
       sourceSessions,
+      hardSafetyConstraints: {
+        profileName: "Youth Safety",
+        audience: "youth",
+        minimumAge: 12,
+        maximumAge: 17,
+        maximumRiskLevel: "medium",
+        maximumImpactLevel: "moderate",
+        requiredSupervision: "increased",
+        restrictedExerciseIds: ["blocked-obstacle"],
+        requiredTrainerQualification: "trainer_c",
+      },
     });
 
     expect(fetchMock).toHaveBeenCalledOnce();
@@ -119,11 +130,19 @@ describe("OpenAI-compatible training provider", () => {
       sourceSessions: typeof sourceSessions;
       approvedExercises: { id: string }[];
       request: { bodyRegions: string[]; exerciseTypes: string[] };
+      hardSafetyConstraints: { profileName: string; requiredSupervision: string; restrictedExerciseIds: string[] };
     };
 
     expect(userPayload.sourceSessions.map((session) => session.id)).toEqual(request.sourceTrainingIds);
     expect(userPayload.approvedExercises.map((item) => item.id)).toEqual([exercise.id]);
     expect(userPayload.request.bodyRegions).toEqual(["forearms-grip"]);
     expect(userPayload.request.exerciseTypes).toEqual(["skill"]);
+    expect(userPayload.hardSafetyConstraints).toMatchObject({
+      profileName: "Youth Safety",
+      requiredSupervision: "increased",
+      restrictedExerciseIds: ["blocked-obstacle"],
+    });
+    expect(body.messages.find((message) => message.role === "system")?.content)
+      .toContain("non-negotiable club safety rules");
   });
 });

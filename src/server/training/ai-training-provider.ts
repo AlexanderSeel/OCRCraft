@@ -15,10 +15,23 @@ export interface AiTrainingSourceSession {
   }[];
 }
 
+export interface AiTrainingHardSafetyConstraints {
+  readonly profileName: string;
+  readonly audience: "kids" | "youth" | "adults" | "mixed";
+  readonly minimumAge: number | null;
+  readonly maximumAge: number | null;
+  readonly maximumRiskLevel: "low" | "medium" | "high" | null;
+  readonly maximumImpactLevel: "low" | "moderate" | "high" | null;
+  readonly requiredSupervision: "normal" | "increased" | "direct";
+  readonly restrictedExerciseIds: readonly string[];
+  readonly requiredTrainerQualification: string;
+}
+
 export interface AiTrainingGenerationContext {
   readonly request: TrainingDraftRequest;
   readonly approvedExercises: readonly TrainingDraftExerciseCandidate[];
   readonly sourceSessions?: readonly AiTrainingSourceSession[];
+  readonly hardSafetyConstraints?: AiTrainingHardSafetyConstraints;
 }
 
 export interface AiTrainingProvider {
@@ -103,6 +116,7 @@ function trainingSystemPrompt(): string {
     "If partner format is requested, organizationMode is team and teamSize is exactly 2. Prefer approved teamwork/partner exercises and never change the pair size.",
     "availableObstacleExerciseIds is a hard club-inventory constraint when present. The approved pool has already removed unavailable obstacle stations; never infer or re-introduce a missing obstacle.",
     "Respect audience, ages, goals, body focus/avoidance, requested exercise types, formats, location, intensity and equipment.",
+    "When hardSafetyConstraints are supplied, they are non-negotiable club safety rules. For kids/youth they outrank performance goals, variety, preferred exercises, source sessions and any inferred progression. Never re-introduce a restricted exercise or weaken age, impact, risk or supervision limits.",
     "If sourceSessions are supplied, use them as inspiration/context for recomposition, not as permission to bypass current constraints or copy every item.",
     "When two exercises are similarly suitable, prefer the one with the lower recentUseCount so recent sessions are not repeated unnecessarily.",
     "Preferred exercise IDs may intentionally override that variety preference.",
@@ -128,6 +142,7 @@ function buildPromptPayload(context: AiTrainingGenerationContext) {
       }],
     },
     sportsPlanningPrinciples: SPORTS_PLANNING_PRINCIPLES,
+    hardSafetyConstraints: context.hardSafetyConstraints ?? null,
     sourceSessions: context.sourceSessions ?? [],
     request: {
       audience: context.request.audience,
