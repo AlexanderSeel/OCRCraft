@@ -37,6 +37,41 @@ export interface DuplicateComparisonRecord {
 
 interface DuplicateRow extends DuplicateExerciseRecord { readonly name: string; }
 
+async function mergeExerciseRelations(connection: DuckDBConnection, keepExerciseId: string, archivedExerciseId: string): Promise<void> {
+  const statements = [
+    `UPDATE exercise_translations AS target
+       SET summary=CASE WHEN COALESCE(TRIM(target.summary), '')='' THEN source.summary ELSE target.summary END,
+           instructions=CASE WHEN COALESCE(TRIM(target.instructions), '')='' THEN source.instructions ELSE target.instructions END,
+           coaching_cues=CASE WHEN COALESCE(TRIM(target.coaching_cues), '')='' THEN source.coaching_cues ELSE target.coaching_cues END,
+           common_mistakes=CASE WHEN COALESCE(TRIM(target.common_mistakes), '')='' THEN source.common_mistakes ELSE target.common_mistakes END
+      FROM exercise_translations AS source
+     WHERE target.exercise_id=$keep::UUID AND source.exercise_id=$archived::UUID AND target.locale=source.locale`,
+    `INSERT OR IGNORE INTO exercise_translations (exercise_id,locale,name,summary,instructions,coaching_cues,common_mistakes)
+     SELECT $keep::UUID,locale,name,summary,instructions,coaching_cues,common_mistakes
+       FROM exercise_translations WHERE exercise_id=$archived::UUID`,
+    `INSERT OR IGNORE INTO exercise_aliases (exercise_id,locale,alias)
+     SELECT $keep::UUID,locale,alias FROM exercise_aliases WHERE exercise_id=$archived::UUID`,
+    `INSERT OR IGNORE INTO exercise_body_regions (exercise_id,body_region_id,emphasis)
+     SELECT $keep::UUID,body_region_id,emphasis FROM exercise_body_regions WHERE exercise_id=$archived::UUID`,
+    `INSERT OR IGNORE INTO exercise_equipment (exercise_id,equipment_id,quantity_required)
+     SELECT $keep::UUID,equipment_id,quantity_required FROM exercise_equipment WHERE exercise_id=$archived::UUID`,
+    `INSERT OR IGNORE INTO exercise_movement_patterns (exercise_id,movement_pattern_id)
+     SELECT $keep::UUID,movement_pattern_id FROM exercise_movement_patterns WHERE exercise_id=$archived::UUID`,
+    `INSERT OR IGNORE INTO exercise_tags (exercise_id,tag_id)
+     SELECT $keep::UUID,tag_id FROM exercise_tags WHERE exercise_id=$archived::UUID`,
+    `INSERT OR IGNORE INTO exercise_execution_steps (exercise_id,locale,step_order,instruction)
+     SELECT $keep::UUID,locale,step_order,instruction FROM exercise_execution_steps WHERE exercise_id=$archived::UUID`,
+    `INSERT OR IGNORE INTO exercise_coaching_cues (exercise_id,locale,cue_order,cue)
+     SELECT $keep::UUID,locale,cue_order,cue FROM exercise_coaching_cues WHERE exercise_id=$archived::UUID`,
+    `INSERT OR IGNORE INTO exercise_common_mistakes (exercise_id,locale,mistake_order,mistake,correction)
+     SELECT $keep::UUID,locale,mistake_order,mistake,correction FROM exercise_common_mistakes WHERE exercise_id=$archived::UUID`,
+    `UPDATE exercise_media_assets SET exercise_id=$keep::UUID WHERE exercise_id=$archived::UUID`,
+    `UPDATE exercise_source_references SET exercise_id=$keep::UUID WHERE exercise_id=$archived::UUID`,
+    `UPDATE training_items SET exercise_id=$keep::UUID WHERE exercise_id=$archived::UUID`,
+  ];
+  for (const statement of statements) await connection.run(statement, { keep: keepExerciseId, archived: archivedExerciseId });
+}
+
 async function loadRecords(connection: DuckDBConnection): Promise<DuplicateRow[]> {
   const reader = await connection.runAndReadAll(`
     SELECT e.id::VARCHAR,
@@ -131,6 +166,7 @@ export async function getDuplicateComparisonRecords(
 
 export async function resolveDuplicateTask(taskId: string, keepExerciseId: string, status: "merged" | "ignored" = "merged", resolutionDecision: "keep_both" | "keep_one" | "not_duplicate" = status === "ignored" ? "not_duplicate" : "keep_one"): Promise<void> {
   await ensureDatabaseReady();
+  let archivedExerciseId: string | null = null;
   await withDuckDbConnection(async (connection) => {
     await connection.run("BEGIN TRANSACTION");
     try {
@@ -144,11 +180,13 @@ export async function resolveDuplicateTask(taskId: string, keepExerciseId: strin
       if (leftExerciseId == null || rightExerciseId == null) throw new Error("duplicate-task-not-found");
       const archiveExerciseId = duplicateArchiveId(leftExerciseId, rightExerciseId, keepExerciseId);
       if (status === "merged") {
+        await mergeExerciseRelations(connection, keepExerciseId, archiveExerciseId);
         await connection.run("UPDATE exercises SET archived=true, updated_at=current_timestamp WHERE id=$archive::UUID", { archive: archiveExerciseId });
+        archivedExerciseId = archiveExerciseId;
       }
       await connection.run("UPDATE exercise_duplicate_tasks SET status=$status,resolution_decision=$resolutionDecision,resolved_at=current_timestamp WHERE id=$task::UUID", { task: taskId, status, resolutionDecision });
       await connection.run("COMMIT");
     } catch (error) { await connection.run("ROLLBACK"); throw error; }
   });
-  await recordAuditEvent({ action: `duplicate.${resolutionDecision}`, entityType: "exercise_duplicate_task", entityId: taskId, metadata: { keepExerciseId } });
+  await recordAuditEvent({ action: `duplicate.${resolutionDecision}`, entityType: "exercise_duplicate_task", entityId: taskId, metadata: { keepExerciseId, archivedExerciseId } });
 }

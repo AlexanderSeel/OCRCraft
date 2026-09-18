@@ -27,7 +27,7 @@ export interface MediaMaintenanceSummary {
   readonly missingAssets: readonly MissingMediaStorageAsset[];
 }
 
-interface MediaStorageReference extends MissingMediaStorageAsset {}
+type MediaStorageReference = MissingMediaStorageAsset;
 
 async function listStorageReferences(
   provider: "filesystem" | "s3",
