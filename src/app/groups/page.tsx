@@ -31,6 +31,7 @@ const GROUP_FORMAT_OPTIONS: readonly (readonly [TrainingFormat, string])[] = [
   ["run-exercise", "Run + Exercise"],
   ["technique", "Technik"],
   ["relay", "Team / Relay"],
+  ["partner", "Partner Workout"],
 ];
 
 interface PageProps {
