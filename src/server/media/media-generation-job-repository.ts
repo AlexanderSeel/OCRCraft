@@ -210,3 +210,4 @@ export async function failQueuedMediaGenerationJobs(errorMessage: string): Promi
     return reader.getRows().length;
   });
 }
+export async function deleteFailedMediaGenerationJob(jobId:string):Promise<boolean>{ await ensureDatabaseReady(); return withDuckDbConnection(async c=>{const r=await c.runAndReadAll("DELETE FROM exercise_image_generation_jobs WHERE id=$jobId::UUID AND status='failed' RETURNING id",{jobId});return r.getRows().length===1;}); }

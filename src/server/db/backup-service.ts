@@ -2,7 +2,7 @@ import "server-only";
 
 import { copyFile, mkdir, readdir, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { openDuckDbConnection, withDuckDbFileLock, getDuckDbPath } from "./duckdb";
+import { withDuckDbConnection, getDuckDbPath } from "./duckdb";
 
 export interface DatabaseBackupResult {
   readonly fileName: string;
@@ -18,14 +18,8 @@ export interface DatabaseBackupSummary {
 }
 
 export async function createDatabaseBackup(): Promise<DatabaseBackupResult> {
-  return withDuckDbFileLock(async () => {
-    const connection = await openDuckDbConnection();
-    try {
-      await connection.run("CHECKPOINT");
-    } finally {
-      connection.closeSync();
-    }
-
+  return withDuckDbConnection(async (connection) => {
+    await connection.run("CHECKPOINT");
     const sourcePath = getDuckDbPath();
     const backupDirectory = path.join(path.dirname(sourcePath), "backups");
     await mkdir(backupDirectory, { recursive: true });

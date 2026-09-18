@@ -30,7 +30,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Produktions-Deployment und Betriebsdokumentation ergänzen.
 - [x] Benutzer und Rollen persistieren; externe Anmeldung kann per Actor-Konfiguration erzwungen werden.
 - [x] Audit-Events für zentrale Admin-/Datenbankaktionen persistieren.
-- [x] Persistente Hintergrund-Task-Queue mit globalem Statusindikator, Admin-Steuerung, Abbruch und Wiederholung für blockierende Prüf-, Dubletten-Merge- und Indexaufgaben.
+- [x] Persistente Hintergrund-Task-Queue mit globalem Statusindikator, Admin-Steuerung, Abbruch, Wiederholung und Löschung fehlgeschlagener Einträge für Prüf-, Dubletten-Merge-, Index- und Medienaufgaben; Detailstatus wird im Header-Popover und in der Admin-Queue angezeigt.
 
 ### Datenbank und portable Daten
 
@@ -60,6 +60,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Dublettenprüfung, Bulk-Edit und Import/Export im Admin abschließen.
 
 ### Suche und Planung
+
+- [ ] Gemeinsame Katalogansicht für Training, Spiele, Hindernisse und Outdoor mit Liste/Klein/Mittel/Groß/Detail, einheitlichen Filtern und serverseitiger Pagination.
 
 - [x] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten: Exact/Prefix/Alias, Kurzbeschreibung, Ziele/Tags/Bewegungsmuster, Körperregionen, Equipment und Instruktionen werden über das aktive persistierte Suchprofil gewichtet; DuckDB-BM25 bleibt die Volltextbasis und ENV-Gewichte dienen nur als Fallback.
 - [x] Autocomplete aus Übungs-, Trainingsziel-, Equipment-, Tag-, Bewegungsmuster- und Körperregionsdaten ergänzen.

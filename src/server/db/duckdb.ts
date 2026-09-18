@@ -65,19 +65,17 @@ export async function withDuckDbConnection<T>(
   });
 }
 
-/** Read-only connection that does not wait behind the application write lock. */
+/** Read-only connection with the same cross-process lock and a short polling budget. */
 export async function withDuckDbReadConnection<T>(
   operation: (connection: DuckDBConnection) => Promise<T>,
 ): Promise<T> {
-  await mkdir(path.dirname(databasePath), { recursive: true });
-  const instance = await DuckDBInstance.create(databasePath, { access_mode: "READ_ONLY" });
-  const connection = await instance.connect();
-  try {
-    return await operation(connection);
-  } finally {
-    connection.closeSync();
-    instance.closeSync();
-  }
+  return withDuckDbFileLock(async () => {
+    await mkdir(path.dirname(databasePath), { recursive: true });
+    const instance = await createInstance();
+    const connection = await instance.connect();
+    try { return await operation(connection); }
+    finally { connection.closeSync(); instance.closeSync(); }
+  }, 1_500);
 }
 
 interface LockHandle {
@@ -107,7 +105,7 @@ async function tryTakeLock(): Promise<LockHandle | null> {
 }
 
 /** Serializes all file-backed DuckDB access across workers/processes. */
-export async function withDuckDbFileLock<T>(operation: () => Promise<T>): Promise<T> {
+export async function withDuckDbFileLock<T>(operation: () => Promise<T>, timeoutMs = lockTimeoutMs): Promise<T> {
   await mkdir(path.dirname(lockPath), { recursive: true });
   const startedAt = Date.now();
   while (true) {
@@ -116,7 +114,7 @@ export async function withDuckDbFileLock<T>(operation: () => Promise<T>): Promis
       try { return await operation(); }
       finally { await lock.close(); }
     }
-    if (Date.now() - startedAt >= lockTimeoutMs) {
+    if (Date.now() - startedAt >= timeoutMs) {
       throw new Error(`Timed out waiting for DuckDB write lock: ${lockPath}`);
     }
     await new Promise((resolve) => setTimeout(resolve, lockRetryMs));

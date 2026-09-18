@@ -18,6 +18,7 @@ import { restoreDatabaseBackup } from "@/server/db/restore-service";
 import { aiProviderInstanceIdSchema, aiProviderKindSchema, deleteAiProviderInstance, disconnectAiProviderOAuth, saveAiProviderInstance, type AiCapability } from "@/server/ai/ai-provider-settings-repository";
 import { cancelAppTask, deleteAppTask, enqueueAppTask, retryAppTask } from "@/server/queue/app-task-repository";
 import { runAppTaskQueue } from "@/server/queue/app-task-worker";
+import { deleteFailedMediaGenerationJob } from "@/server/media/media-generation-job-repository";
 
 const reseedConfirmationSchema = z.literal("OCRCRAFT ZURÜCKSETZEN");
 
@@ -150,6 +151,14 @@ export async function deleteAppTaskAction(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   if (id) await deleteAppTask(id);
   revalidatePath("/admin");
+}
+
+export async function deleteFailedMediaJobAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (id) await deleteFailedMediaGenerationJob(id);
+  revalidatePath("/admin");
+  revalidatePath("/media");
 }
 
 export async function resolveDuplicateExerciseAction(formData: FormData): Promise<void> {

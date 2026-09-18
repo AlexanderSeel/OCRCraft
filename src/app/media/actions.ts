@@ -10,7 +10,7 @@ import { recordAuditEvent } from "@/server/db/audit-service";
 import { hasConfiguredExerciseImageProvider } from "@/server/images/configured-image-generator";
 import { deleteOrphanedMediaObjects } from "@/server/media/media-maintenance-service";
 import { normalizeMediaBatchExerciseIds } from "@/server/media/media-generation-job-core";
-import { enqueueExerciseImageGenerationJobs } from "@/server/media/media-generation-job-repository";
+import { deleteFailedMediaGenerationJob, enqueueExerciseImageGenerationJobs } from "@/server/media/media-generation-job-repository";
 import { runExerciseImageGenerationQueue } from "@/server/media/media-generation-worker";
 import { trainerQualificationBlockReason } from "@/domain/training/trainer-qualification";
 
@@ -117,6 +117,14 @@ export async function retryMediaGenerationJobAction(formData: FormData): Promise
 
   revalidatePath("/media");
   redirect(`/media?jobRetried=${queued > 0 ? "queued" : "active"}`);
+}
+
+export async function deleteFailedMediaGenerationJobAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const jobId = z.string().uuid().safeParse(formData.get("jobId"));
+  if (jobId.success) await deleteFailedMediaGenerationJob(jobId.data);
+  revalidatePath("/media");
+  revalidatePath("/admin");
 }
 
 
