@@ -124,15 +124,15 @@ export async function getDuplicateComparisonRecords(
   });
 }
 
-export async function resolveDuplicateTask(taskId: string, keepExerciseId: string, status: "merged" | "ignored" = "merged"): Promise<void> {
+export async function resolveDuplicateTask(taskId: string, keepExerciseId: string, status: "merged" | "ignored" = "merged", resolutionDecision: "keep_both" | "keep_one" | "not_duplicate" = status === "ignored" ? "not_duplicate" : "keep_one"): Promise<void> {
   await ensureDatabaseReady();
   await withDuckDbConnection(async (connection) => {
     await connection.run("BEGIN TRANSACTION");
     try {
       if (status === "merged") await connection.run("UPDATE exercises SET archived=true, updated_at=current_timestamp WHERE id=(SELECT CASE WHEN left_exercise_id=$keep::UUID THEN right_exercise_id ELSE left_exercise_id END FROM exercise_duplicate_tasks WHERE id=$task::UUID)", { task: taskId, keep: keepExerciseId });
-      await connection.run("UPDATE exercise_duplicate_tasks SET status=$status,resolved_at=current_timestamp WHERE id=$task::UUID", { task: taskId, status });
+      await connection.run("UPDATE exercise_duplicate_tasks SET status=$status,resolution_decision=$resolutionDecision,resolved_at=current_timestamp WHERE id=$task::UUID", { task: taskId, status, resolutionDecision });
       await connection.run("COMMIT");
     } catch (error) { await connection.run("ROLLBACK"); throw error; }
   });
-  await recordAuditEvent({ action: `duplicate.${status}`, entityType: "exercise_duplicate_task", entityId: taskId, metadata: { keepExerciseId } });
+  await recordAuditEvent({ action: `duplicate.${resolutionDecision}`, entityType: "exercise_duplicate_task", entityId: taskId, metadata: { keepExerciseId } });
 }

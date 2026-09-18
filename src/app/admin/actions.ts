@@ -147,8 +147,8 @@ export async function resolveDuplicateExercisesBulkAction(formData: FormData): P
   for (const selection of selections) {
     const [taskId, leftExerciseId, rightExerciseId] = selection.split(":");
     if (!taskId || !leftExerciseId || !rightExerciseId) continue;
-    if (decision === "ignored") {
-      await resolveDuplicateTask(taskId, leftExerciseId, "ignored");
+    if (decision === "ignored" || decision === "both") {
+      await resolveDuplicateTask(taskId, leftExerciseId, "ignored", decision === "both" ? "keep_both" : "not_duplicate");
       continue;
     }
     await resolveDuplicateTask(taskId, decision === "right" ? rightExerciseId : leftExerciseId, "merged");

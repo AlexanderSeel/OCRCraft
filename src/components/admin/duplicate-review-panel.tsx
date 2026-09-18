@@ -72,6 +72,7 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
               <select className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs font-bold" defaultValue="left" id="bulk-duplicate-decision" name="decision">
                 <option value="left">Linke übernehmen</option>
                 <option value="right">Rechte übernehmen</option>
+                <option value="both">Beide behalten</option>
                 <option value="ignored">Ignorieren</option>
               </select>
               <ActionProgressButton className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" pendingLabel={`${selectedTasks.length} Einträge werden verarbeitet`}>Ausführen</ActionProgressButton>
