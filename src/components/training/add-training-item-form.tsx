@@ -63,6 +63,7 @@ export function AddTrainingItemForm({ sessionId, phaseId }: AddTrainingItemFormP
               <option value="run-exercise">Run + Exercise</option>
               <option value="technique">Technik</option>
               <option value="relay">Team / Relay</option>
+              <option value="partner">Partner Workout</option>
             </select>
           </label>
           <label className="grid gap-2 text-sm font-bold">
