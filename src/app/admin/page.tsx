@@ -42,6 +42,7 @@ interface AdminPageProps {
     readonly userSaved?: string;
     readonly searchSaved?: string;
     readonly searchError?: string;
+    readonly queueDeleted?: string;
   }>;
 }
 
@@ -59,7 +60,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     listQueueIssues(),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
-  const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved, searchSaved, searchError } = await searchParams;
+  const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved, searchSaved, searchError, queueDeleted } = await searchParams;
   const activeTab = normalizeAdminTab(tab);
 
   return (
@@ -69,6 +70,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     >
       <div className="space-y-6">
         <AdminTabs active={activeTab} />
+        {queueDeleted === "1" ? <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Der fehlgeschlagene Medienjob wurde gelöscht.</p> : null}
+        {queueDeleted === "0" ? <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Der Fehler konnte nicht gelöscht werden. Der Eintrag ist möglicherweise bereits entfernt oder noch nicht fehlgeschlagen.</p> : null}
         {activeTab === "overview" ? <SeedCompletenessReportView report={seedCompleteness} /> : null}
         {activeTab === "quality" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">

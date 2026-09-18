@@ -155,10 +155,11 @@ export async function deleteAppTaskAction(formData: FormData): Promise<void> {
 
 export async function deleteFailedMediaJobAction(formData: FormData): Promise<void> {
   await requireAdmin();
-  const id = String(formData.get("id") ?? "");
-  if (id) await deleteFailedMediaGenerationJob(id);
+  const id = z.string().uuid().safeParse(formData.get("id"));
+  const deleted = id.success ? await deleteFailedMediaGenerationJob(id.data) : false;
   revalidatePath("/admin");
   revalidatePath("/media");
+  redirect(`/admin?tab=queue&queueDeleted=${deleted ? "1" : "0"}`);
 }
 
 export async function resolveDuplicateExerciseAction(formData: FormData): Promise<void> {
