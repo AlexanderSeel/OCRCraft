@@ -51,6 +51,7 @@ export const mainPartProgrammingSchema = z.object({
 });
 
 export const trainingDraftRequestSchema = z.object({
+  groupId: z.string().uuid().optional(),
   audience: z.enum(AUDIENCES),
   participantCount: z.number().int().min(1).max(200),
   durationMinutes: z.number().int().min(30).max(180),
