@@ -11,6 +11,10 @@ import { Disclosure } from "@/components/ui/disclosure";
 import type { ClubGroup } from "@/server/groups/group-repository";
 import { listClubGroups } from "@/server/groups/group-repository";
 import {
+  listYouthSafetyProfiles,
+  type YouthSafetyProfile,
+} from "@/server/groups/youth-safety-profile-repository";
+import {
   listTrainingEquipmentOptions,
   type TrainingEquipmentOption,
 } from "@/server/training/training-draft-repository";
@@ -42,9 +46,10 @@ export default async function GroupsPage({ searchParams }: PageProps) {
   const query = await searchParams;
   const archivedView = query.archived === "1";
   const selectedPreset = archivedView ? undefined : getGroupPreset(query.preset);
-  const [allGroups, equipmentOptions] = await Promise.all([
+  const [allGroups, equipmentOptions, safetyProfiles] = await Promise.all([
     listClubGroups(archivedView),
     listTrainingEquipmentOptions("de"),
+    listYouthSafetyProfiles(false),
   ]);
   const groups = archivedView ? allGroups.filter((group) => group.archived) : allGroups;
 
@@ -53,12 +58,20 @@ export default async function GroupsPage({ searchParams }: PageProps) {
       title={archivedView ? "Gruppen · Archiv" : "Gruppen"}
       subtitle="Trainingsgruppen mit Alter, Teilnehmerzahl, Standarddauer, Trainingsort, Materialbestand und Risikorahmen verwalten."
       actions={
-        <Link
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
-          href={archivedView ? "/groups" : "/groups?archived=1"}
-        >
-          {archivedView ? "Aktive Gruppen" : "Archiv"}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            href="/groups/safety-profiles"
+          >
+            Kids/Youth-Schutzprofile
+          </Link>
+          <Link
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            href={archivedView ? "/groups" : "/groups?archived=1"}
+          >
+            {archivedView ? "Aktive Gruppen" : "Archiv"}
+          </Link>
+        </div>
       }
     >
       <div className="space-y-6">
@@ -109,7 +122,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
               </p>
             </div>
             <form action={createClubGroupAction} className="p-5">
-              <GroupFields equipmentOptions={equipmentOptions} preset={selectedPreset} />
+              <GroupFields equipmentOptions={equipmentOptions} preset={selectedPreset} safetyProfiles={safetyProfiles} />
               <div className="mt-4 flex justify-end">
                 <button
                   className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
@@ -150,6 +163,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                 <GroupMetric label="Formate" value={group.preferredFormats.length ? String(group.preferredFormats.length) : "Offen"} />
                 <GroupMetric label="Regelprofil" value={ruleProfileLabel(group.ruleProfile)} />
                 <GroupMetric label="Max. Risiko" value={riskLabel(group.maximumRiskLevel)} />
+                <GroupMetric label="Schutzprofil" value={group.youthSafetyProfileName ?? "Keines"} />
                 <GroupMetric label="Organisation" value={group.defaultOrganizationMode === "team" ? `Team · ${group.defaultTeamSize ?? 2}` : "Solo / Rotation"} />
                 <GroupMetric label="Rotationsgruppen" value={group.defaultGroupSplitCount == null ? "Automatisch" : String(group.defaultGroupSplitCount)} />
                 <GroupMetric label="Ziel Stationsgruppe" value={group.defaultStationGroupSize == null ? "Offen" : `max. ${group.defaultStationGroupSize} Pers.`} />
@@ -164,7 +178,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                   <Disclosure className="min-w-[280px] flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]" summaryClassName="px-4 py-3 text-sm font-black" summary="Gruppe bearbeiten">
                     <form action={updateClubGroupAction} className="border-t border-[var(--border)] p-4">
                       <input name="id" type="hidden" value={group.id} />
-                      <GroupFields equipmentOptions={equipmentOptions} group={group} />
+                      <GroupFields equipmentOptions={equipmentOptions} group={group} safetyProfiles={safetyProfiles} />
                       <div className="mt-4 flex justify-end">
                         <button
                           className="rounded-lg bg-[var(--control-strong)] px-4 py-2 text-xs font-black text-[var(--control-strong-foreground)]"
@@ -213,10 +227,12 @@ function GroupFields({
   group,
   preset,
   equipmentOptions,
+  safetyProfiles,
 }: {
   readonly group?: ClubGroup;
   readonly preset?: GroupPresetDefinition;
   readonly equipmentOptions: readonly TrainingEquipmentOption[];
+  readonly safetyProfiles: readonly YouthSafetyProfile[];
 }) {
   const equipmentById = new Map(group?.defaultEquipment.map((item) => [item.equipmentId, item.quantityAvailable]) ?? []);
   return (
@@ -373,6 +389,22 @@ function GroupFields({
             <option key={profile.key} value={profile.key}>{profile.labelDe}</option>
           ))}
         </select>
+      </label>
+      <label className="grid gap-1.5 text-sm font-bold">
+        Kids/Youth-Schutzprofil
+        <select
+          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          defaultValue={group?.youthSafetyProfileId ?? ""}
+          name="youthSafetyProfileId"
+        >
+          <option value="">Kein zusätzliches Schutzprofil</option>
+          {safetyProfiles.map((profile) => (
+            <option key={profile.id} value={profile.id}>
+              {profile.audience === "kids" ? "Kids" : "Youth"} · {profile.name} · {profile.minAge}–{profile.maxAge}
+            </option>
+          ))}
+        </select>
+        <span className="text-xs font-normal text-[var(--muted)]">Nur für passende Kids-/Youth-Gruppen und vollständig passenden Altersbereich.</span>
       </label>
       <label className="grid gap-1.5 text-sm font-bold">
         Maximales Risikoniveau

@@ -14,6 +14,7 @@ export interface TrainingValidationIssue {
     | "empty-main-part"
     | "duration-mismatch"
     | "risk-restricted"
+    | "exercise-restricted"
     | "age-restricted"
     | "impact-restricted"
     | "supervision-required"
@@ -39,6 +40,12 @@ export interface ClubTrainingRules {
   readonly requiredPhases: readonly TrainingPhaseKind[];
   readonly durationToleranceMinutes: number;
   readonly maximumRiskLevel?: RiskLevel;
+  readonly restrictedExerciseIds?: readonly string[];
+  readonly safetyProfileName?: string;
+  readonly requiredSupervision?: "normal" | "increased" | "direct";
+  readonly safetyProfileAudience?: "kids" | "youth";
+  readonly safetyMinimumAge?: number;
+  readonly safetyMaximumAge?: number;
   readonly audienceSafety?: Partial<Record<"kids" | "youth" | "adults" | "mixed", {
     readonly maximumImpactLevel?: "low" | "moderate" | "high";
     readonly requireDirectSupervision?: boolean;
@@ -135,6 +142,36 @@ export function validateTrainingSession(
     }
   }
 
+  const restrictedExercises = new Set(rules.restrictedExerciseIds ?? []);
+  if (restrictedExercises.size > 0) {
+    for (const phase of session.phases) {
+      for (const item of phase.items) {
+        if (!restrictedExercises.has(item.exercise.id)) continue;
+        issues.push({
+          code: "exercise-restricted",
+          severity: "error",
+          message: `${item.exercise.name} ist durch das Schutzprofil ${rules.safetyProfileName ?? "dieser Gruppe"} explizit gesperrt.`,
+          path: `phases.${phase.id}.items.${item.id}`,
+        });
+      }
+    }
+  }
+
+  if (
+    ((rules.safetyProfileAudience ?? session.group.audience) === "kids"
+      || (rules.safetyProfileAudience ?? session.group.audience) === "youth")
+    && rules.requiredSupervision
+    && rules.requiredSupervision !== "normal"
+  ) {
+    const label = rules.requiredSupervision === "direct" ? "direkte Traineraufsicht" : "erhöhte Aufsicht";
+    issues.push({
+      code: "supervision-required",
+      severity: "warning",
+      message: `${rules.safetyProfileName ?? "Das Schutzprofil"} verlangt für diese Gruppe ${label}. Dies muss organisatorisch sichergestellt werden.`,
+      path: "group",
+    });
+  }
+
   if (rules.maximumRiskLevel) {
     const maximumAllowedRisk = RISK_ORDER[rules.maximumRiskLevel];
 
@@ -152,20 +189,22 @@ export function validateTrainingSession(
     }
   }
 
-  const audienceRule = rules.audienceSafety?.[session.group.audience];
+  const effectiveAudience = rules.safetyProfileAudience ?? session.group.audience;
+  const effectiveMinimumAge = rules.safetyMinimumAge ?? session.group.minAge;
+  const audienceRule = rules.audienceSafety?.[effectiveAudience];
   if (audienceRule) {
     const impactOrder = { low: 1, moderate: 2, high: 3 } as const;
     for (const phase of session.phases) for (const item of phase.items) {
       const exercise = item.exercise;
       const path = `phases.${phase.id}.items.${item.id}`;
-      if (exercise.minimumAge != null && session.group.minAge != null && session.group.minAge < exercise.minimumAge) {
+      if (exercise.minimumAge != null && effectiveMinimumAge != null && effectiveMinimumAge < exercise.minimumAge) {
         issues.push({ code: "age-restricted", severity: "error", message: `${exercise.name} ist erst ab ${exercise.minimumAge} Jahren vorgesehen.`, path });
       }
       if (exercise.suitableForAudience === false) {
-        issues.push({ code: "age-restricted", severity: "error", message: `${exercise.name} ist für die Zielgruppe ${session.group.audience} nicht freigegeben.`, path });
+        issues.push({ code: "age-restricted", severity: "error", message: `${exercise.name} ist für die Zielgruppe ${effectiveAudience} nicht freigegeben.`, path });
       }
       if (exercise.impactLevel && audienceRule.maximumImpactLevel && impactOrder[exercise.impactLevel] > impactOrder[audienceRule.maximumImpactLevel]) {
-        issues.push({ code: "impact-restricted", severity: "error", message: `${exercise.name} überschreitet die erlaubte Aufprallstufe für ${session.group.audience}.`, path });
+        issues.push({ code: "impact-restricted", severity: "error", message: `${exercise.name} überschreitet die erlaubte Aufprallstufe für ${effectiveAudience}.`, path });
       }
       if (audienceRule.requireDirectSupervision && exercise.supervision === "direct") {
         issues.push({ code: "supervision-required", severity: "warning", message: `${exercise.name} benötigt direkte Traineraufsicht.`, path });

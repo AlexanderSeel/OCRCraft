@@ -11,6 +11,7 @@ import {
   type ClubTrainingRules,
 } from "@/domain/training/validation";
 import { getClubGroupRuleSettings } from "@/server/groups/group-repository";
+import { getYouthSafetyProfileForGroup } from "@/server/groups/youth-safety-profile-repository";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 
 export async function resolveTrainingClubRules(
@@ -18,7 +19,10 @@ export async function resolveTrainingClubRules(
 ): Promise<ClubTrainingRules> {
   if (!request.groupId) return DEFAULT_CLUB_TRAINING_RULES;
 
-  const settings = await getClubGroupRuleSettings(request.groupId);
+  const [settings, youthSafety] = await Promise.all([
+    getClubGroupRuleSettings(request.groupId),
+    getYouthSafetyProfileForGroup(request.groupId),
+  ]);
   if (!settings) {
     throw new Error("Die ausgewählte Trainingsgruppe ist nicht mehr aktiv.");
   }
@@ -26,6 +30,7 @@ export async function resolveTrainingClubRules(
   return combineClubTrainingRules(
     settings.ruleProfile,
     settings.maximumRiskLevel,
+    youthSafety,
   );
 }
 
@@ -34,10 +39,16 @@ export function filterCandidatesForClubRules(
   candidates: readonly TrainingDraftExerciseCandidate[],
   rules: ClubTrainingRules,
 ): readonly TrainingDraftExerciseCandidate[] {
+  const restricted = new Set(rules.restrictedExerciseIds ?? []);
+  const effectiveAudience = rules.safetyProfileAudience ?? request.audience;
   return candidates.filter((candidate) =>
-    riskAllowedByClubRules(candidate.riskLevel, rules)
+    !restricted.has(candidate.id)
+    && (rules.safetyMinimumAge == null
+      || candidate.minimumAge == null
+      || candidate.minimumAge <= rules.safetyMinimumAge)
+    && riskAllowedByClubRules(candidate.riskLevel, rules)
     && impactAllowedByClubRules(
-      request.audience,
+      effectiveAudience,
       candidate.impactLevel,
       rules,
     )

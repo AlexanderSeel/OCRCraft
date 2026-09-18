@@ -20,6 +20,27 @@ describe("club rule profiles", () => {
     expect(riskAllowedByClubRules("high", safetyFirst)).toBe(false);
   });
 
+  it("applies the stricter reusable youth safety overlay", () => {
+    const rules = combineClubTrainingRules("competition", "high", {
+      name: "Kids Safety",
+      audience: "kids",
+      maximumRiskLevel: "medium",
+      maximumImpactLevel: "low",
+      supervisionRequirement: "direct",
+      restrictedExerciseIds: ["rope-climb"],
+      minimumParticipantAge: 7,
+      maximumParticipantAge: 11,
+    });
+
+    expect(rules.maximumRiskLevel).toBe("medium");
+    expect(rules.audienceSafety?.kids?.maximumImpactLevel).toBe("low");
+    expect(rules.audienceSafety?.kids?.requireDirectSupervision).toBe(true);
+    expect(rules.restrictedExerciseIds).toEqual(["rope-climb"]);
+    expect(rules.safetyProfileName).toBe("Kids Safety");
+    expect(rules.safetyProfileAudience).toBe("kids");
+    expect(rules.safetyMinimumAge).toBe(7);
+  });
+
   it("keeps audience impact limits active for kids and youth", () => {
     const kidsYouth = combineClubTrainingRules("kids-youth", null);
     expect(impactAllowedByClubRules("kids", "low", kidsYouth)).toBe(true);

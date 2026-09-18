@@ -42,6 +42,10 @@ const groupSchema = z.object({
   defaultTeamSize: optionalInteger(2, 20),
   defaultGroupSplitCount: optionalInteger(1, 20),
   defaultStationGroupSize: optionalInteger(1, 100),
+  youthSafetyProfileId: z.preprocess(
+    (value) => value === "" ? null : value,
+    z.string().uuid().nullable(),
+  ),
 }).superRefine((value, context) => {
   if (value.defaultOrganizationMode === "team" && value.defaultTeamSize == null) {
     context.addIssue({
@@ -141,6 +145,7 @@ function parseGroupForm(formData: FormData) {
     defaultTeamSize: formData.get("defaultTeamSize"),
     defaultGroupSplitCount: formData.get("defaultGroupSplitCount"),
     defaultStationGroupSize: formData.get("defaultStationGroupSize"),
+    youthSafetyProfileId: formData.get("youthSafetyProfileId"),
   });
 }
 

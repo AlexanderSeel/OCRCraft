@@ -118,8 +118,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Schutzkonzept
 
-- [ ] Gespeicherte Kids/Youth-Profile.
-- [ ] Eingeschränkte Hindernisregeln, Aufsicht und Maximalrisiken nach Alter.
+- [x] Gespeicherte Kids/Youth-Schutzprofile ergänzen: wiederverwendbare Profile mit Zielgruppe, Altersbereich, maximalem Risiko/Impact, Aufsicht und expliziten Hindernissperren können Gruppen zugeordnet und versioniert in DuckDB verwaltet werden.
+- [x] Eingeschränkte Hindernisregeln, Aufsicht und Maximalrisiken nach Alter als harte Planungsgrenzen anwenden: lokale und AI-Planung filtern gesperrte Übungen sowie Risiko/Impact vorab; die finale Trainingsvalidierung prüft dieselben Regeln erneut und zeigt den Aufsichtsbedarf verständlich an.
 - [ ] Trainerqualifikation, Medienfreigaben und verständliche Blockierungsgründe.
 - [ ] Kinder-/Jugendformulierungen und Vereinsregeln als harte Priorität.
 

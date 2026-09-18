@@ -397,6 +397,29 @@ describe("training validation", () => {
     );
   });
 
+  it("blocks exercises explicitly restricted by a youth safety profile", () => {
+    const base = createSession();
+    const restrictedId = base.phases.find((phase) => phase.kind === "main")!.items[0]!.exercise.id;
+    const issues = validateTrainingSession(base, {
+      requiredPhases: ["warmup","main","cooldown"],
+      durationToleranceMinutes: 2,
+      restrictedExerciseIds: [restrictedId],
+      safetyProfileName: "Kids Safety",
+      requiredSupervision: "direct",
+    });
+    expect(issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        code: "exercise-restricted",
+        severity: "error",
+        message: expect.stringContaining("Kids Safety"),
+      }),
+      expect.objectContaining({
+        code: "supervision-required",
+        severity: "warning",
+      }),
+    ]));
+  });
+
   it("applies age, impact and supervision rules for youth groups", () => {
     const base = createSession();
     const session: TrainingSession = {
