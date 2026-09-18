@@ -75,12 +75,23 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       title="Übungsbibliothek"
       subtitle="Breitensport, OCR und Laufen – vorbefüllt, suchbar und direkt administrierbar."
       actions={
-        <Link
-          className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
-          href="/exercises/new"
-        >
-          + Neue Übung
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/obstacles">
+            Hindernisse
+          </Link>
+          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/media">
+            Medien
+          </Link>
+          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/exercises/ai-drafts">
+            AI-Entwürfe
+          </Link>
+          <Link
+            className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
+            href="/exercises/new"
+          >
+            + Neue Übung
+          </Link>
+        </div>
       }
     >
       <div className="space-y-6">
