@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import type { ClubRuleProfileKey } from "@/domain/training/club-rules";
 import type { TrainingFormat, TrainingLocation } from "@/domain/training/model";
+import { assessYouthSafetyProfileCompatibility } from "@/domain/training/youth-safety-profile";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import type { DuckDBConnection } from "@duckdb/node-api";
@@ -41,6 +42,7 @@ export interface ClubGroupInput {
   readonly defaultTeamSize?: number | null;
   readonly defaultGroupSplitCount?: number | null;
   readonly defaultStationGroupSize?: number | null;
+  readonly youthSafetyProfileId?: string | null;
 }
 
 export interface ClubGroup extends Omit<ClubGroupInput, "defaultLocation" | "defaultEquipment" | "skillDistribution" | "preferredFormats" | "ruleProfile"> {
@@ -54,6 +56,8 @@ export interface ClubGroup extends Omit<ClubGroupInput, "defaultLocation" | "def
   readonly defaultTeamSize: number | null;
   readonly defaultGroupSplitCount: number | null;
   readonly defaultStationGroupSize: number | null;
+  readonly youthSafetyProfileId: string | null;
+  readonly youthSafetyProfileName: string | null;
   readonly archived: boolean;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -86,10 +90,12 @@ function rowToGroup(row: readonly unknown[]): Omit<ClubGroup, "defaultEquipment"
     defaultTeamSize: row[15] == null ? null : Number(row[15]),
     defaultGroupSplitCount: row[16] == null ? null : Number(row[16]),
     defaultStationGroupSize: row[17] == null ? null : Number(row[17]),
-    archived: Boolean(row[18]),
-    createdAt: String(row[19]),
-    updatedAt: String(row[20]),
-    linkedTrainingCount: Number(row[21]),
+    youthSafetyProfileId: row[18] == null ? null : String(row[18]),
+    youthSafetyProfileName: row[19] == null ? null : String(row[19]),
+    archived: Boolean(row[20]),
+    createdAt: String(row[21]),
+    updatedAt: String(row[22]),
+    linkedTrainingCount: Number(row[23]),
   };
 }
 
@@ -112,6 +118,37 @@ async function replaceGroupEquipmentDefaults(
         quantityAvailable: item.quantityAvailable,
       },
     );
+  }
+}
+
+async function assertYouthSafetyProfileCompatible(
+  connection: DuckDBConnection,
+  profileId: string | null | undefined,
+  audience: ClubGroupAudience,
+  minAge: number | null,
+  maxAge: number | null,
+): Promise<void> {
+  if (!profileId) return;
+  if (!UUID_PATTERN.test(profileId)) throw new Error("Schutzprofil ist ungültig.");
+  const reader = await connection.runAndReadAll(`
+    SELECT audience,min_age,max_age
+    FROM club_youth_safety_profiles
+    WHERE id=$profileId::UUID AND archived=false
+  `, { profileId });
+  const row = reader.getRows()[0];
+  if (!row) throw new Error("Das ausgewählte Schutzprofil ist nicht mehr aktiv.");
+  const compatibility = assessYouthSafetyProfileCompatibility(
+    { audience, minAge, maxAge },
+    {
+      audience: String(row[0]) as "kids" | "youth",
+      minAge: Number(row[1]),
+      maxAge: Number(row[2]),
+    },
+  );
+  if (!compatibility.compatible) {
+    if (compatibility.reason === "audience") throw new Error("Zielgruppe der Gruppe passt nicht zum Schutzprofil.");
+    if (compatibility.reason === "missing-age-range") throw new Error("Für ein Schutzprofil muss die Gruppe einen vollständigen Altersbereich besitzen.");
+    throw new Error(`Gruppenalter muss vollständig innerhalb ${Number(row[1])}–${Number(row[2])} liegen.`);
   }
 }
 
@@ -157,6 +194,8 @@ export async function listClubGroups(includeArchived = false): Promise<readonly 
         g.default_team_size,
         g.default_group_split_count,
         g.default_station_group_size,
+        g.youth_safety_profile_id::VARCHAR,
+        yp.name,
         g.archived,
         g.created_at,
         g.updated_at,
@@ -166,6 +205,7 @@ export async function listClubGroups(includeArchived = false): Promise<readonly 
           WHERE s.group_id=g.id
         ) AS linked_training_count
       FROM club_groups g
+      LEFT JOIN club_youth_safety_profiles yp ON yp.id=g.youth_safety_profile_id
       WHERE $includeArchived OR g.archived=false
       ORDER BY g.archived, g.name
       `,
@@ -222,18 +262,26 @@ export async function createClubGroup(input: ClubGroupInput): Promise<string> {
   await withDuckDbConnection(async (connection) => {
     await connection.run("BEGIN TRANSACTION");
     try {
+      await assertYouthSafetyProfileCompatible(
+        connection,
+        input.youthSafetyProfileId,
+        input.audience,
+        input.minAge,
+        input.maxAge,
+      );
       await connection.run(
         `
         INSERT INTO club_groups (
           id, name, audience, min_age, max_age, default_participant_count,
           default_duration_minutes, default_locale, maximum_risk_level, default_location, rule_profile,
           skill_beginner_percent, skill_intermediate_percent, skill_advanced_percent,
-          default_organization_mode,default_team_size,default_group_split_count,default_station_group_size
+          default_organization_mode,default_team_size,default_group_split_count,default_station_group_size,
+          youth_safety_profile_id
         ) VALUES (
           $id::UUID, $name, $audience, $minAge, $maxAge, $participants,
           $duration, $locale, $risk, $location, $ruleProfile,
           $skillBeginner, $skillIntermediate, $skillAdvanced,
-          $organizationMode,$teamSize,$groupSplitCount,$stationGroupSize
+          $organizationMode,$teamSize,$groupSplitCount,$stationGroupSize,$youthSafetyProfileId::UUID
         )
         `,
         {
@@ -255,6 +303,7 @@ export async function createClubGroup(input: ClubGroupInput): Promise<string> {
           teamSize: input.defaultOrganizationMode === "team" ? input.defaultTeamSize ?? 2 : null,
           groupSplitCount: input.defaultOrganizationMode === "team" ? null : input.defaultGroupSplitCount ?? null,
           stationGroupSize: input.defaultStationGroupSize ?? null,
+          youthSafetyProfileId: input.youthSafetyProfileId ?? null,
         },
       );
       await replaceGroupEquipmentDefaults(connection, id, input.defaultEquipment ?? []);
@@ -274,6 +323,13 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
   return withDuckDbConnection(async (connection) => {
     await connection.run("BEGIN TRANSACTION");
     try {
+      await assertYouthSafetyProfileCompatible(
+        connection,
+        input.youthSafetyProfileId,
+        input.audience,
+        input.minAge,
+        input.maxAge,
+      );
       const reader = await connection.runAndReadAll(
         `
         UPDATE club_groups
@@ -295,6 +351,7 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
           default_team_size=$teamSize,
           default_group_split_count=$groupSplitCount,
           default_station_group_size=$stationGroupSize,
+          youth_safety_profile_id=$youthSafetyProfileId::UUID,
           updated_at=current_timestamp
         WHERE id=$id::UUID
         RETURNING id::VARCHAR
@@ -318,6 +375,7 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
           teamSize: input.defaultOrganizationMode === "team" ? input.defaultTeamSize ?? 2 : null,
           groupSplitCount: input.defaultOrganizationMode === "team" ? null : input.defaultGroupSplitCount ?? null,
           stationGroupSize: input.defaultStationGroupSize ?? null,
+          youthSafetyProfileId: input.youthSafetyProfileId ?? null,
         },
       );
       if (reader.getRows().length === 0) {

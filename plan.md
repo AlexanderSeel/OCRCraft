@@ -61,10 +61,10 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Suche und Planung
 
-- [x] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten: Exact/Prefix/Alias-Gewichte sind als persistente Admin-Suchprofile verfügbar und werden beim Übungskatalog verwendet; Umgebungsvariablen bleiben als Fallback erhalten.
+- [x] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten: Exact/Prefix/Alias, Kurzbeschreibung, Ziele/Tags/Bewegungsmuster, Körperregionen, Equipment und Instruktionen werden über das aktive persistierte Suchprofil gewichtet; DuckDB-BM25 bleibt die Volltextbasis und ENV-Gewichte dienen nur als Fallback.
 - [x] Autocomplete aus Übungs-, Trainingsziel-, Equipment-, Tag-, Bewegungsmuster- und Körperregionsdaten ergänzen.
-- [x] Suchprofile und Feldgewichte konfigurierbar machen.
-- [ ] Favoriten und „zuletzt verwendet“ ergänzen.
+- [x] Suchprofile und Feldgewichte konfigurierbar machen: Administration bietet versionierte Startprofile sowie Anlegen, Bearbeiten, Aktivieren und geschütztes Löschen; das aktive Profil steuert Übungssuche und Autocomplete und Profiländerungen werden auditiert.
+- [x] Favoriten und „zuletzt verwendet“ ergänzen: Favoriten werden trainerbezogen persistiert; die Übungsbibliothek kann nach Favoriten und den real zuletzt in eigenen Trainings verwendeten Übungen filtern und zeigt beide Zustände direkt auf den Karten.
 - [x] Authentifizierte DE/EN-FTS-Rebuild-Aktionen bereitstellen.
 - [ ] Partner-Workout und weitere offene Formatregeln ergänzen.
 - [ ] Intervall-/Runden-/Ladder-/Pyramid-/Chipper-/Partner-Regeln vollständig ausbauen.
@@ -120,10 +120,10 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Schutzkonzept
 
-- [ ] Gespeicherte Kids/Youth-Profile.
-- [ ] Eingeschränkte Hindernisregeln, Aufsicht und Maximalrisiken nach Alter.
-- [ ] Trainerqualifikation, Medienfreigaben und verständliche Blockierungsgründe.
-- [ ] Kinder-/Jugendformulierungen und Vereinsregeln als harte Priorität.
+- [x] Gespeicherte Kids/Youth-Schutzprofile ergänzen: wiederverwendbare Profile mit Zielgruppe, Altersbereich, maximalem Risiko/Impact, Aufsicht und expliziten Hindernissperren können Gruppen zugeordnet und versioniert in DuckDB verwaltet werden.
+- [x] Eingeschränkte Hindernisregeln, Aufsicht und Maximalrisiken nach Alter als harte Planungsgrenzen anwenden: lokale und AI-Planung filtern gesperrte Übungen sowie Risiko/Impact vorab; die finale Trainingsvalidierung prüft dieselben Regeln erneut und zeigt den Aufsichtsbedarf verständlich an.
+- [x] Trainerqualifikation, Medienfreigaben und verständliche Blockierungsgründe: Benutzer besitzen einen strukturierten Qualifikationslevel (keine/Assistenz/Trainer C/B/A), Kids/Youth-Schutzprofile definieren eine Mindestqualifikation, Trainingserzeugung wird bei Unterschreitung mit konkretem Grund blockiert und fachliche Medien-/Sequenzfreigaben verlangen mindestens Trainer C.
+- [x] Kinder-/Jugendformulierungen und Vereinsregeln als harte Priorität: aufgelöste Schutzprofilgrenzen werden vor lokaler/AI-Planung deterministisch angewendet, nach der Planung erneut validiert und zusätzlich als nicht verhandelbare `hardSafetyConstraints` an AI-Provider übergeben; Performance-, Vorlagen- und Wunschübungskontext darf sie nicht abschwächen.
 
 ### Internationalisierung
 

@@ -1,5 +1,6 @@
 import type { DuckDBConnection } from "@duckdb/node-api";
 import type { SearchLocale } from "./exercise-search-documents";
+import { normalizeSearchRankingWeights, type SearchRankingWeights } from "./search-profile-core";
 
 export interface ExerciseAutocompleteItem {
   readonly id: string;
@@ -44,8 +45,10 @@ export async function runExerciseAutocomplete(
   query: string,
   locale: SearchLocale,
   limit: number,
+  rankingWeights?: Partial<SearchRankingWeights>,
 ): Promise<readonly ExerciseAutocompleteItem[]> {
   const goalLabel = goalLabelSql(locale);
+  const weights = normalizeSearchRankingWeights(rankingWeights);
   const reader = await connection.runAndReadAll(
     `
     SELECT
@@ -116,12 +119,47 @@ export async function runExerciseAutocomplete(
           ORDER BY length(CASE WHEN $locale='de' THEN br.label_de ELSE br.label_en END)
           LIMIT 1
         )
-      ) AS matched_context
+      ) AS matched_context,
+      (
+        CASE WHEN COALESCE(t.summary,'') ILIKE '%' || $query || '%' THEN $summaryWeight ELSE 0 END
+        + CASE WHEN COALESCE(e.category,'general') ILIKE '%' || $query || '%' THEN $taxonomyWeight ELSE 0 END
+        + CASE WHEN EXISTS (
+          SELECT 1 FROM exercise_aliases a
+          WHERE a.exercise_id=e.id AND a.locale=$locale AND a.alias ILIKE '%' || $query || '%'
+        ) THEN $aliasWeight ELSE 0 END
+        + CASE WHEN EXISTS (
+          SELECT 1 FROM exercise_training_goals etg
+          WHERE etg.exercise_id=e.id
+            AND (etg.goal ILIKE '%' || $query || '%' OR (${goalLabel}) ILIKE '%' || $query || '%')
+        ) OR EXISTS (
+          SELECT 1 FROM exercise_tags et JOIN tags tag ON tag.id=et.tag_id
+          WHERE et.exercise_id=e.id
+            AND (et.tag_id ILIKE '%' || $query || '%'
+              OR (CASE WHEN $locale='de' THEN tag.label_de ELSE tag.label_en END) ILIKE '%' || $query || '%')
+        ) OR EXISTS (
+          SELECT 1 FROM exercise_movement_patterns emp JOIN movement_patterns mp ON mp.id=emp.movement_pattern_id
+          WHERE emp.exercise_id=e.id
+            AND (emp.movement_pattern_id ILIKE '%' || $query || '%'
+              OR (CASE WHEN $locale='de' THEN mp.label_de ELSE mp.label_en END) ILIKE '%' || $query || '%')
+        ) THEN $taxonomyWeight ELSE 0 END
+        + CASE WHEN EXISTS (
+          SELECT 1 FROM exercise_equipment ee JOIN equipment eq ON eq.id=ee.equipment_id
+          WHERE ee.exercise_id=e.id
+            AND (CASE WHEN $locale='de' THEN eq.name_de ELSE COALESCE(eq.name_en,eq.name_de) END) ILIKE '%' || $query || '%'
+        ) THEN $equipmentWeight ELSE 0 END
+        + CASE WHEN EXISTS (
+          SELECT 1 FROM exercise_body_regions ebr JOIN body_regions br ON br.id=ebr.body_region_id
+          WHERE ebr.exercise_id=e.id
+            AND (ebr.body_region_id ILIKE '%' || $query || '%'
+              OR (CASE WHEN $locale='de' THEN br.label_de ELSE br.label_en END) ILIKE '%' || $query || '%')
+        ) THEN $bodyRegionsWeight ELSE 0 END
+      ) AS weighted_context
     FROM exercises e
     JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale=$locale
     WHERE e.archived=false
       AND (
         t.name ILIKE '%' || $query || '%'
+        OR COALESCE(t.summary, '') ILIKE '%' || $query || '%'
         OR COALESCE(e.category, 'general') ILIKE '%' || $query || '%'
         OR EXISTS (
           SELECT 1 FROM exercise_aliases a
@@ -170,24 +208,31 @@ export async function runExerciseAutocomplete(
       )
     ORDER BY
       CASE
-        WHEN lower(t.name)=lower($query) THEN 0
-        WHEN t.name ILIKE $query || '%' THEN 1
+        WHEN lower(t.name)=lower($query) THEN $exactWeight
+        WHEN t.name ILIKE $query || '%' THEN $prefixWeight
         WHEN EXISTS (
           SELECT 1 FROM exercise_aliases a
           WHERE a.exercise_id=e.id AND a.locale=$locale AND a.alias ILIKE $query || '%'
-        ) THEN 2
-        WHEN EXISTS (
-          SELECT 1 FROM exercise_aliases a
-          WHERE a.exercise_id=e.id AND a.locale=$locale AND a.alias ILIKE '%' || $query || '%'
-        ) THEN 3
-        WHEN COALESCE(e.category, 'general') ILIKE '%' || $query || '%' THEN 4
-        ELSE 5
-      END,
+        ) THEN $aliasWeight
+        ELSE 0
+      END DESC,
+      weighted_context DESC,
       length(t.name),
       t.name
     LIMIT $limit
     `,
-    { locale, query, limit },
+    {
+      locale,
+      query,
+      limit,
+      exactWeight: weights.exact,
+      prefixWeight: weights.prefix,
+      aliasWeight: weights.alias,
+      summaryWeight: weights.summary,
+      taxonomyWeight: weights.taxonomy,
+      bodyRegionsWeight: weights.bodyRegions,
+      equipmentWeight: weights.equipment,
+    },
   );
 
   return reader.getRows().map((row) => ({

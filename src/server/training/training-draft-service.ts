@@ -10,6 +10,7 @@ import { applyMainPartProgramming } from "./main-part-programming";
 import { composeStructuredSportsTrainingDraft } from "./structured-sports-training-composer";
 import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
 import {
+  assertTrainerQualificationForRules,
   filterCandidatesForClubRules,
   resolveTrainingClubRules,
 } from "./training-club-rule-service";
@@ -25,6 +26,7 @@ async function approvedCandidatesFor(
   request: TrainingDraftRequest,
   rules: Parameters<typeof filterCandidatesForClubRules>[2],
 ) {
+  await assertTrainerQualificationForRules(rules);
   const candidates = await listTrainingDraftCandidates({
     audience: request.audience,
     minAge: request.minAge,
@@ -82,7 +84,23 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
     const provider = await getConfiguredAiTrainingProvider();
     if (!provider) throw new Error("AI Training Builder ist nicht konfiguriert. Nutze den lokalen Sportalgorithmus oder setze OCRCRAFT_AI_BASE_URL und OCRCRAFT_AI_MODEL.");
     const sourceSessions = await loadAiTrainingSourceSessions(request.sourceTrainingIds, candidates);
-    const proposal = await provider.generateTrainingPlan({ request, approvedExercises: candidates, sourceSessions });
+    const effectiveAudience = rules.safetyProfileAudience ?? request.audience;
+    const proposal = await provider.generateTrainingPlan({
+      request,
+      approvedExercises: candidates,
+      sourceSessions,
+      hardSafetyConstraints: rules.safetyProfileName ? {
+        profileName: rules.safetyProfileName,
+        audience: effectiveAudience,
+        minimumAge: rules.safetyMinimumAge ?? request.minAge ?? null,
+        maximumAge: rules.safetyMaximumAge ?? request.maxAge ?? null,
+        maximumRiskLevel: rules.maximumRiskLevel ?? null,
+        maximumImpactLevel: rules.audienceSafety?.[effectiveAudience]?.maximumImpactLevel ?? null,
+        requiredSupervision: rules.requiredSupervision ?? "normal",
+        restrictedExerciseIds: rules.restrictedExerciseIds ?? [],
+        requiredTrainerQualification: rules.requiredTrainerQualification ?? "none",
+      } : undefined,
+    });
     const draft = composeAiTrainingDraft({ proposal, request, approvedExercises: candidates, providerId: provider.id });
     const recompositionWarnings = sourceSessions.length > 0
       ? [`AI-Rekomposition verwendet ${sourceSessions.length} ausgewählte Quelltrainings als Kontext; aktuelle Trainer-Randbedingungen und der freigegebene Übungspool bleiben maßgeblich.`]

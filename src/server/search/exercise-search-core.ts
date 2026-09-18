@@ -1,6 +1,7 @@
 import type { DuckDBConnection } from "@duckdb/node-api";
 import { safeExerciseImageUri } from "../exercises/exercise-image-uri";
 import type { SearchLocale } from "./exercise-search-documents";
+import { normalizeSearchRankingWeights, type SearchRankingWeights } from "./search-profile-core";
 
 export interface ExerciseSearchHit {
   readonly id: string;
@@ -29,22 +30,6 @@ export interface Bm25SearchOptions {
   readonly rankingWeights?: Partial<SearchRankingWeights>;
 }
 
-export interface SearchRankingWeights {
-  readonly exact: number;
-  readonly prefix: number;
-  readonly alias: number;
-}
-
-export const DEFAULT_SEARCH_RANKING_WEIGHTS: SearchRankingWeights = { exact: 100, prefix: 75, alias: 50 };
-
-export function normalizeSearchRankingWeights(input?: Partial<SearchRankingWeights>): SearchRankingWeights {
-  return {
-    exact: Number.isFinite(input?.exact) ? Math.max(0, Number(input?.exact)) : DEFAULT_SEARCH_RANKING_WEIGHTS.exact,
-    prefix: Number.isFinite(input?.prefix) ? Math.max(0, Number(input?.prefix)) : DEFAULT_SEARCH_RANKING_WEIGHTS.prefix,
-    alias: Number.isFinite(input?.alias) ? Math.max(0, Number(input?.alias)) : DEFAULT_SEARCH_RANKING_WEIGHTS.alias,
-  };
-}
-
 function configForLocale(locale: SearchLocale) {
   return locale === "de"
     ? {
@@ -70,7 +55,15 @@ export async function runBm25ExerciseSearch(
     WITH ranked AS (
       SELECT
         sd.entity_id,
-        ${config.schema}.match_bm25(sd.document_id, $query) AS bm25_score
+        ${config.schema}.match_bm25(sd.document_id, $query) AS bm25_score,
+        (
+          CASE WHEN sd.aliases ILIKE '%' || $query || '%' THEN $aliasWeight ELSE 0 END
+          + CASE WHEN sd.summary ILIKE '%' || $query || '%' THEN $summaryWeight ELSE 0 END
+          + CASE WHEN sd.tags ILIKE '%' || $query || '%' THEN $taxonomyWeight ELSE 0 END
+          + CASE WHEN sd.body_regions ILIKE '%' || $query || '%' THEN $bodyRegionsWeight ELSE 0 END
+          + CASE WHEN sd.equipment ILIKE '%' || $query || '%' THEN $equipmentWeight ELSE 0 END
+          + CASE WHEN sd.instructions ILIKE '%' || $query || '%' THEN $instructionsWeight ELSE 0 END
+        ) AS field_boost
       FROM ${config.table} sd
       WHERE sd.entity_type='exercise'
     )
@@ -124,6 +117,7 @@ export async function runBm25ExerciseSearch(
         ) THEN $aliasWeight
         ELSE 0
       END DESC,
+      ranked.field_boost DESC,
       ranked.bm25_score DESC,
       t.name
     LIMIT $limit OFFSET $offset
@@ -137,6 +131,11 @@ export async function runBm25ExerciseSearch(
       exactWeight: weights.exact,
       prefixWeight: weights.prefix,
       aliasWeight: weights.alias,
+      summaryWeight: weights.summary,
+      taxonomyWeight: weights.taxonomy,
+      bodyRegionsWeight: weights.bodyRegions,
+      equipmentWeight: weights.equipment,
+      instructionsWeight: weights.instructions,
     },
   );
 

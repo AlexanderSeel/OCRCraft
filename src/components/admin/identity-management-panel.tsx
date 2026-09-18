@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react";
 import type { AppUser, UserRole } from "@/server/auth/identity-service";
+import {
+  TRAINER_QUALIFICATION_LABELS,
+  TRAINER_QUALIFICATION_LEVELS,
+} from "@/domain/training/trainer-qualification";
 import { Dialog } from "@/components/ui/dialog";
 import { IdentityLoginDialog } from "./identity-login-dialog";
 
@@ -35,13 +39,14 @@ export function IdentityManagementPanel({ users, createAction, updateAction, log
         <label className="grid gap-1 text-xs font-black">Username<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" name="username" pattern="[A-Za-z0-9._-]{3,40}" required /></label>
         <label className="grid gap-1 text-xs font-black">E-Mail<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" name="email" required type="email" /></label>
         <label className="grid gap-1 text-xs font-black">Startpasswort<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" minLength={8} name="password" required type="password" /></label>
+        <label className="grid gap-1 text-xs font-black">Qualifikation<select className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm" defaultValue="none" name="trainerQualificationLevel">{TRAINER_QUALIFICATION_LEVELS.map((level) => <option key={level} value={level}>{TRAINER_QUALIFICATION_LABELS[level]}</option>)}</select></label>
         <label className="grid gap-1 text-xs font-black">Rolle<select className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm" defaultValue="trainer" name="role"><option value="trainer">Trainer</option><option value="admin">Admin</option><option value="super_admin">Super-Admin</option></select></label>
         <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)] md:col-span-4 md:justify-self-end" type="submit">Benutzer anlegen</button>
       </form>
       <div className="mt-5 grid gap-2">{filtered.map((user) => <article className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" key={user.id}>
         {user.profileImageDataUrl || user.profileImageUri ? <img alt="" className="size-12 shrink-0 rounded-full object-cover" src={user.profileImageDataUrl ?? user.profileImageUri ?? ""} /> : <div aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--surface-elevated)] text-sm font-black">{initials(user.displayName)}</div>}
         <div className="min-w-0 flex-1"><div className="font-black">{user.firstName} {user.lastName}</div><div className="truncate text-xs text-[var(--muted)]">@{user.username} · {user.email}{user.education ? ` · ${user.education}` : ""}{user.specialties ? ` · ${user.specialties}` : ""}</div></div>
-        <span className="rounded-full border border-[var(--border)] px-2 py-1 text-[11px] font-black">{roleLabel(user.role)} · {user.active ? "Aktiv" : "Inaktiv"}</span>
+        <span className="rounded-full border border-[var(--border)] px-2 py-1 text-[11px] font-black">{roleLabel(user.role)} · {TRAINER_QUALIFICATION_LABELS[user.trainerQualificationLevel]} · {user.active ? "Aktiv" : "Inaktiv"}</span>
         <button className="min-h-9 rounded-lg border border-[var(--border)] px-3 text-xs font-black" onClick={() => setEditing(user)} type="button">Bearbeiten</button>
       </article>)}</div>
       {filtered.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Keine Profile gefunden.</p> : null}
@@ -52,6 +57,7 @@ export function IdentityManagementPanel({ users, createAction, updateAction, log
         <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm font-bold">Vorname<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.firstName} name="firstName" required /></label><label className="grid gap-1 text-sm font-bold">Nachname<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.lastName} name="lastName" required /></label></div>
         <label className="grid gap-1 text-sm font-bold">Username<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.username} name="username" pattern="[A-Za-z0-9._-]{3,40}" required /></label>
         <label className="grid gap-1 text-sm font-bold">E-Mail<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.email} name="email" required type="email" /></label>
+        <label className="grid gap-1 text-sm font-bold">Qualifikationslevel<select className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.trainerQualificationLevel} name="trainerQualificationLevel">{TRAINER_QUALIFICATION_LEVELS.map((level) => <option key={level} value={level}>{TRAINER_QUALIFICATION_LABELS[level]}</option>)}</select><span className="text-xs font-normal text-[var(--muted)]">Maschinenlesbarer Level für Schutzprofile und fachliche Medienfreigaben.</span></label>
         <label className="grid gap-1 text-sm font-bold">Ausbildung<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.education ?? ""} name="education" /></label>
         <label className="grid gap-1 text-sm font-bold">Schwerpunkte<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.specialties ?? ""} name="specialties" /></label>
         <label className="grid gap-1 text-sm font-bold">Kurzprofil<textarea className="min-h-24 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 text-sm font-normal" defaultValue={editing.bio ?? ""} name="bio" /></label>

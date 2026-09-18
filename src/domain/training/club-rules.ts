@@ -1,4 +1,5 @@
 import type { RiskLevel } from "./model";
+import type { TrainerQualificationLevel } from "./trainer-qualification";
 import {
   DEFAULT_CLUB_TRAINING_RULES,
   type ClubTrainingRules,
@@ -12,6 +13,18 @@ export const CLUB_RULE_PROFILE_KEYS = [
 ] as const;
 
 export type ClubRuleProfileKey = (typeof CLUB_RULE_PROFILE_KEYS)[number];
+
+export interface YouthSafetyRuleOverlay {
+  readonly name: string;
+  readonly audience: "kids" | "youth";
+  readonly maximumRiskLevel: RiskLevel;
+  readonly maximumImpactLevel: "low" | "moderate" | "high";
+  readonly supervisionRequirement: "normal" | "increased" | "direct";
+  readonly restrictedExerciseIds: readonly string[];
+  readonly minimumParticipantAge: number;
+  readonly maximumParticipantAge: number;
+  readonly minimumTrainerQualification: TrainerQualificationLevel;
+}
 
 export interface ClubRuleProfileDefinition {
   readonly key: ClubRuleProfileKey;
@@ -82,6 +95,7 @@ export function getClubRuleProfile(key: ClubRuleProfileKey): ClubRuleProfileDefi
 export function combineClubTrainingRules(
   profileKey: ClubRuleProfileKey,
   groupMaximumRiskLevel: RiskLevel | null,
+  youthSafety?: YouthSafetyRuleOverlay | null,
 ): ClubTrainingRules {
   const profile = getClubRuleProfile(profileKey);
   const profileMaximum = profile.rules.maximumRiskLevel;
@@ -93,9 +107,43 @@ export function combineClubTrainingRules(
         ? groupMaximumRiskLevel
         : profileMaximum;
 
+  const safetyMaximumRisk = youthSafety?.maximumRiskLevel;
+  const effectiveMaximumRisk = safetyMaximumRisk == null
+    ? maximumRiskLevel
+    : maximumRiskLevel == null
+      ? safetyMaximumRisk
+      : RISK_ORDER[safetyMaximumRisk] <= RISK_ORDER[maximumRiskLevel]
+        ? safetyMaximumRisk
+        : maximumRiskLevel;
+
+  const audienceSafety = { ...profile.rules.audienceSafety };
+  if (youthSafety) {
+    const current = audienceSafety[youthSafety.audience] ?? {};
+    const impactOrder = { low: 1, moderate: 2, high: 3 } as const;
+    const currentMaximum = current.maximumImpactLevel;
+    const maximumImpactLevel = currentMaximum == null
+      || impactOrder[youthSafety.maximumImpactLevel] <= impactOrder[currentMaximum]
+      ? youthSafety.maximumImpactLevel
+      : currentMaximum;
+    audienceSafety[youthSafety.audience] = {
+      ...current,
+      maximumImpactLevel,
+      requireDirectSupervision:
+        current.requireDirectSupervision === true || youthSafety.supervisionRequirement === "direct",
+    };
+  }
+
   return {
     ...profile.rules,
-    maximumRiskLevel,
+    maximumRiskLevel: effectiveMaximumRisk,
+    audienceSafety,
+    restrictedExerciseIds: youthSafety?.restrictedExerciseIds ?? [],
+    safetyProfileName: youthSafety?.name,
+    requiredSupervision: youthSafety?.supervisionRequirement,
+    safetyProfileAudience: youthSafety?.audience,
+    safetyMinimumAge: youthSafety?.minimumParticipantAge,
+    safetyMaximumAge: youthSafety?.maximumParticipantAge,
+    requiredTrainerQualification: youthSafety?.minimumTrainerQualification,
   };
 }
 

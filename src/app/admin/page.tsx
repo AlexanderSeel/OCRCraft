@@ -6,19 +6,20 @@ import { ActionProgressButton } from "@/components/admin/action-progress-button"
 import { Disclosure } from "@/components/ui/disclosure";
 import { AdminTabs, normalizeAdminTab } from "@/components/admin/admin-tabs";
 import { AiProviderSettingsPanel } from "@/components/admin/ai-provider-settings-panel";
+import { SearchProfileSettingsPanel } from "@/components/admin/search-profile-settings-panel";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
+import { listSearchProfiles } from "@/server/search/search-profile-repository";
 import { listRecentAuditEvents } from "@/server/db/audit-service";
 import { listDatabaseBackups } from "@/server/db/backup-service";
 import { listAiProviderSettings } from "@/server/ai/ai-provider-settings-repository";
-import { cancelAppTaskAction, createDatabaseBackupAction, deleteAiProviderSettingsAction, disconnectAiProviderOAuthAction, deleteAppTaskAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, retryAppTaskAction, saveAiProviderSettingsAction, saveSearchProfileAction, scanDuplicateExercisesAction } from "./actions";
+import { activateSearchProfileAction, cancelAppTaskAction, createDatabaseBackupAction, deleteAiProviderSettingsAction, deleteAppTaskAction, deleteSearchProfileAction, disconnectAiProviderOAuthAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, retryAppTaskAction, saveAiProviderSettingsAction, saveSearchProfileAction, scanDuplicateExercisesAction } from "./actions";
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 import { listAppUsers } from "@/server/auth/identity-service";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
 import { createUserAction, loginAction, logoutAction, updateUserAction } from "./identity-actions";
 import { IdentityManagementPanel } from "@/components/admin/identity-management-panel";
 import { listAppTasks } from "@/server/queue/app-task-repository";
-import { listSearchProfiles } from "@/server/search/search-profile-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,8 @@ interface AdminPageProps {
     readonly loggedOut?: string;
     readonly userError?: string;
     readonly userSaved?: string;
+    readonly searchSaved?: string;
+    readonly searchError?: string;
   }>;
 }
 
@@ -56,7 +59,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     listSearchProfiles(),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
-  const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved } = await searchParams;
+  const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved, searchSaved, searchError } = await searchParams;
   const activeTab = normalizeAdminTab(tab);
 
   return (
@@ -183,22 +186,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               saveAction={saveAiProviderSettingsAction}
               saved={aiSaved}
             />
-            <section className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-              <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Suche</div>
-              <h2 className="mt-1 text-xl font-black">Suchprofile</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Steuere die Gewichtung exakter Treffer, Präfixe und Aliase im Übungskatalog.</p>
-              <div className="mt-4 grid gap-3">
-                {searchProfiles.map((profile) => <form action={saveSearchProfileAction} className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 sm:grid-cols-[1fr_repeat(3,6rem)_auto_auto] sm:items-end" key={profile.id}>
-                  <input name="id" type="hidden" value={profile.id} />
-                  <label className="grid gap-1 text-xs font-bold">Name<input className="h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2" defaultValue={profile.name} name="name" required /></label>
-                  <label className="grid gap-1 text-xs font-bold">Exact<input className="h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2" defaultValue={profile.exact} min="0" name="exact" type="number" /></label>
-                  <label className="grid gap-1 text-xs font-bold">Prefix<input className="h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2" defaultValue={profile.prefix} min="0" name="prefix" type="number" /></label>
-                  <label className="grid gap-1 text-xs font-bold">Alias<input className="h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2" defaultValue={profile.alias} min="0" name="alias" type="number" /></label>
-                  <label className="flex items-center gap-2 text-xs font-bold"><input defaultChecked={profile.isActive} name="active" type="checkbox" />Aktiv</label>
-                  <button className="min-h-9 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">Speichern</button>
-                </form>)}
-              </div>
-            </section>
+            <SearchProfileSettingsPanel
+              activateAction={activateSearchProfileAction}
+              deleteAction={deleteSearchProfileAction}
+              error={searchError}
+              profiles={searchProfiles}
+              saveAction={saveSearchProfileAction}
+              saved={searchSaved}
+            />
             <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
               <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Einstellungen</div>
               <h2 className="mt-1 text-xl font-black">Darstellung und Diagnose</h2>
@@ -259,7 +254,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
         {activeTab === "overview" ? <section className="grid gap-4 md:grid-cols-3">
           <AdminArea title="Übungen" text="Create/Edit/Archive ist bereits in der Übungsbibliothek verfügbar." status="aktiv" />
-          <AdminArea title="Suche" text="Status ist sichtbar. Rebuild/Search Profiles folgen nach RBAC." status="im Aufbau" />
+          <AdminArea title="Suche" text={`${searchProfiles.length} Suchprofile verfügbar; ${searchProfiles.find((profile) => profile.isActive)?.name ?? "Ausgewogen"} steuert aktuell die Ranking-Gewichte.`} status="aktiv" />
           <AdminArea title="Benutzer & Rollen" text={`${appUsers.length} Benutzer persistiert. Schreibende globale Aktionen prüfen die Rolle serverseitig.`} status={appUsers.length ? "aktiv" : "bootstrap"} />
         </section> : null}
       </div>

@@ -101,9 +101,11 @@ export default async function MediaPage({ searchParams }: PageProps) {
         ) : null}
         {params.reviewError ? (
           <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
-            {params.reviewError === "blocked"
-              ? "Freigabe ist noch gesperrt: externe Rechte/Einwilligung bzw. Biomechanik- und Textprüfung müssen vollständig bestanden sein."
-              : "Reviewstatus konnte nicht gespeichert werden."}
+            {params.reviewError === "qualification"
+              ? "Medienfreigabe blockiert: hierfür ist mindestens die strukturierte Qualifikation Trainer C erforderlich."
+              : params.reviewError === "blocked"
+                ? "Freigabe ist noch gesperrt: externe Rechte/Einwilligung bzw. Biomechanik- und Textprüfung müssen vollständig bestanden sein."
+                : "Reviewstatus konnte nicht gespeichert werden."}
           </p>
         ) : null}
         {params.batchQueued ? (
@@ -168,7 +170,9 @@ export default async function MediaPage({ searchParams }: PageProps) {
         ) : null}
         {params.sequenceError ? (
           <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
-            Die fachliche Sequenzprüfung konnte nicht gespeichert werden.
+            {params.sequenceError === "qualification"
+              ? "Fachliche Sequenzfreigabe blockiert: „Bestanden“ darf erst ab Trainer C vergeben werden. Korrekturbedarf kann weiterhin dokumentiert werden."
+              : "Die fachliche Sequenzprüfung konnte nicht gespeichert werden."}
           </p>
         ) : null}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
