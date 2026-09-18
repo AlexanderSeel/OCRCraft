@@ -41,6 +41,20 @@ describe("database migrations", () => {
         ["training_sessions", "organization_mode"],
         ["training_sessions", "route_name"],
       ]);
+
+      const gameCatalog = await connection.runAndReadAll(`
+        SELECT count(*), count(*) FILTER (WHERE exercise_type='game')
+        FROM exercises
+        WHERE seed_key LIKE 'game-%'
+      `);
+      expect(gameCatalog.getRows()[0]?.map(Number)).toEqual([12, 12]);
+
+      const gameDetails = await connection.runAndReadAll(`
+        SELECT count(*) FROM exercise_details d
+        JOIN exercises e ON e.id=d.exercise_id
+        WHERE e.seed_key LIKE 'game-%'
+      `);
+      expect(Number(gameDetails.getRows()[0]?.[0])).toBe(24);
     } finally {
       connection.closeSync();
     }

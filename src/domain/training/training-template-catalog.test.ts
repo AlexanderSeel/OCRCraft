@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BODY_REGION_IDS, TRAINING_FORMATS } from "./model";
+import { BODY_REGIONS, TRAINING_FORMATS } from "./model";
 import { TRAINING_TEMPLATE_FOCUS_KEYS, TRAINING_TEMPLATES } from "./training-template-catalog";
 
 describe("training template catalog", () => {
@@ -18,7 +18,7 @@ describe("training template catalog", () => {
   });
 
   it("uses supported planner constraints and explicit source/licensing metadata", () => {
-    const bodyRegions = new Set<string>(BODY_REGION_IDS);
+    const bodyRegions = new Set<string>(BODY_REGIONS);
     const formats = new Set<string>(TRAINING_FORMATS);
     for (const item of TRAINING_TEMPLATES) {
       expect(item.bodyRegions.every((region) => bodyRegions.has(region))).toBe(true);

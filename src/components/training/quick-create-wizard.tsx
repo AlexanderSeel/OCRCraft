@@ -632,11 +632,11 @@ export function QuickCreateWizard({
               <h3 className="text-lg font-black">Wie anspruchsvoll?</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Belastungssteuerung darf konfigurierte Sicherheitsregeln nie überschreiben.</p>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                {[
+                {([
                   ["technique", "Technik zuerst", "Mehr Qualität, längere Lernfenster"],
                   ["balanced", "Ausgewogen", "Technik und Conditioning kombinieren"],
                   ["conditioning", "Conditioning", "Mehr Lauf-/Kraftausdauer bei sauberer Technik"],
-                ].map(([id, label, description]) => (
+                ] as const).map(([id, label, description]) => (
                   <button
                     className={`rounded-xl border p-4 text-left ${
                       intensity === id

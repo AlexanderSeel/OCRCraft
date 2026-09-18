@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import type { ExerciseType } from "@/domain/exercise/classification";
 import type {
   ExerciseCategory,
   ExerciseDraft,
@@ -60,6 +61,7 @@ export interface ExerciseCategoryCount {
 interface ListExercisesOptions {
   readonly query?: string;
   readonly category?: string;
+  readonly exerciseType?: ExerciseType;
   readonly locale?: "de" | "en";
   readonly archived?: boolean;
   readonly limit?: number;
@@ -173,7 +175,7 @@ async function updateSearchDocuments(
   await markSearchDirty(connection);
 }
 
-export async function createExercise(draft: ExerciseDraft): Promise<string> {
+export async function createExercise(draft: ExerciseDraft, initialExerciseType: ExerciseType = "drill"): Promise<string> {
   await ensureDatabaseReady();
   const id = randomUUID();
 
@@ -184,8 +186,8 @@ export async function createExercise(draft: ExerciseDraft): Promise<string> {
     try {
       await connection.run(
         `INSERT INTO exercises
-          (id, canonical_name, category, default_phase, risk_level, min_age, indoor, outdoor)
-         VALUES ($id::UUID, $canonicalName, $category, $phase, $riskLevel, $minAge, true, true)`,
+          (id, canonical_name, category, default_phase, risk_level, min_age, indoor, outdoor, exercise_type)
+         VALUES ($id::UUID, $canonicalName, $category, $phase, $riskLevel, $minAge, true, true, $exerciseType)`,
         {
           id,
           canonicalName: draft.nameEn || draft.nameDe,
@@ -193,6 +195,7 @@ export async function createExercise(draft: ExerciseDraft): Promise<string> {
           phase: draft.phase,
           riskLevel: draft.riskLevel,
           minAge: draft.minAge,
+          exerciseType: initialExerciseType,
         },
       );
       await writeTranslations(connection, id, draft);
@@ -309,6 +312,7 @@ export async function getExerciseById(id: string): Promise<ExerciseEditorRecord 
 export async function listExercises({
   query = "",
   category,
+  exerciseType,
   locale = "de",
   archived = false,
   limit = 80,
@@ -364,6 +368,7 @@ export async function listExercises({
       JOIN exercise_translations t ON t.exercise_id = e.id AND t.locale = $locale
       WHERE e.archived = $archived
         AND ($category = '' OR e.category = $category)
+        AND ($exerciseType = '' OR COALESCE(e.exercise_type,'drill') = $exerciseType)
         AND (
           $query = ''
           OR t.name ILIKE '%' || $query || '%'
@@ -379,7 +384,7 @@ export async function listExercises({
         t.name
       LIMIT $limit OFFSET $offset
       `,
-      { locale, category: category ?? "", query: query.trim(), archived, limit, offset },
+      { locale, category: category ?? "", exerciseType: exerciseType ?? "", query: query.trim(), archived, limit, offset },
     );
 
     return reader.getRows().map((row) => ({
@@ -514,17 +519,19 @@ export async function getExerciseProgressionRelations(
   });
 }
 
-export async function countExercises(options: Pick<ListExercisesOptions, "query" | "category" | "archived" | "locale"> = {}): Promise<number> {
+export async function countExercises(options: Pick<ListExercisesOptions, "query" | "category" | "exerciseType" | "archived" | "locale"> = {}): Promise<number> {
   await ensureDatabaseReady();
-  const { query = "", category, archived = false, locale = "de" } = options;
+  const { query = "", category, exerciseType, archived = false, locale = "de" } = options;
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(`
       SELECT count(*) FROM exercises e
       JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale=$locale
-      WHERE e.archived=$archived AND ($category='' OR e.category=$category)
+      WHERE e.archived=$archived
+        AND ($category='' OR e.category=$category)
+        AND ($exerciseType='' OR COALESCE(e.exercise_type,'drill')=$exerciseType)
         AND ($query='' OR t.name ILIKE '%' || $query || '%' OR COALESCE(t.summary,'') ILIKE '%' || $query || '%'
           OR EXISTS (SELECT 1 FROM exercise_aliases a WHERE a.exercise_id=e.id AND a.locale=$locale AND a.alias ILIKE '%' || $query || '%'))
-    `, { locale, category: category ?? "", archived, query: query.trim() });
+    `, { locale, category: category ?? "", exerciseType: exerciseType ?? "", archived, query: query.trim() });
     return Number(reader.getRows()[0]?.[0] ?? 0);
   });
 }
