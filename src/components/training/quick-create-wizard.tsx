@@ -20,7 +20,6 @@ import {
   type QuickCreateDraftClientInput,
 } from "./quick-create-draft-client";
 import { TrainingDraftPreview } from "./training-draft-preview";
-import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
 
 const groupOptions = [
   ["kids", "Kids", "Spielerisch, altersgerecht, klare Sicherheitsregeln"],
