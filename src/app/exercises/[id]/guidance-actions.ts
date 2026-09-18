@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updateExerciseGuidanceLists } from "@/server/exercises/exercise-guidance-list-repository";
+import { requireTrainer } from "@/server/auth/identity-service";
 
 const textItemSchema = z.string().trim().min(1).max(1000);
 
@@ -30,6 +31,7 @@ export async function updateExerciseGuidanceListsAction(
   exerciseId: string,
   formData: FormData,
 ): Promise<void> {
+  await requireTrainer();
   const parsed = guidanceListsSchema.safeParse({
     locale: String(formData.get("locale") ?? ""),
     executionSteps: parseJsonField(formData, "executionStepsJson"),

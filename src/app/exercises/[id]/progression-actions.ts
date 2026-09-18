@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { addExerciseProgressionRelation, deleteExerciseProgressionRelation } from "@/server/exercises/exercise-repository";
+import { requireTrainer } from "@/server/auth/identity-service";
 
 const relationSchema = z.object({
   relatedExerciseId: z.string().uuid(),
@@ -13,6 +14,7 @@ const relationSchema = z.object({
 });
 
 export async function addExerciseProgressionRelationAction(exerciseId: string, formData: FormData): Promise<void> {
+  await requireTrainer();
   const parsed = relationSchema.safeParse({
     relatedExerciseId: formData.get("relatedExerciseId"),
     type: formData.get("type"),
@@ -28,6 +30,7 @@ export async function addExerciseProgressionRelationAction(exerciseId: string, f
 }
 
 export async function deleteExerciseProgressionRelationAction(exerciseId: string, formData: FormData): Promise<void> {
+  await requireTrainer();
   const relationId = String(formData.get("relationId") ?? "");
   await deleteExerciseProgressionRelation(relationId, exerciseId);
   revalidatePath(`/exercises/${exerciseId}`);

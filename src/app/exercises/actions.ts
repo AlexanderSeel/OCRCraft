@@ -11,6 +11,7 @@ import {
   exerciseFormSchema,
   toExerciseDraft,
 } from "@/server/exercises/exercise-validation";
+import { requireTrainer } from "@/server/auth/identity-service";
 
 export interface ExerciseFormState {
   readonly message?: string;
@@ -50,6 +51,7 @@ export async function createExerciseAction(
   _previousState: ExerciseFormState,
   formData: FormData,
 ): Promise<ExerciseFormState> {
+  await requireTrainer();
   const validation = validationState(formData);
   if (!validation.success) return validation.state;
 
@@ -69,6 +71,7 @@ export async function updateExerciseAction(
   _previousState: ExerciseFormState,
   formData: FormData,
 ): Promise<ExerciseFormState> {
+  await requireTrainer();
   const validation = validationState(formData);
   if (!validation.success) return validation.state;
 
@@ -87,6 +90,7 @@ export async function setExerciseArchivedAction(
   id: string,
   archived: boolean,
 ): Promise<void> {
+  await requireTrainer();
   await setExerciseArchived(id, archived);
   revalidatePath("/exercises");
   revalidatePath(`/exercises/${id}/edit`);

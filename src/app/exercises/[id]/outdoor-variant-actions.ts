@@ -3,11 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { updateExerciseOutdoorVariant } from "@/server/exercises/exercise-outdoor-variant-repository";
+import { requireTrainer } from "@/server/auth/identity-service";
 
 export async function updateExerciseOutdoorVariantAction(
   exerciseId: string,
   formData: FormData,
 ): Promise<void> {
+  await requireTrainer();
   const equipmentIds = [...new Set(formData.getAll("equipmentId").map(String).filter(Boolean))];
   const equipment = equipmentIds.map((id) => ({
     id,

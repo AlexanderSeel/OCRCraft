@@ -9,10 +9,12 @@ import {
 } from "@/server/exercises/ai-exercise-draft-repository";
 import { aiExerciseDraftRequestSchema } from "@/server/exercises/ai-exercise-draft-schema";
 import { generateAiExerciseDraft } from "@/server/exercises/ai-exercise-draft-service";
+import { requireTrainer } from "@/server/auth/identity-service";
 
 const draftIdSchema = z.string().uuid();
 
 export async function generateAiExerciseDraftAction(formData: FormData): Promise<void> {
+  await requireTrainer();
   const parsed = aiExerciseDraftRequestSchema.safeParse({ brief: formData.get("brief") });
   if (!parsed.success) redirect("/exercises/ai-drafts?error=invalid-brief");
 
@@ -30,6 +32,7 @@ export async function generateAiExerciseDraftAction(formData: FormData): Promise
 }
 
 export async function approveAiExerciseDraftAction(formData: FormData): Promise<void> {
+  await requireTrainer();
   const parsed = draftIdSchema.safeParse(formData.get("id"));
   if (!parsed.success) redirect("/exercises/ai-drafts?error=invalid-id");
 
@@ -47,6 +50,7 @@ export async function approveAiExerciseDraftAction(formData: FormData): Promise<
 }
 
 export async function rejectAiExerciseDraftAction(formData: FormData): Promise<void> {
+  await requireTrainer();
   const parsed = draftIdSchema.safeParse(formData.get("id"));
   if (!parsed.success) redirect("/exercises/ai-drafts?error=invalid-id");
 

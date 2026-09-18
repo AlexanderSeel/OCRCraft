@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updateObstacleGuidance } from "@/server/obstacles/obstacle-editor-repository";
+import { requireTrainer } from "@/server/auth/identity-service";
 
 const textField = z.string().trim().min(1).max(4000);
 
@@ -32,6 +33,7 @@ export async function updateExerciseObstacleGuidanceAction(
   exerciseId: string,
   formData: FormData,
 ): Promise<void> {
+  await requireTrainer();
   const parsed = obstacleGuidanceSchema.safeParse({
     stationCapacity: stringField(formData, "stationCapacity"),
     clearZoneMetres: stringField(formData, "clearZoneMetres"),

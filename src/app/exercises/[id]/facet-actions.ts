@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updateExerciseFacets } from "@/server/exercises/exercise-facet-repository";
+import { requireTrainer } from "@/server/auth/identity-service";
 
 const facetId = z.string().trim().min(1).max(100);
 const facetSchema = z.object({
@@ -78,6 +79,7 @@ export async function updateExerciseFacetsAction(
   exerciseId: string,
   formData: FormData,
 ): Promise<void> {
+  await requireTrainer();
   const movementPatternIds = [...new Set(strings(formData, "movementPatternIds"))];
   const tagIds = [...new Set(strings(formData, "tagIds"))];
   const equipmentIds = [...new Set(strings(formData, "equipmentIds"))];

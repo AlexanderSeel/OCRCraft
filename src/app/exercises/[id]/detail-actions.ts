@@ -7,6 +7,7 @@ import {
   updateExerciseLogistics,
   updateLocalizedExerciseDetails,
 } from "@/server/exercises/exercise-detail-editor-repository";
+import { requireTrainer } from "@/server/auth/identity-service";
 
 const optionalText = z.string().trim().max(4000);
 
@@ -63,6 +64,7 @@ export async function updateLocalizedExerciseDetailsAction(
   exerciseId: string,
   formData: FormData,
 ): Promise<void> {
+  await requireTrainer();
   const parsed = localizedDetailsSchema.safeParse({
     locale: stringField(formData, "locale"),
     purpose: stringField(formData, "purpose"),
@@ -109,6 +111,7 @@ export async function updateExerciseLogisticsAction(
   exerciseId: string,
   formData: FormData,
 ): Promise<void> {
+  await requireTrainer();
   const parsed = logisticsSchema.safeParse({
     difficulty: stringField(formData, "difficulty"),
     supervision: stringField(formData, "supervision"),

@@ -13,6 +13,7 @@ import {
   exerciseTypes,
 } from "@/domain/exercise/classification";
 import { updateExerciseClassification } from "@/server/exercises/exercise-classification-repository";
+import { requireTrainer } from "@/server/auth/identity-service";
 
 const schema = z.object({
   exerciseType: z.enum(exerciseTypes),
@@ -44,6 +45,7 @@ export async function updateExerciseClassificationAction(
   exerciseId: string,
   formData: FormData,
 ): Promise<void> {
+  await requireTrainer();
   const parsed = schema.safeParse({
     exerciseType: String(formData.get("exerciseType") ?? ""),
     difficulty: String(formData.get("difficulty") ?? ""),
