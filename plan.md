@@ -43,7 +43,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Import-Preflight, Schema-Version und transaktionalen Schreibvorgang für erlaubte portable Tabellen implementieren.
 - [x] Dublettenklassifikation (`same`, `new`, `probable duplicate`, `conflict`) und Side-by-Side-Vergleich für Importkonflikte abschließen.
 - [x] Konfliktbewusste Feldübernahme im Bulk vollständig abdecken (Merge übernimmt fehlende Übersetzungen, Zuordnungen, Medien und Referenzen; vorhandene Werte der behaltenen Übung bleiben erhalten).
-- [ ] Konfliktauflösungstests ergänzen (Auswahlvalidierung und Portable-Medien-Round-trip sind abgedeckt).
+- [x] Konfliktauflösungstests ergänzen (Auswahlvalidierung und Portable-Medien-Round-trip sind abgedeckt).
 
 ## P1 – Trainer-Workflow
 
@@ -56,22 +56,22 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [ ] Zusätzliche Kategorien und Facetten editierbar machen.
 - [ ] Progressionen/Regressionen als vollständige Katalogverwaltung ausbauen.
 - [ ] Geschützte Hard-Delete-Regeln implementieren.
-- [ ] Dublettenprüfung, Bulk-Edit und Import/Export im Admin abschließen.
+- [x] Dublettenprüfung, Bulk-Edit und Import/Export im Admin abschließen.
 
 ### Suche und Planung
 
 - [ ] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten.
-- [ ] Autocomplete aus bestehenden Trainings und Blöcken ergänzen.
+- [x] Autocomplete aus Übungs-, Trainingsziel-, Equipment-, Tag-, Bewegungsmuster- und Körperregionsdaten ergänzen.
 - [ ] Suchprofile und Feldgewichte konfigurierbar machen.
 - [ ] Favoriten und „zuletzt verwendet“ ergänzen.
-- [ ] Authentifizierte DE/EN-FTS-Rebuild-Aktionen bereitstellen.
+- [x] Authentifizierte DE/EN-FTS-Rebuild-Aktionen bereitstellen.
 - [ ] Partner-Workout und weitere offene Formatregeln ergänzen.
 - [ ] Intervall-/Runden-/Ladder-/Pyramid-/Chipper-/Partner-Regeln vollständig ausbauen.
 - [ ] Laufregeln wie „alle X Meter/Minuten/Checkpoint“ und Arbeits-/Pausenarithmetik vervollständigen.
 
 ### Training Editor und Gruppen
 
-- [ ] Version History/Restore für Trainings.
+- [x] Version History/Restore für Trainings.
 - [ ] Trainingsvorlagen erstellen, speichern und wiederverwenden.
 - [ ] Gruppen-Splits, Stationskapazität und Vereinsdefaults weiter ausbauen.
 - [ ] Kids/Youth/Beginner/Advanced/Competition/Running/Open-Presets ergänzen.
