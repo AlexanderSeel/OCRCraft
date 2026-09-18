@@ -41,6 +41,7 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Bet
 - Audit-Events für Reset-, Backup- und Dublettenaktionen
 - externe Quellen-, Lizenz- und Generierungsmetadaten
 - OpenAI-Images-Pipeline mit `gpt-image-2`, Dry Run, stabilen Seed-Dateinamen, Reviewstatus und Dateisystem/S3-Abstraktion
+- Medienwarteschlange mit dedupliziertem Worker und periodischer Statusaktualisierung ohne wiederholte Request-Callbacks
 - generierte Bilder bleiben an stabile Übungs-/Seed-IDs gebunden und werden bei Reseeds nicht automatisch gelöscht
 
 Für den privaten Vereinsbetrieb kann die lokale Bootstrap-Identität verwendet werden. Mit `OCRCRAFT_AUTH_REQUIRED=1` und `OCRCRAFT_ACTOR_EMAIL=<email>` müssen globale Admin-Aktionen einem aktiven Benutzer mit passender Rolle zugeordnet sein. Die Rollen `trainer`, `admin` und `super_admin` werden in DuckDB persistiert; eine externe Anmeldung (zum Beispiel über einen vorgeschalteten Vereins-Login) liefert die Actor-Konfiguration.

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { after } from "next/server";
 import { AppShell } from "@/components/app-shell";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import { MediaJobRefresh } from "@/components/media/media-job-refresh";
@@ -15,7 +14,6 @@ import {
   listRecentMediaGenerationJobs,
   type RecentMediaGenerationJob,
 } from "@/server/media/media-generation-job-repository";
-import { runExerciseImageGenerationQueue } from "@/server/media/media-generation-worker";
 import { queueMediaBatchAction, retryMediaGenerationJobAction, updateMediaReviewStatusAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -59,12 +57,6 @@ export default async function MediaPage({ searchParams }: PageProps) {
     listMediaGenerationCandidates(missingQuery, 24),
     listRecentMediaGenerationJobs(12),
   ]);
-
-  if (generationQueue.queued > 0 && process.env.OPENAI_API_KEY) {
-    after(async () => {
-      await runExerciseImageGenerationQueue();
-    });
-  }
 
   return (
     <AppShell
