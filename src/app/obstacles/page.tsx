@@ -172,7 +172,7 @@ function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) 
             <Link className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" href={`/exercises/${obstacle.exerciseId}`}>
               Übung öffnen
             </Link>
-            <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/exercises/${obstacle.exerciseId}/edit`}>
+            <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/exercises/${obstacle.exerciseId}/edit#obstacle-guidance`}>
               Hindernis bearbeiten
             </Link>
           </div>
