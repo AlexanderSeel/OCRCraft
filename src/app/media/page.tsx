@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import { MediaJobRefresh } from "@/components/media/media-job-refresh";
+import { OrphanedMediaCleanupForm } from "@/components/media/orphaned-media-cleanup-form";
 import {
   getMediaCatalogSummary,
   listMediaCatalog,
@@ -14,7 +15,8 @@ import {
   listRecentMediaGenerationJobs,
   type RecentMediaGenerationJob,
 } from "@/server/media/media-generation-job-repository";
-import { queueMediaBatchAction, retryMediaGenerationJobAction, updateMediaReviewStatusAction } from "./actions";
+import { cleanupOrphanedMediaAction, queueMediaBatchAction, retryMediaGenerationJobAction, updateMediaReviewStatusAction } from "./actions";
+import { getMediaMaintenanceSummary } from "@/server/media/media-maintenance-service";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +34,8 @@ interface PageProps {
     batchError?: string;
     missingQ?: string;
     jobRetried?: string;
+    cleanupRemoved?: string;
+    cleanupError?: string;
   }>;
 }
 
@@ -44,7 +48,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
   const mediaType = allowed(params.type, ["image", "video", "illustration"]);
   const missingQuery = params.missingQ?.trim() ?? "";
 
-  const [summary, assets, generationQueue, missingImageExercises, recentJobs] = await Promise.all([
+  const [summary, assets, generationQueue, missingImageExercises, recentJobs, maintenance] = await Promise.all([
     getMediaCatalogSummary(),
     listMediaCatalog({
       query,
@@ -56,6 +60,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
     getMediaGenerationQueueSummary(),
     listMediaGenerationCandidates(missingQuery, 24),
     listRecentMediaGenerationJobs(12),
+    getMediaMaintenanceSummary(),
   ]);
 
   return (
@@ -100,6 +105,16 @@ export default async function MediaPage({ searchParams }: PageProps) {
             {params.jobRetried === "queued"
               ? "Der KI-Bildjob wurde erneut in die Warteschlange gestellt."
               : "Für diese Übung läuft bereits ein KI-Bildjob."}
+          </p>
+        ) : null}
+        {params.cleanupRemoved ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            {params.cleanupRemoved} nicht referenzierte Storage-Objekt(e) wurden entfernt.
+          </p>
+        ) : null}
+        {params.cleanupError ? (
+          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+            Die Medienbereinigung konnte nicht vollständig ausgeführt werden.
           </p>
         ) : null}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
@@ -250,6 +265,50 @@ export default async function MediaPage({ searchParams }: PageProps) {
               )}
             </div>
           </div>
+        </section>
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-base font-black">Medien-Wartung</h2>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+                OCRCraft vergleicht die im konfigurierten {maintenance.storageProvider === "s3" ? "S3-Storage" : "Dateisystem"} vorhandenen Objekte mit den in DuckDB referenzierten Medien. Automatisch löschbar sind ausschließlich Objekte ohne Datenbankreferenz.
+              </p>
+            </div>
+            {maintenance.available ? <OrphanedMediaCleanupForm action={cleanupOrphanedMediaAction} count={maintenance.orphanedObjectCount} /> : null}
+          </div>
+          {!maintenance.available ? (
+            <p className="mt-4 rounded-xl border border-[var(--warning)] bg-[var(--warning-bg)] p-3 text-sm font-bold text-[var(--warning)]">
+              {maintenance.errorMessage}
+            </p>
+          ) : null}
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Data label="Storage-Objekte" value={String(maintenance.storedObjectCount)} />
+            <Data label="DB-Referenzen" value={String(maintenance.referencedObjectCount)} />
+            <Data label="Verwaist" value={String(maintenance.orphanedObjectCount)} />
+            <Data label="Referenz fehlt im Storage" value={String(maintenance.missingObjectCount)} />
+          </dl>
+          {maintenance.orphanedKeys.length ? (
+            <div className="mt-4 rounded-xl bg-[var(--surface-subtle)] p-3">
+              <div className="text-xs font-black uppercase tracking-[0.08em] text-[var(--muted)]">Verwaiste Objekte</div>
+              <ul className="mt-2 grid gap-1 font-mono text-xs text-[var(--muted)]">
+                {maintenance.orphanedKeys.map((key) => <li className="truncate" key={key}>{key}</li>)}
+              </ul>
+            </div>
+          ) : null}
+          {maintenance.missingAssets.length ? (
+            <div className="mt-4 rounded-xl border border-[var(--warning)] bg-[var(--warning-bg)] p-3">
+              <div className="text-xs font-black uppercase tracking-[0.08em] text-[var(--warning)]">Fehlende Storage-Objekte – nur prüfen, keine automatische Löschung</div>
+              <ul className="mt-2 grid gap-2 text-xs">
+                {maintenance.missingAssets.map((asset) => (
+                  <li className="flex flex-wrap justify-between gap-2" key={asset.assetId}>
+                    <Link className="font-black underline underline-offset-2" href={`/exercises/${asset.exerciseId}`}>{asset.exerciseName}</Link>
+                    <span className="max-w-full truncate font-mono text-[var(--muted)]">{asset.storageKey}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </section>
 
         {assets.length ? (
@@ -535,7 +594,7 @@ function formatJobTime(value: string): string {
 
 function batchErrorLabel(value: string): string {
   if (value === "selection") return "Wähle mindestens eine Übung oder Medienkarte für die Batch-Operation aus.";
-  if (value === "config") return "KI-Bildgenerierung ist nicht konfiguriert. OPENAI_API_KEY fehlt.";
+  if (value === "config") return "KI-Bildgenerierung ist nicht konfiguriert. Weise in Administration → Einstellungen mindestens einen aktiven Bild-AI-Provider zu.";
   if (value === "action") return "Die gewählte Batch-Aktion ist ungültig.";
   return "Die Batch-Operation konnte nicht in die Warteschlange gestellt werden.";
 }

@@ -51,3 +51,8 @@ export async function createConfiguredExerciseImageGenerator(): Promise<Exercise
   const configs = await resolveAiProviderChain("image");
   return configs.length ? new FallbackExerciseImageGenerator() : null;
 }
+
+
+export async function hasConfiguredExerciseImageProvider(): Promise<boolean> {
+  return (await resolveAiProviderChain("image")).length > 0;
+}

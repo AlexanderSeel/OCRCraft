@@ -5,6 +5,10 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
 import { setMediaReviewStatus } from "@/server/media/media-catalog-repository";
+import { requireAdmin } from "@/server/auth/identity-service";
+import { recordAuditEvent } from "@/server/db/audit-service";
+import { hasConfiguredExerciseImageProvider } from "@/server/images/configured-image-generator";
+import { deleteOrphanedMediaObjects } from "@/server/media/media-maintenance-service";
 import { normalizeMediaBatchExerciseIds } from "@/server/media/media-generation-job-core";
 import { enqueueExerciseImageGenerationJobs } from "@/server/media/media-generation-job-repository";
 import { runExerciseImageGenerationQueue } from "@/server/media/media-generation-worker";
@@ -49,7 +53,7 @@ export async function queueMediaBatchAction(formData: FormData): Promise<void> {
     formData.getAll("exerciseId").map((value) => String(value)),
   );
   if (exerciseIds.length === 0) redirect("/media?batchError=selection");
-  if (!process.env.OPENAI_API_KEY) redirect("/media?batchError=config");
+  if (!(await hasConfiguredExerciseImageProvider())) redirect("/media?batchError=config");
 
   let queued = 0;
   let skipped = 0;
@@ -79,7 +83,7 @@ export async function queueMediaBatchAction(formData: FormData): Promise<void> {
 export async function retryMediaGenerationJobAction(formData: FormData): Promise<void> {
   const exerciseId = z.string().uuid().safeParse(formData.get("exerciseId"));
   if (!exerciseId.success) redirect("/media?batchError=selection");
-  if (!process.env.OPENAI_API_KEY) redirect("/media?batchError=config");
+  if (!(await hasConfiguredExerciseImageProvider())) redirect("/media?batchError=config");
 
   let queued = 0;
   try {
@@ -97,4 +101,29 @@ export async function retryMediaGenerationJobAction(formData: FormData): Promise
 
   revalidatePath("/media");
   redirect(`/media?jobRetried=${queued > 0 ? "queued" : "active"}`);
+}
+
+
+export async function cleanupOrphanedMediaAction(): Promise<void> {
+  let deleted = 0;
+  try {
+    const actor = await requireAdmin();
+    const result = await deleteOrphanedMediaObjects();
+    deleted = result.deleted;
+    await recordAuditEvent({
+      action: "media.orphan_cleanup",
+      entityType: "media_storage",
+      actorType: "user",
+      actorId: actor.id,
+      metadata: {
+        storageProvider: result.storageProvider,
+        deleted: result.deleted,
+      },
+    });
+  } catch {
+    redirect("/media?cleanupError=1");
+  }
+
+  revalidatePath("/media");
+  redirect("/media?cleanupRemoved=" + String(deleted));
 }

@@ -101,7 +101,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 - [ ] Galerie, Videos und externe Thumbnails verwalten.
 - [ ] Lizenz-, Quellen- und Einwilligungsprüfung ergänzen.
-- [ ] Verwaiste Medien erkennen und bereinigen.
+- [x] Verwaiste Medien in Dateisystem/S3 gegen DuckDB-Referenzen erkennen; nicht referenzierte Storage-Objekte werden nur nach Admin-Bestätigung gelöscht, fehlende referenzierte Objekte bleiben als Prüfhinweis sichtbar.
 - [ ] S3-kompatible Speicherung produktionsfest machen.
 - [ ] Legacy-Triptychon nach fachlicher Prüfung in Sequenzbilder migrieren.
 - [ ] Generierte Sequenzen auf biomechanische Plausibilität und Textübereinstimmung prüfen.
