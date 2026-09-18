@@ -83,6 +83,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### UI/UX und Zugänglichkeit
 
+- [ ] Tailgrids-kompatible UI-Schicht schrittweise als lokale OCRCraft-Komponenten einführen: zuerst Overlay/Popover, Form-Felder, Pagination, Tabs, Sidebar und Toast; bestehende semantische Tokens, deutsche Übersetzungen, Fokus-/Z-Index-Regeln und Serveraktionen bleiben erhalten. Die Komponenten werden manuell bzw. als kopierte Bausteine übernommen, ohne CLI-Überschreiben von `globals.css` oder eine Abhängigkeit auf Tailgrids-Laufzeitcode; Lizenz- und Quellenhinweis bleiben in der Projektdokumentation nachvollziehbar.
 - [x] Globales Formularfeedback vereinheitlichen: native Pflichtfeld-, Format-, Bereichs- und Längenprüfungen zeigen direkt am Feld eine deutsche Fehlermeldung, markieren das Feld mit `aria-invalid`, setzen den Fokuspfad über `aria-describedby` und kennzeichnen Pflichtfelder konsistent mit `*`.
 - [x] Kontrast und Lesbarkeit in Hell-/Dunkelmodus über die globalen semantischen Tokens nachgeschärft: Muted-/Status-/Sidebar-Kontraste und Feldgrenzen wurden erhöht, Placeholder verlieren keine zusätzliche Opazität mehr und Fokuszustände bleiben in beiden Themes klar sichtbar.
 - [x] Gemeinsames erweitertes Form-Kit für Labels, Pflichtkennzeichnung, Hilfetexte, Fehlermeldungen, Controls, Statusmeldungen und Action-Zeilen eingeführt und in Übungseditor sowie Training-Item-Editor integriert.
