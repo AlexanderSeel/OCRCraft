@@ -24,6 +24,7 @@ async function createFixture() {
       notes VARCHAR,
       organization_mode VARCHAR DEFAULT 'solo',
       team_size INTEGER,
+      group_split_count INTEGER,
       created_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
       updated_at TIMESTAMP NOT NULL DEFAULT current_timestamp
     );

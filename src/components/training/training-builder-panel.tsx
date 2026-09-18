@@ -25,6 +25,7 @@ import {
   type SelectedExerciseReference,
 } from "./exercise-autocomplete-picker";
 import { MainPartProgrammingEditor } from "./main-part-programming-editor";
+import { Disclosure } from "@/components/ui/disclosure";
 import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
 import {
@@ -369,10 +370,7 @@ export function TrainingBuilderPanel({
                 AI muss serverseitig konfiguriert sein. Sie darf keine neuen Übungs-IDs erfinden und kann Alters-, Orts-, Ausschluss-, Equipment-, Hindernis- oder Sicherheitsfilter nicht umgehen.
               </p>
               {sourceTrainingOptions.length > 0 ? (
-                <details className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-                  <summary className="cursor-pointer text-sm font-black">
-                    Frühere Trainings als Rekompositions-Kontext ({sourceTrainingIds.length}/6)
-                  </summary>
+                <Disclosure className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" summaryClassName="text-sm font-black" summary={`Frühere Trainings als Rekompositions-Kontext (${sourceTrainingIds.length}/6)`}>
                   <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
                     Optional. Die AI darf Muster und Übungsauswahl aus bis zu sechs Einheiten als Inspiration verwenden. Aktuelle Ziele, Muskelwahl, Ausschlüsse, Equipment und Sicherheitsregeln bleiben maßgeblich.
                   </p>
@@ -391,7 +389,7 @@ export function TrainingBuilderPanel({
                       );
                     })}
                   </div>
-                </details>
+                </Disclosure>
               ) : null}
             </div>
           ) : null}
@@ -451,8 +449,7 @@ export function TrainingBuilderPanel({
             ))}
           </div>
 
-          <details className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4" open={mainPartProgramming.some((item) => item.mode !== "standard")}>
-            <summary className="cursor-pointer font-black">Programmierung je Hauptteil</summary>
+          <Disclosure className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4" open={mainPartProgramming.some((item) => item.mode !== "standard")} summaryClassName="font-black" summary="Programmierung je Hauptteil">
             <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
               Optional. Intervall, feste Runden, Ladder, Pyramide, Chipper und Every-X werden als strukturierte Prescription gespeichert und bleiben bei AI-Neuplanung oder Übungsersatz erhalten.
             </p>
@@ -466,7 +463,7 @@ export function TrainingBuilderPanel({
                 />
               ))}
             </div>
-          </details>
+          </Disclosure>
 
           <div className="mt-5 grid gap-4 border-t border-[var(--border)] pt-4 sm:grid-cols-2">
             <Field label="Organisation im Hauptteil">
@@ -534,12 +531,11 @@ export function TrainingBuilderPanel({
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <BodyFocusSelector selected={bodyRegions} onToggle={(id) => { setBodyRegions(toggle(bodyRegions, id)); setAvoidBodyRegions((current) => current.filter((entry) => entry !== id)); invalidate(); }} />
-          <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-            <summary className="cursor-pointer font-black">Nicht belasten / vermeiden ({avoidBodyRegions.length})</summary>
+          <Disclosure className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" summaryClassName="font-black" summary={`Nicht belasten / vermeiden (${avoidBodyRegions.length})`}>
             <div className="mt-4">
               <BodyFocusSelector description="Übungen, die diese Bereiche belasten, werden ausgeschlossen." onToggle={(id) => { setAvoidBodyRegions(toggle(avoidBodyRegions, id)); setBodyRegions((current) => current.filter((entry) => entry !== id)); invalidate(); }} selected={avoidBodyRegions} title="Ausgeschlossene Bereiche" visualCompact />
             </div>
-          </details>
+          </Disclosure>
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
@@ -554,12 +550,10 @@ export function TrainingBuilderPanel({
           <h2 className="text-lg font-black">Format & Belastung</h2>
           <div className="mt-3 flex flex-wrap gap-2">{TRAINING_FORMATS.filter((format) => format !== "free").map((format) => <Toggle key={format} active={formats.includes(format)} onClick={() => { setFormats(toggle(formats, format)); invalidate(); }}>{formatLabels[format]}</Toggle>)}</div>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">{([ ["technique", "Technik"], ["balanced", "Ausgewogen"], ["conditioning", "Conditioning"] ] as const).map(([id, label]) => <Toggle key={id} active={intensity === id} onClick={() => { setIntensity(id); invalidate(); }}>{label}</Toggle>)}</div>
-          <details className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-            <summary className="cursor-pointer font-black">Equipment-Bestand</summary>
+          <Disclosure className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" summaryClassName="font-black" summary="Equipment-Bestand">
             <div className="mt-4"><EquipmentAvailabilityPicker onChange={(id, value) => { setAvailableEquipment((current) => ({ ...current, [id]: value })); invalidate(); }} options={equipmentOptions} value={availableEquipment} /></div>
-          </details>
-          <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={obstacleInventoryDeclared}>
-            <summary className="cursor-pointer font-black">OCR-Hindernisbestand</summary>
+          </Disclosure>
+          <Disclosure className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={obstacleInventoryDeclared} summaryClassName="font-black" summary="OCR-Hindernisbestand">
             <p className="mt-2 text-xs leading-5 text-[var(--muted)]">Wenn der Vereinsbestand aktiviert ist, werden nicht markierte Hindernisstationen hart aus lokaler und AI-Planung sowie aus späteren Übungsalternativen ausgeschlossen.</p>
             <div className="mt-4">
               <ObstacleAvailabilityPicker
@@ -570,7 +564,7 @@ export function TrainingBuilderPanel({
                 selectedIds={availableObstacleExerciseIds}
               />
             </div>
-          </details>
+          </Disclosure>
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">

@@ -20,7 +20,7 @@ import {
   type QuickCreateDraftClientInput,
 } from "./quick-create-draft-client";
 import { TrainingDraftPreview } from "./training-draft-preview";
-import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
+import { Disclosure } from "@/components/ui/disclosure";
 
 const groupOptions = [
   ["kids", "Kids", "Spielerisch, altersgerecht, klare Sicherheitsregeln"],
@@ -405,8 +405,8 @@ export function QuickCreateWizard({
                 </div>
               </div>
 
-              <details className="mt-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)]">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 marker:hidden sm:px-5">
+              <Disclosure className="mt-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)]" summaryClassName="flex items-center justify-between gap-3 px-4 py-4 sm:px-5" summary={
+                <>
                   <span>
                     <span className="font-black">Bereiche bewusst ausschließen</span>
                     <span className="ml-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[11px] font-bold text-[var(--muted)]">
@@ -417,7 +417,8 @@ export function QuickCreateWizard({
                     </span>
                   </span>
                   <span aria-hidden="true" className="text-lg font-black text-[var(--muted)]">+</span>
-                </summary>
+                </>
+              }>
                 <div className="border-t border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
                   <BodyFocusSelector
                     description="Wähle Bereiche, die diese Einheit bewusst nicht belasten soll. Wenn ein Bereich hier ausgewählt wird, wird er automatisch aus dem Trainingsfokus entfernt – und umgekehrt. Diese Einstellung ist eine Planungsregel des Trainers, keine medizinische Diagnose."
@@ -427,7 +428,7 @@ export function QuickCreateWizard({
                     visualCompact
                   />
                 </div>
-              </details>
+              </Disclosure>
 
               <div className="mt-8 border-t border-[var(--border)] pt-6">
                 <ExerciseAutocompletePicker
@@ -523,10 +524,7 @@ export function QuickCreateWizard({
                 </p>
               </div>
 
-              <details className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-                <summary className="cursor-pointer text-sm font-black">
-                  Verfügbare Ausrüstung für Zirkel prüfen
-                </summary>
+              <Disclosure className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" summaryClassName="text-sm font-black" summary="Verfügbare Ausrüstung für Zirkel prüfen">
                 <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                   Leeres Feld bedeutet unbekannten Bestand; 0 bedeutet nicht vorhanden. Für Zirkel wird der Bedarf aller gleichzeitig belegten Stationen addiert.
                 </p>
@@ -543,12 +541,9 @@ export function QuickCreateWizard({
                     value={availableEquipment}
                   />
                 </div>
-              </details>
+              </Disclosure>
 
-              <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={obstacleInventoryDeclared}>
-                <summary className="cursor-pointer text-sm font-black">
-                  Verfügbare OCR-Hindernisse
-                </summary>
+              <Disclosure className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={obstacleInventoryDeclared} summaryClassName="text-sm font-black" summary="Verfügbare OCR-Hindernisse">
                 <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                   Optionaler harter Filter für Rig, Wand, Netz, Traverse und andere strukturierte Hindernisstationen. Nicht markierte Hindernisse werden weder lokal noch per AI eingeplant.
                 </p>
@@ -567,7 +562,7 @@ export function QuickCreateWizard({
                     selectedIds={availableObstacleExerciseIds}
                   />
                 </div>
-              </details>
+              </Disclosure>
             </div>
           ) : null}
 
