@@ -47,7 +47,7 @@ export function IdentityManagementPanel({ users, createAction, updateAction, log
       {filtered.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Keine Profile gefunden.</p> : null}
     </section>
     {editing ? <Dialog eyebrow="Identität" onClose={() => setEditing(null)} title={`Profil bearbeiten: ${editing.firstName} ${editing.lastName}`}>
-      <form action={updateAction} className="grid gap-3" encType="multipart/form-data">
+      <form action={updateAction} className="grid gap-3">
         <input name="id" type="hidden" value={editing.id} />
         <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm font-bold">Vorname<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.firstName} name="firstName" required /></label><label className="grid gap-1 text-sm font-bold">Nachname<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.lastName} name="lastName" required /></label></div>
         <label className="grid gap-1 text-sm font-bold">Username<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" defaultValue={editing.username} name="username" pattern="[A-Za-z0-9._-]{3,40}" required /></label>
