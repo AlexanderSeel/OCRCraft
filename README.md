@@ -49,6 +49,8 @@ Für den privaten Vereinsbetrieb kann die lokale Bootstrap-Identität verwendet 
 
 Administration und Einstellungen liegen in einem gemeinsamen Bereich mit vier Tabs: Übersicht, Datenbank, Datenqualität und Einstellungen. Dort sind Seed-Vollständigkeit, Dublettenprüfung, DuckDB-/FTS-Status, der bestätigungspflichtige Datenbank-Reset und das optionale Muskelkarten-Debugging getrennt erreichbar.
 
+Im Datenbank-Tab können Übungen, Details, Zuordnungen, Trainings, Gruppen, Medien und Provenienz selektiv als versioniertes JSON exportiert werden. Importdateien werden vor jedem späteren Schreibvorgang über das Schema `ocrcraft-portable` und die Version `1` vorgeprüft.
+
 ### UI/UX
 
 - Light-, Dark- und System-Theme mit semantischen Tokens

@@ -37,10 +37,10 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Lock-gesichertes DuckDB-Backup mit Zeitstempel und Manifest.
 - [x] DuckDB-Restore mit Sicherheitsbackup und sichere Multi-Process-Betriebsanleitung.
 - [x] Konfigurierbare Backup-Rotation und Anzeige der vorhandenen Backups im Adminbereich.
-- [ ] Selektierbaren JSON-Import/Export implementieren.
-- [ ] Exportoptionen für Übungen, Details, Mapping, Trainings, Gruppen, Medien und Provenienz anbieten.
+- [x] Selektierbaren, versionierten JSON-Export implementieren.
+- [x] Exportoptionen für Übungen, Details, Mapping, Trainings, Gruppen, Medien und Provenienz anbieten.
 - [ ] Optional Binärmedien mit MIME-Typ, Prüfsumme und Quellenmetadaten exportieren.
-- [ ] Import-Preflight, Schema-Version, Vorschau und transaktionalen Schreibvorgang implementieren.
+- [x] Import-Preflight und Schema-Version als sichere Vorschauvalidierung implementieren; transaktionaler Import bleibt als nächster Ausbau.
 - [ ] Dublettenklassifikation (`same`, `new`, `probable duplicate`, `conflict`) und Side-by-Side-Vergleich für Importkonflikte abschließen.
 - [ ] Feldvergleich, Bildvergleich, Bulk-Entscheidungen und `Use left / Use right / Keep both` vollständig abdecken.
 - [ ] Round-trip- und Konfliktauflösungstests ergänzen.
