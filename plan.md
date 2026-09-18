@@ -52,7 +52,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 - [x] Katalog mit einer kuratierten Lücken-Kohorte erweitern: acht zusätzliche Core-, Mobilitäts-, Koordinations- und OCR-Übergangsdrills schließen bodennahe Stabilitäts-, Sprunggelenk-/Hüft-/BWS-Mobilitäts- und kontrollierte Richtungswechsel-Lücken.
 - [x] Zusätzliche deutsche/englische Aliase und Trainerbegriffe für alle Seeds ergänzen: bewegungsmuster- und kategoriebasierte Trainerbegriffe werden versioniert in die Suche aufgenommen und durch Integrationstests auf vollständige Seed-Abdeckung geprüft.
-- [ ] Fachliche Einzelprüfung und Anreicherung aller verbleibenden Seeds abschließen.
+- [x] Fachliche Einzelprüfung und Anreicherung aller verbleibenden Seeds abschließen: der Altbestand wurde von generischen Legacy-Coachingtexten bereinigt, kategorien-/bewegungsspezifisch nachgeschärft und erhält pro Seed eine versionierte Qualitätsreviewspur; CI verlangt für jeden Seed ein bestandenes DE/EN-, Sicherheits-, Bewegungsmuster-, Dosierungs- und Metadaten-Gate.
 - [x] Weitere Katalogkohorten versioniert, zweisprachig und mit Detail-/Sicherheits-Gates aufnehmen; die neue Gap-Kohorte besitzt DE/EN-Details, Ausführungsschritte, Coaching, Fehlerkorrektur, Körperregionen, Bewegungsmuster, Ziele, Phasen und Suchdokumente.
 - [x] Zusätzliche Kategorien und Facetten editierbar machen.
 - [x] Progressionen/Regressionen als Katalogverwaltung mit Editor und geschützter Archivierung ausbauen.

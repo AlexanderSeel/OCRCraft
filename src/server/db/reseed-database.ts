@@ -51,6 +51,7 @@ const tablesToClear = [
   "exercise_training_phases",
   "exercise_training_goals",
   "exercise_muscle_oppositions",
+  "exercise_seed_quality_reviews",
   "exercise_tags",
   "exercise_body_regions",
   "exercise_translations",

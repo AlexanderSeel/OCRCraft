@@ -34,6 +34,7 @@ const migrationFiles = [
   "028_seed_quality_expansion.sql",
   "063_curated_catalog_gap_cohort.sql",
   "064_seed_trainer_search_terms.sql",
+  "073_seed_individual_quality_review.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -141,6 +142,24 @@ describe("initial exercise catalog", () => {
         SELECT count(*) FROM exercises e JOIN exercise_equipment x ON x.exercise_id=e.id
         JOIN equipment q ON q.id=x.equipment_id
         WHERE e.seed_key='cooperative-cone-collect' AND q.seed_key='cones' AND x.quantity_required=6
+      `);
+      const seedReviews = await scalar(connection, "SELECT count(*) FROM exercise_seed_quality_reviews");
+      const openSeedReviews = await scalar(connection, "SELECT count(*) FROM exercise_seed_quality_reviews WHERE review_status<>'passed'");
+      const legacyGenericSteps = await scalar(connection, `
+        SELECT count(*) FROM exercise_execution_steps s JOIN exercises e ON e.id=s.exercise_id
+        WHERE e.seed_key IS NOT NULL AND s.instruction IN (
+          'Höre die kurze Demonstration an und prüfe Startposition sowie Bewegungsweg.',
+          'Beginne auf das Signal und bewege dich kontrolliert durch den vollständigen, schmerzfreien Bewegungsweg.',
+          'Beende die Wiederholung ruhig, prüfe deine Haltung und starte erst dann erneut.',
+          'Watch the brief demonstration and check the start position and movement path.',
+          'Start on the signal and move under control through the full, pain-free range.',
+          'Finish the repetition calmly, check your position and then begin again.'
+        )
+      `);
+      const legacyGenericCues = await scalar(connection, `
+        SELECT count(*) FROM exercise_coaching_cues c JOIN exercises e ON e.id=c.exercise_id
+        WHERE e.seed_key IS NOT NULL
+          AND c.cue IN ('Ruhig starten','Sauber vor schnell','Atme weiter','Start smoothly','Quality before speed','Keep breathing')
       `);
       const categories = await scalar(connection, "SELECT count(DISTINCT category) FROM exercises WHERE seed_key IS NOT NULL");
       const sampleExerciseResult = await connection.runAndReadAll("SELECT id::VARCHAR FROM exercises WHERE seed_key='easy-jog'");
@@ -280,6 +299,10 @@ describe("initial exercise catalog", () => {
       expect(completenessRows).toHaveLength(total);
       expect(running).toBeGreaterThanOrEqual(25);
       expect(categories).toBeGreaterThanOrEqual(11);
+      expect(seedReviews).toBe(total);
+      expect(openSeedReviews).toBe(0);
+      expect(legacyGenericSteps).toBe(0);
+      expect(legacyGenericCues).toBe(0);
       expect(translations).toBe(total * 2);
       expect(missingCanonicalNames).toBe(0);
       expect(missingCrossLocaleAliases).toBe(0);
