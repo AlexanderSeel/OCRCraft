@@ -26,6 +26,23 @@ export interface Bm25SearchOptions {
   readonly locale: SearchLocale;
   readonly limit: number;
   readonly offset?: number;
+  readonly rankingWeights?: Partial<SearchRankingWeights>;
+}
+
+export interface SearchRankingWeights {
+  readonly exact: number;
+  readonly prefix: number;
+  readonly alias: number;
+}
+
+export const DEFAULT_SEARCH_RANKING_WEIGHTS: SearchRankingWeights = { exact: 100, prefix: 75, alias: 50 };
+
+export function normalizeSearchRankingWeights(input?: Partial<SearchRankingWeights>): SearchRankingWeights {
+  return {
+    exact: Number.isFinite(input?.exact) ? Math.max(0, Number(input?.exact)) : DEFAULT_SEARCH_RANKING_WEIGHTS.exact,
+    prefix: Number.isFinite(input?.prefix) ? Math.max(0, Number(input?.prefix)) : DEFAULT_SEARCH_RANKING_WEIGHTS.prefix,
+    alias: Number.isFinite(input?.alias) ? Math.max(0, Number(input?.alias)) : DEFAULT_SEARCH_RANKING_WEIGHTS.alias,
+  };
 }
 
 function configForLocale(locale: SearchLocale) {
@@ -44,9 +61,10 @@ function configForLocale(locale: SearchLocale) {
 
 export async function runBm25ExerciseSearch(
   connection: DuckDBConnection,
-  { query, category, locale, limit, offset = 0 }: Bm25SearchOptions,
+  { query, category, locale, limit, offset = 0, rankingWeights }: Bm25SearchOptions,
 ): Promise<readonly ExerciseSearchHit[]> {
   const config = configForLocale(locale);
+  const weights = normalizeSearchRankingWeights(rankingWeights);
   const reader = await connection.runAndReadAll(
     `
     WITH ranked AS (
@@ -96,16 +114,16 @@ export async function runBm25ExerciseSearch(
       AND ($category='' OR e.category=$category)
     ORDER BY
       CASE
-        WHEN lower(t.name)=lower($query) THEN 0
-        WHEN t.name ILIKE $query || '%' THEN 1
+        WHEN lower(t.name)=lower($query) THEN $exactWeight
+        WHEN t.name ILIKE $query || '%' THEN $prefixWeight
         WHEN EXISTS (
           SELECT 1 FROM exercise_aliases a
           WHERE a.exercise_id=e.id
             AND a.locale=$locale
             AND a.alias ILIKE $query || '%'
-        ) THEN 2
-        ELSE 3
-      END,
+        ) THEN $aliasWeight
+        ELSE 0
+      END DESC,
       ranked.bm25_score DESC,
       t.name
     LIMIT $limit OFFSET $offset
@@ -116,6 +134,9 @@ export async function runBm25ExerciseSearch(
       category: category ?? "",
       limit,
       offset,
+      exactWeight: weights.exact,
+      prefixWeight: weights.prefix,
+      aliasWeight: weights.alias,
     },
   );
 

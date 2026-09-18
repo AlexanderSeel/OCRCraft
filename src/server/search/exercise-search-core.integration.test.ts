@@ -1,6 +1,6 @@
 import { DuckDBInstance } from "@duckdb/node-api";
 import { describe, expect, it } from "vitest";
-import { runBm25ExerciseSearch } from "./exercise-search-core";
+import { normalizeSearchRankingWeights, runBm25ExerciseSearch } from "./exercise-search-core";
 
 async function createSearchFixture() {
   const instance = await DuckDBInstance.create(":memory:");
@@ -105,6 +105,10 @@ async function createSearchFixture() {
 }
 
 describe("DuckDB BM25 exercise search", () => {
+  it("normalizes configurable ranking weights without allowing negative boosts", () => {
+    expect(normalizeSearchRankingWeights({ exact: 140, prefix: -2 })).toEqual({ exact: 140, prefix: 0, alias: 50 });
+  });
+
   it("finds enriched instruction content and hydrates exercise metadata", async () => {
     const { connection } = await createSearchFixture();
 
