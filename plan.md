@@ -80,8 +80,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### UI/UX und Zugänglichkeit
 
-- [ ] Kontrast und Lesbarkeit in Hell-/Dunkelmodus auf allen Seiten prüfen.
-- [ ] Gemeinsames erweitertes Form-Kit für Labels, Hilfe, Fehler, Felder und Actions.
+- [x] Kontrast und Lesbarkeit in Hell-/Dunkelmodus über die globalen semantischen Tokens nachgeschärft: Muted-/Status-/Sidebar-Kontraste und Feldgrenzen wurden erhöht, Placeholder verlieren keine zusätzliche Opazität mehr und Fokuszustände bleiben in beiden Themes klar sichtbar.
+- [x] Gemeinsames erweitertes Form-Kit für Labels, Pflichtkennzeichnung, Hilfetexte, Fehlermeldungen, Controls, Statusmeldungen und Action-Zeilen eingeführt und in Übungseditor sowie Training-Item-Editor integriert.
 - [ ] Toast-/Feedbacksystem mit Loading-, Erfolg- und Fehlerzuständen.
 - [ ] Undo/Redo für geeignete Editoraktionen.
 - [ ] Fullscreen-Traineransicht und Druckansicht.

@@ -1,15 +1,22 @@
 "use client";
 
 import { useActionState } from "react";
+import type { ExerciseFormState } from "@/app/exercises/actions";
+import {
+  FormActions,
+  FormField,
+  FormMessage,
+  PrimaryFormButton,
+  formControlClass,
+} from "@/components/ui/form";
+import type { ExerciseType } from "@/domain/exercise/classification";
 import {
   exerciseCategories,
   exerciseCategoryLabels,
   exercisePhases,
   exerciseRiskLevels,
 } from "@/domain/exercise/model";
-import type { ExerciseType } from "@/domain/exercise/classification";
 import type { ExerciseEditorRecord } from "@/server/exercises/exercise-repository";
-import type { ExerciseFormState } from "@/app/exercises/actions";
 
 interface ExerciseFormProps {
   readonly action: (
@@ -29,99 +36,74 @@ export function ExerciseForm({ action, exercise, initialExerciseType, submitLabe
   return (
     <form action={formAction} className="space-y-6">
       {initialExerciseType ? <input name="initialExerciseType" type="hidden" value={initialExerciseType} /> : null}
-      {state.message ? (
-        <div className="rounded-xl border border-[var(--warning)] bg-[var(--warning-bg)] p-4 text-sm font-semibold text-[var(--warning)]">
-          {state.message}
-        </div>
-      ) : null}
+      {state.message ? <FormMessage tone="warning">{state.message}</FormMessage> : null}
 
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
         <h2 className="text-lg font-black">Bezeichnung & Suche</h2>
-        <p className="mt-1 text-sm text-[var(--muted)]">Deutsch ist Pflicht. Englisch fällt bei neuen Übungen automatisch auf Deutsch zurück.</p>
+        <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+          Deutsch ist Pflicht. Englisch fällt bei neuen Übungen automatisch auf Deutsch zurück.
+        </p>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <Field label="Name (DE)" error={state.errors?.nameDe?.[0]}>
-            <input className={inputClass} defaultValue={exercise?.nameDe} name="nameDe" required />
-          </Field>
-          <Field label="Name (EN)" error={state.errors?.nameEn?.[0]}>
-            <input className={inputClass} defaultValue={exercise?.nameEn} name="nameEn" />
-          </Field>
-          <Field label="Aliase (DE)" hint="Kommagetrennt, z. B. Pendellauf, Shuttle" error={state.errors?.aliasesDe?.[0]}>
-            <input className={inputClass} defaultValue={exercise?.aliasesDe.join(", ")} name="aliasesDe" />
-          </Field>
-          <Field label="Aliase (EN)" hint="Comma separated" error={state.errors?.aliasesEn?.[0]}>
-            <input className={inputClass} defaultValue={exercise?.aliasesEn.join(", ")} name="aliasesEn" />
-          </Field>
+          <FormField error={state.errors?.nameDe?.[0]} label="Name (DE)" required>
+            <input aria-invalid={Boolean(state.errors?.nameDe?.[0])} className={formControlClass} defaultValue={exercise?.nameDe} name="nameDe" required />
+          </FormField>
+          <FormField error={state.errors?.nameEn?.[0]} label="Name (EN)">
+            <input aria-invalid={Boolean(state.errors?.nameEn?.[0])} className={formControlClass} defaultValue={exercise?.nameEn} name="nameEn" />
+          </FormField>
+          <FormField error={state.errors?.aliasesDe?.[0]} hint="Kommagetrennt, z. B. Pendellauf, Shuttle" label="Aliase (DE)">
+            <input aria-invalid={Boolean(state.errors?.aliasesDe?.[0])} className={formControlClass} defaultValue={exercise?.aliasesDe.join(", ")} name="aliasesDe" />
+          </FormField>
+          <FormField error={state.errors?.aliasesEn?.[0]} hint="Comma separated" label="Aliase (EN)">
+            <input aria-invalid={Boolean(state.errors?.aliasesEn?.[0])} className={formControlClass} defaultValue={exercise?.aliasesEn.join(", ")} name="aliasesEn" />
+          </FormField>
         </div>
       </section>
 
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
         <h2 className="text-lg font-black">Trainingsklassifikation</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Field label="Bereich" error={state.errors?.category?.[0]}>
-            <select className={inputClass} defaultValue={exercise?.category ?? "general"} name="category">
+          <FormField error={state.errors?.category?.[0]} label="Bereich">
+            <select aria-invalid={Boolean(state.errors?.category?.[0])} className={formControlClass} defaultValue={exercise?.category ?? "general"} name="category">
               {exerciseCategories.map((category) => (
                 <option key={category} value={category}>{exerciseCategoryLabels[category]}</option>
               ))}
             </select>
-          </Field>
-          <Field label="Standardphase" error={state.errors?.phase?.[0]}>
-            <select className={inputClass} defaultValue={exercise?.phase ?? "main"} name="phase">
+          </FormField>
+          <FormField error={state.errors?.phase?.[0]} label="Standardphase">
+            <select aria-invalid={Boolean(state.errors?.phase?.[0])} className={formControlClass} defaultValue={exercise?.phase ?? "main"} name="phase">
               {exercisePhases.map((phase) => (
                 <option key={phase} value={phase}>{phase === "warmup" ? "Aufwärmen" : phase === "main" ? "Hauptteil" : "Cooldown"}</option>
               ))}
             </select>
-          </Field>
-          <Field label="Risiko" error={state.errors?.riskLevel?.[0]}>
-            <select className={inputClass} defaultValue={exercise?.riskLevel ?? "low"} name="riskLevel">
+          </FormField>
+          <FormField error={state.errors?.riskLevel?.[0]} label="Risiko">
+            <select aria-invalid={Boolean(state.errors?.riskLevel?.[0])} className={formControlClass} defaultValue={exercise?.riskLevel ?? "low"} name="riskLevel">
               {exerciseRiskLevels.map((risk) => <option key={risk} value={risk}>{risk}</option>)}
             </select>
-          </Field>
-          <Field label="Mindestalter" error={state.errors?.minAge?.[0]}>
-            <input className={inputClass} defaultValue={exercise?.minAge ?? ""} max={99} min={4} name="minAge" type="number" />
-          </Field>
+          </FormField>
+          <FormField error={state.errors?.minAge?.[0]} label="Mindestalter">
+            <input aria-invalid={Boolean(state.errors?.minAge?.[0])} className={formControlClass} defaultValue={exercise?.minAge ?? ""} max={99} min={4} name="minAge" type="number" />
+          </FormField>
         </div>
       </section>
 
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
         <h2 className="text-lg font-black">Kurzbeschreibung</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <Field label="Beschreibung (DE)" error={state.errors?.summaryDe?.[0]}>
-            <textarea className={`${inputClass} min-h-32 py-3`} defaultValue={exercise?.summaryDe} maxLength={800} name="summaryDe" />
-          </Field>
-          <Field label="Beschreibung (EN)" error={state.errors?.summaryEn?.[0]}>
-            <textarea className={`${inputClass} min-h-32 py-3`} defaultValue={exercise?.summaryEn} maxLength={800} name="summaryEn" />
-          </Field>
+          <FormField error={state.errors?.summaryDe?.[0]} label="Beschreibung (DE)">
+            <textarea aria-invalid={Boolean(state.errors?.summaryDe?.[0])} className={`${formControlClass} min-h-32 py-3 leading-6`} defaultValue={exercise?.summaryDe} maxLength={800} name="summaryDe" />
+          </FormField>
+          <FormField error={state.errors?.summaryEn?.[0]} label="Beschreibung (EN)">
+            <textarea aria-invalid={Boolean(state.errors?.summaryEn?.[0])} className={`${formControlClass} min-h-32 py-3 leading-6`} defaultValue={exercise?.summaryEn} maxLength={800} name="summaryEn" />
+          </FormField>
         </div>
       </section>
 
-      <div className="flex justify-end">
-        <button className="min-h-11 rounded-xl bg-[var(--accent)] px-6 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)] disabled:opacity-50" disabled={pending} type="submit">
+      <FormActions>
+        <PrimaryFormButton disabled={pending}>
           {pending ? "Speichert …" : submitLabel}
-        </button>
-      </div>
+        </PrimaryFormButton>
+      </FormActions>
     </form>
-  );
-}
-
-const inputClass = "min-h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--focus)] focus:ring-2 focus:ring-[var(--focus)]/15";
-
-function Field({
-  label,
-  hint,
-  error,
-  children,
-}: {
-  readonly label: string;
-  readonly hint?: string;
-  readonly error?: string;
-  readonly children: React.ReactNode;
-}) {
-  return (
-    <label className="grid gap-1.5 text-sm font-bold">
-      {label}
-      {children}
-      {error ? <span className="text-xs font-semibold text-[var(--danger)]">{error}</span> : null}
-      {!error && hint ? <span className="text-xs font-normal text-[var(--muted)]">{hint}</span> : null}
-    </label>
   );
 }
