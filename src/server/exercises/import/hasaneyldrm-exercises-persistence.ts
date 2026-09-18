@@ -1,6 +1,6 @@
 import "server-only";
 
-import { readFile } from "node:fs/promises";
+import { open, readFile, unlink } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import type { DuckDBConnection } from "@duckdb/node-api";
@@ -239,11 +239,35 @@ export async function importHasaneyldrmExercises(input: unknown, limit?: number,
 /** Imports the checked-in metadata catalogue after migrations on a fresh DB. */
 export async function seedBundledHasaneyldrmExercises(): Promise<HasaneyldrmImportResult | null> {
   if (process.env.OCRCRAFT_AUTO_IMPORT_EXTERNAL_EXERCISES === "false") return null;
+  const seedLockPath = path.join(process.cwd(), "data", "hasaneyldrm-seed.lock");
+  let lock: Awaited<ReturnType<typeof open>> | undefined;
+  try {
+    lock = await open(seedLockPath, "wx");
+    await lock.writeFile(JSON.stringify({ pid: process.pid, startedAt: Date.now() }), "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") {
+      try {
+        const metadata = JSON.parse(await readFile(seedLockPath, "utf8")) as { pid?: number };
+        if (metadata.pid && metadata.pid !== process.pid) {
+          process.kill(metadata.pid, 0);
+          return null;
+        }
+      } catch {
+        await unlink(seedLockPath).catch(() => undefined);
+        return seedBundledHasaneyldrmExercises();
+      }
+      return null;
+    }
+    throw error;
+  }
   try {
     const file = await readFile(path.join(process.cwd(), "data", "hasaneyldrm-exercises.json"), "utf8");
     return importHasaneyldrmExercises(JSON.parse(file) as unknown, undefined, true);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
     throw error;
+  } finally {
+    await lock.close();
+    await unlink(seedLockPath).catch(() => undefined);
   }
 }
