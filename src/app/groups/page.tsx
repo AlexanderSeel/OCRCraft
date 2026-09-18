@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import type { TrainingFormat } from "@/domain/training/model";
 import { Disclosure } from "@/components/ui/disclosure";
 import type { ClubGroup } from "@/server/groups/group-repository";
 import { listClubGroups } from "@/server/groups/group-repository";
@@ -14,6 +15,17 @@ import {
 } from "./actions";
 
 export const dynamic = "force-dynamic";
+
+const GROUP_FORMAT_OPTIONS: readonly (readonly [TrainingFormat, string])[] = [
+  ["circuit", "Zirkel"],
+  ["tabata", "Tabata"],
+  ["amrap", "AMRAP"],
+  ["emom", "EMOM"],
+  ["rig-run", "Rig & Run"],
+  ["run-exercise", "Run + Exercise"],
+  ["technique", "Technik"],
+  ["relay", "Team / Relay"],
+];
 
 interface PageProps {
   readonly searchParams: Promise<{ archived?: string; saved?: string; error?: string }>;
@@ -93,6 +105,8 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                 <GroupMetric label="Dauer" value={group.defaultDurationMinutes ? `${group.defaultDurationMinutes} Min.` : "–"} />
                 <GroupMetric label="Ort" value={locationLabel(group.defaultLocation)} />
                 <GroupMetric label="Equipment" value={group.defaultEquipment.length ? `${group.defaultEquipment.length} Overrides` : "Global"} />
+                <GroupMetric label="Skill-Mix" value={skillDistributionLabel(group)} />
+                <GroupMetric label="Formate" value={group.preferredFormats.length ? String(group.preferredFormats.length) : "Offen"} />
                 <GroupMetric label="Max. Risiko" value={riskLabel(group.maximumRiskLevel)} />
               </dl>
 
@@ -292,6 +306,38 @@ function GroupFields({
         ))}
       </div>
     </details>
+
+    <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={Boolean(group?.skillDistribution || group?.preferredFormats.length)}>
+      <summary className="cursor-pointer text-sm font-black">Skill-Verteilung & bevorzugte Formate</summary>
+      <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+        Die Skill-Verteilung ist optional. Wenn sie gepflegt wird, müssen Beginner, Intermediate und Advanced zusammen 100 % ergeben. Bevorzugte Formate werden von Quick Create als Gruppenstandard übernommen.
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <label className="grid gap-1 text-xs font-bold">
+          Beginner %
+          <input className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal" defaultValue={group?.skillDistribution?.beginnerPercent ?? ""} max={100} min={0} name="skillBeginnerPercent" type="number" />
+        </label>
+        <label className="grid gap-1 text-xs font-bold">
+          Intermediate %
+          <input className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal" defaultValue={group?.skillDistribution?.intermediatePercent ?? ""} max={100} min={0} name="skillIntermediatePercent" type="number" />
+        </label>
+        <label className="grid gap-1 text-xs font-bold">
+          Advanced %
+          <input className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal" defaultValue={group?.skillDistribution?.advancedPercent ?? ""} max={100} min={0} name="skillAdvancedPercent" type="number" />
+        </label>
+      </div>
+      <div className="mt-4">
+        <div className="text-xs font-black uppercase tracking-[0.08em] text-[var(--muted)]">Bevorzugte Trainingsformate</div>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {GROUP_FORMAT_OPTIONS.map(([format, label]) => (
+            <label className="flex min-h-10 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-bold" key={format}>
+              <input defaultChecked={group?.preferredFormats.includes(format) ?? false} name="preferredFormats" type="checkbox" value={format} />
+              {label}
+            </label>
+          ))}
+        </div>
+      </div>
+    </details>
     </>
   );
 }
@@ -323,6 +369,11 @@ function locationLabel(location: ClubGroup["defaultLocation"]): string {
   if (location === "indoor") return "Indoor";
   if (location === "outdoor") return "Outdoor";
   return "Flexibel";
+}
+
+function skillDistributionLabel(group: ClubGroup): string {
+  if (!group.skillDistribution) return "Offen";
+  return `${group.skillDistribution.beginnerPercent}/${group.skillDistribution.intermediatePercent}/${group.skillDistribution.advancedPercent} %`;
 }
 
 function riskLabel(risk: ClubGroup["maximumRiskLevel"]): string {
