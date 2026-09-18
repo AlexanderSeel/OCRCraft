@@ -158,9 +158,7 @@ export function validateTrainingSession(
   }
 
   if (
-    ((rules.safetyProfileAudience ?? session.group.audience) === "kids"
-      || (rules.safetyProfileAudience ?? session.group.audience) === "youth")
-    && rules.requiredSupervision
+    rules.requiredSupervision
     && rules.requiredSupervision !== "normal"
   ) {
     const label = rules.requiredSupervision === "direct" ? "direkte Traineraufsicht" : "erhöhte Aufsicht";
