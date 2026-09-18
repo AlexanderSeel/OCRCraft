@@ -98,3 +98,54 @@ export function evaluateAiUsageLimits(input: {
       && input.totalTokens >= input.monthlyTextTokenLimit,
   };
 }
+
+export type AiProviderRoutingState =
+  | "ready"
+  | "inactive"
+  | "unassigned"
+  | "auth_missing"
+  | "model_missing"
+  | "limit_reached";
+
+export function evaluateAiProviderRoutingState(input: {
+  readonly enabled: boolean;
+  readonly providerKind: AiProviderKind;
+  readonly authMode: AiProviderAuthMode;
+  readonly environmentKeyAvailable: boolean;
+  readonly hasStoredApiKey: boolean;
+  readonly hasOAuthCredential: boolean;
+  readonly capabilities: readonly AiCapability[];
+  readonly textModelId: string | null;
+  readonly imageModelId: string | null;
+  readonly requestLimitReached: boolean;
+  readonly textTokenLimitReached: boolean;
+}): AiProviderRoutingState {
+  if (!input.enabled) return "inactive";
+  if (input.capabilities.length === 0) return "unassigned";
+  if (input.requestLimitReached || input.textTokenLimitReached) return "limit_reached";
+
+  const authOptional = input.providerKind === "openai-compatible";
+  const authAvailable = input.authMode === "oauth"
+    ? input.hasOAuthCredential
+    : input.authMode === "encrypted_key"
+      ? input.hasStoredApiKey || authOptional
+      : input.environmentKeyAvailable || authOptional;
+  if (!authAvailable) return "auth_missing";
+
+  const needsText = input.capabilities.some((capability) => capability !== "image");
+  const needsImage = input.capabilities.includes("image");
+  if ((needsText && !input.textModelId?.trim()) || (needsImage && !input.imageModelId?.trim())) {
+    return "model_missing";
+  }
+
+  return "ready";
+}
+
+export function aiProviderRoutingStateLabel(state: AiProviderRoutingState): string {
+  if (state === "ready") return "Bereit";
+  if (state === "inactive") return "Inaktiv";
+  if (state === "unassigned") return "Nicht zugewiesen";
+  if (state === "auth_missing") return "Zugang fehlt";
+  if (state === "model_missing") return "Modell fehlt";
+  return "Limit erreicht";
+}
