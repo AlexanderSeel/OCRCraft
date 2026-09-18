@@ -24,13 +24,10 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
         </div>
         <PrimaryNavigation variant="sidebar" />
         <div className="border-t border-[var(--sidebar-border)] p-4">
-          <Link className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" href="/admin#database-settings">
-            Einstellungen
-          </Link>
           <Link className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" href="/admin/outdoor-variants">
             Outdoor-Varianten
           </Link>
-          <Link className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" href="/admin">
+          <Link className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" href="/admin?tab=overview">
             Administration
           </Link>
         </div>
@@ -47,10 +44,7 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
               <TrainingBuilderResumeLink />
               <ThemeSwitcher />
               <nav aria-label="Schnellzugriff" className="flex items-center gap-1">
-                <Link className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-xs font-bold text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)] sm:px-3 sm:text-sm" href="/admin#database-settings">
-                  <span className="sm:hidden">Setup</span><span className="hidden sm:inline">Einstellungen</span>
-                </Link>
-                <Link className="inline-flex min-h-11 items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs font-black hover:bg-[var(--surface-subtle)] sm:px-3 sm:text-sm" href="/admin">
+                <Link className="inline-flex min-h-11 items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs font-black hover:bg-[var(--surface-subtle)] sm:px-3 sm:text-sm" href="/admin?tab=overview">
                   <span className="sm:hidden">Admin</span><span className="hidden sm:inline">Administration</span>
                 </Link>
               </nav>

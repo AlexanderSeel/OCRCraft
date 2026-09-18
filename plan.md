@@ -46,7 +46,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Übungskatalog
 
-- [ ] Katalog über die 157 Startübungen hinaus mit kuratierten Lücken erweitern.
+- [ ] Katalog über alle Übungen hinaus mit kuratierten Lücken erweitern.
 - [ ] Zusätzliche deutsche/englische Aliase und Trainerbegriffe für alle Seeds kuratieren.
 - [ ] Fachliche Einzelprüfung und Anreicherung aller verbleibenden Startübungen abschließen.
 - [ ] Weitere Katalogkohorten versioniert, zweisprachig und mit Detail-/Sicherheits-Gates aufnehmen.
@@ -140,6 +140,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - Gruppen-Grundmodell, Lauf-/OCR-Formate, Team-/Stationskapazität, Übergangszeiten und strukturierte Hauptteilprogrammierung.
 - OpenAI-`gpt-image-2`-Bildpipeline mit Dry Run, stabilen Seed-Dateinamen, Quellen-/Reviewmetadaten und S3-Abstraktion.
 - Wiederverwendbare Dialog-/Disclosure-Komponenten mit Fokusmanagement, Escape, Fokusfalle, Scroll-Lock, sichtbarem Fokus und konsistenten Panels.
+- Gemeinsamer Administrationsbereich mit Tabs für Übersicht, Datenbank, Datenqualität und Einstellungen; doppelte Settings-/Admin-Navigation entfernt.
 - Light/Dark/System-Theme, semantische UI-Tokens, responsive Layouts und laufende CI-Gates.
 
 ## CI und Definition of Done

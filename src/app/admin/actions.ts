@@ -19,20 +19,20 @@ export async function reseedDatabaseAction(formData: FormData): Promise<void> {
   );
 
   if (!confirmation.success) {
-    redirect("/admin?reseedError=confirmation#database-settings");
+    redirect("/admin?tab=database&reseedError=confirmation#database-settings");
   }
 
   try {
     await ensureDatabaseReady();
     await reseedAllDatabaseData();
   } catch {
-    redirect("/admin?reseedError=failed#database-settings");
+    redirect("/admin?tab=database&reseedError=failed#database-settings");
   }
 
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/exercises");
-  redirect("/admin?reseeded=1#database-settings");
+  redirect("/admin?tab=database&reseeded=1#database-settings");
 }
 
 export async function runOutdoorVariantEnrichmentAction(): Promise<void> {

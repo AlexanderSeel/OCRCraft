@@ -4,6 +4,7 @@ import { MuscleMapDebugSetting } from "@/components/admin/muscle-map-debug-setti
 import { DuplicateReviewPanel } from "@/components/admin/duplicate-review-panel";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import { Disclosure } from "@/components/ui/disclosure";
+import { AdminTabs, normalizeAdminTab } from "@/components/admin/admin-tabs";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, scanDuplicateExercisesAction } from "./actions";
@@ -15,6 +16,7 @@ interface AdminPageProps {
   readonly searchParams: Promise<{
     readonly reseeded?: string;
     readonly reseedError?: string;
+    readonly tab?: string;
   }>;
 }
 
@@ -25,7 +27,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     listDuplicateReviewTasks(),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
-  const { reseeded, reseedError } = await searchParams;
+  const { reseeded, reseedError, tab } = await searchParams;
+  const activeTab = normalizeAdminTab(tab);
 
   return (
     <AppShell
@@ -33,15 +36,16 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       subtitle="Systemstatus und schrittweise Administration von OCRCraft."
     >
       <div className="space-y-6">
-        <SeedCompletenessReportView report={seedCompleteness} />
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+        <AdminTabs active={activeTab} />
+        {activeTab === "overview" ? <SeedCompletenessReportView report={seedCompleteness} /> : null}
+        {activeTab === "quality" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität</div><h2 className="mt-1 text-xl font-black">Doppelungen prüfen</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Die Engine vergleicht normalisierte Namen, Aliase, Equipment, Körperregionen und externe IDs. Zusammenführen archiviert den überzähligen Datensatz und erhält die Trainingshistorie.</p></div>
             <form action={scanDuplicateExercisesAction}><ActionProgressButton className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" pendingLabel="Vergleiche Namen, Aliase und Zuordnungen …">Jetzt prüfen</ActionProgressButton></form>
           </div>
           {duplicateTasks.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Keine offenen Doppelungsaufgaben.</p> : <DuplicateReviewPanel bulkAction={resolveDuplicateExercisesBulkAction} comparisonRecords={Object.fromEntries(comparisonRecords)} resolveAction={resolveDuplicateExerciseAction} tasks={duplicateTasks} />}
-        </section>
-        <section id="database-settings" className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+        </section> : null}
+        {activeTab === "database" ? <section id="database-settings" className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="max-w-3xl">
             <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenbank</div>
             <h2 className="mt-1 text-xl font-black">Initialdaten neu einspielen</h2>
@@ -90,10 +94,16 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               </form>
             </div>
           </Disclosure>
-          <MuscleMapDebugSetting />
-        </section>
+        </section> : null}
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+        {activeTab === "settings" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+          <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Einstellungen</div>
+          <h2 className="mt-1 text-xl font-black">Darstellung und Diagnose</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Optionale Diagnosewerkzeuge bleiben deaktiviert, solange sie nicht ausdrücklich benötigt werden.</p>
+          <MuscleMapDebugSetting />
+        </section> : null}
+
+        {activeTab === "database" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
             <div>
               <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">DuckDB Search</div>
@@ -120,13 +130,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               </article>
             ))}
           </div>
-        </section>
+        </section> : null}
 
-        <section className="grid gap-4 md:grid-cols-3">
+        {activeTab === "overview" ? <section className="grid gap-4 md:grid-cols-3">
           <AdminArea title="Übungen" text="Create/Edit/Archive ist bereits in der Übungsbibliothek verfügbar." status="aktiv" />
           <AdminArea title="Suche" text="Status ist sichtbar. Rebuild/Search Profiles folgen nach RBAC." status="im Aufbau" />
           <AdminArea title="Benutzer & Rollen" text="Wird vor schreibenden globalen Admin-Aktionen umgesetzt." status="offen" />
-        </section>
+        </section> : null}
       </div>
     </AppShell>
   );

@@ -238,7 +238,7 @@ export default function HomePage() {
               <Link className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/groups">
                 Vereinsgruppen definieren
               </Link>
-              <Link className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/admin#database-settings">
+              <Link className="block rounded-xl bg-[var(--surface-subtle)] px-4 py-3 font-bold hover:bg-[var(--surface-elevated)]" href="/admin?tab=database">
                 Such- & Trainingsregeln einstellen
               </Link>
             </div>

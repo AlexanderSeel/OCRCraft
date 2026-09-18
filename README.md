@@ -39,6 +39,10 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Bet
 - OpenAI-Images-Pipeline mit `gpt-image-2`, Dry Run, stabilen Seed-Dateinamen, Reviewstatus und Dateisystem/S3-Abstraktion
 - generierte Bilder bleiben an stabile Übungs-/Seed-IDs gebunden und werden bei Reseeds nicht automatisch gelöscht
 
+### Administration
+
+Administration und Einstellungen liegen in einem gemeinsamen Bereich mit vier Tabs: Übersicht, Datenbank, Datenqualität und Einstellungen. Dort sind Seed-Vollständigkeit, Dublettenprüfung, DuckDB-/FTS-Status, der bestätigungspflichtige Datenbank-Reset und das optionale Muskelkarten-Debugging getrennt erreichbar.
+
 ### UI/UX
 
 - Light-, Dark- und System-Theme mit semantischen Tokens
