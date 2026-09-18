@@ -6,6 +6,7 @@ import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { isRoleAtLeast } from "./identity-core";
 import { verifyActorAssertion } from "./identity-assertion";
+import { hashPassword, verifyPassword } from "./password";
 
 export const userRoleSchema = z.enum(["trainer", "admin", "super_admin"]);
 export type UserRole = z.infer<typeof userRoleSchema>;
@@ -100,21 +101,37 @@ export async function listAppUsers(): Promise<readonly AppUser[]> {
   });
 }
 
-export async function createAppUser(input: { readonly email: string; readonly displayName: string; readonly role: UserRole }): Promise<AppUser> {
+export async function createAppUser(input: { readonly email: string; readonly displayName: string; readonly role: UserRole; readonly password?: string }): Promise<AppUser> {
   await requireSuperAdmin();
   const email = emailSchema.parse(input.email);
   const displayName = z.string().trim().min(1).max(120).parse(input.displayName);
   const role = userRoleSchema.parse(input.role);
+  const passwordHash = input.password ? hashPassword(input.password) : null;
   return withDuckDbConnection(async (connection) => {
     await connection.run(
-      `INSERT INTO app_users (email,display_name,role) VALUES ($email,$displayName,$role)`,
-      { email, displayName, role },
+      `INSERT INTO app_users (email,display_name,role,password_hash) VALUES ($email,$displayName,$role,$passwordHash)`,
+      { email, displayName, role, passwordHash },
     );
     const reader = await connection.runAndReadAll(
       `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR FROM app_users WHERE email=$email`,
       { email },
     );
     return toUser(reader.getRows()[0]);
+  });
+}
+
+export async function authenticateAppUser(emailInput: string, password: string): Promise<AppUser | null> {
+  const email = emailSchema.parse(emailInput);
+  if (password.length < 1 || password.length > 200) return null;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `SELECT id::VARCHAR,email,display_name,role,active,created_at::VARCHAR,password_hash FROM app_users WHERE lower(email)=lower($email) LIMIT 1`,
+      { email },
+    );
+    const row = reader.getRows()[0];
+    if (!row || !Boolean(row[4]) || !verifyPassword(password, row[6] == null ? null : String(row[6]))) return null;
+    return toUser(row);
   });
 }
 

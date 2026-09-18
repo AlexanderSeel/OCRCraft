@@ -155,6 +155,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - AppShell zeigt im Seitenkopf nur kontextbezogene Aktionen; Administration, Darstellung und Diagnose sind über die Hauptnavigation und den Einstellungen-Tab erreichbar.
 - Darstellung und optionale Diagnose sind im Administrations-Tab Einstellungen gebündelt; der globale Seitenkopf bleibt frei von doppelten Systemaktionen.
 - Adminbereich mit Benutzer-/Rollenverwaltung und lokalem Login-Dialog; Trainings-Readonly-Ansicht bleibt ohne Login teilbar.
+- Klassische E-Mail-/Passwort-Anmeldung mit gesalzenem scrypt-Hash und optionalem Zugangscode-Fallback.
 
 ## CI und Definition of Done
 
