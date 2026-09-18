@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
-import { deleteExternalMediaAsset, saveExternalMediaAsset, setMediaReviewStatus } from "@/server/media/media-catalog-repository";
+import { deleteExternalMediaAsset, retireLegacyTriptychsAfterApprovedSequence, saveExternalMediaAsset, setMediaReviewStatus } from "@/server/media/media-catalog-repository";
 import { requireAdmin } from "@/server/auth/identity-service";
 import { recordAuditEvent } from "@/server/db/audit-service";
 import { hasConfiguredExerciseImageProvider } from "@/server/images/configured-image-generator";
@@ -226,4 +226,33 @@ export async function deleteExternalMediaAction(formData: FormData): Promise<voi
   revalidatePath("/media");
   revalidatePath("/exercises");
   redirect("/media?externalDeleted=1");
+}
+
+
+export async function finalizeLegacyTriptychMigrationAction(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const exerciseId = z.string().uuid().safeParse(formData.get("exerciseId"));
+  if (!exerciseId.success) redirect("/media?legacyError=invalid");
+
+  let retired = 0;
+  try {
+    retired = await retireLegacyTriptychsAfterApprovedSequence(exerciseId.data);
+    if (retired > 0) {
+      await recordAuditEvent({
+        action: "media.legacy_triptych.retire",
+        entityType: "exercise",
+        entityId: exerciseId.data,
+        actorType: "user",
+        actorId: actor.id,
+        metadata: { retired },
+      });
+    }
+  } catch {
+    redirect("/media?legacyError=save");
+  }
+  if (retired === 0) redirect("/media?legacyError=approval");
+
+  revalidatePath("/media");
+  revalidatePath("/exercises/" + exerciseId.data);
+  redirect("/media?legacyRetired=" + String(retired));
 }

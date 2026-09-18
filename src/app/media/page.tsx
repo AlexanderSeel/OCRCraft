@@ -9,6 +9,8 @@ import {
   getMediaCatalogSummary,
   listMediaCatalog,
   listMediaGenerationCandidates,
+  listLegacyTriptychMigrationCandidates,
+  type LegacyTriptychMigrationCandidate,
   type MediaCatalogItem,
   type MediaGenerationCandidate,
 } from "@/server/media/media-catalog-repository";
@@ -17,7 +19,8 @@ import {
   listRecentMediaGenerationJobs,
   type RecentMediaGenerationJob,
 } from "@/server/media/media-generation-job-repository";
-import { cleanupOrphanedMediaAction, deleteExternalMediaAction, queueMediaBatchAction, retryMediaGenerationJobAction, saveExternalMediaAction, updateMediaReviewStatusAction } from "./actions";
+import { cleanupOrphanedMediaAction, deleteExternalMediaAction, finalizeLegacyTriptychMigrationAction, queueMediaBatchAction, retryMediaGenerationJobAction, saveExternalMediaAction, updateMediaReviewStatusAction } from "./actions";
+import { getLegacyMediaMigrationState, legacyMediaMigrationStateLabel } from "@/server/media/legacy-media-migration-core";
 import { getMediaMaintenanceSummary } from "@/server/media/media-maintenance-service";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +44,8 @@ interface PageProps {
     externalSaved?: string;
     externalDeleted?: string;
     externalError?: string;
+    legacyRetired?: string;
+    legacyError?: string;
   }>;
 }
 
@@ -53,7 +58,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
   const mediaType = allowed(params.type, ["image", "video", "illustration"]);
   const missingQuery = params.missingQ?.trim() ?? "";
 
-  const [summary, assets, generationQueue, missingImageExercises, recentJobs, maintenance] = await Promise.all([
+  const [summary, assets, generationQueue, missingImageExercises, recentJobs, maintenance, legacyCandidates] = await Promise.all([
     getMediaCatalogSummary(),
     listMediaCatalog({
       query,
@@ -66,6 +71,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
     listMediaGenerationCandidates(missingQuery, 24),
     listRecentMediaGenerationJobs(12),
     getMediaMaintenanceSummary(),
+    listLegacyTriptychMigrationCandidates(40),
   ]);
 
   return (
@@ -136,6 +142,18 @@ export default async function MediaPage({ searchParams }: PageProps) {
         {params.externalError ? (
           <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
             Externes Medium konnte nicht gespeichert werden. Prüfe HTTPS-URLs, Lizenz und Einwilligungsstatus.
+          </p>
+        ) : null}
+        {params.legacyRetired ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            {params.legacyRetired} Legacy-Triptychon-Asset(s) wurden nach Freigabe der Sequenz als ersetzt markiert.
+          </p>
+        ) : null}
+        {params.legacyError ? (
+          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+            {params.legacyError === "approval"
+              ? "Die Migration kann erst abgeschlossen werden, wenn mindestens eine erzeugte Sequenz fachlich freigegeben wurde."
+              : "Die Legacy-Migration konnte nicht abgeschlossen werden."}
           </p>
         ) : null}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
@@ -285,6 +303,27 @@ export default async function MediaPage({ searchParams }: PageProps) {
                 <p className="rounded-xl bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">Noch keine KI-Bildjobs vorhanden.</p>
               )}
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-black">Legacy-Triptychon → Sequenzbild</h2>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+                Alte dreiteilige AI-Illustrationen werden nicht automatisch überschrieben. Zuerst wird eine neue Bewegungssequenz erzeugt und fachlich geprüft; erst nach deren Freigabe kann das Legacy-Asset als ersetzt markiert werden.
+              </p>
+            </div>
+            <span className="rounded-full bg-[var(--surface-subtle)] px-3 py-1 text-xs font-black">{legacyCandidates.length} offen</span>
+          </div>
+          <div className="mt-4 grid gap-2">
+            {legacyCandidates.length ? legacyCandidates.map((candidate) => (
+              <LegacyMigrationRow candidate={candidate} key={candidate.exerciseId} />
+            )) : (
+              <p className="rounded-xl bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">
+                Keine aktiven Legacy-Triptychon-Assets mehr zu migrieren.
+              </p>
+            )}
           </div>
         </section>
 
@@ -492,6 +531,51 @@ function MediaGenerationCandidateRow({ candidate }: { readonly candidate: MediaG
         />
         {candidate.activeJobCount > 0 ? "Bereits eingeplant" : "Auswählen"}
       </label>
+    </article>
+  );
+}
+
+function LegacyMigrationRow({ candidate }: { readonly candidate: LegacyTriptychMigrationCandidate }) {
+  const state = getLegacyMediaMigrationState(candidate);
+  return (
+    <article className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+      <div className="min-w-0">
+        <Link className="font-black underline-offset-4 hover:underline" href={`/exercises/${candidate.exerciseId}`}>
+          {candidate.exerciseName}
+        </Link>
+        <div className="mt-1 text-xs text-[var(--muted)]">
+          {candidate.legacyAssetCount} Legacy · {candidate.pendingSequenceCount} Sequenz(en) im Review · {legacyMediaMigrationStateLabel(state)}
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {state === "needs_generation" ? (
+          <form action={queueMediaBatchAction}>
+            <input name="batchAction" type="hidden" value="generate_ai_image" />
+            <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
+            <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
+              Sequenz erzeugen
+            </button>
+          </form>
+        ) : null}
+        {state === "review_pending" ? (
+          <Link className="grid min-h-10 place-items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href={`/media?q=${encodeURIComponent(candidate.exerciseName)}&review=pending`}>
+            Sequenz prüfen
+          </Link>
+        ) : null}
+        {state === "generating" ? (
+          <span className="grid min-h-10 place-items-center rounded-lg border border-[var(--border)] px-3 text-xs font-black text-[var(--muted)]">
+            Job läuft
+          </span>
+        ) : null}
+        {state === "ready_to_finalize" ? (
+          <form action={finalizeLegacyTriptychMigrationAction}>
+            <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
+            <button className="min-h-10 rounded-lg border border-[var(--danger)] px-3 text-xs font-black text-[var(--danger)]" type="submit">
+              Legacy als ersetzt markieren
+            </button>
+          </form>
+        ) : null}
+      </div>
     </article>
   );
 }

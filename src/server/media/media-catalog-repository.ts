@@ -422,3 +422,127 @@ export async function deleteExternalMediaAsset(assetId: string): Promise<boolean
     return result.getRows().length === 1;
   });
 }
+
+
+export interface LegacyTriptychMigrationCandidate {
+  readonly exerciseId: string;
+  readonly exerciseName: string;
+  readonly seedKey: string | null;
+  readonly legacyAssetCount: number;
+  readonly pendingSequenceCount: number;
+  readonly approvedSequenceCount: number;
+  readonly activeJobCount: number;
+}
+
+export async function listLegacyTriptychMigrationCandidates(
+  limit = 40,
+): Promise<readonly LegacyTriptychMigrationCandidate[]> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      SELECT
+        e.id::VARCHAR,
+        COALESCE(t.name,e.canonical_name),
+        e.seed_key,
+        count(*) FILTER (
+          WHERE m.source_type='ai_generated'
+            AND m.illustration_format='legacy_triptych'
+            AND m.generation_status='generated'
+            AND m.review_status<>'rejected'
+        ) AS legacy_count,
+        (
+          SELECT count(*)
+          FROM exercise_media_assets s
+          WHERE s.exercise_id=e.id
+            AND s.source_type='ai_generated'
+            AND s.illustration_format='exercise_sequence'
+            AND s.generation_status='generated'
+            AND s.review_status='pending'
+        ) AS pending_sequences,
+        (
+          SELECT count(*)
+          FROM exercise_media_assets s
+          WHERE s.exercise_id=e.id
+            AND s.source_type='ai_generated'
+            AND s.illustration_format='exercise_sequence'
+            AND s.generation_status='generated'
+            AND s.review_status='approved'
+        ) AS approved_sequences,
+        (
+          SELECT count(*)
+          FROM exercise_image_generation_jobs j
+          WHERE j.exercise_id=e.id
+            AND j.status IN ('queued','running')
+        ) AS active_jobs
+      FROM exercises e
+      JOIN exercise_media_assets m ON m.exercise_id=e.id
+      LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
+      WHERE e.archived=false
+      GROUP BY e.id,t.name,e.canonical_name,e.seed_key
+      HAVING count(*) FILTER (
+        WHERE m.source_type='ai_generated'
+          AND m.illustration_format='legacy_triptych'
+          AND m.generation_status='generated'
+          AND m.review_status<>'rejected'
+      ) > 0
+      ORDER BY
+        CASE WHEN (
+          SELECT count(*)
+          FROM exercise_media_assets s
+          WHERE s.exercise_id=e.id
+            AND s.source_type='ai_generated'
+            AND s.illustration_format='exercise_sequence'
+            AND s.generation_status='generated'
+            AND s.review_status='approved'
+        ) > 0 THEN 0 ELSE 1 END,
+        COALESCE(t.name,e.canonical_name)
+      LIMIT $limit
+    `, { limit: Math.max(1, Math.min(200, limit)) });
+
+    return reader.getRows().map((row) => ({
+      exerciseId: String(row[0]),
+      exerciseName: String(row[1]),
+      seedKey: row[2] == null ? null : String(row[2]),
+      legacyAssetCount: Number(row[3] ?? 0),
+      pendingSequenceCount: Number(row[4] ?? 0),
+      approvedSequenceCount: Number(row[5] ?? 0),
+      activeJobCount: Number(row[6] ?? 0),
+    }));
+  });
+}
+
+export async function retireLegacyTriptychsAfterApprovedSequence(
+  exerciseId: string,
+): Promise<number> {
+  if (!UUID_PATTERN.test(exerciseId)) return 0;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      UPDATE exercise_media_assets
+      SET
+        review_status='rejected',
+        usage_note=CASE
+          WHEN COALESCE(trim(usage_note),'')=''
+            THEN 'Durch fachlich freigegebene exercise_sequence ersetzt.'
+          ELSE usage_note || ' · Durch fachlich freigegebene exercise_sequence ersetzt.'
+        END,
+        updated_at=current_timestamp
+      WHERE exercise_id=$exerciseId::UUID
+        AND source_type='ai_generated'
+        AND illustration_format='legacy_triptych'
+        AND generation_status='generated'
+        AND review_status<>'rejected'
+        AND EXISTS (
+          SELECT 1
+          FROM exercise_media_assets replacement
+          WHERE replacement.exercise_id=$exerciseId::UUID
+            AND replacement.source_type='ai_generated'
+            AND replacement.illustration_format='exercise_sequence'
+            AND replacement.generation_status='generated'
+            AND replacement.review_status='approved'
+        )
+      RETURNING id::VARCHAR
+    `, { exerciseId });
+    return reader.getRows().length;
+  });
+}
