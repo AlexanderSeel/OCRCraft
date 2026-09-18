@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { CLUB_RULE_PROFILES } from "@/domain/training/club-rules";
 import type { TrainingFormat } from "@/domain/training/model";
 import { Disclosure } from "@/components/ui/disclosure";
 import type { ClubGroup } from "@/server/groups/group-repository";
@@ -107,6 +108,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                 <GroupMetric label="Equipment" value={group.defaultEquipment.length ? `${group.defaultEquipment.length} Overrides` : "Global"} />
                 <GroupMetric label="Skill-Mix" value={skillDistributionLabel(group)} />
                 <GroupMetric label="Formate" value={group.preferredFormats.length ? String(group.preferredFormats.length) : "Offen"} />
+                <GroupMetric label="Regelprofil" value={ruleProfileLabel(group.ruleProfile)} />
                 <GroupMetric label="Max. Risiko" value={riskLabel(group.maximumRiskLevel)} />
               </dl>
 
@@ -268,6 +270,18 @@ function GroupFields({
         </select>
       </label>
       <label className="grid gap-1.5 text-sm font-bold">
+        Club-Regelprofil
+        <select
+          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          defaultValue={group?.ruleProfile ?? "standard"}
+          name="ruleProfile"
+        >
+          {CLUB_RULE_PROFILES.map((profile) => (
+            <option key={profile.key} value={profile.key}>{profile.labelDe}</option>
+          ))}
+        </select>
+      </label>
+      <label className="grid gap-1.5 text-sm font-bold">
         Maximales Risikoniveau
         <select
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
@@ -369,6 +383,10 @@ function locationLabel(location: ClubGroup["defaultLocation"]): string {
   if (location === "indoor") return "Indoor";
   if (location === "outdoor") return "Outdoor";
   return "Flexibel";
+}
+
+function ruleProfileLabel(profile: ClubGroup["ruleProfile"]): string {
+  return CLUB_RULE_PROFILES.find((item) => item.key === profile)?.labelDe ?? profile;
 }
 
 function skillDistributionLabel(group: ClubGroup): string {
