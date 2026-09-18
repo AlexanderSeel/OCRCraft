@@ -136,7 +136,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
           </Disclosure>
         ) : null}
 
-        <section className="grid gap-4 xl:grid-cols-2">
+        <section className="catalog-results grid gap-4 xl:grid-cols-2">
           {groups.map((group) => (
             <article
               className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"

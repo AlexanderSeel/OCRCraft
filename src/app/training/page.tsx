@@ -110,7 +110,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
         </div>
 
         {sessions.length > 0 ? (
-          <section className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+          <section className="catalog-results grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
             {sessions.map((session) => (
               <article
                 className="flex min-h-56 flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"

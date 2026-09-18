@@ -407,7 +407,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
         </details>
 
         {assets.length ? (
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <section className="catalog-results grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {assets.map((asset) => <MediaCard asset={asset} key={asset.id} />)}
           </section>
         ) : (

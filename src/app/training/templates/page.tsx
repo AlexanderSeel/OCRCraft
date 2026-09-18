@@ -140,7 +140,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
           <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs font-black">{templates.length} versionierte Startvorlagen</span>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <section className="catalog-results grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {templates.map((item) => (
             <article className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" key={item.key}>
               <div className="flex flex-wrap gap-2 text-xs font-black">

@@ -51,7 +51,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Architektur- und UI-Review 2026-09
 
-- [ ] Gemeinsame Kataloglisten vollständig auf `OverviewLayout` migrieren: Games, Hindernisse, Medien, Gruppen, AI-Entwürfe und Outdoor erhalten dieselbe Ansichtsauswahl, Filter-/Suchzustand, Ergebniszähler und Pagination wie Übungen.
+- [ ] Gemeinsame Kataloglisten fachlich vollständig vereinheitlichen: Die gemeinsame `OverviewLayout`-Ansicht und responsive Ergebnisdichte sind für Games, Hindernisse, Medien, Gruppen, AI-Entwürfe und Outdoor umgesetzt; ein gemeinsames Filter-Sidepanel, URL-Suchzustand, Ergebniszähler und Pagination-Primitive stehen noch aus.
 - [ ] Listen- und Detaildatenquellen auf statische Legacy-Platzhalter prüfen; insbesondere Dashboard-Kennzahlen und Vorschaukarten dürfen ausschließlich aus Repository-/Service-Daten entstehen.
 - [ ] Quick-Create- und Builder-E2E weiter ausbauen: Vorlagenauswahl und responsive Empty-/Shell-/Overflow-Gates sind abgedeckt; Training-Editor und Kids/Youth-Schutzpfade fehlen noch.
 - [ ] Übrig gebliebene Legacy-UI-Texte und feste Katalogzähler in CI als Review-Gate erkennen.

@@ -75,7 +75,7 @@ export default async function GamesPage({ searchParams }: PageProps) {
         </section>
 
         {games.length ? (
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <section className="catalog-results grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {games.map((game, index) => (
               <article className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]" key={game.id}>
                 {game.imageUrl ? (

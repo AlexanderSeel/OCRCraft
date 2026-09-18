@@ -165,7 +165,7 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
         </div>
 
         {obstacles.length ? (
-          <section className="grid gap-4 xl:grid-cols-2">
+          <section className="catalog-results grid gap-4 xl:grid-cols-2">
             {obstacles.map((obstacle) => <ObstacleCard obstacle={obstacle} key={obstacle.exerciseId} />)}
           </section>
         ) : (

@@ -268,6 +268,11 @@ html[data-theme="dark"] [class~="hover:bg-[#e5e9ed]"]:hover {
   .muscle-workspace { grid-template-columns: minmax(200px, 32%) minmax(0, 1fr); }
 }
 .exercise-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.catalog-results { min-width: 0; }
+.overview-layout[data-view="list"] .catalog-results { grid-template-columns: minmax(0, 1fr); }
+.overview-layout[data-view="small"] .catalog-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.overview-layout[data-view="medium"] .catalog-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.overview-layout[data-view="large"] .catalog-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
 .exercise-card-image { height: 120px; }
 .overview-layout[data-view="small"] .exercise-card-muscles,
 .overview-layout[data-view="small"] .exercise-card-tags,

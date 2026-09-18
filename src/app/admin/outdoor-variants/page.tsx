@@ -123,7 +123,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
               Keine importierte aktive Übung mit erkannter Studio-Equipment-Abhängigkeit gefunden.
             </div>
           ) : (
-            <div className="mt-5 space-y-3">
+            <div className="catalog-results mt-5 space-y-3">
               {candidates.map((candidate) => <CandidateCard candidate={candidate} key={candidate.exerciseId} />)}
             </div>
           )}

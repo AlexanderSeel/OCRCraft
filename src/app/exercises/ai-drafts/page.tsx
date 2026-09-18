@@ -92,7 +92,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
           </form>
         </section>
 
-        <section className="space-y-4">
+        <section className="catalog-results space-y-4">
           <div>
             <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Review Queue</div>
             <h2 className="mt-1 text-xl font-black">{showHistory ? "Alle AI-Entwürfe" : "Offene AI-Entwürfe"}</h2>
@@ -103,7 +103,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
               {showHistory ? "Noch keine AI-Übungsentwürfe vorhanden." : "Keine offenen AI-Übungsentwürfe."}
             </div>
           ) : (
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="catalog-results grid gap-4 xl:grid-cols-2">
               {drafts.map((draft) => (
                 <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" key={draft.id}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
