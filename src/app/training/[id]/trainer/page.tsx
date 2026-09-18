@@ -28,12 +28,7 @@ export default async function TrainingTrainerPage({ params }: PageProps) {
     >
       <div className="mx-auto max-w-6xl">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 print:hidden">
-          <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
-            href={`/training/${session.id}`}
-          >
-            ← Bearbeiten
-          </Link>
+          <span className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black text-[var(--muted)]">Readonly-Ansicht</span>
           <div className="flex flex-wrap gap-2">
             <Link
               className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"

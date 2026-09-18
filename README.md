@@ -44,7 +44,9 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Bet
 - Medienwarteschlange mit dedupliziertem Worker und periodischer Statusaktualisierung ohne wiederholte Request-Callbacks
 - generierte Bilder bleiben an stabile Übungs-/Seed-IDs gebunden und werden bei Reseeds nicht automatisch gelöscht
 
-Für den privaten Vereinsbetrieb kann die lokale Bootstrap-Identität verwendet werden. Mit `OCRCRAFT_AUTH_REQUIRED=1` und `OCRCRAFT_ACTOR_EMAIL=<email>` müssen globale Admin-Aktionen einem aktiven Benutzer mit passender Rolle zugeordnet sein. Die Rollen `trainer`, `admin` und `super_admin` werden in DuckDB persistiert. Ein vorgeschalteter Vereins-Login kann alternativ einen fünf Minuten gültigen HMAC-Header übergeben: `OCRCRAFT_ACTOR_ASSERTION_SECRET=<secret>` und optional `OCRCRAFT_ACTOR_ASSERTION_HEADER=<header-name>` (Standard: `x-ocrcraft-actor`). Der Headerwert ist `email|unixSeconds|hexSignature`; signiert wird `email|unixSeconds` mit HMAC-SHA256. Das Secret bleibt ausschließlich in der Prozessumgebung.
+Für den privaten Vereinsbetrieb kann die lokale Bootstrap-Identität verwendet werden. Im Adminbereich lassen sich Benutzer und Rollen verwalten; der lokale Login-Dialog verwendet dafür `OCRCRAFT_LOGIN_CODE` und ein signiertes httpOnly Cookie. Mit `OCRCRAFT_AUTH_REQUIRED=1` müssen globale Admin-Aktionen einem aktiven Benutzer mit passender Rolle zugeordnet sein. Die Rollen `trainer`, `admin` und `super_admin` werden in DuckDB persistiert. Ein vorgeschalteter Vereins-Login kann alternativ einen fünf Minuten gültigen HMAC-Header übergeben: `OCRCRAFT_ACTOR_ASSERTION_SECRET=<secret>` und optional `OCRCRAFT_ACTOR_ASSERTION_HEADER=<header-name>` (Standard: `x-ocrcraft-actor`). Der Headerwert ist `email|unixSeconds|hexSignature`; signiert wird `email|unixSeconds` mit HMAC-SHA256. Das Secret bleibt ausschließlich in der Prozessumgebung.
+
+Trainings können über `/training/<id>/trainer` als schreibgeschützte Ansicht ohne Login geteilt werden. Diese Ansicht enthält keine Bearbeitungsaktionen.
 
 ### Administration
 

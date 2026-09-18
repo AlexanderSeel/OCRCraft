@@ -18,9 +18,13 @@ Für den lokalen Vereinsbetrieb wird beim ersten Zugriff automatisch `owner@ocrc
 ```text
 OCRCRAFT_AUTH_REQUIRED=1
 OCRCRAFT_ACTOR_EMAIL=trainer@example.org
+OCRCRAFT_LOGIN_CODE=<vereins-code>
+OCRCRAFT_ACTOR_ASSERTION_SECRET=<langes-secret>
 ```
 
 Der konfigurierte Actor muss als aktiver Benutzer in DuckDB vorhanden sein. Schreibende globale Aktionen prüfen die Rolle serverseitig; die UI-Prüfung ersetzt keine Autorisierung. Eine vorgeschaltete Vereinsanmeldung muss nach erfolgreicher Anmeldung die Actor-E-Mail für den Prozess setzen.
+
+Für den lokalen Login-Dialog im Adminbereich wird zusätzlich `OCRCRAFT_LOGIN_CODE` benötigt. Der Code wird nur serverseitig verglichen; die Anmeldung erstellt ein acht Stunden gültiges, httpOnly Cookie. Ohne gesetzten Login-Code bleibt die Anmeldung deaktiviert.
 
 Für einen vorgeschalteten Login ohne gemeinsam genutzte Prozessvariable kann der Proxy pro Request den Header `x-ocrcraft-actor` setzen. Der Wert hat die Form `email|unixSeconds|hexSignature`; signiert wird `email|unixSeconds` mit HMAC-SHA256 und `OCRCRAFT_ACTOR_ASSERTION_SECRET`. Assertions sind fünf Minuten gültig. Der Proxy muss den Header von außen entfernen und selbst neu setzen; das Secret darf nicht an Browser oder Clients gelangen. Mit `OCRCRAFT_ACTOR_ASSERTION_HEADER` kann ein anderer Headername verwendet werden.
 
