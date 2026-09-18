@@ -33,7 +33,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Datenbank und portable Daten
 
-- [ ] Training-Versionen mit Snapshot und Wiederherstellung.
+- [x] Training-Versionen mit Snapshot und geschützter Wiederherstellung.
 - [x] Lock-gesichertes DuckDB-Backup mit Zeitstempel und Manifest.
 - [x] DuckDB-Restore mit Sicherheitsbackup und sichere Multi-Process-Betriebsanleitung.
 - [x] Konfigurierbare Backup-Rotation und Anzeige der vorhandenen Backups im Adminbereich.
@@ -143,6 +143,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - Granulare 89-Muskel-/Körperregionen-Taxonomie, primär/sekundär/Gegenmuskel-Beziehungen und zugängliche Listenalternative.
 - Quick Create und Training Builder mit lokalem deterministischem Composer, optionalem AI-Pfad, Zielgruppen-/Alters-/Risiko-/Equipment-/Hindernisregeln und Trainerprüfung.
 - Training CRUD, Phasen, Items, Level 1–3, Alternativen, Reorder, Duplicate/Combine und gespeicherte Builderbedingungen.
+- Versionierte Trainings-Snapshots mit rollenprüfter Wiederherstellung von Training, Phasen und Items.
 - Gruppen-Grundmodell, Lauf-/OCR-Formate, Team-/Stationskapazität, Übergangszeiten und strukturierte Hauptteilprogrammierung.
 - OpenAI-`gpt-image-2`-Bildpipeline mit Dry Run, stabilen Seed-Dateinamen, Quellen-/Reviewmetadaten und S3-Abstraktion.
 - Wiederverwendbare Dialog-/Disclosure-Komponenten mit Fokusmanagement, Escape, Fokusfalle, Scroll-Lock, sichtbarem Fokus und konsistenten Panels; große Katalogfilter öffnen als zentrierte Dialoge statt im Sidepanel zu wachsen.

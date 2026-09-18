@@ -51,6 +51,8 @@ Administration und Einstellungen liegen in einem gemeinsamen Bereich mit vier Ta
 
 Im Datenbank-Tab können Übungen, Details, Zuordnungen, Trainings, Gruppen, Medien und Provenienz selektiv als versioniertes JSON exportiert werden. Importdateien werden vor jedem späteren Schreibvorgang über das Schema `ocrcraft-portable` und die Version `1` vorgeprüft.
 
+Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit einer Admin-Rolle wiederhergestellt werden. Die Wiederherstellung ersetzt Training, Phasen und Items innerhalb einer Transaktion.
+
 ### UI/UX
 
 - Light-, Dark- und System-Theme mit semantischen Tokens

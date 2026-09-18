@@ -21,6 +21,8 @@ import {
 import { duplicateTrainingSessionAction } from "./duplicate-action";
 import { updateTrainingOrganizationAction } from "./organization-action";
 import { reorderTrainingItemsAction } from "./reorder-action";
+import { createTrainingVersionAction, restoreTrainingVersionAction } from "./version-actions";
+import { listTrainingVersions } from "@/server/training/training-version-service";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +48,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
     getTrainingExerciseGuidanceMap(exerciseIds, session.locale),
     getLatestTrainingGeneration(session.id),
   ]);
+  const versions = await listTrainingVersions(session.id);
   const updateMetadataAction = updateTrainingSessionMetadataAction.bind(null, session.id);
   const duplicateAction = duplicateTrainingSessionAction.bind(null, session.id);
   const editable = session.status !== "archived";
@@ -111,9 +114,19 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                   ? "Solo-/Teamorganisation konnte nicht gespeichert werden. Prüfe die Teamgröße."
                   : query.error === "programming"
                     ? "Hauptteil-Programmierung konnte nicht gespeichert werden. Bitte die Werte prüfen."
-                    : "Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen."}
+              : query.error === "version" ? "Version konnte nicht erstellt werden. Bitte erneut versuchen."
+                : query.error === "restore" ? "Version konnte nicht wiederhergestellt werden."
+                  : "Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen."}
           </div>
         ) : null}
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div><h2 className="font-black">Versionen</h2><p className="mt-1 text-sm text-[var(--muted)]">Snapshots sichern Training, Phasen und Übungen für eine spätere Wiederherstellung.</p></div>
+            <form action={createTrainingVersionAction.bind(null, session.id)}><button className="min-h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black" type="submit">Snapshot erstellen</button></form>
+          </div>
+          {versions.length ? <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{versions.map((version) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2" key={version.id}><span><strong className="text-[var(--foreground)]">Version {version.versionNumber}</strong> · {version.createdAt}{version.createdBy ? ` · ${version.createdBy}` : ""}</span><form action={restoreTrainingVersionAction}><input name="sessionId" type="hidden" value={session.id} /><input name="versionId" type="hidden" value={version.id} /><button className="rounded-lg border border-[var(--border)] px-2 py-1 font-black" type="submit">Wiederherstellen</button></form></li>)}</ul> : <p className="mt-3 text-sm text-[var(--muted)]">Noch kein Snapshot vorhanden.</p>}
+        </section>
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <InfoCard label="Status" value={statusLabel(session.status)} />
@@ -526,6 +539,8 @@ function savedMessage(saved: string): string {
   if (saved === "programming") return "Hauptteil-Programmierung wurde aktualisiert.";
   if (saved === "duplicated") return "Training wurde als neue Kopie angelegt.";
   if (saved === "combined") return "Kombiniertes Training wurde als neuer Entwurf angelegt.";
+  if (saved === "version") return "Training-Snapshot wurde erstellt.";
+  if (saved === "restore") return "Training-Snapshot wurde wiederhergestellt.";
   return "Training wurde aktualisiert.";
 }
 
