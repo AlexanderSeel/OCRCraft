@@ -28,6 +28,7 @@ interface PreservedSeedMediaAsset {
 }
 
 const tablesToClear = [
+  "exercise_seed_quality_reviews",
   "exercise_source_references",
   "exercise_media_assets",
   "training_session_versions",
