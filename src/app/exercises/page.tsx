@@ -4,6 +4,7 @@ import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
 import { MuscleMap } from "@/components/body/muscle-map";
 import { Disclosure } from "@/components/ui/disclosure";
+import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import { expandBodyRegionIds } from "@/domain/body-regions";
 import {
   exerciseCategoryLabels,
@@ -95,6 +96,8 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       }
     >
       <div className="space-y-6">
+        <div className="grid gap-4 lg:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)] lg:items-start">
+        <FilterSidePanel title="Übungsfilter">
         <form
           className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] md:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_180px_160px_120px_auto]"
           method="get"
@@ -181,6 +184,8 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             {selectedFacets.length ? <div className="mt-2 flex flex-wrap gap-2">{selectedFacets.map((id) => { const label = tagOptions.find((option) => option.id === id)?.labelDe ?? id; return <Link className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-bold" href={removeFacetHref(params, id)} key={id}>{label}<span aria-hidden="true">×</span><span className="sr-only">{label} entfernen</span></Link>; })}</div> : null}
           </div>
         </form>
+        </FilterSidePanel>
+        <div className="min-w-0 space-y-6">
 
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
           <div className="flex flex-wrap items-center gap-2">
@@ -332,6 +337,8 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             Keine Übung passt zu diesem Filter.
           </div>
         ) : null}
+        </div>
+        </div>
       </div>
     </AppShell>
   );

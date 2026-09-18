@@ -15,6 +15,7 @@ const navigation = [
 
 interface PrimaryNavigationProps {
   readonly variant: "sidebar" | "mobile";
+  readonly collapsed?: boolean;
 }
 
 function isActivePath(pathname: string, href: string): boolean {
@@ -23,7 +24,7 @@ function isActivePath(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function PrimaryNavigation({ variant }: PrimaryNavigationProps) {
+export function PrimaryNavigation({ variant, collapsed = false }: PrimaryNavigationProps) {
   const pathname = usePathname();
 
   if (variant === "mobile") {
@@ -53,13 +54,14 @@ export function PrimaryNavigation({ variant }: PrimaryNavigationProps) {
   }
 
   return (
-    <nav aria-label="Hauptnavigation" className="flex-1 space-y-1 p-4">
+    <nav aria-label="Hauptnavigation" className={`flex-1 space-y-1 ${collapsed ? "p-2" : "p-4"}`}>
       {navigation.map(([label, href]) => {
         const active = isActivePath(pathname, href);
         return (
           <Link
             aria-current={active ? "page" : undefined}
-            className={`block rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
+                aria-label={label}
+                className={`block rounded-lg py-2.5 text-sm font-semibold transition ${collapsed ? "px-0 text-center" : "px-3"} ${
               active
                 ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
                 : "text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]"
@@ -67,10 +69,15 @@ export function PrimaryNavigation({ variant }: PrimaryNavigationProps) {
             href={href}
             key={href}
           >
-            {label}
+                {collapsed ? <span aria-hidden="true">{iconFor(label)}</span> : label}
           </Link>
         );
       })}
     </nav>
   );
+}
+
+function iconFor(label: string): string {
+  const icons: Record<string, string> = { Übersicht: "⌂", Training: "▶", Übungen: "▦", "AI-Entwürfe": "✦", Hindernisse: "◇", Gruppen: "♧", Medien: "▣" };
+  return icons[label] ?? "•";
 }

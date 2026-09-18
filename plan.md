@@ -109,6 +109,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 - [ ] KI-Übungsentwürfe mit separatem Trainer-Approval-Workflow abschließen.
 - [ ] KI-Ausgaben weiterhin schema-validieren und deterministisch gegen Club-/Alters-/Sicherheitsregeln prüfen.
+- [ ] Settings für die AI Auswahl OpenAI, Gemini, CoPilot, Claude, etc. und Setzen der entsprechenden Keys/Zugänge (auch per Login bei Anbieter und Freigabe möglich machen) zusätzlich das Nutzungslimit und aktuellen Verbrauch in einem Info Panel anzeigen
 
 ## P3 – Ausbau und Qualität
 
@@ -143,6 +144,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - Gruppen-Grundmodell, Lauf-/OCR-Formate, Team-/Stationskapazität, Übergangszeiten und strukturierte Hauptteilprogrammierung.
 - OpenAI-`gpt-image-2`-Bildpipeline mit Dry Run, stabilen Seed-Dateinamen, Quellen-/Reviewmetadaten und S3-Abstraktion.
 - Wiederverwendbare Dialog-/Disclosure-Komponenten mit Fokusmanagement, Escape, Fokusfalle, Scroll-Lock, sichtbarem Fokus und konsistenten Panels.
+- Einklappbare Hauptnavigation mit persistiertem Icon-Modus und wiederverwendbares Filter-Sidepanel; Übungsübersicht nutzt beide Muster.
 - Gemeinsamer Administrationsbereich mit Tabs für Übersicht, Datenbank, Datenqualität und Einstellungen; doppelte Settings-/Admin-Navigation entfernt.
 - Dynamischer Vollständigkeitsbericht für Seed-Bestand und gesamten Übungskatalog sowie Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes.
 - Light/Dark/System-Theme, semantische UI-Tokens, responsive Layouts und laufende CI-Gates.

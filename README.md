@@ -51,6 +51,7 @@ Administration und Einstellungen liegen in einem gemeinsamen Bereich mit vier Ta
 
 - Light-, Dark- und System-Theme mit semantischen Tokens
 - responsive Traineroberflächen für Desktop, Tablet und mobile Nutzung
+- einklappbare Hauptnavigation mit persistiertem Icon-Modus sowie Sidepanel-Filter in der Übungsübersicht
 - zentrale Dialog-Komponente mit ARIA-Rolle, Fokusfalle, Escape, Backdrop-Schließen, Scroll-Lock und Fokus-Rückgabe
 - zentrale Disclosure-Komponente für Filter, Editoren, Builder und Adminflächen
 - sichtbare Fokuszustände und Tastaturbedienung für zentrale Auswahl- und Formularpfade
