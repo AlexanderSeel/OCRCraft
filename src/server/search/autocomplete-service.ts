@@ -7,6 +7,7 @@ import {
   type ExerciseAutocompleteItem,
 } from "./autocomplete-core";
 import type { SearchLocale } from "./search-index-service";
+import { getActiveSearchProfile } from "./search-profile-repository";
 
 export type { ExerciseAutocompleteItem } from "./autocomplete-core";
 
@@ -19,12 +20,14 @@ export async function autocompleteExercises(
   if (query.length < 2) return [];
 
   await ensureDatabaseReady();
+  const profile = await getActiveSearchProfile();
   return withDuckDbConnection((connection) =>
     runExerciseAutocomplete(
       connection,
       query,
       locale,
       Math.max(1, Math.min(limit, 20)),
+      profile.weights,
     ),
   );
 }

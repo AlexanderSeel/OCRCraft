@@ -6,12 +6,14 @@ import { ActionProgressButton } from "@/components/admin/action-progress-button"
 import { Disclosure } from "@/components/ui/disclosure";
 import { AdminTabs, normalizeAdminTab } from "@/components/admin/admin-tabs";
 import { AiProviderSettingsPanel } from "@/components/admin/ai-provider-settings-panel";
+import { SearchProfileSettingsPanel } from "@/components/admin/search-profile-settings-panel";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
+import { listSearchProfiles } from "@/server/search/search-profile-repository";
 import { listRecentAuditEvents } from "@/server/db/audit-service";
 import { listDatabaseBackups } from "@/server/db/backup-service";
 import { listAiProviderSettings } from "@/server/ai/ai-provider-settings-repository";
-import { createDatabaseBackupAction, deleteAiProviderSettingsAction, disconnectAiProviderOAuthAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, saveAiProviderSettingsAction, scanDuplicateExercisesAction } from "./actions";
+import { activateSearchProfileAction, createDatabaseBackupAction, deleteAiProviderSettingsAction, deleteSearchProfileAction, disconnectAiProviderOAuthAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, saveAiProviderSettingsAction, saveSearchProfileAction, scanDuplicateExercisesAction } from "./actions";
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
 import { listAppUsers } from "@/server/auth/identity-service";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
@@ -38,11 +40,13 @@ interface AdminPageProps {
     readonly loggedOut?: string;
     readonly userError?: string;
     readonly userSaved?: string;
+    readonly searchSaved?: string;
+    readonly searchError?: string;
   }>;
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
-  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers, aiProviders] = await Promise.all([
+  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers, aiProviders, searchProfiles] = await Promise.all([
     getSearchIndexStates(),
     getSeedCompletenessReport(),
     listDuplicateReviewTasks(),
@@ -50,9 +54,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     listDatabaseBackups(),
     listAppUsers(),
     listAiProviderSettings(),
+    listSearchProfiles(),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
-  const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved } = await searchParams;
+  const { reseeded, reseedError, tab, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved, searchSaved, searchError } = await searchParams;
   const activeTab = normalizeAdminTab(tab);
 
   return (
@@ -175,6 +180,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               saveAction={saveAiProviderSettingsAction}
               saved={aiSaved}
             />
+            <SearchProfileSettingsPanel
+              activateAction={activateSearchProfileAction}
+              deleteAction={deleteSearchProfileAction}
+              error={searchError}
+              profiles={searchProfiles}
+              saveAction={saveSearchProfileAction}
+              saved={searchSaved}
+            />
             <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
               <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Einstellungen</div>
               <h2 className="mt-1 text-xl font-black">Darstellung und Diagnose</h2>
@@ -235,7 +248,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
         {activeTab === "overview" ? <section className="grid gap-4 md:grid-cols-3">
           <AdminArea title="Übungen" text="Create/Edit/Archive ist bereits in der Übungsbibliothek verfügbar." status="aktiv" />
-          <AdminArea title="Suche" text="Status ist sichtbar. Rebuild/Search Profiles folgen nach RBAC." status="im Aufbau" />
+          <AdminArea title="Suche" text={`${searchProfiles.length} Suchprofile verfügbar; ${searchProfiles.find((profile) => profile.isActive)?.name ?? "Ausgewogen"} steuert aktuell die Ranking-Gewichte.`} status="aktiv" />
           <AdminArea title="Benutzer & Rollen" text={`${appUsers.length} Benutzer persistiert. Schreibende globale Aktionen prüfen die Rolle serverseitig.`} status={appUsers.length ? "aktiv" : "bootstrap"} />
         </section> : null}
       </div>

@@ -8,7 +8,7 @@ async function createAutocompleteFixture() {
 
   await connection.run(`
     CREATE TABLE exercises (id VARCHAR PRIMARY KEY, category VARCHAR, archived BOOLEAN);
-    CREATE TABLE exercise_translations (exercise_id VARCHAR, locale VARCHAR, name VARCHAR);
+    CREATE TABLE exercise_translations (exercise_id VARCHAR, locale VARCHAR, name VARCHAR, summary VARCHAR);
     CREATE TABLE exercise_aliases (exercise_id VARCHAR, locale VARCHAR, alias VARCHAR);
     CREATE TABLE exercise_training_goals (exercise_id VARCHAR, goal VARCHAR);
     CREATE TABLE tags (id VARCHAR PRIMARY KEY, label_de VARCHAR, label_en VARCHAR);
@@ -25,9 +25,9 @@ async function createAutocompleteFixture() {
       ('squat','strength',false),
       ('hang','grip-rig',false);
     INSERT INTO exercise_translations VALUES
-      ('carry','de','Farmer Carry'),('carry','en','Farmer Carry'),
-      ('squat','de','Kniebeuge'),('squat','en','Squat'),
-      ('hang','de','Grip Hang'),('hang','en','Grip Hang');
+      ('carry','de','Farmer Carry','Trageübung'),('carry','en','Farmer Carry','Carry exercise'),
+      ('squat','de','Kniebeuge','Beinübung'),('squat','en','Squat','Leg exercise'),
+      ('hang','de','Grip Hang','Hängeübung'),('hang','en','Grip Hang','Hanging exercise');
     INSERT INTO exercise_aliases VALUES
       ('carry','de','Farmer Walk'),('carry','en','Farmer Walk');
     INSERT INTO exercise_training_goals VALUES ('carry','strength_endurance'),('hang','ocr_technique');

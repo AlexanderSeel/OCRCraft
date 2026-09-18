@@ -7,6 +7,7 @@ import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { createDatabaseBackup } from "@/server/db/backup-service";
 import { recordAuditEvent } from "@/server/db/audit-service";
 import { rebuildSearchIndex } from "@/server/search/search-index-service";
+import { activateSearchProfile, deleteSearchProfile, saveSearchProfile } from "@/server/search/search-profile-repository";
 import { reseedAllDatabaseData } from "@/server/db/reseed-service";
 import { refreshDuplicateReviewTasks, resolveDuplicateTask } from "@/server/exercises/duplicate-review-service";
 import {
@@ -289,4 +290,113 @@ export async function disconnectAiProviderOAuthAction(formData: FormData): Promi
 
   revalidatePath("/admin");
   redirect("/admin?tab=settings&aiSaved=oauth-disconnected#ai-provider-settings");
+}
+
+
+const searchProfileIdSchema = z.string().uuid();
+const searchProfileSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().trim().min(1).max(80),
+  exact: z.coerce.number().int().min(0).max(500),
+  prefix: z.coerce.number().int().min(0).max(500),
+  alias: z.coerce.number().int().min(0).max(500),
+  summary: z.coerce.number().int().min(0).max(500),
+  taxonomy: z.coerce.number().int().min(0).max(500),
+  bodyRegions: z.coerce.number().int().min(0).max(500),
+  equipment: z.coerce.number().int().min(0).max(500),
+  instructions: z.coerce.number().int().min(0).max(500),
+});
+
+export async function saveSearchProfileAction(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const idText = String(formData.get("id") ?? "").trim();
+  const parsed = searchProfileSchema.safeParse({
+    id: idText || undefined,
+    name: formData.get("name"),
+    exact: formData.get("exact"),
+    prefix: formData.get("prefix"),
+    alias: formData.get("alias"),
+    summary: formData.get("summary"),
+    taxonomy: formData.get("taxonomy"),
+    bodyRegions: formData.get("bodyRegions"),
+    equipment: formData.get("equipment"),
+    instructions: formData.get("instructions"),
+  });
+  if (!parsed.success) redirect("/admin?tab=settings&searchError=invalid#search-profile-settings");
+
+  let savedId = "";
+  try {
+    savedId = await saveSearchProfile({
+      id: parsed.data.id,
+      name: parsed.data.name,
+      weights: parsed.data,
+    });
+    await recordAuditEvent({
+      action: "search_profile.update",
+      entityType: "search_profile",
+      entityId: savedId,
+      actorType: "user",
+      actorId: actor.id,
+      metadata: { name: parsed.data.name, weights: parsed.data },
+    });
+  } catch {
+    redirect("/admin?tab=settings&searchError=save#search-profile-settings");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/exercises");
+  redirect("/admin?tab=settings&searchSaved=" + encodeURIComponent(savedId) + "#search-profile-settings");
+}
+
+export async function activateSearchProfileAction(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const id = searchProfileIdSchema.safeParse(formData.get("id"));
+  if (!id.success) redirect("/admin?tab=settings&searchError=invalid#search-profile-settings");
+
+  let activated = false;
+  try {
+    activated = await activateSearchProfile(id.data);
+    if (activated) {
+      await recordAuditEvent({
+        action: "search_profile.activate",
+        entityType: "search_profile",
+        entityId: id.data,
+        actorType: "user",
+        actorId: actor.id,
+      });
+    }
+  } catch {
+    redirect("/admin?tab=settings&searchError=save#search-profile-settings");
+  }
+  if (!activated) redirect("/admin?tab=settings&searchError=missing#search-profile-settings");
+
+  revalidatePath("/admin");
+  revalidatePath("/exercises");
+  redirect("/admin?tab=settings&searchSaved=" + encodeURIComponent(id.data) + "#search-profile-settings");
+}
+
+export async function deleteSearchProfileAction(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const id = searchProfileIdSchema.safeParse(formData.get("id"));
+  if (!id.success) redirect("/admin?tab=settings&searchError=invalid#search-profile-settings");
+
+  let deleted = false;
+  try {
+    deleted = await deleteSearchProfile(id.data);
+    if (deleted) {
+      await recordAuditEvent({
+        action: "search_profile.delete",
+        entityType: "search_profile",
+        entityId: id.data,
+        actorType: "user",
+        actorId: actor.id,
+      });
+    }
+  } catch {
+    redirect("/admin?tab=settings&searchError=save#search-profile-settings");
+  }
+  if (!deleted) redirect("/admin?tab=settings&searchError=protected#search-profile-settings");
+
+  revalidatePath("/admin");
+  redirect("/admin?tab=settings&searchSaved=deleted#search-profile-settings");
 }

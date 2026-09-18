@@ -60,9 +60,9 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Suche und Planung
 
-- [ ] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten (Ranking-Core unterstützt Exact/Prefix/Alias-Gewichte per Suchoption und `OCRCRAFT_SEARCH_WEIGHT_*`; persistente Admin-Profile bleiben offen).
+- [x] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten: Exact/Prefix/Alias, Kurzbeschreibung, Ziele/Tags/Bewegungsmuster, Körperregionen, Equipment und Instruktionen werden über das aktive persistierte Suchprofil gewichtet; DuckDB-BM25 bleibt die Volltextbasis und ENV-Gewichte dienen nur als Fallback.
 - [x] Autocomplete aus Übungs-, Trainingsziel-, Equipment-, Tag-, Bewegungsmuster- und Körperregionsdaten ergänzen.
-- [ ] Suchprofile und Feldgewichte konfigurierbar machen.
+- [x] Suchprofile und Feldgewichte konfigurierbar machen: Administration bietet versionierte Startprofile sowie Anlegen, Bearbeiten, Aktivieren und geschütztes Löschen; das aktive Profil steuert Übungssuche und Autocomplete und Profiländerungen werden auditiert.
 - [ ] Favoriten und „zuletzt verwendet“ ergänzen.
 - [x] Authentifizierte DE/EN-FTS-Rebuild-Aktionen bereitstellen.
 - [ ] Partner-Workout und weitere offene Formatregeln ergänzen.

@@ -1,6 +1,7 @@
 import { DuckDBInstance } from "@duckdb/node-api";
 import { describe, expect, it } from "vitest";
-import { normalizeSearchRankingWeights, runBm25ExerciseSearch } from "./exercise-search-core";
+import { runBm25ExerciseSearch } from "./exercise-search-core";
+import { normalizeSearchRankingWeights } from "./search-profile-core";
 
 async function createSearchFixture() {
   const instance = await DuckDBInstance.create(":memory:");
@@ -76,9 +77,9 @@ async function createSearchFixture() {
     INSERT INTO exercise_media_assets (id,exercise_id,generation_status,storage_uri,review_status,license_label)
       VALUES ('media-1','run-1','generated','/generated/exercises/run-1.png','pending',NULL);
     INSERT INTO search_documents_de VALUES
-      ('exercise:carry-1','exercise','carry-1','Farmer Carry','Farmer Walk','Kontrolliertes Tragen einer Last','carry grip','full body','Kettlebell','schwere Last aufnehmen stabil tragen kontrolliert absetzen'),
+      ('exercise:carry-1','exercise','carry-1','Farmer Carry','Farmer Walk','Kontrolliertes Tragen einer Last','carry grip sharedterm','full body','Kettlebell','schwere Last aufnehmen stabil tragen kontrolliert absetzen'),
       ('exercise:run-1','exercise','run-1','Easy Jog','Lockerer Lauf','Lockerer Lauf im Sprechtempo','running endurance','legs','','ruhig laufen gleichmaessig atmen'),
-      ('exercise:run-2','exercise','run-2','Sand Run','','Laufen auf losem Untergrund','running trail','legs','','auf Sand laufen stabiler Schritt');
+      ('exercise:run-2','exercise','run-2','Sand Run','','Laufen auf losem Untergrund sharedterm','running trail','legs','','auf Sand laufen stabiler Schritt');
   `);
 
   await connection.run("INSTALL fts; LOAD fts;");
@@ -106,7 +107,7 @@ async function createSearchFixture() {
 
 describe("DuckDB BM25 exercise search", () => {
   it("normalizes configurable ranking weights without allowing negative boosts", () => {
-    expect(normalizeSearchRankingWeights({ exact: 140, prefix: -2 })).toEqual({ exact: 140, prefix: 0, alias: 50 });
+    expect(normalizeSearchRankingWeights({ exact: 140, prefix: -2 })).toMatchObject({ exact: 140, prefix: 0, alias: 50 });
   });
 
   it("finds enriched instruction content and hydrates exercise metadata", async () => {
@@ -139,6 +140,34 @@ describe("DuckDB BM25 exercise search", () => {
 
       expect(results.map((item) => item.seedKey)).toEqual(["sand-run"]);
       expect(results.every((item) => item.category === "running")).toBe(true);
+    } finally {
+      connection.closeSync();
+    }
+  });
+
+  it("allows structured field weights to change ranking priorities", async () => {
+    const { connection } = await createSearchFixture();
+    try {
+      const taxonomyFirst = await runBm25ExerciseSearch(connection, {
+        query: "sharedterm",
+        locale: "de",
+        limit: 10,
+        rankingWeights: {
+          exact: 0, prefix: 0, alias: 0, summary: 1,
+          taxonomy: 80, bodyRegions: 0, equipment: 0, instructions: 0,
+        },
+      });
+      const summaryFirst = await runBm25ExerciseSearch(connection, {
+        query: "sharedterm",
+        locale: "de",
+        limit: 10,
+        rankingWeights: {
+          exact: 0, prefix: 0, alias: 0, summary: 80,
+          taxonomy: 1, bodyRegions: 0, equipment: 0, instructions: 0,
+        },
+      });
+      expect(taxonomyFirst[0]?.seedKey).toBe("farmer-carry");
+      expect(summaryFirst[0]?.seedKey).toBe("sand-run");
     } finally {
       connection.closeSync();
     }
