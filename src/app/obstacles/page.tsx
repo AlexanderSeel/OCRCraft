@@ -5,6 +5,8 @@ import {
   listObstacleCatalog,
   type ObstacleCatalogItem,
 } from "@/server/obstacles/obstacle-catalog-repository";
+import { listObstacleCandidates, type ObstacleCandidate } from "@/server/obstacles/obstacle-assignment-repository";
+import { assignExerciseAsObstacleAction, removeExerciseFromObstaclesAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +15,9 @@ interface PageProps {
     q?: string;
     risk?: string;
     status?: string;
+    candidateQ?: string;
+    assignment?: string;
+    assignmentError?: string;
   }>;
 }
 
@@ -21,10 +26,12 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
   const query = params.q?.trim() ?? "";
   const riskLevel = allowed(params.risk, ["low", "medium", "high"]);
   const archived = params.status === "archived";
+  const candidateQuery = params.candidateQ?.trim() ?? "";
 
-  const [summary, obstacles] = await Promise.all([
+  const [summary, obstacles, candidates] = await Promise.all([
     getObstacleCatalogSummary(),
     listObstacleCatalog({ query, riskLevel, archived }),
+    candidateQuery ? listObstacleCandidates(candidateQuery) : Promise.resolve([]),
   ]);
 
   return (
@@ -43,11 +50,70 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
       )}
     >
       <div className="space-y-6">
+        {params.assignment === "added" ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            Die Übung wurde als Hindernis übernommen. Vorhandene Übungsdaten wurden als Ausgangspunkt für die Hindernis-Guidance verwendet.
+          </p>
+        ) : null}
+        {params.assignment === "already" ? (
+          <p className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm font-bold">
+            Die Übung ist bereits als Hindernis zugeordnet.
+          </p>
+        ) : null}
+        {params.assignment === "removed" ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            Die Hindernis-Zuordnung wurde entfernt. Die Übung selbst bleibt vollständig erhalten.
+          </p>
+        ) : null}
+        {params.assignmentError ? (
+          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+            Die Hindernis-Zuordnung konnte nicht geändert werden.
+          </p>
+        ) : null}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Metric label="Aktiv" value={summary.active} />
           <Metric label="Archiviert" value={summary.archived} />
           <Metric label="Hohes Risiko" value={summary.highRisk} />
           <Metric label="Mit Club-Maßen" value={summary.withClubDimensions} />
+        </section>
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-black">Bestehende Übung als Hindernis übernehmen</h2>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+                Suche im gesamten aktiven Übungskatalog. Beim Übernehmen wird die Übung nicht dupliziert: Sie erhält lediglich eine Hindernis-Guidance und erscheint danach zusätzlich hier.
+              </p>
+            </div>
+            <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href="/exercises">
+              Gesamten Übungskatalog öffnen
+            </Link>
+          </div>
+          <form className="mt-3 flex flex-wrap gap-2" method="get">
+            <label className="min-w-[260px] flex-1">
+              <span className="sr-only">Bestehende Übung suchen</span>
+              <input
+                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+                defaultValue={candidateQuery}
+                name="candidateQ"
+                placeholder="Übung suchen, z. B. Box, Hang, Carry ..."
+              />
+            </label>
+            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
+              Übungen suchen
+            </button>
+          </form>
+          {candidateQuery ? (
+            candidates.length ? (
+              <div className="mt-4 grid gap-2">
+                {candidates.map((candidate) => <ObstacleCandidateRow candidate={candidate} key={candidate.exerciseId} />)}
+              </div>
+            ) : (
+              <p className="mt-4 rounded-xl bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">
+                Keine noch nicht zugeordneten aktiven Übungen für „{candidateQuery}“ gefunden.
+              </p>
+            )
+          ) : null}
         </section>
 
         <form
@@ -175,9 +241,43 @@ function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) 
             <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/exercises/${obstacle.exerciseId}/edit#obstacle-guidance`}>
               Hindernis bearbeiten
             </Link>
+            <form action={removeExerciseFromObstaclesAction}>
+              <input name="exerciseId" type="hidden" value={obstacle.exerciseId} />
+              <button className="min-h-9 rounded-lg border border-[var(--danger)] px-3 py-2 text-xs font-black text-[var(--danger)]" type="submit">
+                Aus Hindernissen entfernen
+              </button>
+            </form>
           </div>
         </div>
       </div>
+    </article>
+  );
+}
+
+function ObstacleCandidateRow({ candidate }: { readonly candidate: ObstacleCandidate }) {
+  return (
+    <article className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 sm:grid-cols-[72px_minmax(0,1fr)_auto] sm:items-center">
+      <div className="h-16 overflow-hidden rounded-lg bg-[var(--surface)]">
+        {candidate.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img alt="" className="h-full w-full object-contain" loading="lazy" src={candidate.imageUrl} />
+        ) : (
+          <div className="grid h-full place-items-center text-[10px] font-bold text-[var(--muted)]">Kein Bild</div>
+        )}
+      </div>
+      <div className="min-w-0">
+        <div className="truncate font-black">{candidate.name}</div>
+        <div className="mt-1 text-xs text-[var(--muted)]">
+          {candidate.category} · {riskLabel(candidate.riskLevel)}
+          {candidate.seedKey ? ` · ${candidate.seedKey}` : ""}
+        </div>
+      </div>
+      <form action={assignExerciseAsObstacleAction}>
+        <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
+        <button className="min-h-11 rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
+          Als Hindernis übernehmen
+        </button>
+      </form>
     </article>
   );
 }

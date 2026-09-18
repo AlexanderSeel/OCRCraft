@@ -2,8 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { z } from "zod";
 import { setMediaReviewStatus } from "@/server/media/media-catalog-repository";
+import { normalizeMediaBatchExerciseIds } from "@/server/media/media-generation-job-core";
+import { enqueueExerciseImageGenerationJobs } from "@/server/media/media-generation-job-repository";
+import { runExerciseImageGenerationQueue } from "@/server/media/media-generation-worker";
 
 const reviewSchema = z.object({
   assetId: z.string().uuid(),
@@ -32,4 +36,41 @@ export async function updateMediaReviewStatusAction(formData: FormData): Promise
   revalidatePath(`/exercises/${parsed.data.exerciseId}`);
   revalidatePath(`/exercises/${parsed.data.exerciseId}/edit`);
   redirect(`/media?reviewSaved=${parsed.data.reviewStatus}`);
+}
+
+
+const mediaBatchActionSchema = z.enum(["generate_ai_image"]);
+
+export async function queueMediaBatchAction(formData: FormData): Promise<void> {
+  const batchAction = mediaBatchActionSchema.safeParse(formData.get("batchAction"));
+  if (!batchAction.success) redirect("/media?batchError=action");
+
+  const exerciseIds = normalizeMediaBatchExerciseIds(
+    formData.getAll("exerciseId").map((value) => String(value)),
+  );
+  if (exerciseIds.length === 0) redirect("/media?batchError=selection");
+  if (!process.env.OPENAI_API_KEY) redirect("/media?batchError=config");
+
+  let queued = 0;
+  let skipped = 0;
+  try {
+    const result = await enqueueExerciseImageGenerationJobs(exerciseIds);
+    queued = result.queued;
+    skipped = result.skipped;
+  } catch {
+    redirect("/media?batchError=save");
+  }
+
+  if (queued > 0) {
+    after(async () => {
+      await runExerciseImageGenerationQueue();
+    });
+  }
+
+  revalidatePath("/media");
+  const query = new URLSearchParams({
+    batchQueued: String(queued),
+    batchSkipped: String(skipped),
+  });
+  redirect(`/media?${query.toString()}`);
 }

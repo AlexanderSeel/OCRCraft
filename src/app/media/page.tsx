@@ -1,11 +1,15 @@
 import Link from "next/link";
+import { after } from "next/server";
 import { AppShell } from "@/components/app-shell";
+import { MediaJobRefresh } from "@/components/media/media-job-refresh";
 import {
   getMediaCatalogSummary,
   listMediaCatalog,
   type MediaCatalogItem,
 } from "@/server/media/media-catalog-repository";
-import { updateMediaReviewStatusAction } from "./actions";
+import { getMediaGenerationQueueSummary } from "@/server/media/media-generation-job-repository";
+import { runExerciseImageGenerationQueue } from "@/server/media/media-generation-worker";
+import { queueMediaBatchAction, updateMediaReviewStatusAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +22,9 @@ interface PageProps {
     type?: string;
     reviewSaved?: string;
     reviewError?: string;
+    batchQueued?: string;
+    batchSkipped?: string;
+    batchError?: string;
   }>;
 }
 
@@ -29,7 +36,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
   const sourceType = allowed(params.source, ["ai_generated", "club_created", "external_reference"]);
   const mediaType = allowed(params.type, ["image", "video", "illustration"]);
 
-  const [summary, assets] = await Promise.all([
+  const [summary, assets, generationQueue] = await Promise.all([
     getMediaCatalogSummary(),
     listMediaCatalog({
       query,
@@ -38,7 +45,14 @@ export default async function MediaPage({ searchParams }: PageProps) {
       sourceType,
       mediaType,
     }),
+    getMediaGenerationQueueSummary(),
   ]);
+
+  if (generationQueue.queued > 0 && process.env.OPENAI_API_KEY) {
+    after(async () => {
+      await runExerciseImageGenerationQueue();
+    });
+  }
 
   return (
     <AppShell
@@ -64,6 +78,17 @@ export default async function MediaPage({ searchParams }: PageProps) {
         {params.reviewError ? (
           <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
             Reviewstatus konnte nicht gespeichert werden.
+          </p>
+        ) : null}
+        {params.batchQueued ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            {params.batchQueued} KI-Bildjob(s) wurden in die Warteschlange gestellt
+            {Number(params.batchSkipped ?? 0) > 0 ? `; ${params.batchSkipped} Auswahl(en) waren bereits eingeplant oder nicht aktiv` : ""}.
+          </p>
+        ) : null}
+        {params.batchError ? (
+          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+            {batchErrorLabel(params.batchError)}
           </p>
         ) : null}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
@@ -124,6 +149,36 @@ export default async function MediaPage({ searchParams }: PageProps) {
           ) : null}
         </div>
 
+        <section className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
+          <div>
+            <h2 className="text-base font-black">Batch-Operationen</h2>
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+              Markiere eine oder mehrere Medienkarten. „Neues Bild per KI erzeugen“ erstellt für die zugehörigen Übungen jeweils ein neues Bild und lässt vorhandene Medien unverändert. Die Generierung läuft nach dem Absenden im Hintergrund weiter.
+            </p>
+            <form action={queueMediaBatchAction} className="mt-3 flex flex-wrap items-end gap-2" id="media-batch-form">
+              <label className="grid gap-1 text-sm font-bold">
+                Batch-Aktion
+                <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" name="batchAction">
+                  <option value="generate_ai_image">Neues Bild per KI erzeugen</option>
+                </select>
+              </label>
+              <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 py-2 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
+                Für Auswahl starten
+              </button>
+            </form>
+          </div>
+          <div className="rounded-xl bg-[var(--surface-subtle)] p-3">
+            <div className="text-xs font-black uppercase tracking-[0.08em] text-[var(--muted)]">KI-Bildjobs</div>
+            <dl className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 xl:grid-cols-2">
+              <Data label="Wartend" value={String(generationQueue.queued)} />
+              <Data label="Läuft" value={String(generationQueue.running)} />
+              <Data label="Erfolgreich · 24 h" value={String(generationQueue.succeededRecent)} />
+              <Data label="Fehler · 24 h" value={String(generationQueue.failedRecent)} />
+            </dl>
+            <MediaJobRefresh active={generationQueue.queued + generationQueue.running > 0} />
+          </div>
+        </section>
+
         {assets.length ? (
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {assets.map((asset) => <MediaCard asset={asset} key={asset.id} />)}
@@ -160,7 +215,13 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
             <h2 className="mt-1 truncate text-lg font-black">{asset.exerciseName}</h2>
             {asset.seedKey ? <div className="mt-1 font-mono text-xs text-[var(--muted)]">{asset.seedKey}</div> : null}
           </div>
-          <StatusBadge asset={asset} />
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-[var(--border)] px-3 text-xs font-black">
+              <input form="media-batch-form" name="exerciseId" type="checkbox" value={asset.exerciseId} />
+              Auswählen
+            </label>
+            <StatusBadge asset={asset} />
+          </div>
         </div>
 
         <dl className="grid gap-2 text-xs sm:grid-cols-2">
@@ -318,4 +379,12 @@ function safeHttps(value: string | null): string | null {
   } catch {
     return null;
   }
+}
+
+
+function batchErrorLabel(value: string): string {
+  if (value === "selection") return "Wähle mindestens eine Medienkarte für die Batch-Operation aus.";
+  if (value === "config") return "KI-Bildgenerierung ist nicht konfiguriert. OPENAI_API_KEY fehlt.";
+  if (value === "action") return "Die gewählte Batch-Aktion ist ungültig.";
+  return "Die Batch-Operation konnte nicht in die Warteschlange gestellt werden.";
 }
