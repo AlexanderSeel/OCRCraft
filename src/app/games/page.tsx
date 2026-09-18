@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { OverviewLayout } from "@/components/overview-layout";
 import { ExerciseImagePreview } from "@/components/exercises/exercise-image-preview";
 import { exerciseCategoryLabels, type ExerciseCategory } from "@/domain/exercise/model";
 import { countExercises, listExercises } from "@/server/exercises/exercise-repository";
@@ -41,7 +42,7 @@ export default async function GamesPage({ searchParams }: PageProps) {
         </div>
       )}
     >
-      <div className="space-y-6">
+      <OverviewLayout storageKey="ocrcraft-games-view"><div className="space-y-6">
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
           <form className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px_120px_auto]" method="get">
             <label className="grid gap-1 text-sm font-bold">
@@ -122,7 +123,7 @@ export default async function GamesPage({ searchParams }: PageProps) {
             </div>
           </nav>
         ) : null}
-      </div>
+      </div></OverviewLayout>
     </AppShell>
   );
 }

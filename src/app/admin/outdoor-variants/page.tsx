@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { OverviewLayout } from "@/components/overview-layout";
 import {
   listOutdoorVariantCandidates,
   type OutdoorVariantCandidatePreview,
@@ -49,7 +50,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
         </div>
       )}
     >
-      <div className="space-y-6">
+      <OverviewLayout storageKey="ocrcraft-outdoor-view"><div className="space-y-6">
         {result.error ? (
           <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">
             Der Outdoor-Varianten-Task konnte nicht abgeschlossen werden. Es wurden keine unvollständigen Varianten übernommen.
@@ -127,7 +128,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
             </div>
           )}
         </section>
-      </div>
+      </div></OverviewLayout>
     </AppShell>
   );
 }

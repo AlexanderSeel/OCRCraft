@@ -32,7 +32,17 @@ for (const route of CATALOG_ROUTES) {
 }
 
 test("catalog pages expose the shared view switcher", async ({ page }) => {
-  for (const route of ["/training", "/training/templates", "/exercises"] as const) {
+  for (const route of [
+    "/training",
+    "/training/templates",
+    "/exercises",
+    "/games",
+    "/obstacles",
+    "/groups",
+    "/media",
+    "/exercises/ai-drafts",
+    "/admin/outdoor-variants",
+  ] as const) {
     await page.goto(route, { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("overview-layout")).toBeVisible();
     await expect(page.getByRole("group", { name: "Übersichtsdarstellung" })).toBeVisible();

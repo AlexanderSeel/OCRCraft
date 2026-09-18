@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { OverviewLayout } from "@/components/overview-layout";
 import { CLUB_RULE_PROFILES } from "@/domain/training/club-rules";
 import {
   GROUP_PRESETS,
@@ -74,7 +75,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         </div>
       }
     >
-      <div className="space-y-6">
+      <OverviewLayout storageKey="ocrcraft-groups-view"><div className="space-y-6">
         {query.saved ? (
           <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">
             {savedMessage(query.saved)}
@@ -218,7 +219,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
             </p>
           </section>
         ) : null}
-      </div>
+      </div></OverviewLayout>
     </AppShell>
   );
 }

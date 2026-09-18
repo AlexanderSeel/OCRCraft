@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { OverviewLayout } from "@/components/overview-layout";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import { MediaJobRefresh } from "@/components/media/media-job-refresh";
 import { OrphanedMediaCleanupForm } from "@/components/media/orphaned-media-cleanup-form";
@@ -93,7 +94,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
         </div>
       )}
     >
-      <div className="space-y-6">
+      <OverviewLayout storageKey="ocrcraft-media-view"><div className="space-y-6">
         {params.reviewSaved ? (
           <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
             Medienreview gespeichert: {reviewLabel(params.reviewSaved)}.
@@ -414,7 +415,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
         )}
         </div>
         </div>
-      </div>
+      </div></OverviewLayout>
     </AppShell>
   );
 }

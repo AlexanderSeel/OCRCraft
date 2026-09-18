@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { OverviewLayout } from "@/components/overview-layout";
 import { Disclosure } from "@/components/ui/disclosure";
 import { exerciseCategoryLabels, exercisePhaseLabels } from "@/domain/exercise/model";
 import { getConfiguredAiExerciseDraftProvider } from "@/server/exercises/ai-exercise-draft-provider";
@@ -47,7 +48,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
         </div>
       )}
     >
-      <div className="space-y-6">
+      <OverviewLayout storageKey="ocrcraft-ai-drafts-view"><div className="space-y-6">
         {query.saved ? (
           <Notice>{query.saved === "rejected" ? "AI-Entwurf wurde verworfen." : "AI-Entwurf wurde erzeugt und wartet auf Trainerprüfung."}</Notice>
         ) : null}
@@ -193,7 +194,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
             </div>
           )}
         </section>
-      </div>
+      </div></OverviewLayout>
     </AppShell>
   );
 }

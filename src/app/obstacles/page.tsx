@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { OverviewLayout } from "@/components/overview-layout";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import { RemoveObstacleAssignmentForm } from "@/components/obstacles/remove-obstacle-assignment-form";
 import {
@@ -51,7 +52,7 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
         </div>
       )}
     >
-      <div className="space-y-6">
+      <OverviewLayout storageKey="ocrcraft-obstacles-view"><div className="space-y-6">
         {params.assignment === "added" ? (
           <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
             Die Übung wurde als Hindernis übernommen. Vorhandene Übungsdaten wurden als Ausgangspunkt für die Hindernis-Guidance verwendet.
@@ -177,7 +178,7 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
         )}
         </div>
         </div>
-      </div>
+      </div></OverviewLayout>
     </AppShell>
   );
 }
