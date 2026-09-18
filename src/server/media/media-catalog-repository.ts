@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash, randomUUID } from "node:crypto";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { safeExerciseImageUri } from "@/server/exercises/exercise-image-uri";
@@ -37,6 +38,17 @@ export interface MediaCatalogItem {
   readonly licenseLabel: string | null;
   readonly sourceReference: string | null;
   readonly usageNote: string | null;
+  readonly thumbnailUrl: string | null;
+  readonly attributionText: string | null;
+  readonly rightsStatus: string;
+  readonly consentRequired: boolean;
+  readonly consentConfirmed: boolean;
+  readonly biomechanicsReview: "unreviewed" | "pass" | "needs_changes";
+  readonly textMatchReview: "unreviewed" | "pass" | "needs_changes";
+  readonly reviewNotes: string | null;
+  readonly reviewedBy: string | null;
+  readonly reviewerName: string | null;
+  readonly reviewedAt: string | null;
   readonly generatedAt: string | null;
   readonly createdAt: string;
   readonly errorMessage: string | null;
@@ -119,6 +131,22 @@ export async function listMediaCatalog({
         m.license_label,
         m.source_reference,
         m.usage_note,
+        m.thumbnail_uri,
+        m.attribution_text,
+        COALESCE(m.rights_status,'unreviewed'),
+        COALESCE(m.consent_required,false),
+        COALESCE(m.consent_confirmed,false),
+        COALESCE(m.biomechanics_review,'unreviewed'),
+        COALESCE(m.text_match_review,'unreviewed'),
+        m.review_notes,
+        m.reviewed_by::VARCHAR,
+        (
+          SELECT u.display_name
+          FROM app_users u
+          WHERE u.id=m.reviewed_by
+          LIMIT 1
+        ),
+        m.reviewed_at::VARCHAR,
         m.generated_at,
         m.created_at,
         m.error_message
@@ -169,9 +197,20 @@ export async function listMediaCatalog({
       licenseLabel: row[18] == null ? null : String(row[18]),
       sourceReference: row[19] == null ? null : String(row[19]),
       usageNote: row[20] == null ? null : String(row[20]),
-      generatedAt: row[21] == null ? null : String(row[21]),
-      createdAt: String(row[22]),
-      errorMessage: row[23] == null ? null : String(row[23]),
+      thumbnailUrl: safeExerciseImageUri(row[21]),
+      attributionText: row[22] == null ? null : String(row[22]),
+      rightsStatus: String(row[23] ?? "unreviewed"),
+      consentRequired: Boolean(row[24]),
+      consentConfirmed: Boolean(row[25]),
+      biomechanicsReview: String(row[26] ?? "unreviewed") as "unreviewed" | "pass" | "needs_changes",
+      textMatchReview: String(row[27] ?? "unreviewed") as "unreviewed" | "pass" | "needs_changes",
+      reviewNotes: row[28] == null ? null : String(row[28]),
+      reviewedBy: row[29] == null ? null : String(row[29]),
+      reviewerName: row[30] == null ? null : String(row[30]),
+      reviewedAt: row[31] == null ? null : String(row[31]),
+      generatedAt: row[32] == null ? null : String(row[32]),
+      createdAt: String(row[33]),
+      errorMessage: row[34] == null ? null : String(row[34]),
     }));
   });
 }
@@ -255,16 +294,348 @@ export async function listMediaGenerationCandidates(
 export async function setMediaReviewStatus(
   assetId: string,
   reviewStatus: "pending" | "approved" | "rejected",
+  reviewerId: string,
 ): Promise<boolean> {
-  if (!UUID_PATTERN.test(assetId)) return false;
+  if (!UUID_PATTERN.test(assetId) || !UUID_PATTERN.test(reviewerId)) return false;
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(`
       UPDATE exercise_media_assets
-      SET review_status=$reviewStatus, updated_at=current_timestamp
+      SET
+        review_status=$reviewStatus,
+        reviewed_by=CASE WHEN $reviewStatus='pending' THEN NULL ELSE $reviewerId::UUID END,
+        reviewed_at=CASE WHEN $reviewStatus='pending' THEN NULL ELSE current_timestamp END,
+        updated_at=current_timestamp
       WHERE id=$assetId::UUID
+        AND (
+          $reviewStatus<>'approved'
+          OR (
+            (
+              source_type<>'external_reference'
+              OR (
+                COALESCE(rights_status,'unreviewed')='approved'
+                AND COALESCE(trim(license_label),'')<>''
+                AND COALESCE(trim(source_reference),'')<>''
+                AND (COALESCE(consent_required,false)=false OR COALESCE(consent_confirmed,false)=true)
+              )
+            )
+            AND (
+              NOT (source_type='ai_generated' AND illustration_format='exercise_sequence')
+              OR (
+                COALESCE(biomechanics_review,'unreviewed')='pass'
+                AND COALESCE(text_match_review,'unreviewed')='pass'
+              )
+            )
+          )
+        )
       RETURNING id::VARCHAR
-    `, { assetId, reviewStatus });
+    `, { assetId, reviewStatus, reviewerId });
     return reader.getRows().length === 1;
+  });
+}
+
+export async function saveMediaSequenceAssessment(input: {
+  readonly assetId: string;
+  readonly biomechanicsReview: "unreviewed" | "pass" | "needs_changes";
+  readonly textMatchReview: "unreviewed" | "pass" | "needs_changes";
+  readonly reviewNotes: string;
+  readonly reviewerId: string;
+}): Promise<boolean> {
+  if (!UUID_PATTERN.test(input.assetId) || !UUID_PATTERN.test(input.reviewerId)) return false;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      UPDATE exercise_media_assets
+      SET
+        biomechanics_review=$biomechanicsReview,
+        text_match_review=$textMatchReview,
+        review_notes=$reviewNotes,
+        reviewed_by=$reviewerId::UUID,
+        reviewed_at=current_timestamp,
+        review_status=CASE
+          WHEN $biomechanicsReview='pass' AND $textMatchReview='pass' THEN review_status
+          ELSE 'pending'
+        END,
+        updated_at=current_timestamp
+      WHERE id=$assetId::UUID
+        AND source_type='ai_generated'
+        AND illustration_format='exercise_sequence'
+        AND generation_status='generated'
+      RETURNING id::VARCHAR
+    `, {
+      assetId: input.assetId,
+      biomechanicsReview: input.biomechanicsReview,
+      textMatchReview: input.textMatchReview,
+      reviewNotes: input.reviewNotes.trim().slice(0, 2000) || null,
+      reviewerId: input.reviewerId,
+    });
+    return reader.getRows().length === 1;
+  });
+}
+
+
+export interface SaveExternalMediaAssetInput {
+  readonly assetId?: string | null;
+  readonly exerciseId: string;
+  readonly mediaType: "image" | "video";
+  readonly mediaUrl: string;
+  readonly thumbnailUrl?: string | null;
+  readonly provider?: string | null;
+  readonly sourceReference: string;
+  readonly licenseLabel: string;
+  readonly attributionText?: string | null;
+  readonly usageNote?: string | null;
+  readonly rightsStatus: "unreviewed" | "approved" | "restricted";
+  readonly consentRequired: boolean;
+  readonly consentConfirmed: boolean;
+}
+
+function requireHttpsUrl(value: string, label: string): string {
+  const trimmed = value.trim();
+  let url: URL;
+  try { url = new URL(trimmed); } catch { throw new Error(label + " ist keine gültige URL."); }
+  if (url.protocol !== "https:") throw new Error(label + " muss HTTPS verwenden.");
+  return url.toString();
+}
+
+export async function saveExternalMediaAsset(input: SaveExternalMediaAssetInput): Promise<string> {
+  if (!UUID_PATTERN.test(input.exerciseId)) throw new Error("Ungültige Übungs-ID.");
+  if (input.assetId && !UUID_PATTERN.test(input.assetId)) throw new Error("Ungültige Medien-ID.");
+  if (input.rightsStatus === "approved" && input.consentRequired && !input.consentConfirmed) {
+    throw new Error("Für eine Rechtefreigabe muss die erforderliche Einwilligung bestätigt sein.");
+  }
+  const mediaUrl = requireHttpsUrl(input.mediaUrl, "Medien-URL");
+  const thumbnailUrl = input.thumbnailUrl?.trim()
+    ? requireHttpsUrl(input.thumbnailUrl, "Thumbnail-URL")
+    : null;
+  const sourceReference = requireHttpsUrl(input.sourceReference, "Quellen-URL");
+  const licenseLabel = input.licenseLabel.trim();
+  if (!licenseLabel) throw new Error("Lizenz/Verwendungsrecht ist erforderlich.");
+
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    if (input.assetId) {
+      const updated = await connection.runAndReadAll(`
+        UPDATE exercise_media_assets
+        SET media_type=$mediaType,
+            storage_uri=$mediaUrl,
+            content_type=$contentType,
+            sha256=$sha,
+            thumbnail_uri=$thumbnailUrl,
+            provider=$provider,
+            source_reference=$sourceReference,
+            license_label=$licenseLabel,
+            attribution_text=$attributionText,
+            usage_note=$usageNote,
+            rights_status=$rightsStatus,
+            consent_required=$consentRequired,
+            consent_confirmed=$consentConfirmed,
+            review_status=CASE
+              WHEN $rightsStatus='approved' AND ($consentRequired=false OR $consentConfirmed=true)
+                THEN review_status
+              ELSE 'pending'
+            END,
+            reviewed_by=CASE
+              WHEN $rightsStatus='approved' AND ($consentRequired=false OR $consentConfirmed=true)
+                THEN reviewed_by
+              ELSE NULL
+            END,
+            reviewed_at=CASE
+              WHEN $rightsStatus='approved' AND ($consentRequired=false OR $consentConfirmed=true)
+                THEN reviewed_at
+              ELSE NULL
+            END,
+            updated_at=current_timestamp
+        WHERE id=$assetId::UUID AND source_type='external_reference'
+        RETURNING id::VARCHAR
+      `, {
+        assetId: input.assetId,
+        mediaType: input.mediaType,
+        mediaUrl,
+        contentType: input.mediaType === "video" ? "video/external" : "image/external",
+        sha: createHash("sha256").update(mediaUrl).digest("hex"),
+        thumbnailUrl,
+        provider: input.provider?.trim() || null,
+        sourceReference,
+        licenseLabel,
+        attributionText: input.attributionText?.trim() || null,
+        usageNote: input.usageNote?.trim() || null,
+        rightsStatus: input.rightsStatus,
+        consentRequired: input.consentRequired,
+        consentConfirmed: input.consentConfirmed,
+      });
+      const id = updated.getRows()[0]?.[0];
+      if (id == null) throw new Error("Externes Medium wurde nicht gefunden.");
+      return String(id);
+    }
+
+    const created = await connection.runAndReadAll(`
+      INSERT INTO exercise_media_assets (
+        exercise_id,media_type,source_type,provider,
+        review_status,generation_status,storage_provider,storage_key,storage_uri,
+        content_type,sha256,generated_at,license_label,source_reference,usage_note,
+        thumbnail_uri,attribution_text,rights_status,consent_required,consent_confirmed
+      ) VALUES (
+        $exerciseId,$mediaType,'external_reference',$provider,
+        'pending','generated','filesystem',$storageKey,$mediaUrl,
+        $contentType,$sha,current_timestamp,$licenseLabel,$sourceReference,$usageNote,
+        $thumbnailUrl,$attributionText,$rightsStatus,$consentRequired,$consentConfirmed
+      )
+      RETURNING id::VARCHAR
+    `, {
+      exerciseId: input.exerciseId,
+      mediaType: input.mediaType,
+      provider: input.provider?.trim() || null,
+      storageKey: "external-reference/" + randomUUID(),
+      mediaUrl,
+      contentType: input.mediaType === "video" ? "video/external" : "image/external",
+      sha: createHash("sha256").update(mediaUrl).digest("hex"),
+      licenseLabel,
+      sourceReference,
+      usageNote: input.usageNote?.trim() || null,
+      thumbnailUrl,
+      attributionText: input.attributionText?.trim() || null,
+      rightsStatus: input.rightsStatus,
+      consentRequired: input.consentRequired,
+      consentConfirmed: input.consentConfirmed,
+    });
+    return String(created.getRows()[0]?.[0]);
+  });
+}
+
+export async function deleteExternalMediaAsset(assetId: string): Promise<boolean> {
+  if (!UUID_PATTERN.test(assetId)) return false;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const result = await connection.runAndReadAll(`
+      DELETE FROM exercise_media_assets
+      WHERE id=$assetId::UUID AND source_type='external_reference'
+      RETURNING id::VARCHAR
+    `, { assetId });
+    return result.getRows().length === 1;
+  });
+}
+
+
+export interface LegacyTriptychMigrationCandidate {
+  readonly exerciseId: string;
+  readonly exerciseName: string;
+  readonly seedKey: string | null;
+  readonly legacyAssetCount: number;
+  readonly pendingSequenceCount: number;
+  readonly approvedSequenceCount: number;
+  readonly activeJobCount: number;
+}
+
+export async function listLegacyTriptychMigrationCandidates(
+  limit = 40,
+): Promise<readonly LegacyTriptychMigrationCandidate[]> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      SELECT
+        e.id::VARCHAR,
+        COALESCE(t.name,e.canonical_name),
+        e.seed_key,
+        count(*) FILTER (
+          WHERE m.source_type='ai_generated'
+            AND m.illustration_format='legacy_triptych'
+            AND m.generation_status='generated'
+            AND m.review_status<>'rejected'
+        ) AS legacy_count,
+        (
+          SELECT count(*)
+          FROM exercise_media_assets s
+          WHERE s.exercise_id=e.id
+            AND s.source_type='ai_generated'
+            AND s.illustration_format='exercise_sequence'
+            AND s.generation_status='generated'
+            AND s.review_status='pending'
+        ) AS pending_sequences,
+        (
+          SELECT count(*)
+          FROM exercise_media_assets s
+          WHERE s.exercise_id=e.id
+            AND s.source_type='ai_generated'
+            AND s.illustration_format='exercise_sequence'
+            AND s.generation_status='generated'
+            AND s.review_status='approved'
+        ) AS approved_sequences,
+        (
+          SELECT count(*)
+          FROM exercise_image_generation_jobs j
+          WHERE j.exercise_id=e.id
+            AND j.status IN ('queued','running')
+        ) AS active_jobs
+      FROM exercises e
+      JOIN exercise_media_assets m ON m.exercise_id=e.id
+      LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
+      WHERE e.archived=false
+      GROUP BY e.id,t.name,e.canonical_name,e.seed_key
+      HAVING count(*) FILTER (
+        WHERE m.source_type='ai_generated'
+          AND m.illustration_format='legacy_triptych'
+          AND m.generation_status='generated'
+          AND m.review_status<>'rejected'
+      ) > 0
+      ORDER BY
+        CASE WHEN (
+          SELECT count(*)
+          FROM exercise_media_assets s
+          WHERE s.exercise_id=e.id
+            AND s.source_type='ai_generated'
+            AND s.illustration_format='exercise_sequence'
+            AND s.generation_status='generated'
+            AND s.review_status='approved'
+        ) > 0 THEN 0 ELSE 1 END,
+        COALESCE(t.name,e.canonical_name)
+      LIMIT $limit
+    `, { limit: Math.max(1, Math.min(200, limit)) });
+
+    return reader.getRows().map((row) => ({
+      exerciseId: String(row[0]),
+      exerciseName: String(row[1]),
+      seedKey: row[2] == null ? null : String(row[2]),
+      legacyAssetCount: Number(row[3] ?? 0),
+      pendingSequenceCount: Number(row[4] ?? 0),
+      approvedSequenceCount: Number(row[5] ?? 0),
+      activeJobCount: Number(row[6] ?? 0),
+    }));
+  });
+}
+
+export async function retireLegacyTriptychsAfterApprovedSequence(
+  exerciseId: string,
+): Promise<number> {
+  if (!UUID_PATTERN.test(exerciseId)) return 0;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      UPDATE exercise_media_assets
+      SET
+        review_status='rejected',
+        usage_note=CASE
+          WHEN COALESCE(trim(usage_note),'')=''
+            THEN 'Durch fachlich freigegebene exercise_sequence ersetzt.'
+          ELSE usage_note || ' · Durch fachlich freigegebene exercise_sequence ersetzt.'
+        END,
+        updated_at=current_timestamp
+      WHERE exercise_id=$exerciseId::UUID
+        AND source_type='ai_generated'
+        AND illustration_format='legacy_triptych'
+        AND generation_status='generated'
+        AND review_status<>'rejected'
+        AND EXISTS (
+          SELECT 1
+          FROM exercise_media_assets replacement
+          WHERE replacement.exercise_id=$exerciseId::UUID
+            AND replacement.source_type='ai_generated'
+            AND replacement.illustration_format='exercise_sequence'
+            AND replacement.generation_status='generated'
+            AND replacement.review_status='approved'
+        )
+      RETURNING id::VARCHAR
+    `, { exerciseId });
+    return reader.getRows().length;
   });
 }

@@ -44,6 +44,7 @@ async function listStorageReferences(
       JOIN exercises e ON e.id=m.exercise_id
       LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
       WHERE m.storage_provider=$provider
+        AND m.source_type<>'external_reference'
         AND m.storage_key IS NOT NULL
         AND trim(m.storage_key)<>''
       ORDER BY m.created_at,m.id
@@ -66,6 +67,7 @@ async function withInventoryStorage<T>(
     throw new Error("Das konfigurierte Medien-Storage unterstützt keine Inventarisierung.");
   }
   try {
+    await storage.healthCheck?.();
     return await callback(storage as ExerciseImageStorage & { listKeys(): Promise<readonly string[]> });
   } finally {
     storage.close?.();

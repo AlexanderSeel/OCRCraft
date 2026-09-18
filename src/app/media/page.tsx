@@ -3,10 +3,14 @@ import { AppShell } from "@/components/app-shell";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import { MediaJobRefresh } from "@/components/media/media-job-refresh";
 import { OrphanedMediaCleanupForm } from "@/components/media/orphaned-media-cleanup-form";
+import { ExternalMediaManager } from "@/components/media/external-media-manager";
+import { VideoPopoverButton } from "@/components/media/video-popover-button";
 import {
   getMediaCatalogSummary,
   listMediaCatalog,
   listMediaGenerationCandidates,
+  listLegacyTriptychMigrationCandidates,
+  type LegacyTriptychMigrationCandidate,
   type MediaCatalogItem,
   type MediaGenerationCandidate,
 } from "@/server/media/media-catalog-repository";
@@ -15,7 +19,9 @@ import {
   listRecentMediaGenerationJobs,
   type RecentMediaGenerationJob,
 } from "@/server/media/media-generation-job-repository";
-import { cleanupOrphanedMediaAction, queueMediaBatchAction, retryMediaGenerationJobAction, updateMediaReviewStatusAction } from "./actions";
+import { cleanupOrphanedMediaAction, deleteExternalMediaAction, finalizeLegacyTriptychMigrationAction, queueMediaBatchAction, retryMediaGenerationJobAction, saveExternalMediaAction, updateMediaReviewStatusAction, updateSequenceMediaAssessmentAction } from "./actions";
+import { getLegacyMediaMigrationState, legacyMediaMigrationStateLabel } from "@/server/media/legacy-media-migration-core";
+import { canApproveMediaReview } from "@/server/media/media-review-core";
 import { getMediaMaintenanceSummary } from "@/server/media/media-maintenance-service";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +42,13 @@ interface PageProps {
     jobRetried?: string;
     cleanupRemoved?: string;
     cleanupError?: string;
+    externalSaved?: string;
+    externalDeleted?: string;
+    externalError?: string;
+    legacyRetired?: string;
+    legacyError?: string;
+    sequenceSaved?: string;
+    sequenceError?: string;
   }>;
 }
 
@@ -48,7 +61,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
   const mediaType = allowed(params.type, ["image", "video", "illustration"]);
   const missingQuery = params.missingQ?.trim() ?? "";
 
-  const [summary, assets, generationQueue, missingImageExercises, recentJobs, maintenance] = await Promise.all([
+  const [summary, assets, generationQueue, missingImageExercises, recentJobs, maintenance, legacyCandidates] = await Promise.all([
     getMediaCatalogSummary(),
     listMediaCatalog({
       query,
@@ -61,6 +74,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
     listMediaGenerationCandidates(missingQuery, 24),
     listRecentMediaGenerationJobs(12),
     getMediaMaintenanceSummary(),
+    listLegacyTriptychMigrationCandidates(40),
   ]);
 
   return (
@@ -69,6 +83,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
       subtitle="Bilder, Illustrationen und Videos des Übungskatalogs mit Herkunft, Generierungs- und Reviewstatus."
       actions={(
         <div className="flex flex-wrap gap-2">
+          <ExternalMediaManager deleteAction={deleteExternalMediaAction} saveAction={saveExternalMediaAction} />
           <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/exercises">
             Übungskatalog
           </Link>
@@ -86,7 +101,9 @@ export default async function MediaPage({ searchParams }: PageProps) {
         ) : null}
         {params.reviewError ? (
           <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
-            Reviewstatus konnte nicht gespeichert werden.
+            {params.reviewError === "blocked"
+              ? "Freigabe ist noch gesperrt: externe Rechte/Einwilligung bzw. Biomechanik- und Textprüfung müssen vollständig bestanden sein."
+              : "Reviewstatus konnte nicht gespeichert werden."}
           </p>
         ) : null}
         {params.batchQueued ? (
@@ -115,6 +132,43 @@ export default async function MediaPage({ searchParams }: PageProps) {
         {params.cleanupError ? (
           <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
             Die Medienbereinigung konnte nicht vollständig ausgeführt werden.
+          </p>
+        ) : null}
+        {params.externalSaved ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            Externes Medium wurde gespeichert.
+          </p>
+        ) : null}
+        {params.externalDeleted ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            Externes Medium wurde entfernt.
+          </p>
+        ) : null}
+        {params.externalError ? (
+          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+            Externes Medium konnte nicht gespeichert werden. Prüfe HTTPS-URLs, Lizenz und Einwilligungsstatus.
+          </p>
+        ) : null}
+        {params.legacyRetired ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            {params.legacyRetired} Legacy-Triptychon-Asset(s) wurden nach Freigabe der Sequenz als ersetzt markiert.
+          </p>
+        ) : null}
+        {params.legacyError ? (
+          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+            {params.legacyError === "approval"
+              ? "Die Migration kann erst abgeschlossen werden, wenn mindestens eine erzeugte Sequenz fachlich freigegeben wurde."
+              : "Die Legacy-Migration konnte nicht abgeschlossen werden."}
+          </p>
+        ) : null}
+        {params.sequenceSaved ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            Sequenzprüfung wurde gespeichert.
+          </p>
+        ) : null}
+        {params.sequenceError ? (
+          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+            Die fachliche Sequenzprüfung konnte nicht gespeichert werden.
           </p>
         ) : null}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
@@ -268,6 +322,27 @@ export default async function MediaPage({ searchParams }: PageProps) {
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-black">Legacy-Triptychon → Sequenzbild</h2>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+                Alte dreiteilige AI-Illustrationen werden nicht automatisch überschrieben. Zuerst wird eine neue Bewegungssequenz erzeugt und fachlich geprüft; erst nach deren Freigabe kann das Legacy-Asset als ersetzt markiert werden.
+              </p>
+            </div>
+            <span className="rounded-full bg-[var(--surface-subtle)] px-3 py-1 text-xs font-black">{legacyCandidates.length} offen</span>
+          </div>
+          <div className="mt-4 grid gap-2">
+            {legacyCandidates.length ? legacyCandidates.map((candidate) => (
+              <LegacyMigrationRow candidate={candidate} key={candidate.exerciseId} />
+            )) : (
+              <p className="rounded-xl bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">
+                Keine aktiven Legacy-Triptychon-Assets mehr zu migrieren.
+              </p>
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 className="text-base font-black">Medien-Wartung</h2>
@@ -327,15 +402,29 @@ export default async function MediaPage({ searchParams }: PageProps) {
 
 function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
   const sourceHref = safeHttps(asset.sourceReference);
+  const approvalReady = canApproveMediaReview({
+    sourceType: asset.sourceType,
+    illustrationFormat: asset.illustrationFormat,
+    rightsStatus: asset.rightsStatus,
+    licenseLabel: asset.licenseLabel,
+    sourceReference: asset.sourceReference,
+    consentRequired: asset.consentRequired,
+    consentConfirmed: asset.consentConfirmed,
+    biomechanicsReview: asset.biomechanicsReview,
+    textMatchReview: asset.textMatchReview,
+  });
   return (
     <article className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
       <div className="aspect-[16/10] bg-[var(--surface-subtle)]">
-        {asset.imageUrl && asset.mediaType !== "video" ? (
+        {asset.mediaType === "video" && asset.thumbnailUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img alt={`${asset.exerciseName} · Video-Thumbnail`} className="h-full w-full object-contain" loading="lazy" src={asset.thumbnailUrl} />
+        ) : asset.imageUrl && asset.mediaType !== "video" ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img alt={`${asset.exerciseName} · Medienvorschau`} className="h-full w-full object-contain" loading="lazy" src={asset.imageUrl} />
         ) : (
           <div className="grid h-full place-items-center p-6 text-center text-sm font-bold text-[var(--muted)]">
-            {asset.mediaType === "video" ? "Video-Metadaten · keine Inline-Vorschau" : "Keine aufrufbare Vorschau gespeichert"}
+            {asset.mediaType === "video" ? "Video vorhanden · ohne Thumbnail" : "Keine aufrufbare Vorschau gespeichert"}
           </div>
         )}
       </div>
@@ -365,6 +454,8 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
           <Data label="Sequenz" value={asset.sequenceStepCount == null ? "–" : `${asset.sequenceStepCount} Schritte`} />
           <Data label="Größe" value={asset.width && asset.height ? `${asset.width} × ${asset.height}` : "–"} />
           <Data label="Content-Type" value={asset.contentType ?? "–"} />
+          <Data label="Rechte" value={rightsLabel(asset.rightsStatus)} />
+          <Data label="Einwilligung" value={asset.consentRequired ? (asset.consentConfirmed ? "Bestätigt" : "Fehlt") : "Nicht erforderlich"} />
         </dl>
 
         {(asset.provider || asset.model || asset.styleProfile) ? (
@@ -373,16 +464,57 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
           </p>
         ) : null}
         {asset.licenseLabel ? <p className="text-xs font-bold">Lizenz: {asset.licenseLabel}</p> : null}
+        {asset.attributionText ? <p className="text-xs text-[var(--muted)]">Attribution: {asset.attributionText}</p> : null}
+        {asset.usageNote ? <p className="text-xs text-[var(--muted)]">{asset.usageNote}</p> : null}
         {asset.errorMessage ? <p className="rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs font-bold text-[var(--danger)]">{asset.errorMessage}</p> : null}
+
+        {asset.sourceType === "ai_generated" && asset.illustrationFormat === "exercise_sequence" && asset.generationStatus === "generated" ? (
+          <form action={updateSequenceMediaAssessmentAction} className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+            <input name="assetId" type="hidden" value={asset.id} />
+            <input name="exerciseId" type="hidden" value={asset.exerciseId} />
+            <div>
+              <div className="text-xs font-black uppercase tracking-[0.08em] text-[var(--muted)]">Fachliche Sequenzprüfung</div>
+              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                Vergleiche jede dargestellte Phase mit den strukturierten Ausführungsschritten und prüfe Haltung, Bewegungsrichtung, Gelenkpositionen, Equipment und sichere Übergänge.
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <ReviewSelect label="Biomechanische Plausibilität" name="biomechanicsReview" value={asset.biomechanicsReview} />
+              <ReviewSelect label="Übereinstimmung mit Ausführungstext" name="textMatchReview" value={asset.textMatchReview} />
+            </div>
+            <label className="grid gap-1 text-xs font-bold">
+              Review-Notiz
+              <textarea
+                className="min-h-20 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 font-normal"
+                defaultValue={asset.reviewNotes ?? ""}
+                maxLength={2000}
+                name="reviewNotes"
+                placeholder="Abweichungen, Korrekturhinweise oder Freigabebegründung"
+              />
+            </label>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs text-[var(--muted)]">
+                {asset.reviewerName && asset.reviewedAt ? `Zuletzt geprüft von ${asset.reviewerName} · ${formatJobTime(asset.reviewedAt)}` : "Noch nicht fachlich geprüft"}
+              </span>
+              <button className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" type="submit">
+                Prüfung speichern
+              </button>
+            </div>
+          </form>
+        ) : null}
 
         <div className="flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
           <form action={updateMediaReviewStatusAction} className="flex flex-wrap gap-2">
             <input name="assetId" type="hidden" value={asset.id} />
             <input name="exerciseId" type="hidden" value={asset.exerciseId} />
-            {asset.reviewStatus !== "approved" ? (
+            {asset.reviewStatus !== "approved" && approvalReady ? (
               <button className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" name="reviewStatus" type="submit" value="approved">
                 Freigeben
               </button>
+            ) : asset.reviewStatus !== "approved" ? (
+              <span className="grid min-h-9 place-items-center rounded-lg border border-[var(--warning)] bg-[var(--warning-bg)] px-3 text-xs font-black text-[var(--warning)]">
+                Freigabeprüfung offen
+              </span>
             ) : null}
             {asset.reviewStatus !== "rejected" ? (
               <button className="rounded-lg border border-[var(--danger)] px-3 py-2 text-xs font-black text-[var(--danger)]" name="reviewStatus" type="submit" value="rejected">
@@ -399,8 +531,33 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
             Übung öffnen
           </Link>
           <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/exercises/${asset.exerciseId}/edit`}>
-            Bearbeiten
+            Übung bearbeiten
           </Link>
+          {asset.mediaType === "video" && asset.imageUrl ? (
+            <VideoPopoverButton title={asset.exerciseName} videoUrl={asset.imageUrl} thumbnailUrl={asset.thumbnailUrl} />
+          ) : null}
+          {asset.sourceType === "external_reference" && asset.imageUrl ? (
+            <ExternalMediaManager
+              deleteAction={deleteExternalMediaAction}
+              saveAction={saveExternalMediaAction}
+              value={{
+                id: asset.id,
+                exerciseId: asset.exerciseId,
+                exerciseName: asset.exerciseName,
+                mediaType: asset.mediaType === "video" ? "video" : "image",
+                mediaUrl: asset.imageUrl,
+                thumbnailUrl: asset.thumbnailUrl,
+                provider: asset.provider,
+                sourceReference: asset.sourceReference,
+                licenseLabel: asset.licenseLabel,
+                attributionText: asset.attributionText,
+                usageNote: asset.usageNote,
+                rightsStatus: asset.rightsStatus,
+                consentRequired: asset.consentRequired,
+                consentConfirmed: asset.consentConfirmed,
+              }}
+            />
+          ) : null}
           {sourceHref ? (
             <a className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={sourceHref} rel="noreferrer" target="_blank">
               Quelle
@@ -439,6 +596,51 @@ function MediaGenerationCandidateRow({ candidate }: { readonly candidate: MediaG
         />
         {candidate.activeJobCount > 0 ? "Bereits eingeplant" : "Auswählen"}
       </label>
+    </article>
+  );
+}
+
+function LegacyMigrationRow({ candidate }: { readonly candidate: LegacyTriptychMigrationCandidate }) {
+  const state = getLegacyMediaMigrationState(candidate);
+  return (
+    <article className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+      <div className="min-w-0">
+        <Link className="font-black underline-offset-4 hover:underline" href={`/exercises/${candidate.exerciseId}`}>
+          {candidate.exerciseName}
+        </Link>
+        <div className="mt-1 text-xs text-[var(--muted)]">
+          {candidate.legacyAssetCount} Legacy · {candidate.pendingSequenceCount} Sequenz(en) im Review · {legacyMediaMigrationStateLabel(state)}
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {state === "needs_generation" ? (
+          <form action={queueMediaBatchAction}>
+            <input name="batchAction" type="hidden" value="generate_ai_image" />
+            <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
+            <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
+              Sequenz erzeugen
+            </button>
+          </form>
+        ) : null}
+        {state === "review_pending" ? (
+          <Link className="grid min-h-10 place-items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href={`/media?q=${encodeURIComponent(candidate.exerciseName)}&review=pending`}>
+            Sequenz prüfen
+          </Link>
+        ) : null}
+        {state === "generating" ? (
+          <span className="grid min-h-10 place-items-center rounded-lg border border-[var(--border)] px-3 text-xs font-black text-[var(--muted)]">
+            Job läuft
+          </span>
+        ) : null}
+        {state === "ready_to_finalize" ? (
+          <form action={finalizeLegacyTriptychMigrationAction}>
+            <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
+            <button className="min-h-10 rounded-lg border border-[var(--danger)] px-3 text-xs font-black text-[var(--danger)]" type="submit">
+              Legacy als ersetzt markieren
+            </button>
+          </form>
+        ) : null}
+      </div>
     </article>
   );
 }
@@ -486,6 +688,27 @@ function Data({ label, value }: { readonly label: string; readonly value: string
       <dt className="font-bold text-[var(--muted)]">{label}</dt>
       <dd className="mt-0.5 break-words font-black">{value}</dd>
     </div>
+  );
+}
+
+function ReviewSelect({
+  label,
+  name,
+  value,
+}: {
+  readonly label: string;
+  readonly name: string;
+  readonly value: "unreviewed" | "pass" | "needs_changes";
+}) {
+  return (
+    <label className="grid gap-1 text-xs font-bold">
+      {label}
+      <select className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal" defaultValue={value} name={name}>
+        <option value="unreviewed">Noch nicht geprüft</option>
+        <option value="pass">Bestanden</option>
+        <option value="needs_changes">Korrektur erforderlich</option>
+      </select>
+    </label>
   );
 }
 
@@ -564,6 +787,12 @@ function mediaTypeLabel(value: string): string {
   return value;
 }
 
+function rightsLabel(value: string): string {
+  if (value === "approved") return "Geprüft";
+  if (value === "restricted") return "Eingeschränkt";
+  return "Noch zu prüfen";
+}
+
 function safeHttps(value: string | null): string | null {
   if (!value) return null;
   try {
@@ -598,3 +827,4 @@ function batchErrorLabel(value: string): string {
   if (value === "action") return "Die gewählte Batch-Aktion ist ungültig.";
   return "Die Batch-Operation konnte nicht in die Warteschlange gestellt werden.";
 }
+

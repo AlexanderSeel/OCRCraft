@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
-import { setMediaReviewStatus } from "@/server/media/media-catalog-repository";
-import { requireAdmin } from "@/server/auth/identity-service";
+import { deleteExternalMediaAsset, retireLegacyTriptychsAfterApprovedSequence, saveExternalMediaAsset, saveMediaSequenceAssessment, setMediaReviewStatus } from "@/server/media/media-catalog-repository";
+import { requireAdmin, requireTrainer } from "@/server/auth/identity-service";
 import { recordAuditEvent } from "@/server/db/audit-service";
 import { hasConfiguredExerciseImageProvider } from "@/server/images/configured-image-generator";
 import { deleteOrphanedMediaObjects } from "@/server/media/media-maintenance-service";
@@ -20,6 +20,7 @@ const reviewSchema = z.object({
 });
 
 export async function updateMediaReviewStatusAction(formData: FormData): Promise<void> {
+  const actor = await requireTrainer();
   const parsed = reviewSchema.safeParse({
     assetId: formData.get("assetId"),
     exerciseId: formData.get("exerciseId"),
@@ -29,11 +30,19 @@ export async function updateMediaReviewStatusAction(formData: FormData): Promise
 
   let updated = false;
   try {
-    updated = await setMediaReviewStatus(parsed.data.assetId, parsed.data.reviewStatus);
+    updated = await setMediaReviewStatus(parsed.data.assetId, parsed.data.reviewStatus, actor.id);
   } catch {
     redirect("/media?reviewError=save");
   }
-  if (!updated) redirect("/media?reviewError=missing");
+  if (!updated) redirect("/media?reviewError=blocked");
+  await recordAuditEvent({
+    action: "media.review_status.update",
+    entityType: "exercise_media_asset",
+    entityId: parsed.data.assetId,
+    actorType: "user",
+    actorId: actor.id,
+    metadata: { reviewStatus: parsed.data.reviewStatus },
+  }).catch(() => undefined);
 
   revalidatePath("/media");
   revalidatePath("/exercises");
@@ -126,4 +135,185 @@ export async function cleanupOrphanedMediaAction(): Promise<void> {
 
   revalidatePath("/media");
   redirect("/media?cleanupRemoved=" + String(deleted));
+}
+
+
+const externalMediaSchema = z.object({
+  assetId: z.string().uuid().optional(),
+  exerciseId: z.string().uuid(),
+  mediaType: z.enum(["image", "video"]),
+  mediaUrl: z.string().trim().url(),
+  thumbnailUrl: z.string().trim().url().optional().or(z.literal("")),
+  provider: z.string().trim().max(160).optional(),
+  sourceReference: z.string().trim().url(),
+  licenseLabel: z.string().trim().min(1).max(240),
+  attributionText: z.string().trim().max(500).optional(),
+  usageNote: z.string().trim().max(1000).optional(),
+  rightsStatus: z.enum(["unreviewed", "approved", "restricted"]),
+  consentRequired: z.boolean(),
+  consentConfirmed: z.boolean(),
+});
+
+export async function saveExternalMediaAction(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const parsed = externalMediaSchema.safeParse({
+    assetId: String(formData.get("assetId") ?? "").trim() || undefined,
+    exerciseId: formData.get("exerciseId"),
+    mediaType: formData.get("mediaType"),
+    mediaUrl: formData.get("mediaUrl"),
+    thumbnailUrl: String(formData.get("thumbnailUrl") ?? "").trim(),
+    provider: String(formData.get("provider") ?? "").trim(),
+    sourceReference: formData.get("sourceReference"),
+    licenseLabel: formData.get("licenseLabel"),
+    attributionText: String(formData.get("attributionText") ?? "").trim(),
+    usageNote: String(formData.get("usageNote") ?? "").trim(),
+    rightsStatus: formData.get("rightsStatus"),
+    consentRequired: formData.get("consentRequired") === "on",
+    consentConfirmed: formData.get("consentConfirmed") === "on",
+  });
+  if (!parsed.success) redirect("/media?externalError=invalid");
+
+  let assetId = parsed.data.assetId ?? "";
+  try {
+    assetId = await saveExternalMediaAsset({
+      assetId: parsed.data.assetId,
+      exerciseId: parsed.data.exerciseId,
+      mediaType: parsed.data.mediaType,
+      mediaUrl: parsed.data.mediaUrl,
+      thumbnailUrl: parsed.data.thumbnailUrl || null,
+      provider: parsed.data.provider || null,
+      sourceReference: parsed.data.sourceReference,
+      licenseLabel: parsed.data.licenseLabel,
+      attributionText: parsed.data.attributionText || null,
+      usageNote: parsed.data.usageNote || null,
+      rightsStatus: parsed.data.rightsStatus,
+      consentRequired: parsed.data.consentRequired,
+      consentConfirmed: parsed.data.consentConfirmed,
+    });
+    await recordAuditEvent({
+      action: parsed.data.assetId ? "media.external.update" : "media.external.create",
+      entityType: "exercise_media_asset",
+      entityId: assetId,
+      actorType: "user",
+      actorId: actor.id,
+      metadata: {
+        exerciseId: parsed.data.exerciseId,
+        mediaType: parsed.data.mediaType,
+        rightsStatus: parsed.data.rightsStatus,
+      },
+    });
+  } catch {
+    redirect("/media?externalError=save");
+  }
+
+  revalidatePath("/media");
+  revalidatePath("/exercises");
+  revalidatePath("/exercises/" + parsed.data.exerciseId);
+  redirect("/media?externalSaved=" + encodeURIComponent(assetId));
+}
+
+export async function deleteExternalMediaAction(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const assetId = z.string().uuid().safeParse(formData.get("assetId"));
+  if (!assetId.success) redirect("/media?externalError=invalid");
+
+  let deleted = false;
+  try {
+    deleted = await deleteExternalMediaAsset(assetId.data);
+    if (deleted) await recordAuditEvent({
+      action: "media.external.delete",
+      entityType: "exercise_media_asset",
+      entityId: assetId.data,
+      actorType: "user",
+      actorId: actor.id,
+    });
+  } catch {
+    redirect("/media?externalError=save");
+  }
+  if (!deleted) redirect("/media?externalError=missing");
+
+  revalidatePath("/media");
+  revalidatePath("/exercises");
+  redirect("/media?externalDeleted=1");
+}
+
+
+export async function finalizeLegacyTriptychMigrationAction(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const exerciseId = z.string().uuid().safeParse(formData.get("exerciseId"));
+  if (!exerciseId.success) redirect("/media?legacyError=invalid");
+
+  let retired = 0;
+  try {
+    retired = await retireLegacyTriptychsAfterApprovedSequence(exerciseId.data);
+    if (retired > 0) {
+      await recordAuditEvent({
+        action: "media.legacy_triptych.retire",
+        entityType: "exercise",
+        entityId: exerciseId.data,
+        actorType: "user",
+        actorId: actor.id,
+        metadata: { retired },
+      });
+    }
+  } catch {
+    redirect("/media?legacyError=save");
+  }
+  if (retired === 0) redirect("/media?legacyError=approval");
+
+  revalidatePath("/media");
+  revalidatePath("/exercises/" + exerciseId.data);
+  redirect("/media?legacyRetired=" + String(retired));
+}
+
+
+const sequenceAssessmentSchema = z.object({
+  assetId: z.string().uuid(),
+  exerciseId: z.string().uuid(),
+  biomechanicsReview: z.enum(["unreviewed", "pass", "needs_changes"]),
+  textMatchReview: z.enum(["unreviewed", "pass", "needs_changes"]),
+  reviewNotes: z.string().trim().max(2000),
+});
+
+export async function updateSequenceMediaAssessmentAction(formData: FormData): Promise<void> {
+  const actor = await requireTrainer();
+  const parsed = sequenceAssessmentSchema.safeParse({
+    assetId: formData.get("assetId"),
+    exerciseId: formData.get("exerciseId"),
+    biomechanicsReview: formData.get("biomechanicsReview"),
+    textMatchReview: formData.get("textMatchReview"),
+    reviewNotes: String(formData.get("reviewNotes") ?? ""),
+  });
+  if (!parsed.success) redirect("/media?sequenceError=invalid");
+
+  let updated = false;
+  try {
+    updated = await saveMediaSequenceAssessment({
+      assetId: parsed.data.assetId,
+      biomechanicsReview: parsed.data.biomechanicsReview,
+      textMatchReview: parsed.data.textMatchReview,
+      reviewNotes: parsed.data.reviewNotes,
+      reviewerId: actor.id,
+    });
+    if (updated) {
+      await recordAuditEvent({
+        action: "media.sequence_assessment.update",
+        entityType: "exercise_media_asset",
+        entityId: parsed.data.assetId,
+        actorType: "user",
+        actorId: actor.id,
+        metadata: {
+          biomechanicsReview: parsed.data.biomechanicsReview,
+          textMatchReview: parsed.data.textMatchReview,
+        },
+      });
+    }
+  } catch {
+    redirect("/media?sequenceError=save");
+  }
+  if (!updated) redirect("/media?sequenceError=missing");
+
+  revalidatePath("/media");
+  revalidatePath("/exercises/" + parsed.data.exerciseId);
+  redirect("/media?sequenceSaved=1");
 }
