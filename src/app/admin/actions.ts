@@ -164,18 +164,16 @@ export async function resolveDuplicateExerciseAction(formData: FormData): Promis
 }
 
 export async function resolveDuplicateExercisesBulkAction(formData: FormData): Promise<void> {
-  await requireAdmin();
+  const actor = await requireAdmin();
   const decision = String(formData.get("decision") ?? "left");
   const selections = formData.getAll("selection").map(String);
-
-  for (const selection of selections) {
+  const resolutions = selections.flatMap((selection) => {
     const [taskId, leftExerciseId, rightExerciseId] = selection.split(":");
-    if (!taskId || !leftExerciseId || !rightExerciseId) continue;
-    if (decision === "ignored" || decision === "both") {
-      await resolveDuplicateTask(taskId, leftExerciseId, "ignored", decision === "both" ? "keep_both" : "not_duplicate");
-      continue;
-    }
-    await resolveDuplicateTask(taskId, decision === "right" ? rightExerciseId : leftExerciseId, "merged");
+    return taskId && leftExerciseId && rightExerciseId ? [{ taskId, leftExerciseId, rightExerciseId, decision }] : [];
+  });
+  if (resolutions.length) {
+    await enqueueAppTask({ type: "duplicate_resolve", title: `${resolutions.length} Dublettenentscheidungen anwenden`, requestedBy: actor.id, payload: { resolutions } });
+    void runAppTaskQueue();
   }
 
   revalidatePath("/admin");
