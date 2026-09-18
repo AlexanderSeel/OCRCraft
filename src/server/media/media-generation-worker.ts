@@ -3,7 +3,7 @@ import "server-only";
 import { ExerciseImageGenerationRepository } from "@/server/images/exercise-image-generation-repository";
 import { ExerciseImageGenerationService } from "@/server/images/exercise-image-generation-service";
 import { createExerciseImageStorageFromEnvironment } from "@/server/images/exercise-image-storage";
-import { OpenAIImageGenerator } from "@/server/images/openai-image-generator";
+import { createConfiguredExerciseImageGenerator } from "@/server/images/configured-image-generator";
 import {
   claimNextMediaGenerationJob,
   failQueuedMediaGenerationJobs,
@@ -23,8 +23,9 @@ function configuredConcurrency(): number {
 async function processQueue(): Promise<void> {
   await requeueStaleMediaGenerationJobs();
 
-  if (!process.env.OPENAI_API_KEY) {
-    await failQueuedMediaGenerationJobs("OPENAI_API_KEY is not configured for background image generation.");
+  const imageGenerator = await createConfiguredExerciseImageGenerator();
+  if (!imageGenerator) {
+    await failQueuedMediaGenerationJobs("Für Bildgenerierung ist kein aktiver AI-Provider zugewiesen.");
     return;
   }
 
@@ -39,7 +40,7 @@ async function processQueue(): Promise<void> {
 
   const service = new ExerciseImageGenerationService(
     new ExerciseImageGenerationRepository(),
-    new OpenAIImageGenerator(),
+    imageGenerator,
     storage,
   );
 

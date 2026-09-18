@@ -1,6 +1,6 @@
 import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
-import { createAiJsonClient } from "@/server/ai/ai-json-provider";
-import { resolveAiProvider } from "@/server/ai/ai-provider-settings-repository";
+import { createAiJsonFallbackClient } from "@/server/ai/ai-json-provider";
+import { resolveAiProviderChain } from "@/server/ai/ai-provider-settings-repository";
 import { SPORTS_PLANNING_PRINCIPLES } from "./sports-planning-principles";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 
@@ -68,14 +68,16 @@ export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
 }
 
 class ConfiguredAiTrainingProvider implements AiTrainingProvider {
-  readonly id: string;
-  readonly modelId: string;
-
   constructor(
-    private readonly client: ReturnType<typeof createAiJsonClient>,
-  ) {
-    this.id = client.providerId;
-    this.modelId = client.modelId;
+    private readonly client: ReturnType<typeof createAiJsonFallbackClient>,
+  ) {}
+
+  get id(): string {
+    return this.client.providerId;
+  }
+
+  get modelId(): string {
+    return this.client.modelId;
   }
 
   async generateTrainingPlan(context: AiTrainingGenerationContext): Promise<unknown> {
@@ -84,9 +86,9 @@ class ConfiguredAiTrainingProvider implements AiTrainingProvider {
 }
 
 export async function getConfiguredAiTrainingProvider(): Promise<AiTrainingProvider | null> {
-  const config = await resolveAiProvider("training");
-  if (!config) return null;
-  return new ConfiguredAiTrainingProvider(createAiJsonClient(config, "training"));
+  const configs = await resolveAiProviderChain("training");
+  if (configs.length === 0) return null;
+  return new ConfiguredAiTrainingProvider(createAiJsonFallbackClient(configs, "training"));
 }
 
 function trainingSystemPrompt(): string {

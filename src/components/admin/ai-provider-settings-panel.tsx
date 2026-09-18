@@ -1,13 +1,61 @@
-import type { AiProviderSettingsView } from "@/server/ai/ai-provider-settings-repository";
+"use client";
+
+import { useMemo, useState } from "react";
+import { Dialog } from "@/components/ui/dialog";
+import {
+  aiCapabilityLabel,
+  aiPriorityLabel,
+  defaultImageModel,
+  defaultProviderBaseUrl,
+  defaultProviderKeyEnvironment,
+  providerKindLabel,
+  providerSupportsCapability,
+  type AiCapability,
+  type AiProviderKind,
+} from "@/server/ai/ai-provider-core";
+import type {
+  AiProviderSettingsView,
+} from "@/server/ai/ai-provider-settings-repository";
+import type { AiModelOption } from "@/server/ai/ai-model-discovery";
 
 interface Props {
   readonly providers: readonly AiProviderSettingsView[];
   readonly saved?: string;
   readonly error?: string;
   readonly saveAction: (formData: FormData) => Promise<void>;
+  readonly deleteAction: (formData: FormData) => Promise<void>;
 }
 
-export function AiProviderSettingsPanel({ providers, saved, error, saveAction }: Props) {
+type EditorTarget = AiProviderSettingsView | "new" | null;
+
+export function AiProviderSettingsPanel({
+  providers,
+  saved,
+  error,
+  saveAction,
+  deleteAction,
+}: Props) {
+  const [editor, setEditor] = useState<EditorTarget>(null);
+  const routes = useMemo(() => {
+    const result: Record<AiCapability, { name: string; priority: number }[]> = {
+      training: [],
+      exercise_draft: [],
+      image: [],
+    };
+    for (const provider of providers) {
+      for (const assignment of provider.assignments) {
+        result[assignment.capability].push({
+          name: provider.displayName,
+          priority: assignment.priority,
+        });
+      }
+    }
+    for (const capability of Object.keys(result) as AiCapability[]) {
+      result[capability].sort((a, b) => a.priority - b.priority);
+    }
+    return result;
+  }, [providers]);
+
   return (
     <section
       className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6"
@@ -16,155 +64,431 @@ export function AiProviderSettingsPanel({ providers, saved, error, saveAction }:
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">KI Provider</div>
-          <h2 className="mt-1 text-xl font-black">Modelle, Keys, Limits und Verbrauch</h2>
+          <h2 className="mt-1 text-xl font-black">AI-Provider und Routing</h2>
           <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--muted)]">
-            OCRCraft kann Text-KI für Trainingsgenerierung und AI-Übungsentwürfe getrennt auswählen. Keys bleiben entweder in Umgebungsvariablen oder werden mit OCRCRAFT_AI_SECRET_KEY verschlüsselt in DuckDB gespeichert.
+            Lege beliebig viele AI-Instanzen an und ordne sie Trainingsgenerierung, Übungsentwürfen oder Bildgenerierung mit Priorität zu.
+            Ist ein Monatslimit erreicht oder ein Provider technisch nicht verfügbar, versucht OCRCraft den nächsten zugewiesenen Provider.
           </p>
         </div>
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2 text-xs font-bold text-[var(--muted)]">
-          Direkter Provider-Login/OAuth benötigt provider-spezifische App-Registrierungen und ist noch nicht aktiviert.
-        </div>
+        <button
+          className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]"
+          onClick={() => setEditor("new")}
+          type="button"
+        >
+          + AI hinzufügen
+        </button>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm leading-6 text-[var(--muted)]">
+        <strong className="text-[var(--foreground)]">Text-Token-Limit</strong> bedeutet die Anzahl der verarbeiteten Input- und Output-Tokens im aktuellen Monat – <strong className="text-[var(--foreground)]">kein Geldbetrag</strong>.
+        Das Request-Limit zählt API-Aufrufe. Bildaufrufe werden separat als Bilder gezählt.
       </div>
 
       {saved ? (
         <p aria-live="polite" className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
-          KI-Provider „{saved}“ wurde gespeichert.
+          AI-Konfiguration wurde gespeichert.
         </p>
       ) : null}
       {error ? <ErrorNotice code={error} /> : null}
 
-      <div className="mt-5 grid gap-4 xl:grid-cols-2">
-        {providers.map((provider) => (
-          <form action={saveAction} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={provider.providerId}>
-            <input name="providerId" type="hidden" value={provider.providerId} />
-
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h3 className="font-black">{provider.displayName}</h3>
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  {provider.protocol === "anthropic" ? "Anthropic Messages API" : "OpenAI-kompatible Chat-Completions API"}
-                </p>
-              </div>
-              <span className={provider.enabled
-                ? "rounded-full bg-[var(--success-bg)] px-2.5 py-1 text-xs font-black text-[var(--success-foreground)]"
-                : "rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black text-[var(--muted)]"}>
-                {provider.enabled ? "Aktiv" : "Inaktiv"}
-              </span>
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="flex items-center gap-2 text-sm font-bold">
-                <input defaultChecked={provider.enabled} name="enabled" type="checkbox" />
-                Provider aktivieren
-              </label>
-              <div className="text-xs font-bold text-[var(--muted)]">
-                Key: {provider.authMode === "environment"
-                  ? provider.environmentKeyAvailable ? "Umgebungsvariable vorhanden" : "Umgebungsvariable fehlt"
-                  : provider.hasStoredApiKey ? "verschlüsselt gespeichert" : "noch nicht gespeichert"}
-              </div>
-            </div>
-
-            <fieldset className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
-              <legend className="px-1 text-xs font-black uppercase tracking-[0.1em] text-[var(--muted)]">Verwendung</legend>
-              <div className="mt-1 flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 text-sm font-bold">
-                  <input defaultChecked={provider.useForTraining} name="useForTraining" type="checkbox" />
-                  Trainingsgenerierung
-                </label>
-                <label className="flex items-center gap-2 text-sm font-bold">
-                  <input defaultChecked={provider.useForExerciseDrafts} name="useForExerciseDrafts" type="checkbox" />
-                  Übungsentwürfe
-                </label>
-              </div>
-              <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-                Pro Funktion ist genau der zuletzt gespeicherte ausgewählte Provider aktiv.
-              </p>
-            </fieldset>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <Field label="Base URL" name="baseUrl" defaultValue={provider.baseUrl ?? ""} placeholder="https://..." />
-              <Field label="Modell-ID" name="modelId" defaultValue={provider.modelId ?? ""} placeholder="Provider-Modell" />
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="grid gap-1 text-sm font-bold">
-                Key-Quelle
-                <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={provider.authMode} name="authMode">
-                  <option value="environment">Umgebungsvariable</option>
-                  <option value="encrypted_key">Verschlüsselt in DuckDB</option>
-                </select>
-              </label>
-              <Field label="Umgebungsvariable" name="apiKeyEnv" defaultValue={provider.apiKeyEnv ?? ""} placeholder="OPENAI_API_KEY" />
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-              <label className="grid gap-1 text-sm font-bold">
-                Neuen API-Key speichern
-                <input
-                  autoComplete="new-password"
-                  className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-                  disabled={!provider.keyStorageAvailable}
-                  name="apiKey"
-                  placeholder={provider.keyStorageAvailable ? "wird nicht angezeigt oder zurückgegeben" : "OCRCRAFT_AI_SECRET_KEY fehlt"}
-                  type="password"
-                />
-              </label>
-              <label className="flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-bold">
-                <input name="clearStoredApiKey" type="checkbox" />
-                Gespeicherten Key löschen
-              </label>
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <Field
-                label="Monatliches Token-Limit"
-                name="monthlyTokenLimit"
-                defaultValue={provider.monthlyTokenLimit == null ? "" : String(provider.monthlyTokenLimit)}
-                inputMode="numeric"
-                placeholder="kein Limit"
-              />
-              <Field
-                label="Monatliches Request-Limit"
-                name="monthlyRequestLimit"
-                defaultValue={provider.monthlyRequestLimit == null ? "" : String(provider.monthlyRequestLimit)}
-                inputMode="numeric"
-                placeholder="kein Limit"
-              />
-            </div>
-
-            <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
-              <div className="text-xs font-black uppercase tracking-[0.08em] text-[var(--muted)]">Aktueller Monat</div>
-              <dl className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-5">
-                <Metric label="Requests" value={formatNumber(provider.usage.requests)} />
-                <Metric label="Input" value={formatNumber(provider.usage.inputTokens)} />
-                <Metric label="Output" value={formatNumber(provider.usage.outputTokens)} />
-                <Metric label="Tokens gesamt" value={formatNumber(provider.usage.totalTokens)} />
-                <Metric label="Bilder" value={formatNumber(provider.usage.images)} />
-              </dl>
-              {provider.monthlyTokenLimit ? (
-                <UsageBar label="Token-Limit" used={provider.usage.totalTokens} limit={provider.monthlyTokenLimit} />
-              ) : null}
-              {provider.monthlyRequestLimit ? (
-                <UsageBar label="Request-Limit" used={provider.usage.requests} limit={provider.monthlyRequestLimit} />
-              ) : null}
-            </div>
-
-            <div className="mt-4 flex justify-end">
-              <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
-                Provider speichern
-              </button>
-            </div>
-          </form>
+      <div className="mt-5 grid gap-3 lg:grid-cols-3">
+        {(["training","exercise_draft","image"] as const).map((capability) => (
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={capability}>
+            <div className="text-xs font-black uppercase tracking-[0.1em] text-[var(--muted)]">{aiCapabilityLabel(capability)}</div>
+            {routes[capability].length ? (
+              <ol className="mt-3 grid gap-2">
+                {routes[capability].map((route) => (
+                  <li className="flex items-center gap-2 text-sm" key={route.name + route.priority}>
+                    <span className="rounded-full bg-[var(--surface)] px-2 py-1 text-xs font-black">{aiPriorityLabel(route.priority)}</span>
+                    <span className="truncate font-bold">{route.name}</span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="mt-3 text-sm text-[var(--muted)]">Keine AI zugewiesen.</p>
+            )}
+          </div>
         ))}
       </div>
 
-      <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-        <h3 className="font-black">GitHub Copilot</h3>
-        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-          GitHub Copilot wird nicht als direkter OCRCraft-Inference-Provider angeboten. GitHub Models wurde eingestellt; Copilot ist ein separater Dienst und stellt für diese App keinen allgemeinen öffentlichen Chat-Completions-Endpunkt bereit. OpenAI-kompatible eigene Endpunkte können stattdessen über „OpenAI-kompatibel“ angebunden werden.
-        </p>
+      <div className="mt-6 overflow-x-auto rounded-xl border border-[var(--border)]">
+        <table className="w-full min-w-[920px] border-collapse text-left text-sm">
+          <thead className="bg-[var(--surface-subtle)] text-xs uppercase tracking-[0.08em] text-[var(--muted)]">
+            <tr>
+              <th className="px-4 py-3">AI</th>
+              <th className="px-4 py-3">Modelle</th>
+              <th className="px-4 py-3">Verwendung / Prio</th>
+              <th className="px-4 py-3">Verbrauch Monat</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3 text-right">Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {providers.map((provider) => (
+              <tr className="border-t border-[var(--border)]" key={provider.id}>
+                <td className="px-4 py-3">
+                  <div className="font-black">{provider.displayName}</div>
+                  <div className="mt-1 text-xs text-[var(--muted)]">{providerKindLabel(provider.providerKind)}</div>
+                </td>
+                <td className="px-4 py-3">
+                  <div><span className="text-xs text-[var(--muted)]">Text:</span> <strong>{provider.textModelId || "—"}</strong></div>
+                  <div className="mt-1"><span className="text-xs text-[var(--muted)]">Bild:</span> <strong>{provider.imageModelId || "—"}</strong></div>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex max-w-[330px] flex-wrap gap-1.5">
+                    {provider.assignments.length ? provider.assignments
+                      .slice()
+                      .sort((a, b) => a.priority - b.priority)
+                      .map((assignment) => (
+                        <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1 text-xs font-bold" key={assignment.capability}>
+                          {aiCapabilityLabel(assignment.capability)} · {aiPriorityLabel(assignment.priority)}
+                        </span>
+                      )) : <span className="text-xs text-[var(--muted)]">nicht zugewiesen</span>}
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-xs">
+                  <div>{formatNumber(provider.usage.requests)} Requests</div>
+                  <div>{formatNumber(provider.usage.totalTokens)} Text-Tokens</div>
+                  <div>{formatNumber(provider.usage.images)} Bilder</div>
+                </td>
+                <td className="px-4 py-3">
+                  <span className={provider.enabled
+                    ? "rounded-full bg-[var(--success-bg)] px-2.5 py-1 text-xs font-black text-[var(--success-foreground)]"
+                    : "rounded-full bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-black text-[var(--muted)]"}>
+                    {provider.enabled ? "Aktiv" : "Inaktiv"}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <button
+                    className="min-h-9 rounded-lg border border-[var(--border)] px-3 text-xs font-black"
+                    onClick={() => setEditor(provider)}
+                    type="button"
+                  >
+                    Bearbeiten
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {providers.length === 0 ? (
+              <tr><td className="px-4 py-6 text-center text-[var(--muted)]" colSpan={6}>Noch keine AI-Instanz angelegt.</td></tr>
+            ) : null}
+          </tbody>
+        </table>
       </div>
+
+      {editor ? (
+        <Dialog
+          eyebrow="AI Provider"
+          onClose={() => setEditor(null)}
+          title={editor === "new" ? "AI hinzufügen" : editor.displayName + " bearbeiten"}
+        >
+          <AiProviderEditor
+            deleteAction={deleteAction}
+            onClose={() => setEditor(null)}
+            provider={editor === "new" ? null : editor}
+            saveAction={saveAction}
+          />
+        </Dialog>
+      ) : null}
     </section>
+  );
+}
+
+function AiProviderEditor({
+  provider,
+  saveAction,
+  deleteAction,
+  onClose,
+}: {
+  readonly provider: AiProviderSettingsView | null;
+  readonly saveAction: (formData: FormData) => Promise<void>;
+  readonly deleteAction: (formData: FormData) => Promise<void>;
+  readonly onClose: () => void;
+}) {
+  const initialKind = provider?.providerKind ?? "openai";
+  const [providerKind, setProviderKind] = useState<AiProviderKind>(initialKind);
+  const [baseUrl, setBaseUrl] = useState(provider?.baseUrl ?? defaultProviderBaseUrl(initialKind) ?? "");
+  const [authMode, setAuthMode] = useState<"environment" | "encrypted_key">(provider?.authMode ?? "environment");
+  const [apiKeyEnv, setApiKeyEnv] = useState(provider?.apiKeyEnv ?? defaultProviderKeyEnvironment(initialKind) ?? "");
+  const [apiKey, setApiKey] = useState("");
+  const [models, setModels] = useState<readonly AiModelOption[]>([]);
+  const [modelWarning, setModelWarning] = useState<string | null>(null);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const supportsImage = providerSupportsCapability(providerKind, "image");
+  const assignment = (capability: AiCapability) => provider?.assignments.find((item) => item.capability === capability);
+
+  function changeKind(next: AiProviderKind) {
+    setProviderKind(next);
+    setBaseUrl(defaultProviderBaseUrl(next) ?? "");
+    setApiKeyEnv(defaultProviderKeyEnvironment(next) ?? "");
+    setModels([]);
+    setModelWarning(null);
+  }
+
+  async function loadModels() {
+    setLoadingModels(true);
+    setModelWarning(null);
+    try {
+      const response = await fetch("/api/admin/ai/models", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          instanceId: provider?.id ?? null,
+          providerKind,
+          baseUrl,
+          authMode,
+          apiKeyEnv,
+          apiKey: apiKey || null,
+        }),
+      });
+      const payload = await response.json() as {
+        readonly models?: readonly AiModelOption[];
+        readonly warning?: string | null;
+        readonly message?: string;
+      };
+      if (!response.ok) throw new Error(payload.message || "Modelle konnten nicht geladen werden.");
+      setModels(payload.models ?? []);
+      setModelWarning(payload.warning ?? null);
+    } catch (error) {
+      setModelWarning(error instanceof Error ? error.message : "Modelle konnten nicht geladen werden.");
+    } finally {
+      setLoadingModels(false);
+    }
+  }
+
+  const textModels = models.filter((model) => model.supportsText);
+  const imageModels = models.filter((model) => model.supportsImage);
+
+  return (
+    <form action={saveAction} className="grid gap-5">
+      {provider ? <input name="id" type="hidden" value={provider.id} /> : null}
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-1 text-sm font-bold">
+          Provider
+          <select
+            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+            name="providerKind"
+            onChange={(event) => changeKind(event.target.value as AiProviderKind)}
+            value={providerKind}
+          >
+            <option value="openai">OpenAI</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="anthropic">Anthropic Claude</option>
+            <option value="openai-compatible">OpenAI-kompatibel / lokal</option>
+          </select>
+        </label>
+        <Field
+          defaultValue={provider?.displayName ?? providerKindLabel(providerKind)}
+          label="Anzeigename"
+          name="displayName"
+          placeholder="z. B. OpenAI Training Primär"
+        />
+      </div>
+
+      <label className="flex items-center gap-2 text-sm font-bold">
+        <input defaultChecked={provider?.enabled ?? true} name="enabled" type="checkbox" />
+        AI-Instanz aktivieren
+      </label>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-1 text-sm font-bold">
+          Base URL
+          <input
+            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal disabled:opacity-70"
+            disabled={providerKind !== "openai-compatible"}
+            name="baseUrl"
+            onChange={(event) => setBaseUrl(event.target.value)}
+            placeholder="https://..."
+            value={baseUrl}
+          />
+          {providerKind !== "openai-compatible" ? <span className="text-xs font-normal text-[var(--muted)]">Standard-URL wird automatisch verwaltet.</span> : null}
+        </label>
+        <div className="grid content-start gap-2">
+          <span className="text-sm font-bold">Verfügbare Modelle</span>
+          <button
+            className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black"
+            disabled={loadingModels}
+            onClick={loadModels}
+            type="button"
+          >
+            {loadingModels ? "Modelle werden geladen …" : "Modelle vom Provider abrufen"}
+          </button>
+          {modelWarning ? <span className="text-xs text-[var(--warning)]">{modelWarning}</span> : null}
+        </div>
+      </div>
+
+      <datalist id={"text-models-" + (provider?.id ?? "new")}>
+        {textModels.map((model) => <option key={model.id} value={model.id}>{model.label}</option>)}
+      </datalist>
+      <datalist id={"image-models-" + (provider?.id ?? "new")}>
+        {imageModels.map((model) => <option key={model.id} value={model.id}>{model.label}</option>)}
+      </datalist>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-1 text-sm font-bold">
+          Textmodell
+          <input
+            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+            defaultValue={provider?.textModelId ?? ""}
+            list={"text-models-" + (provider?.id ?? "new")}
+            name="textModelId"
+            placeholder="Modell auswählen oder ID eingeben"
+          />
+          <span className="text-xs font-normal text-[var(--muted)]">Für Training und Übungsentwürfe.</span>
+        </label>
+        <label className="grid gap-1 text-sm font-bold">
+          Bildmodell
+          <input
+            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal disabled:opacity-60"
+            defaultValue={provider?.imageModelId ?? defaultImageModel(providerKind) ?? ""}
+            disabled={!supportsImage}
+            list={"image-models-" + (provider?.id ?? "new")}
+            name="imageModelId"
+            placeholder={supportsImage ? "Bildmodell auswählen oder ID eingeben" : "für diesen Adapter nicht verfügbar"}
+          />
+          <span className="text-xs font-normal text-[var(--muted)]">Aktuell für OpenAI/OpenAI-kompatible Images-Endpunkte.</span>
+        </label>
+      </div>
+
+      <fieldset className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+        <legend className="px-1 text-sm font-black">Funktionszuweisung und Priorität</legend>
+        <p className="mb-3 text-xs leading-5 text-[var(--muted)]">Kleinere Prioritätszahl wird zuerst verwendet. Beispiel: P1 → P2 → P3.</p>
+        <div className="grid gap-3 md:grid-cols-3">
+          <CapabilityAssignment capability="training" existing={assignment("training")} />
+          <CapabilityAssignment capability="exercise_draft" existing={assignment("exercise_draft")} />
+          <CapabilityAssignment capability="image" disabled={!supportsImage} existing={assignment("image")} />
+        </div>
+      </fieldset>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-1 text-sm font-bold">
+          Key-Quelle
+          <select
+            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+            name="authMode"
+            onChange={(event) => setAuthMode(event.target.value as "environment" | "encrypted_key")}
+            value={authMode}
+          >
+            <option value="environment">Umgebungsvariable</option>
+            <option value="encrypted_key">Verschlüsselt in DuckDB</option>
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm font-bold">
+          Umgebungsvariable
+          <input
+            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+            name="apiKeyEnv"
+            onChange={(event) => setApiKeyEnv(event.target.value)}
+            value={apiKeyEnv}
+          />
+        </label>
+      </div>
+
+      <label className="grid gap-1 text-sm font-bold">
+        Neuen API-Key speichern
+        <input
+          autoComplete="new-password"
+          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          disabled={authMode !== "encrypted_key" || !(provider?.keyStorageAvailable ?? true)}
+          name="apiKey"
+          onChange={(event) => setApiKey(event.target.value)}
+          placeholder={provider?.keyStorageAvailable === false ? "OCRCRAFT_AI_SECRET_KEY fehlt" : "wird nicht angezeigt oder zurückgegeben"}
+          type="password"
+          value={apiKey}
+        />
+      </label>
+
+      {provider?.hasStoredApiKey ? (
+        <label className="flex items-center gap-2 text-xs font-bold">
+          <input name="clearStoredApiKey" type="checkbox" />
+          Gespeicherten API-Key löschen
+        </label>
+      ) : null}
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field
+          defaultValue={provider?.monthlyTextTokenLimit == null ? "" : String(provider.monthlyTextTokenLimit)}
+          inputMode="numeric"
+          label="Monatliches Text-Token-Limit"
+          name="monthlyTextTokenLimit"
+          placeholder="kein Limit"
+        />
+        <Field
+          defaultValue={provider?.monthlyRequestLimit == null ? "" : String(provider.monthlyRequestLimit)}
+          inputMode="numeric"
+          label="Monatliches Request-Limit"
+          name="monthlyRequestLimit"
+          placeholder="kein Limit"
+        />
+      </div>
+      <p className="-mt-3 text-xs leading-5 text-[var(--muted)]">
+        Text-Tokens sind eine Mengenbegrenzung, keine Kostenangabe. Ein monetäres Budget wird erst ergänzt, wenn belastbare providerübergreifende Kostendaten verfügbar sind.
+      </p>
+
+      {provider ? (
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+          <div className="text-xs font-black uppercase tracking-[0.08em] text-[var(--muted)]">Aktueller Monat</div>
+          <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+            <Metric label="Requests" value={formatNumber(provider.usage.requests)} />
+            <Metric label="Text-Tokens" value={formatNumber(provider.usage.totalTokens)} />
+            <Metric label="Bilder" value={formatNumber(provider.usage.images)} />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap justify-between gap-3 border-t border-[var(--border)] pt-4">
+        <div>
+          {provider ? (
+            <button
+              className="min-h-11 rounded-xl border border-[var(--danger)] px-4 text-sm font-black text-[var(--danger)]"
+              formAction={deleteAction}
+              name="id"
+              type="submit"
+              value={provider.id}
+            >
+              AI entfernen
+            </button>
+          ) : null}
+        </div>
+        <div className="flex gap-2">
+          <button className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black" onClick={onClose} type="button">Abbrechen</button>
+          <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
+            Speichern
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function CapabilityAssignment({
+  capability,
+  existing,
+  disabled = false,
+}: {
+  readonly capability: AiCapability;
+  readonly existing?: { readonly priority: number };
+  readonly disabled?: boolean;
+}) {
+  return (
+    <div className={"rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 " + (disabled ? "opacity-60" : "")}>
+      <label className="flex items-center gap-2 text-sm font-black">
+        <input defaultChecked={Boolean(existing)} disabled={disabled} name={"assign_" + capability} type="checkbox" />
+        {aiCapabilityLabel(capability)}
+      </label>
+      <label className="mt-2 grid gap-1 text-xs font-bold">
+        Priorität
+        <input
+          className="h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2"
+          defaultValue={existing?.priority ?? 10}
+          disabled={disabled}
+          min={1}
+          name={"priority_" + capability}
+          type="number"
+        />
+      </label>
+    </div>
   );
 }
 
@@ -197,24 +521,9 @@ function Field({
 
 function Metric({ label, value }: { readonly label: string; readonly value: string }) {
   return (
-    <div className="rounded-lg bg-[var(--surface-subtle)] p-2">
-      <dt className="text-[var(--muted)]">{label}</dt>
-      <dd className="mt-0.5 font-black">{value}</dd>
-    </div>
-  );
-}
-
-function UsageBar({ label, used, limit }: { readonly label: string; readonly used: number; readonly limit: number }) {
-  const percentage = Math.max(0, Math.min(100, Math.round((used / limit) * 100)));
-  return (
-    <div className="mt-3">
-      <div className="flex items-center justify-between gap-3 text-xs">
-        <span className="font-bold">{label}</span>
-        <span className="text-[var(--muted)]">{formatNumber(used)} / {formatNumber(limit)} · {percentage}%</span>
-      </div>
-      <div className="mt-1 h-2 overflow-hidden rounded-full bg-[var(--border)]">
-        <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: String(percentage) + "%" }} />
-      </div>
+    <div className="rounded-lg bg-[var(--surface)] p-2">
+      <div className="text-[var(--muted)]">{label}</div>
+      <div className="mt-0.5 font-black">{value}</div>
     </div>
   );
 }
@@ -222,11 +531,11 @@ function UsageBar({ label, used, limit }: { readonly label: string; readonly use
 function ErrorNotice({ code }: { readonly code: string }) {
   const message = code === "secret"
     ? "API-Key konnte nicht gespeichert werden, weil OCRCRAFT_AI_SECRET_KEY nicht gesetzt ist."
-    : code === "config"
-      ? "Ein aktivierter Provider benötigt Base-URL und Modell-ID."
-      : code === "provider"
-        ? "Unbekannter KI-Provider."
-        : "KI-Provider-Einstellungen konnten nicht gespeichert werden.";
+    : code === "provider"
+      ? "Provider oder AI-Instanz ist ungültig."
+      : code === "config"
+        ? "Die AI-Konfiguration ist unvollständig. Prüfe Modelle, URL und Funktionszuweisungen."
+        : "AI-Einstellungen konnten nicht gespeichert werden.";
   return <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">{message}</p>;
 }
 

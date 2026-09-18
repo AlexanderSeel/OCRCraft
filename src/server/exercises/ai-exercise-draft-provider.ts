@@ -1,7 +1,7 @@
 import "server-only";
 
-import { createAiJsonClient } from "@/server/ai/ai-json-provider";
-import { resolveAiProvider } from "@/server/ai/ai-provider-settings-repository";
+import { createAiJsonFallbackClient } from "@/server/ai/ai-json-provider";
+import { resolveAiProviderChain } from "@/server/ai/ai-provider-settings-repository";
 import {
   aiExerciseDraftProposalSchema,
   type AiExerciseDraftProposal,
@@ -70,14 +70,16 @@ export class OpenAiCompatibleExerciseDraftProvider implements AiExerciseDraftPro
 }
 
 class ConfiguredAiExerciseDraftProvider implements AiExerciseDraftProvider {
-  readonly id: string;
-  readonly modelId: string;
-
   constructor(
-    private readonly client: ReturnType<typeof createAiJsonClient>,
-  ) {
-    this.id = client.providerId;
-    this.modelId = client.modelId;
+    private readonly client: ReturnType<typeof createAiJsonFallbackClient>,
+  ) {}
+
+  get id(): string {
+    return this.client.providerId;
+  }
+
+  get modelId(): string {
+    return this.client.modelId;
   }
 
   async generateExerciseDraft(request: AiExerciseDraftRequest): Promise<AiExerciseDraftProposal> {
@@ -90,9 +92,9 @@ class ConfiguredAiExerciseDraftProvider implements AiExerciseDraftProvider {
 }
 
 export async function getConfiguredAiExerciseDraftProvider(): Promise<AiExerciseDraftProvider | null> {
-  const config = await resolveAiProvider("exercise_draft");
-  if (!config) return null;
-  return new ConfiguredAiExerciseDraftProvider(createAiJsonClient(config, "exercise_draft"));
+  const configs = await resolveAiProviderChain("exercise_draft");
+  if (configs.length === 0) return null;
+  return new ConfiguredAiExerciseDraftProvider(createAiJsonFallbackClient(configs, "exercise_draft"));
 }
 function exerciseDraftSystemPrompt(): string {
   return [

@@ -35,16 +35,18 @@ export interface AiJsonClient {
 }
 
 abstract class TrackedAiJsonClient implements AiJsonClient {
-  readonly providerId: string;
-  readonly modelId: string;
+  get providerId(): string {
+    return this.config.providerId;
+  }
+
+  get modelId(): string {
+    return this.config.modelId;
+  }
 
   constructor(
     protected readonly config: ResolvedAiProvider,
     protected readonly capability: AiCapability,
-  ) {
-    this.providerId = config.providerId;
-    this.modelId = config.modelId;
-  }
+  ) {}
 
   abstract generateJson(systemPrompt: string, userPayload: unknown): Promise<unknown>;
 
@@ -55,7 +57,10 @@ abstract class TrackedAiJsonClient implements AiJsonClient {
     readonly status?: "succeeded" | "failed";
   }): Promise<void> {
     await recordAiProviderUsage({
-      providerId: this.providerId,
+      providerInstanceId: this.config.instanceId,
+      providerId: this.config.providerKind === "legacy"
+        ? "legacy-openai-compatible"
+        : this.config.providerKind,
       capability: this.capability,
       modelId: this.modelId,
       inputTokens: input.inputTokens,
@@ -68,14 +73,15 @@ abstract class TrackedAiJsonClient implements AiJsonClient {
 
 export class OpenAiCompatibleJsonClient extends TrackedAiJsonClient {
   async generateJson(systemPrompt: string, userPayload: unknown): Promise<unknown> {
-    const response = await fetch(`${this.config.baseUrl.replace(/\/$/, "")}/chat/completions`, {
+    const response = await fetch(this.config.baseUrl.replace(/\/$/, "") + "/chat/completions", {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        ...(this.config.apiKey ? { authorization: `Bearer ${this.config.apiKey}` } : {}),
+        ...(this.config.apiKey ? { authorization: "Bearer " + this.config.apiKey } : {}),
       },
       body: JSON.stringify({
         model: this.modelId,
+        temperature: 0.2,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
@@ -87,7 +93,7 @@ export class OpenAiCompatibleJsonClient extends TrackedAiJsonClient {
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
       await this.recordUsage({ status: "failed" });
-      throw new Error(`AI provider failed (${response.status})${detail ? `: ${detail.slice(0, 300)}` : ""}`);
+      throw new Error("AI provider failed (" + String(response.status) + ")" + (detail ? ": " + detail.slice(0, 300) : ""));
     }
 
     const payload = await response.json() as OpenAiCompatibleResponse;
@@ -110,7 +116,7 @@ export class OpenAiCompatibleJsonClient extends TrackedAiJsonClient {
 export class AnthropicJsonClient extends TrackedAiJsonClient {
   async generateJson(systemPrompt: string, userPayload: unknown): Promise<unknown> {
     if (!this.config.apiKey) throw new Error("Anthropic API-Key fehlt.");
-    const response = await fetch(`${this.config.baseUrl.replace(/\/$/, "")}/messages`, {
+    const response = await fetch(this.config.baseUrl.replace(/\/$/, "") + "/messages", {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -121,19 +127,14 @@ export class AnthropicJsonClient extends TrackedAiJsonClient {
         model: this.modelId,
         max_tokens: 4096,
         system: systemPrompt,
-        messages: [
-          {
-            role: "user",
-            content: JSON.stringify(userPayload),
-          },
-        ],
+        messages: [{ role: "user", content: JSON.stringify(userPayload) }],
       }),
     });
 
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
       await this.recordUsage({ status: "failed" });
-      throw new Error(`Anthropic provider failed (${response.status})${detail ? `: ${detail.slice(0, 300)}` : ""}`);
+      throw new Error("Anthropic provider failed (" + String(response.status) + ")" + (detail ? ": " + detail.slice(0, 300) : ""));
     }
 
     const payload = await response.json() as AnthropicResponse;
@@ -155,6 +156,41 @@ export class AnthropicJsonClient extends TrackedAiJsonClient {
   }
 }
 
+class FallbackAiJsonClient implements AiJsonClient {
+  private selected: AiJsonClient | null = null;
+
+  constructor(
+    private readonly clients: readonly AiJsonClient[],
+  ) {}
+
+  get providerId(): string {
+    return this.selected?.providerId ?? this.clients[0]?.providerId ?? "unconfigured";
+  }
+
+  get modelId(): string {
+    return this.selected?.modelId ?? this.clients[0]?.modelId ?? "unconfigured";
+  }
+
+  async generateJson(systemPrompt: string, userPayload: unknown): Promise<unknown> {
+    const errors: Error[] = [];
+    for (const client of this.clients) {
+      try {
+        const result = await client.generateJson(systemPrompt, userPayload);
+        this.selected = client;
+        return result;
+      } catch (error) {
+        errors.push(error instanceof Error ? error : new Error(String(error)));
+      }
+    }
+    throw new AggregateError(
+      errors,
+      errors.length
+        ? "Alle zugewiesenen AI-Provider sind fehlgeschlagen."
+        : "Für diese AI-Funktion ist kein Provider verfügbar.",
+    );
+  }
+}
+
 export function createAiJsonClient(
   config: ResolvedAiProvider,
   capability: AiCapability,
@@ -162,4 +198,13 @@ export function createAiJsonClient(
   return config.protocol === "anthropic"
     ? new AnthropicJsonClient(config, capability)
     : new OpenAiCompatibleJsonClient(config, capability);
+}
+
+export function createAiJsonFallbackClient(
+  configs: readonly ResolvedAiProvider[],
+  capability: AiCapability,
+): AiJsonClient {
+  return new FallbackAiJsonClient(
+    configs.map((config) => createAiJsonClient(config, capability)),
+  );
 }

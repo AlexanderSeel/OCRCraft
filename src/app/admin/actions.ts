@@ -15,7 +15,7 @@ import {
 } from "@/server/exercises/outdoor-variant-enrichment-service";
 import { requireAdmin, requireSuperAdmin } from "@/server/auth/identity-service";
 import { restoreDatabaseBackup } from "@/server/db/restore-service";
-import { aiProviderIdSchema, updateAiProviderSettings } from "@/server/ai/ai-provider-settings-repository";
+import { aiProviderInstanceIdSchema, aiProviderKindSchema, deleteAiProviderInstance, saveAiProviderInstance, type AiCapability } from "@/server/ai/ai-provider-settings-repository";
 
 const reseedConfirmationSchema = z.literal("OCRCRAFT ZURÜCKSETZEN");
 
@@ -159,6 +159,7 @@ export async function resolveDuplicateExercisesBulkAction(formData: FormData): P
 }
 
 
+
 function optionalPositiveInt(value: FormDataEntryValue | null): number | null {
   const text = String(value ?? "").trim();
   if (!text) return null;
@@ -167,74 +168,99 @@ function optionalPositiveInt(value: FormDataEntryValue | null): number | null {
   return parsed;
 }
 
+function assignmentFrom(formData: FormData, capability: AiCapability) {
+  if (formData.get("assign_" + capability) !== "on") return null;
+  return {
+    capability,
+    priority: optionalPositiveInt(formData.get("priority_" + capability)) ?? 10,
+  } as const;
+}
+
 export async function saveAiProviderSettingsAction(formData: FormData): Promise<void> {
   const actor = await requireAdmin();
-  const providerId = aiProviderIdSchema.safeParse(formData.get("providerId"));
-  if (!providerId.success) redirect("/admin?tab=settings&aiError=provider#ai-provider-settings");
+  const providerKind = aiProviderKindSchema.safeParse(formData.get("providerKind"));
+  if (!providerKind.success) redirect("/admin?tab=settings&aiError=provider#ai-provider-settings");
+  const idValue = String(formData.get("id") ?? "").trim();
+  const id = idValue ? aiProviderInstanceIdSchema.safeParse(idValue) : null;
+  if (id && !id.success) redirect("/admin?tab=settings&aiError=provider#ai-provider-settings");
 
   try {
-    const enabled = formData.get("enabled") === "on";
-    const useForTraining = formData.get("useForTraining") === "on";
-    const useForExerciseDrafts = formData.get("useForExerciseDrafts") === "on";
     const authMode = String(formData.get("authMode") ?? "environment") === "encrypted_key"
       ? "encrypted_key"
       : "environment";
-    const baseUrl = String(formData.get("baseUrl") ?? "").trim() || null;
-    const modelId = String(formData.get("modelId") ?? "").trim() || null;
-    const apiKeyEnv = String(formData.get("apiKeyEnv") ?? "").trim() || null;
-    const apiKey = String(formData.get("apiKey") ?? "").trim() || undefined;
+    const assignments = (["training","exercise_draft","image"] as const)
+      .map((capability) => assignmentFrom(formData, capability))
+      .filter((item): item is NonNullable<typeof item> => item != null);
 
-    if (enabled && (!baseUrl || !modelId)) {
-      throw new Error("provider-config-incomplete");
-    }
-    if (!enabled && (useForTraining || useForExerciseDrafts)) {
-      throw new Error("provider-selection-requires-enabled");
-    }
-
-    await updateAiProviderSettings({
-      providerId: providerId.data,
-      enabled,
-      useForTraining,
-      useForExerciseDrafts,
-      baseUrl,
-      modelId,
+    const savedId = await saveAiProviderInstance({
+      id: id?.success ? id.data : null,
+      providerKind: providerKind.data,
+      displayName: String(formData.get("displayName") ?? "").trim(),
+      enabled: formData.get("enabled") === "on",
+      baseUrl: String(formData.get("baseUrl") ?? "").trim() || null,
+      textModelId: String(formData.get("textModelId") ?? "").trim() || null,
+      imageModelId: String(formData.get("imageModelId") ?? "").trim() || null,
       authMode,
-      apiKeyEnv,
-      apiKey,
+      apiKeyEnv: String(formData.get("apiKeyEnv") ?? "").trim() || null,
+      apiKey: String(formData.get("apiKey") ?? "").trim() || undefined,
       clearStoredApiKey: formData.get("clearStoredApiKey") === "on",
-      monthlyTokenLimit: optionalPositiveInt(formData.get("monthlyTokenLimit")),
+      monthlyTextTokenLimit: optionalPositiveInt(formData.get("monthlyTextTokenLimit")),
       monthlyRequestLimit: optionalPositiveInt(formData.get("monthlyRequestLimit")),
+      assignments,
       updatedBy: actor.id,
     });
 
     await recordAuditEvent({
-      action: "ai_provider.update",
-      entityType: "ai_provider",
-      entityId: providerId.data,
+      action: "ai_provider_instance.update",
+      entityType: "ai_provider_instance",
+      entityId: savedId,
       actorType: "user",
       actorId: actor.id,
       metadata: {
-        enabled,
-        useForTraining,
-        useForExerciseDrafts,
+        providerKind: providerKind.data,
         authMode,
-        modelId,
+        assignments,
       },
     });
+
+    revalidatePath("/admin");
+    revalidatePath("/exercises/ai-drafts");
+    revalidatePath("/training/builder");
+    redirect("/admin?tab=settings&aiSaved=" + encodeURIComponent(savedId) + "#ai-provider-settings");
   } catch (error) {
     const code = error instanceof Error && error.message.includes("OCRCRAFT_AI_SECRET_KEY")
       ? "secret"
       : error instanceof Error && (
-          error.message === "provider-config-incomplete"
-          || error.message === "provider-selection-requires-enabled"
+          error.message.includes("Modell")
+          || error.message.includes("Base URL")
+          || error.message.includes("unterstützt")
         )
         ? "config"
         : "save";
-    redirect(`/admin?tab=settings&aiError=${code}#ai-provider-settings`);
+    redirect("/admin?tab=settings&aiError=" + code + "#ai-provider-settings");
+  }
+}
+
+export async function deleteAiProviderSettingsAction(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const id = aiProviderInstanceIdSchema.safeParse(formData.get("id"));
+  if (!id.success) redirect("/admin?tab=settings&aiError=provider#ai-provider-settings");
+
+  try {
+    const deleted = await deleteAiProviderInstance(id.data);
+    if (deleted) {
+      await recordAuditEvent({
+        action: "ai_provider_instance.delete",
+        entityType: "ai_provider_instance",
+        entityId: id.data,
+        actorType: "user",
+        actorId: actor.id,
+      });
+    }
+  } catch {
+    redirect("/admin?tab=settings&aiError=save#ai-provider-settings");
   }
 
   revalidatePath("/admin");
-  revalidatePath("/exercises/ai-drafts");
-  revalidatePath("/training/builder");
-  redirect(`/admin?tab=settings&aiSaved=${providerId.data}#ai-provider-settings`);
+  redirect("/admin?tab=settings#ai-provider-settings");
 }
