@@ -93,9 +93,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </form>
           <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
             <h3 className="text-sm font-black">Portable Daten exportieren</h3>
-            <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Exportiert nur die ausgewählten strukturierten Bereiche als versioniertes JSON. Binärmedien bleiben über Quellen- und Medienmetadaten referenziert.</p>
+            <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Exportiert nur die ausgewählten strukturierten Bereiche als versioniertes JSON. Binärmedien bleiben standardmäßig über Quellen- und Medienmetadaten referenziert.</p>
             <form action="/api/admin/export" className="mt-3 flex flex-wrap items-center gap-3" method="get" target="_blank">
               {[["exercises", "Übungen"], ["details", "Details"], ["mapping", "Mapping"], ["trainings", "Trainings"], ["groups", "Gruppen"], ["media", "Medien"], ["provenance", "Provenienz"]].map(([value, label]) => <label className="inline-flex items-center gap-2 text-xs font-bold" key={value}><input defaultChecked name="section" type="checkbox" value={value} />{label}</label>)}
+              <label className="inline-flex items-center gap-2 text-xs font-bold"><input name="includeBinary" type="checkbox" value="1" />Binärmedien einbetten (größerer Export)</label>
               <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black" type="submit">JSON exportieren</button>
             </form>
           </div>

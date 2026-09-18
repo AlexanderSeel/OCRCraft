@@ -39,7 +39,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Konfigurierbare Backup-Rotation und Anzeige der vorhandenen Backups im Adminbereich.
 - [x] Selektierbaren, versionierten JSON-Export implementieren.
 - [x] Exportoptionen für Übungen, Details, Mapping, Trainings, Gruppen, Medien und Provenienz anbieten.
-- [ ] Optional Binärmedien mit MIME-Typ, Prüfsumme und Quellenmetadaten exportieren.
+- [x] Optional Binärmedien mit MIME-Typ, Prüfsumme und Quellenmetadaten exportieren.
 - [x] Import-Preflight, Schema-Version und transaktionalen Schreibvorgang für erlaubte portable Tabellen implementieren.
 - [x] Dublettenklassifikation (`same`, `new`, `probable duplicate`, `conflict`) und Side-by-Side-Vergleich für Importkonflikte abschließen.
 - [ ] Bildvergleich, `Keep both` als explizite Entscheidung und konfliktbewusste Feldübernahme im Bulk vollständig abdecken.

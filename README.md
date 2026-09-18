@@ -57,6 +57,8 @@ Administration und Einstellungen liegen in einem gemeinsamen Bereich mit fünf T
 
 Im Datenbank-Tab können Übungen, Details, Zuordnungen, Trainings, Gruppen, Medien und Provenienz selektiv als versioniertes JSON exportiert werden. `ocrcraft-portable`-Dateien werden vor dem transaktionalen Import auf Schema, erlaubte Tabellen und Spalten geprüft; der Import ist auf Super-Admins begrenzt.
 
+Beim Medienexport können Binärdateien optional als Base64 eingebettet werden. Der Export ergänzt MIME-Typ, SHA-256-Prüfsumme sowie Speicher- und Quellenmetadaten; standardmäßig bleiben Binärdaten aus Platzgründen außen vor.
+
 Der Tab **Datenqualität** klassifiziert erkannte Übungspaare als gleich, wahrscheinliche Dublette, Konflikt oder neu. Side-by-Side-Feldvergleich und Bulk-Entscheidungen bleiben trainerbestätigt; Datensätze werden nicht automatisch gelöscht.
 
 Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit einer Admin-Rolle wiederhergestellt werden. Die Wiederherstellung ersetzt Training, Phasen und Items innerhalb einer Transaktion.

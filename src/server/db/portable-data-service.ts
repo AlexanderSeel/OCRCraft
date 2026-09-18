@@ -1,5 +1,8 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import type { DuckDBConnection } from "@duckdb/node-api";
 import { ensureDatabaseReady } from "./database-ready";
 import { withDuckDbConnection } from "./duckdb";
@@ -17,7 +20,7 @@ const sectionTables: Record<PortableSection, readonly string[]> = {
 const importOrder = ["body_regions", "movement_patterns", "tags", "equipment", "exercises", "exercise_translations", "exercise_aliases", "exercise_details", "exercise_body_regions", "exercise_muscle_relationships", "exercise_equipment", "exercise_movement_patterns", "exercise_tags", "training_sessions", "training_phases", "training_items", "club_groups", "exercise_media_assets", "exercise_image_sequences", "exercise_image_generation_jobs", "exercise_source_references"];
 
 
-export async function exportPortableData(requested: readonly PortableSection[]): Promise<PortableExport> {
+export async function exportPortableData(requested: readonly PortableSection[], options: { readonly includeBinary?: boolean } = {}): Promise<PortableExport> {
   await ensureDatabaseReady();
   const sections = [...new Set(requested)];
   return withDuckDbConnection(async (connection) => {
@@ -29,12 +32,31 @@ export async function exportPortableData(requested: readonly PortableSection[]):
         const columns = await tableColumns(connection, table);
         if (!columns.length) continue;
         const reader = await connection.runAndReadAll(`SELECT ${columns.map(quoteIdentifier).join(",")} FROM ${quoteIdentifier(table)}`);
-        for (const row of reader.getRows()) rows.push({ _table: table, ...Object.fromEntries(columns.map((column, index) => [column, row[index]])) });
+        for (const row of reader.getRows()) {
+          const record = { _table: table, ...Object.fromEntries(columns.map((column, index) => [column, row[index]])) };
+          if (options.includeBinary && table === "exercise_media_assets") await attachFilesystemBinary(record);
+          rows.push(record);
+        }
       }
       output[section] = rows;
     }
     return { schema: "ocrcraft-portable", version: 1, exportedAt: new Date().toISOString(), sections: output };
   });
+}
+
+async function attachFilesystemBinary(record: Record<string, unknown>): Promise<void> {
+  if (record.storage_provider !== "filesystem" || typeof record.storage_key !== "string") return;
+  const root = path.resolve(process.cwd(), "public", "generated", "exercises");
+  const filePath = path.resolve(root, record.storage_key);
+  if (!filePath.startsWith(`${root}${path.sep}`)) return;
+  try {
+    const bytes = await readFile(filePath);
+    record._binary_base64 = bytes.toString("base64");
+    record._binary_sha256 = createHash("sha256").update(bytes).digest("hex");
+    record._binary_content_type = typeof record.content_type === "string" ? record.content_type : "application/octet-stream";
+  } catch {
+    record._binary_available = false;
+  }
 }
 
 export interface PortableImportResult {
@@ -60,7 +82,7 @@ export async function importPortableData(value: unknown): Promise<PortableImport
         tableColumnsCache.set(table, columns);
       }
       const columns = tableColumnsCache.get(table) ?? [];
-      for (const column of Object.keys(record).filter((key) => key !== "_table")) if (!columns.includes(column)) throw new Error(`Column ${table}.${column} is not part of the current schema.`);
+      for (const column of Object.keys(record).filter((key) => key !== "_table" && !key.startsWith("_binary_"))) if (!columns.includes(column)) throw new Error(`Column ${table}.${column} is not part of the current schema.`);
     }
 
     let imported = 0;
@@ -70,7 +92,7 @@ export async function importPortableData(value: unknown): Promise<PortableImport
       const sorted = entries.sort((left, right) => importOrder.indexOf(String(left.record._table)) - importOrder.indexOf(String(right.record._table)));
       for (const { record } of sorted) {
         const table = String(record._table);
-        const columns = Object.keys(record).filter((key) => key !== "_table");
+        const columns = Object.keys(record).filter((key) => key !== "_table" && !key.startsWith("_binary_"));
         if (!columns.length) { skipped += 1; continue; }
         const values = Object.fromEntries(columns.map((column) => [`v_${column}`, record[column]]));
         await connection.run(`INSERT OR IGNORE INTO ${quoteIdentifier(table)} (${columns.map(quoteIdentifier).join(",")}) VALUES (${columns.map((column) => `$v_${column}`).join(",")})`, values as Parameters<typeof connection.run>[1]);
