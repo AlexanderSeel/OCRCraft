@@ -70,6 +70,7 @@ SET instruction = CASE
       WHEN 'running' THEN 'Beende den Abschnitt kontrolliert, reduziere das Tempo und starte die nächste Wiederholung erst nach der vorgesehenen Erholung.'
       ELSE 'Beende die Wiederholung stabil, ordne Position oder Material neu und beginne die nächste Wiederholung erst mit sauberer Ausgangsposition.'
     END
+  END
   ELSE CASE s.step_order
     WHEN 1 THEN CASE e.category
       WHEN 'running' THEN 'For “' || t.name || '”, check the route, turn points and planned starting pace.'
