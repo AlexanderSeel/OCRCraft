@@ -49,7 +49,7 @@ export function TrainingReadonlySession({
         ) : null}
         {session.trainerProfile ? (
           <div className={printMode ? "mt-4 flex items-center gap-3 text-sm text-slate-600" : "mt-4 flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]"}>
-            {session.trainerProfile.imageUri ? <img alt="" className="size-10 rounded-full object-cover" src={session.trainerProfile.imageUri} /> : <div aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-[var(--surface-elevated)] font-black">{session.trainerProfile.name.slice(0, 1).toUpperCase()}</div>}
+            {session.trainerProfile.imageDataUrl || session.trainerProfile.imageUri ? <img alt="" className="size-10 rounded-full object-cover" src={session.trainerProfile.imageDataUrl ?? session.trainerProfile.imageUri ?? ""} /> : <div aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-[var(--surface-elevated)] font-black">{initials(session.trainerProfile.name)}</div>}
             <div><div className={printMode ? "font-black text-slate-900" : "font-black text-[var(--foreground)]"}>{session.trainerProfile.name}</div><div>{[session.trainerProfile.education, session.trainerProfile.specialties].filter(Boolean).join(" · ") || "Trainerprofil"}</div></div>
           </div>
         ) : null}
@@ -135,6 +135,11 @@ export function TrainingReadonlySession({
       ))}
     </div>
   );
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return (parts.length > 1 ? `${parts[0][0]}${parts.at(-1)?.[0] ?? ""}` : parts[0]?.[0] ?? "?").toUpperCase();
 }
 
 function programmingLabel(programming: MainPartProgramming): string {

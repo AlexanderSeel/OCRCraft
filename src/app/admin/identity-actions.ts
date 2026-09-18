@@ -38,6 +38,14 @@ export async function createUserAction(formData: FormData): Promise<void> {
 
 export async function updateUserAction(formData: FormData): Promise<void> {
   try {
+    const image = formData.get("profileImage");
+    let profileImageData: string | undefined;
+    let profileImageContentType: string | undefined;
+    if (image instanceof File && image.size > 0) {
+      if (image.size > 2 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(image.type)) throw new Error("invalid-profile-image");
+      profileImageData = Buffer.from(await image.arrayBuffer()).toString("base64");
+      profileImageContentType = image.type;
+    }
     await updateAppUser({
       id: String(formData.get("id") ?? ""),
       role: userRoleSchema.parse(formData.get("role")),
@@ -47,6 +55,8 @@ export async function updateUserAction(formData: FormData): Promise<void> {
       bio: String(formData.get("bio") ?? ""),
       specialties: String(formData.get("specialties") ?? ""),
       profileImageUri: String(formData.get("profileImageUri") ?? ""),
+      profileImageData,
+      profileImageContentType,
     });
   } catch {
     redirect("/admin?tab=settings&userError=1#identity");

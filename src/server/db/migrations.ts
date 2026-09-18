@@ -63,6 +63,7 @@ const migrations: readonly Migration[] = [
   { version: 50, fileName: "050_duplicate_classification.sql" },
   { version: 51, fileName: "051_identity_passwords.sql" },
   { version: 52, fileName: "052_profile_and_training_authorship.sql" },
+  { version: 53, fileName: "053_profile_images.sql" },
 ];
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {

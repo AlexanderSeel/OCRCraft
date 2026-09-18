@@ -49,6 +49,7 @@ Für den privaten Vereinsbetrieb kann die lokale Bootstrap-Identität verwendet 
 Trainings können über `/training/<id>/trainer` als schreibgeschützte Ansicht ohne Login geteilt werden. Diese Ansicht enthält keine Bearbeitungsaktionen.
 
 Trainerprofile lassen sich im Adminbereich mit Anzeigename, Ausbildung, Schwerpunkten, Kurzprofil und Bildreferenz pflegen. Bei neu erstellten Trainings wird das Profil kompakt in der Trainer- und Readonly-Ansicht angezeigt.
+Profilbilder können als JPEG, PNG oder WebP bis 2 MB hochgeladen und in DuckDB gespeichert werden. Fehlt ein Bild, erscheinen automatisch die Initialen aus Vor- und Nachnamen.
 
 ### Administration
 
