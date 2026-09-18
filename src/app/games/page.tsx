@@ -78,7 +78,7 @@ export default async function GamesPage({ searchParams }: PageProps) {
             {games.map((game, index) => (
               <article className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]" key={game.id}>
                 {game.imageUrl ? (
-                  <div className="aspect-[16/9] overflow-hidden bg-[var(--surface-subtle)]">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-[var(--surface-subtle)]">
                     <ExerciseImagePreview alt={`Spielillustration: ${game.name}`} priority={index === 0} src={game.imageUrl} />
                   </div>
                 ) : (
