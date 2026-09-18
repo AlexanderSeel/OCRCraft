@@ -49,11 +49,12 @@ export function MainPartProgrammingEditor({ index, value, onChange, partnerWorko
       partnerSwitchSeconds: value.partnerMode === "alternating" ? value.partnerSwitchSeconds ?? 30 : undefined,
     };
     if (mode === "interval") return onChange({ mode, workSeconds: 40, restSeconds: 20, ...partner });
-    if (mode === "rounds") return onChange({ mode, rounds: 3, scoreMode: "quality", ...partner });
+    if (mode === "rounds") return onChange({ mode, rounds: 3, scoreMode: "quality", roundRestSeconds: 0, ...partner });
     if (mode === "ladder") return onChange({ mode, ladderStart: 2, ladderEnd: 10, ladderStep: 2, ...partner });
     if (mode === "reverse-ladder") return onChange({ mode, ladderStart: 10, ladderEnd: 2, ladderStep: 2, ...partner });
     if (mode === "pyramid") return onChange({ mode, ladderStart: 2, ladderEnd: 10, ladderStep: 2, ...partner });
-    if (mode === "every") return onChange({ mode, everyValue: 500, everyUnit: "metres", ...partner });
+    if (mode === "chipper") return onChange({ mode, chipperRepsPerExercise: 20, ...partner });
+    if (mode === "every") return onChange({ mode, everyValue: 500, everyUnit: "metres", everyWorkSeconds: 40, everyRestSeconds: 20, ...partner });
     onChange({ mode, ...partner });
   }
 
@@ -92,6 +93,9 @@ export function MainPartProgrammingEditor({ index, value, onChange, partnerWorko
               <option value="time">Zeit</option>
             </select>
           </label>
+          <div className="col-span-2">
+            <NumberField label="Pause zwischen Runden (Sek.)" min={0} max={600} value={value.roundRestSeconds ?? 0} onChange={(roundRestSeconds) => onChange({ ...value, roundRestSeconds })} />
+          </div>
         </div>
       ) : null}
 
@@ -116,11 +120,18 @@ export function MainPartProgrammingEditor({ index, value, onChange, partnerWorko
               {MAIN_PART_EVERY_UNITS.map((unit) => <option key={unit} value={unit}>{everyUnitLabels[unit]}</option>)}
             </select>
           </label>
+          <NumberField label="Arbeit am Trigger (Sek.)" min={5} max={1800} value={value.everyWorkSeconds ?? 40} onChange={(everyWorkSeconds) => onChange({ ...value, everyWorkSeconds })} />
+          <NumberField label="Reset/Pause (Sek.)" min={0} max={1800} value={value.everyRestSeconds ?? 20} onChange={(everyRestSeconds) => onChange({ ...value, everyRestSeconds })} />
         </div>
       ) : null}
 
       {value.mode === "chipper" ? (
-        <p className="mt-3 text-xs leading-5 text-[var(--muted)]">Alle Übungen des Blocks werden der Reihe nach vollständig abgearbeitet.</p>
+        <div className="mt-3 grid gap-2">
+          <div className="max-w-48">
+            <NumberField label="Wdh. pro Übung" min={1} max={500} value={value.chipperRepsPerExercise ?? 20} onChange={(chipperRepsPerExercise) => onChange({ ...value, chipperRepsPerExercise })} />
+          </div>
+          <p className="text-xs leading-5 text-[var(--muted)]">Alle Übungen des Blocks werden der Reihe nach mit der Zielmenge vollständig abgearbeitet.</p>
+        </div>
       ) : null}
 
       {partnerWorkout ? (

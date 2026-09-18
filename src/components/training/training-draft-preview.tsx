@@ -1,6 +1,7 @@
 import type { TrainingDraft } from "@/domain/training/draft";
 import type { MainPartProgramming, TrainingItem, TrainingPhase, TrainingPhaseKind } from "@/domain/training/model";
 import { mainPartProgrammingLabel } from "@/server/training/main-part-programming";
+import { analyzeMainPartProgramming } from "@/domain/training/programming-math";
 
 export type DraftPreviewAlternativeMode = "easier" | "harder" | "equipment";
 
@@ -129,7 +130,15 @@ function PhasePreview({
 
       {phase.kind === "main" ? (
         <div className="mt-3 space-y-3">
-          {mainBlocks.map((block) => (
+          {mainBlocks.map((block) => {
+            const analysis = block.programming
+              ? analyzeMainPartProgramming(
+                  block.programming,
+                  block.items.reduce((sum, item) => sum + item.durationMinutes * 60, 0),
+                  block.items.length,
+                )
+              : null;
+            return (
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" key={block.index}>
               <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] pb-2">
                 <span className="text-xs font-black uppercase tracking-[0.08em]">{block.title}</span>
@@ -138,8 +147,9 @@ function PhasePreview({
                 </span>
               </div>
               {block.programming && (block.programming.mode !== "standard" || block.programming.partnerMode) ? (
-                <div className="mt-2 rounded-lg border border-[var(--accent-strong)] bg-[var(--accent-soft)] px-3 py-2 text-xs font-black">
-                  {mainPartProgrammingLabel(block.programming)}
+                <div className="mt-2 rounded-lg border border-[var(--accent-strong)] bg-[var(--accent-soft)] px-3 py-2 text-xs">
+                  <div className="font-black">{mainPartProgrammingLabel(block.programming)}</div>
+                  {analysis?.summary ? <div className="mt-1 font-semibold opacity-80">{analysis.summary}</div> : null}
                 </div>
               ) : null}
               <ol className="mt-2 space-y-2">
@@ -156,7 +166,8 @@ function PhasePreview({
                 ))}
               </ol>
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <ol className="mt-3 space-y-2">

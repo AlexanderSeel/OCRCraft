@@ -55,11 +55,12 @@ export function PersistedMainPartProgrammingForm({
         : undefined,
     };
     if (mode === "interval") return setProgramming({ mode, workSeconds: 40, restSeconds: 20, ...partner });
-    if (mode === "rounds") return setProgramming({ mode, rounds: 3, scoreMode: "quality", ...partner });
+    if (mode === "rounds") return setProgramming({ mode, rounds: 3, scoreMode: "quality", roundRestSeconds: 0, ...partner });
     if (mode === "ladder") return setProgramming({ mode, ladderStart: 2, ladderEnd: 10, ladderStep: 2, ...partner });
     if (mode === "reverse-ladder") return setProgramming({ mode, ladderStart: 10, ladderEnd: 2, ladderStep: 2, ...partner });
     if (mode === "pyramid") return setProgramming({ mode, ladderStart: 2, ladderEnd: 10, ladderStep: 2, ...partner });
-    if (mode === "every") return setProgramming({ mode, everyValue: 500, everyUnit: "metres", ...partner });
+    if (mode === "chipper") return setProgramming({ mode, chipperRepsPerExercise: 20, ...partner });
+    if (mode === "every") return setProgramming({ mode, everyValue: 500, everyUnit: "metres", everyWorkSeconds: 40, everyRestSeconds: 20, ...partner });
     setProgramming({ mode, ...partner });
   }
 
@@ -106,6 +107,9 @@ export function PersistedMainPartProgrammingForm({
                 <option value="time">Zeit</option>
               </select>
             </label>
+            <div className="sm:col-span-2">
+              <NumberInput label="Pause zwischen Runden (Sek.)" max={600} min={0} name="roundRestSeconds" onChange={(roundRestSeconds) => setProgramming({ ...programming, roundRestSeconds })} value={programming.roundRestSeconds ?? 0} />
+            </div>
           </div>
         ) : null}
 
@@ -133,11 +137,18 @@ export function PersistedMainPartProgrammingForm({
                 ))}
               </select>
             </label>
+            <NumberInput label="Arbeit am Trigger (Sek.)" max={1800} min={5} name="everyWorkSeconds" onChange={(everyWorkSeconds) => setProgramming({ ...programming, everyWorkSeconds })} value={programming.everyWorkSeconds ?? 40} />
+            <NumberInput label="Reset/Pause (Sek.)" max={1800} min={0} name="everyRestSeconds" onChange={(everyRestSeconds) => setProgramming({ ...programming, everyRestSeconds })} value={programming.everyRestSeconds ?? 20} />
           </div>
         ) : null}
 
         {programming.mode === "chipper" ? (
-          <p className="text-xs leading-5 text-[var(--muted)]">Die Übungen dieses Hauptteils werden nacheinander vollständig abgearbeitet.</p>
+          <div className="grid gap-2">
+            <div className="max-w-48">
+              <NumberInput label="Wdh. pro Übung" max={500} min={1} name="chipperRepsPerExercise" onChange={(chipperRepsPerExercise) => setProgramming({ ...programming, chipperRepsPerExercise })} value={programming.chipperRepsPerExercise ?? 20} />
+            </div>
+            <p className="text-xs leading-5 text-[var(--muted)]">Die Übungen dieses Hauptteils werden mit der Zielmenge nacheinander vollständig abgearbeitet.</p>
+          </div>
         ) : null}
 
         {programming.partnerMode ? (
@@ -219,10 +230,13 @@ function shortLabel(programming: MainPartProgramming): string {
   else if (programming.mode === "ladder") base = `Ladder ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}`;
   else if (programming.mode === "reverse-ladder") base = `Reverse ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}`;
   else if (programming.mode === "pyramid") base = `Pyramide bis ${programming.ladderEnd ?? 1}`;
-  else if (programming.mode === "chipper") base = "Chipper";
-  else if (programming.mode === "every") base = programming.everyUnit === "checkpoint"
-    ? `jeder ${programming.everyValue ?? 1}. Checkpoint`
-    : `alle ${programming.everyValue ?? 1} ${programming.everyUnit === "minutes" ? "Min." : "m"}`;
+  else if (programming.mode === "chipper") base = `Chipper ${programming.chipperRepsPerExercise ?? 20} Wdh.`;
+  else if (programming.mode === "every") {
+    const trigger = programming.everyUnit === "checkpoint"
+      ? `jeder ${programming.everyValue ?? 1}. Checkpoint`
+      : `alle ${programming.everyValue ?? 1} ${programming.everyUnit === "minutes" ? "Min." : "m"}`;
+    base = `${trigger} · ${programming.everyWorkSeconds ?? 40}/${programming.everyRestSeconds ?? 20}s`;
+  }
 
   if (!programming.partnerMode) return base;
   const partner = programming.partnerMode === "synchronized"

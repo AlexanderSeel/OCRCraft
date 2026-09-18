@@ -152,7 +152,7 @@ function normalizeProgramming(value: MainPartProgramming | undefined): MainPartP
     : {};
 
   if (mode === "interval") return { mode, workSeconds: boundedInteger(value?.workSeconds, 40, 5, 3600), restSeconds: boundedInteger(value?.restSeconds, 20, 0, 1800), ...partner };
-  if (mode === "rounds") return { mode, rounds: boundedInteger(value?.rounds, 3, 1, 50), scoreMode: isScoreMode(value?.scoreMode) ? value.scoreMode : "quality", ...partner };
+  if (mode === "rounds") return { mode, rounds: boundedInteger(value?.rounds, 3, 1, 50), scoreMode: isScoreMode(value?.scoreMode) ? value.scoreMode : "quality", roundRestSeconds: boundedInteger(value?.roundRestSeconds, 0, 0, 600), ...partner };
   if (mode === "ladder") {
     const ladderStart = boundedInteger(value?.ladderStart, 2, 1, 100);
     const ladderEnd = Math.max(ladderStart + 1, boundedInteger(value?.ladderEnd, 10, 1, 200));
@@ -163,8 +163,22 @@ function normalizeProgramming(value: MainPartProgramming | undefined): MainPartP
     const ladderEnd = Math.min(ladderStart - 1, boundedInteger(value?.ladderEnd, 2, 1, 199));
     return { mode, ladderStart, ladderEnd, ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50), ...partner };
   }
-  if (mode === "pyramid") return { mode, ladderStart: boundedInteger(value?.ladderStart, 2, 1, 100), ladderEnd: boundedInteger(value?.ladderEnd, 10, 2, 200), ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50), ...partner };
-  if (mode === "every") return { mode, everyValue: boundedInteger(value?.everyValue, 500, 1, 10000), everyUnit: isEveryUnit(value?.everyUnit) ? value.everyUnit : "metres", ...partner };
+  if (mode === "pyramid") {
+    const ladderStart = boundedInteger(value?.ladderStart, 2, 1, 100);
+    const ladderStep = boundedInteger(value?.ladderStep, 2, 1, 50);
+    const rawEnd = Math.max(ladderStart + ladderStep, boundedInteger(value?.ladderEnd, 10, 2, 200));
+    const ladderEnd = ladderStart + Math.max(1, Math.round((rawEnd - ladderStart) / ladderStep)) * ladderStep;
+    return { mode, ladderStart, ladderEnd, ladderStep, ...partner };
+  }
+  if (mode === "chipper") return { mode, chipperRepsPerExercise: boundedInteger(value?.chipperRepsPerExercise, 20, 1, 500), ...partner };
+  if (mode === "every") return {
+    mode,
+    everyValue: boundedInteger(value?.everyValue, 500, 1, 10000),
+    everyUnit: isEveryUnit(value?.everyUnit) ? value.everyUnit : "metres",
+    everyWorkSeconds: boundedInteger(value?.everyWorkSeconds, 40, 5, 1800),
+    everyRestSeconds: boundedInteger(value?.everyRestSeconds, 20, 0, 1800),
+    ...partner,
+  };
   return { mode, ...partner };
 }
 

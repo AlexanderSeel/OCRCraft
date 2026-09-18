@@ -62,13 +62,20 @@ export interface MainPartProgramming {
   /** Fixed rounds for time or quality. */
   readonly rounds?: number;
   readonly scoreMode?: MainPartScoreMode;
+  /** Planned recovery between completed rounds. */
+  readonly roundRestSeconds?: number;
   /** Repetition range for ladder/reverse-ladder/pyramid programming. */
   readonly ladderStart?: number;
   readonly ladderEnd?: number;
   readonly ladderStep?: number;
+  /** Target repetitions per exercise in a chipper block. */
+  readonly chipperRepsPerExercise?: number;
   /** Trigger cadence for running/checkpoint combinations. */
   readonly everyValue?: number;
   readonly everyUnit?: MainPartEveryUnit;
+  /** Work and reset time performed at each Every-X trigger. */
+  readonly everyWorkSeconds?: number;
+  readonly everyRestSeconds?: number;
   /** Pair-specific work sharing when the Partner Workout format is active. */
   readonly partnerMode?: PartnerWorkMode;
   /** Work switch cadence for alternating partner blocks. */

@@ -1,6 +1,7 @@
 import { TrainingItemGuidance } from "@/components/training/training-item-guidance";
 import { TRAINING_PHASE_LABELS } from "@/domain/training/model";
 import { mainPartProgrammingLabel } from "@/server/training/main-part-programming";
+import { analyzeMainPartProgramming } from "@/domain/training/programming-math";
 import type { TrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 import type { TrainingSessionDetail } from "@/server/training/training-session-repository";
 
@@ -83,6 +84,16 @@ export function TrainingReadonlySession({
               const previous = phase.items[index - 1];
               const beginsMainPart = phase.kind === "main"
                 && (index === 0 || (previous?.mainPartIndex ?? 1) !== (item.mainPartIndex ?? 1));
+              const mainPartItems = beginsMainPart
+                ? phase.items.filter((candidate) => (candidate.mainPartIndex ?? 1) === (item.mainPartIndex ?? 1))
+                : [];
+              const analysis = beginsMainPart && item.programming
+                ? analyzeMainPartProgramming(
+                    item.programming,
+                    mainPartItems.reduce((sum, candidate) => sum + candidate.durationMinutes * 60, 0),
+                    mainPartItems.length,
+                  )
+                : null;
               return (
                 <div key={item.id}>
                   {beginsMainPart ? (
@@ -92,7 +103,10 @@ export function TrainingReadonlySession({
                     >
                       <span>{item.mainPartTitle ?? `Hauptteil ${item.mainPartIndex ?? 1}`}</span>
                       {item.programming && (item.programming.mode !== "standard" || item.programming.partnerMode) ? (
-                        <span>{mainPartProgrammingLabel(item.programming)}</span>
+                        <span className="text-right">
+                          <span className="block">{mainPartProgrammingLabel(item.programming)}</span>
+                          {analysis?.summary ? <span className="mt-0.5 block font-semibold opacity-80">{analysis.summary}</span> : null}
+                        </span>
                       ) : null}
                     </div>
                   ) : null}

@@ -188,4 +188,31 @@ describe("training draft request equipment, obstacles, groups and location", () 
   });
 
 
+  it("validates minute-based Every-X work/rest arithmetic when explicitly supplied", () => {
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["run-exercise"],
+      mainPartProgramming: [{
+        mode: "every",
+        everyValue: 2,
+        everyUnit: "minutes",
+        everyWorkSeconds: 40,
+        everyRestSeconds: 20,
+      }],
+    }).success).toBe(true);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["run-exercise"],
+      mainPartProgramming: [{
+        mode: "every",
+        everyValue: 1,
+        everyUnit: "minutes",
+        everyWorkSeconds: 40,
+        everyRestSeconds: 20,
+      }],
+    }).success).toBe(false);
+  });
+
+
 });

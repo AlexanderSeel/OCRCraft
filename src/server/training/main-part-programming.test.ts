@@ -82,7 +82,13 @@ describe("main-part programming", () => {
 
     expect(main?.items[0]?.programming).toEqual({ mode: "interval", workSeconds: 50, restSeconds: 20 });
     expect(main?.items[1]?.programming).toEqual({ mode: "interval", workSeconds: 50, restSeconds: 20 });
-    expect(main?.items[2]?.programming).toEqual({ mode: "every", everyValue: 500, everyUnit: "metres" });
+    expect(main?.items[2]?.programming).toEqual({
+      mode: "every",
+      everyValue: 500,
+      everyUnit: "metres",
+      everyWorkSeconds: 40,
+      everyRestSeconds: 20,
+    });
     expect(result.session.phases.find((phase) => phase.kind === "warmup")?.items[0]?.programming).toBeUndefined();
   });
 
@@ -94,7 +100,7 @@ describe("main-part programming", () => {
   it("formats the supported prescriptions for trainer-facing surfaces", () => {
     expect(mainPartProgrammingLabel({ mode: "rounds", rounds: 4, scoreMode: "quality" })).toContain("4 Runden");
     expect(mainPartProgrammingLabel({ mode: "pyramid", ladderStart: 2, ladderEnd: 10, ladderStep: 2 })).toContain("Pyramide");
-    expect(mainPartProgrammingLabel({ mode: "every", everyValue: 400, everyUnit: "metres" })).toBe("Alle 400 m");
+    expect(mainPartProgrammingLabel({ mode: "every", everyValue: 400, everyUnit: "metres" })).toBe("Alle 400 m · 40s Arbeit / 20s Reset");
   });
   it("adds deterministic pair defaults and partner-facing labels", () => {
     const partnerRequest = trainingDraftRequestSchema.parse({
@@ -115,6 +121,44 @@ describe("main-part programming", () => {
     expect(mainPartProgrammingLabel(main?.items[0]?.programming)).toContain("You-go-I-go");
     expect(mainPartProgrammingLabel(main?.items[2]?.programming)).toContain("Wechsel alle 45s");
     expect(result.warnings.some((warning) => warning.includes("keine vollständigen Paare"))).toBe(true);
+  });
+
+
+  it("maps training formats to deterministic programming defaults", () => {
+    const tabata = applyMainPartProgramming(trainingDraftRequestSchema.parse({
+      ...request,
+      formats: ["tabata"],
+      mainPartProgramming: [{ mode: "standard" }, { mode: "standard" }],
+    }), draft);
+    const tabataMain = tabata.session.phases.find((phase) => phase.kind === "main");
+    expect(tabataMain?.items[0]?.programming).toMatchObject({ mode: "interval", workSeconds: 20, restSeconds: 10 });
+
+    const runExercise = applyMainPartProgramming(trainingDraftRequestSchema.parse({
+      ...request,
+      formats: ["run-exercise"],
+      mainPartProgramming: [{ mode: "standard" }, { mode: "standard" }],
+    }), draft);
+    const runMain = runExercise.session.phases.find((phase) => phase.kind === "main");
+    expect(runMain?.items[0]?.programming).toMatchObject({
+      mode: "every",
+      everyValue: 500,
+      everyUnit: "metres",
+      everyWorkSeconds: 40,
+      everyRestSeconds: 20,
+    });
+  });
+
+  it("adds arithmetic warnings for invalid ladder steps and round recovery", () => {
+    const ladderRequest = trainingDraftRequestSchema.parse({
+      ...request,
+      mainPartProgramming: [
+        { mode: "ladder", ladderStart: 2, ladderEnd: 9, ladderStep: 2 },
+        { mode: "rounds", rounds: 10, scoreMode: "quality", roundRestSeconds: 30 },
+      ],
+    });
+    const result = applyMainPartProgramming(ladderRequest, draft);
+    expect(result.warnings.some((warning) => warning.includes("Schrittweite"))).toBe(true);
+    expect(result.warnings.some((warning) => warning.includes("Rundenpausen"))).toBe(true);
   });
 
 
