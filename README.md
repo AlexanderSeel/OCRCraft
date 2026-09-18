@@ -60,6 +60,7 @@ Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit e
 - responsive Traineroberflächen für Desktop, Tablet und mobile Nutzung
 - einklappbare Hauptnavigation mit persistiertem Icon-Modus sowie wiederverwendbare Sidepanel-Filter in Übungs-, Medien- und Hinderniskatalog
 - zentrale Dialog-Komponente mit ARIA-Rolle, Fokusfalle, Escape, Backdrop-Schließen, Scroll-Lock und Fokus-Rückgabe
+- AppShell trennt kontextbezogene Seitenaktionen von globalen Systemwerkzeugen wie Theme, Builder-Fortsetzung und Administration
 - große Muskel- und Facettenfilter öffnen als zentrierte Dialoge und halten die Sidepanels kompakt
 - zentrale Disclosure-Komponente für Filter, Editoren, Builder und Adminflächen
 - sichtbare Fokuszustände und Tastaturbedienung für zentrale Auswahl- und Formularpfade

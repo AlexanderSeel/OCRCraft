@@ -151,6 +151,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - Gemeinsamer Administrationsbereich mit Tabs für Übersicht, Datenbank, Datenqualität und Einstellungen; doppelte Settings-/Admin-Navigation entfernt.
 - Dynamischer Vollständigkeitsbericht für Seed-Bestand und gesamten Übungskatalog sowie Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes.
 - Light/Dark/System-Theme, semantische UI-Tokens, responsive Layouts und laufende CI-Gates.
+- AppShell trennt Seitenaktionen sichtbar von globalen Systemwerkzeugen; globale Administration und Theme sind nicht mehr mit kontextbezogenen Aktionen vermischt.
 
 ## CI und Definition of Done
 

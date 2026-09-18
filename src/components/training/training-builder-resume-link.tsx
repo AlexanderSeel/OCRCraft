@@ -21,7 +21,7 @@ export function TrainingBuilderResumeLink() {
       href={`/training/builder?source=${encodeURIComponent(match[1])}`}
     >
       <span className="sm:hidden">Builder</span>
-      <span className="hidden sm:inline">Im Builder anpassen</span>
+      <span className="hidden sm:inline">Builder fortsetzen</span>
     </Link>
   );
 }

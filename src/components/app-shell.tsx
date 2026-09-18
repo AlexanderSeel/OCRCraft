@@ -23,13 +23,16 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
               <h1 className="truncate text-xl font-black tracking-tight sm:text-2xl">{title}</h1>
               {subtitle ? <p className="mt-1 hidden text-sm text-[var(--muted)] sm:block">{subtitle}</p> : null}
             </div>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+            {actions ? <div aria-label="Seitenaktionen" className="flex flex-wrap items-center justify-end gap-2">{actions}</div> : null}
+          </div>
+          <div className="border-t border-[var(--border)]/70 bg-[var(--surface-subtle)]/40">
+            <div aria-label="Globale Werkzeuge" className="mx-auto flex min-h-10 max-w-[1500px] flex-wrap items-center justify-end gap-2 px-4 py-1.5 sm:px-6 lg:px-8">
+              <span className="mr-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--muted)]">System</span>
               <TrainingBuilderResumeLink />
               <ThemeSwitcher />
               <nav aria-label="Schnellzugriff" className="flex items-center gap-1">
-                <Link className="inline-flex min-h-11 items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs font-black hover:bg-[var(--surface-subtle)] sm:px-3 sm:text-sm" href="/admin?tab=overview">
-                  <span className="sm:hidden">Admin</span><span className="hidden sm:inline">Administration</span>
+                <Link className="inline-flex min-h-9 items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs font-black hover:bg-[var(--surface-subtle)]" href="/admin?tab=overview">
+                  Administration
                 </Link>
               </nav>
             </div>
