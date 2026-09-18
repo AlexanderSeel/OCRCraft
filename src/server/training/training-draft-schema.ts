@@ -106,6 +106,10 @@ export const trainingDraftRequestSchema = z.object({
   (value) => value.teamSize == null || value.teamSize <= value.participantCount,
   { message: "Die Teamgröße darf die Teilnehmerzahl nicht überschreiten.", path: ["teamSize"] },
 ).refine(
+  (value) => !value.formats.includes("partner")
+    || (value.organizationMode === "team" && value.teamSize === 2),
+  { message: "Partner Workout wird verbindlich in 2er-Teams geplant.", path: ["teamSize"] },
+).refine(
   (value) => value.organizationMode !== "team" || value.groupSplitCount == null,
   { message: "Rotationsgruppen werden nur im Solo-/Rotationsmodus verwendet.", path: ["groupSplitCount"] },
 ).refine(

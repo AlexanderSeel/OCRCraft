@@ -56,6 +56,21 @@ describe("reviewed AI persistence main-part counts", () => {
     expect(reviewedAiTrainingPersistenceSchema.safeParse(base).success).toBe(true);
   });
 
+  it("requires the persisted group to match the group whose rules were validated", () => {
+    const groupId = "11111111-1111-4111-8111-111111111111";
+    expect(reviewedAiTrainingPersistenceSchema.safeParse({
+      ...base,
+      groupId,
+      request: { ...base.request, groupId },
+    }).success).toBe(true);
+
+    expect(reviewedAiTrainingPersistenceSchema.safeParse({
+      ...base,
+      groupId: "22222222-2222-4222-8222-222222222222",
+      request: { ...base.request, groupId },
+    }).success).toBe(false);
+  });
+
   it("rejects a reviewed selection whose per-part distribution is wrong even when the total matches", () => {
     const invalid = {
       ...base,

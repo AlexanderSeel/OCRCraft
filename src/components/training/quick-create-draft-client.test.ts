@@ -173,6 +173,7 @@ describe("normalizeTrainingDraftRequest", () => {
     expect(request.location).toBe("mixed");
     expect(request.intensity).toBe("balanced");
     expect(request.builderMode).toBe("local");
+    expect(request.groupId).toBeUndefined();
     expect(request.exerciseTypes).toEqual([]);
     expect(request.sourceTrainingIds).toEqual([]);
     expect(request.minAge).toBeUndefined();

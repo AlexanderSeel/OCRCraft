@@ -28,6 +28,14 @@ export const reviewedAiTrainingPersistenceSchema = z.object({
     phases: z.array(reviewedPhaseSchema).length(TRAINING_PHASES.length),
   }),
 }).superRefine((value, context) => {
+  if (value.groupId !== value.request.groupId) {
+    context.addIssue({
+      code: "custom",
+      path: ["groupId"],
+      message: "Die gespeicherte Trainingsgruppe muss der validierten Regelgruppe entsprechen.",
+    });
+  }
+
   const kinds = value.reviewed.phases.map((phase) => phase.kind);
   for (const kind of TRAINING_PHASES) {
     if (kinds.filter((candidate) => candidate === kind).length !== 1) {

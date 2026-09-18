@@ -46,6 +46,7 @@ const FORMAT_CATEGORY_BONUS: Readonly<Partial<Record<TrainingFormat, readonly Ex
   "run-exercise": ["running", "strength", "core", "carry-lift", "ocr-skill"],
   technique: ["ocr-skill", "grip-rig", "balance-agility", "throw", "mobility"],
   relay: ["running", "balance-agility", "carry-lift", "general"],
+  partner: ["strength", "core", "carry-lift", "balance-agility", "general"],
 };
 
 const MOVEMENT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
@@ -228,6 +229,14 @@ function structuredScore(
   if (phase !== "main") {
     if (candidate.riskLevel === "low") score += 20;
     if (candidate.impactLevel === "high") score -= 30;
+  }
+
+  if (phase === "main" && input.formats.includes("partner")) {
+    if (candidate.trainingGoals?.includes("teamwork")) score += 100;
+    const partnerContext = `${candidate.tags.join(" ")} ${candidate.planningText ?? ""}`.toLocaleLowerCase("de-DE");
+    if (partnerContext.includes("partner") || partnerContext.includes("team")) score += 45;
+    if (candidate.exerciseType === "game" || candidate.exerciseType === "drill") score += 30;
+    if (candidate.stationCapacity >= 2) score += 20;
   }
 
   if (phase === "main" && input.organizationMode === "team") {
@@ -473,6 +482,7 @@ function buildItem(
 
 function formatForPhase(kind: TrainingPhaseKind, input: StructuredSportsTrainingInput): TrainingFormat {
   if (kind !== "main") return "free";
+  if (input.formats.includes("partner")) return "partner";
   if (input.organizationMode === "team" && input.formats.includes("relay")) return "relay";
   return input.formats[0] ?? "free";
 }

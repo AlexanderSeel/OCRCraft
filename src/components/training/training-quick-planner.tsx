@@ -14,6 +14,7 @@ const formats = [
   ["rig-run", "Rig & Run"],
   ["technique", "Technik"],
   ["relay", "Team / Staffel"],
+  ["partner", "Partner Workout"],
   ["run-exercise", "Run + Exercise"],
   ["amrap", "AMRAP"],
 ] as const;
@@ -98,9 +99,9 @@ export function TrainingQuickPlanner({
       mainPartExerciseCounts: mainPartCounts,
       cooldownExerciseCount: cooldownCount,
       mainPartCount,
-      organizationMode,
-      teamSize: organizationMode === "team" ? Math.min(teamSize, participants) : undefined,
-      groupSplitCount: organizationMode === "solo" && groupSplitCount != null
+      organizationMode: format === "partner" ? "team" : organizationMode,
+      teamSize: format === "partner" ? 2 : organizationMode === "team" ? Math.min(teamSize, participants) : undefined,
+      groupSplitCount: format !== "partner" && organizationMode === "solo" && groupSplitCount != null
         ? Math.min(groupSplitCount, participants, 20)
         : undefined,
       sourceTrainingIds: [],
@@ -175,7 +176,15 @@ export function TrainingQuickPlanner({
         <NumberField label="Dauer (Min.)" value={duration} min={30} max={180} onChange={(value) => { setDuration(value); invalidateDraft(); }} />
         <Select label="Ziel" value={goal} onChange={(value) => { setGoal(value); invalidateDraft(); }} options={goals.map((value) => [value, value] as const)} />
         <Select label="Muskel-/Körperfokus" value={bodyRegion} onChange={(value) => { setBodyRegion(value); invalidateDraft(); }} options={coarseOptions.map((option) => [option.id, option.labelDe] as const)} />
-        <Select label="Format" value={format} onChange={(value) => { setFormat(value); invalidateDraft(); }} options={formats} />
+        <Select label="Format" value={format} onChange={(value) => {
+          setFormat(value);
+          if (value === "partner") {
+            setOrganizationMode("team");
+            setTeamSize(2);
+            setGroupSplitCount(undefined);
+          }
+          invalidateDraft();
+        }} options={formats} />
         <Select label="Ort" value={location} onChange={(value) => { setLocation(value); invalidateDraft(); }} options={locations} />
         <Select label="Organisation" value={organizationMode} onChange={(value) => { setOrganizationMode(value as "solo" | "team"); invalidateDraft(); }} options={[["solo", "Alleine / individuell"], ["team", "Teams"]]} />
       </div>

@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { CLUB_RULE_PROFILES } from "@/domain/training/club-rules";
+import {
+  GROUP_PRESETS,
+  getGroupPreset,
+  type GroupPresetDefinition,
+} from "@/domain/training/group-presets";
 import type { TrainingFormat } from "@/domain/training/model";
 import { Disclosure } from "@/components/ui/disclosure";
 import type { ClubGroup } from "@/server/groups/group-repository";
@@ -26,15 +31,17 @@ const GROUP_FORMAT_OPTIONS: readonly (readonly [TrainingFormat, string])[] = [
   ["run-exercise", "Run + Exercise"],
   ["technique", "Technik"],
   ["relay", "Team / Relay"],
+  ["partner", "Partner Workout"],
 ];
 
 interface PageProps {
-  readonly searchParams: Promise<{ archived?: string; saved?: string; error?: string }>;
+  readonly searchParams: Promise<{ archived?: string; saved?: string; error?: string; preset?: string }>;
 }
 
 export default async function GroupsPage({ searchParams }: PageProps) {
   const query = await searchParams;
   const archivedView = query.archived === "1";
+  const selectedPreset = archivedView ? undefined : getGroupPreset(query.preset);
   const [allGroups, equipmentOptions] = await Promise.all([
     listClubGroups(archivedView),
     listTrainingEquipmentOptions("de"),
@@ -67,9 +74,42 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         ) : null}
 
         {!archivedView ? (
-          <Disclosure className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]" summaryClassName="px-5 py-4 font-black" summary="+ Neue Gruppe anlegen">
-            <form action={createClubGroupAction} className="border-t border-[var(--border)] p-5">
-              <GroupFields equipmentOptions={equipmentOptions} />
+          <Disclosure
+            className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]"
+            open={Boolean(selectedPreset)}
+            summaryClassName="px-5 py-4 font-black"
+            summary="+ Neue Gruppe anlegen"
+          >
+            <div className="border-t border-[var(--border)] px-5 pt-5">
+              <div className="text-xs font-black uppercase tracking-[0.1em] text-[var(--muted)]">Startvorlage</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {GROUP_PRESETS.map((preset) => (
+                  <Link
+                    className={`rounded-lg border px-3 py-2 text-xs font-black ${
+                      selectedPreset?.key === preset.key
+                        ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"
+                        : "border-[var(--border)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-elevated)]"
+                    }`}
+                    href={`/groups?preset=${preset.key}`}
+                    key={preset.key}
+                  >
+                    {preset.labelDe}
+                  </Link>
+                ))}
+                {selectedPreset ? (
+                  <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href="/groups">
+                    Ohne Vorlage
+                  </Link>
+                ) : null}
+              </div>
+              <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                {selectedPreset
+                  ? selectedPreset.descriptionDe
+                  : "Vorlagen setzen nur editierbare Startwerte. Beim Speichern entsteht eine normale Vereinsgruppe."}
+              </p>
+            </div>
+            <form action={createClubGroupAction} className="p-5">
+              <GroupFields equipmentOptions={equipmentOptions} preset={selectedPreset} />
               <div className="mt-4 flex justify-end">
                 <button
                   className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
@@ -168,9 +208,11 @@ export default async function GroupsPage({ searchParams }: PageProps) {
 
 function GroupFields({
   group,
+  preset,
   equipmentOptions,
 }: {
   readonly group?: ClubGroup;
+  readonly preset?: GroupPresetDefinition;
   readonly equipmentOptions: readonly TrainingEquipmentOption[];
 }) {
   const equipmentById = new Map(group?.defaultEquipment.map((item) => [item.equipmentId, item.quantityAvailable]) ?? []);
@@ -181,7 +223,7 @@ function GroupFields({
         Name
         <input
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
-          defaultValue={group?.name ?? ""}
+          defaultValue={group?.name ?? preset?.defaultName ?? ""}
           maxLength={120}
           name="name"
           placeholder="z. B. OCR Kids Mittwoch"
@@ -192,7 +234,7 @@ function GroupFields({
         Zielgruppe
         <select
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-          defaultValue={group?.audience ?? "mixed"}
+          defaultValue={group?.audience ?? preset?.audience ?? "mixed"}
           name="audience"
         >
           <option value="kids">Kinder</option>
@@ -216,7 +258,7 @@ function GroupFields({
         Mindestalter
         <input
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-          defaultValue={group?.minAge ?? ""}
+          defaultValue={group?.minAge ?? preset?.minAge ?? ""}
           max={99}
           min={3}
           name="minAge"
@@ -227,7 +269,7 @@ function GroupFields({
         Höchstalter
         <input
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-          defaultValue={group?.maxAge ?? ""}
+          defaultValue={group?.maxAge ?? preset?.maxAge ?? ""}
           max={99}
           min={3}
           name="maxAge"
@@ -238,7 +280,7 @@ function GroupFields({
         Teilnehmerzahl
         <input
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-          defaultValue={group?.defaultParticipantCount ?? 12}
+          defaultValue={group?.defaultParticipantCount ?? preset?.participantCount ?? 12}
           max={500}
           min={1}
           name="defaultParticipantCount"
@@ -250,7 +292,7 @@ function GroupFields({
         Standarddauer (Min.)
         <input
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-          defaultValue={group?.defaultDurationMinutes ?? 60}
+          defaultValue={group?.defaultDurationMinutes ?? preset?.durationMinutes ?? 60}
           max={480}
           min={10}
           name="defaultDurationMinutes"
@@ -261,7 +303,7 @@ function GroupFields({
         Standard-Trainingsort
         <select
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-          defaultValue={group?.defaultLocation ?? "mixed"}
+          defaultValue={group?.defaultLocation ?? preset?.defaultLocation ?? "mixed"}
           name="defaultLocation"
         >
           <option value="mixed">Flexibel</option>
@@ -273,7 +315,7 @@ function GroupFields({
         Club-Regelprofil
         <select
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-          defaultValue={group?.ruleProfile ?? "standard"}
+          defaultValue={group?.ruleProfile ?? preset?.ruleProfile ?? "standard"}
           name="ruleProfile"
         >
           {CLUB_RULE_PROFILES.map((profile) => (
@@ -285,7 +327,7 @@ function GroupFields({
         Maximales Risikoniveau
         <select
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
-          defaultValue={group?.maximumRiskLevel ?? ""}
+          defaultValue={group?.maximumRiskLevel ?? preset?.maximumRiskLevel ?? ""}
           name="maximumRiskLevel"
         >
           <option value="">Kein Gruppenlimit</option>
@@ -321,7 +363,7 @@ function GroupFields({
       </div>
     </details>
 
-    <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={Boolean(group?.skillDistribution || group?.preferredFormats.length)}>
+    <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={Boolean(group?.skillDistribution || group?.preferredFormats.length || preset?.skillDistribution || preset?.preferredFormats.length)}>
       <summary className="cursor-pointer text-sm font-black">Skill-Verteilung & bevorzugte Formate</summary>
       <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
         Die Skill-Verteilung ist optional. Wenn sie gepflegt wird, müssen Beginner, Intermediate und Advanced zusammen 100 % ergeben. Bevorzugte Formate werden von Quick Create als Gruppenstandard übernommen.
@@ -329,15 +371,15 @@ function GroupFields({
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <label className="grid gap-1 text-xs font-bold">
           Beginner %
-          <input className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal" defaultValue={group?.skillDistribution?.beginnerPercent ?? ""} max={100} min={0} name="skillBeginnerPercent" type="number" />
+          <input className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal" defaultValue={group?.skillDistribution?.beginnerPercent ?? preset?.skillDistribution?.beginnerPercent ?? ""} max={100} min={0} name="skillBeginnerPercent" type="number" />
         </label>
         <label className="grid gap-1 text-xs font-bold">
           Intermediate %
-          <input className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal" defaultValue={group?.skillDistribution?.intermediatePercent ?? ""} max={100} min={0} name="skillIntermediatePercent" type="number" />
+          <input className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal" defaultValue={group?.skillDistribution?.intermediatePercent ?? preset?.skillDistribution?.intermediatePercent ?? ""} max={100} min={0} name="skillIntermediatePercent" type="number" />
         </label>
         <label className="grid gap-1 text-xs font-bold">
           Advanced %
-          <input className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal" defaultValue={group?.skillDistribution?.advancedPercent ?? ""} max={100} min={0} name="skillAdvancedPercent" type="number" />
+          <input className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal" defaultValue={group?.skillDistribution?.advancedPercent ?? preset?.skillDistribution?.advancedPercent ?? ""} max={100} min={0} name="skillAdvancedPercent" type="number" />
         </label>
       </div>
       <div className="mt-4">
@@ -345,7 +387,7 @@ function GroupFields({
         <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           {GROUP_FORMAT_OPTIONS.map(([format, label]) => (
             <label className="flex min-h-10 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-bold" key={format}>
-              <input defaultChecked={group?.preferredFormats.includes(format) ?? false} name="preferredFormats" type="checkbox" value={format} />
+              <input defaultChecked={(group?.preferredFormats ?? preset?.preferredFormats ?? []).includes(format)} name="preferredFormats" type="checkbox" value={format} />
               {label}
             </label>
           ))}

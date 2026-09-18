@@ -50,6 +50,7 @@ const formatOptions = [
   ["run-exercise", "Run + Exercise", "Alle X Meter oder Minuten eine Übung"],
   ["technique", "Technik", "Qualität und Hindernisprogression im Fokus"],
   ["relay", "Team / Relay", "Gruppen- und Staffelvarianten"],
+  ["partner", "Partner Workout", "Verbindliche 2er-Teams mit Partner-/Teamwork-Übungen"],
 ] as const;
 
 const DEFAULT_FORMATS: readonly string[] = ["rig-run"];
@@ -228,8 +229,9 @@ export function QuickCreateWizard({
       avoidBodyRegions,
       formats,
       location,
-      organizationMode: "solo",
-      groupSplitCount: effectiveGroupSplitCount,
+      organizationMode: formats.includes("partner") ? "team" : "solo",
+      teamSize: formats.includes("partner") ? 2 : undefined,
+      groupSplitCount: formats.includes("partner") ? undefined : effectiveGroupSplitCount,
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
         quantity.trim() === "" ? [] : [{ equipmentId, quantityAvailable: Number(quantity) }]
       ),

@@ -58,6 +58,7 @@ export class OpenAiCompatibleTrainingProvider implements AiTrainingProvider {
               "Respect the exact requested exercise counts. mainPartExerciseCounts contains the exact number of exercises for main parts 1..N; assign every main item a matching 1-based mainPart.",
               "mainPartProgramming is trainer-owned programming for main parts 1..N. Use it as context when selecting suitable exercises, but never rewrite, replace or invent its work/rest, rounds, ladder, pyramid, chipper or every-X values. The server applies it canonically after selection.",
               "Respect organizationMode, teamSize and groupSplitCount. teamSize applies to team mode; groupSplitCount is the explicit number of parallel rotation groups in solo mode and therefore affects station-capacity/logistics suitability.",
+              "If partner format is requested, organizationMode is team and teamSize is exactly 2. Prefer approved teamwork/partner exercises and never change the pair size.",
               "availableObstacleExerciseIds is a hard club-inventory constraint when present. The approved pool has already removed unavailable obstacle stations; never infer or re-introduce a missing obstacle.",
               "Respect audience, ages, goals, body focus/avoidance, requested exercise types, formats, location, intensity and equipment.",
               "If sourceSessions are supplied, use them as inspiration/context for recomposition, not as permission to bypass current constraints or copy every item.",
@@ -99,7 +100,7 @@ function buildPromptPayload(context: AiTrainingGenerationContext) {
         kind: "warmup | main | cooldown",
         items: [{
           exerciseId: "approved exercise id",
-          format: "optional free | circuit | tabata | amrap | emom | rig-run | run-exercise | technique | relay",
+          format: "optional free | circuit | tabata | amrap | emom | rig-run | run-exercise | technique | relay | partner",
           level: "optional level1 | level2 | level3",
           trainerNote: "optional short note",
           mainPart: "required 1-based integer for main items when mainPartCount > 1; omit outside main",

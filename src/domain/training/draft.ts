@@ -119,6 +119,7 @@ const FORMAT_CATEGORY_BONUS: Readonly<Partial<Record<TrainingFormat, readonly Ex
   "run-exercise": ["running", "strength", "core", "carry-lift", "ocr-skill"],
   technique: ["ocr-skill", "grip-rig", "balance-agility", "throw"],
   relay: ["running", "balance-agility", "carry-lift", "general"],
+  partner: ["strength", "core", "carry-lift", "balance-agility", "general"],
   circuit: ["strength", "core", "carry-lift", "balance-agility", "general"],
   tabata: ["strength", "core", "running", "general"],
   amrap: ["strength", "core", "carry-lift", "running", "general"],
@@ -227,6 +228,12 @@ function scoreCandidate(
 
   for (const format of input.formats) {
     if (FORMAT_CATEGORY_BONUS[format]?.includes(candidate.category)) score += 12;
+  }
+
+  if (phase === "main" && input.formats.includes("partner")) {
+    if (candidate.trainingGoals?.includes("teamwork")) score += 36;
+    const partnerContext = `${candidate.tags.join(" ")} ${candidate.planningText ?? ""}`.toLocaleLowerCase("de-DE");
+    if (partnerContext.includes("partner") || partnerContext.includes("team")) score += 18;
   }
 
   if (input.intensity === "technique" && ["ocr-skill", "grip-rig", "balance-agility", "mobility"].includes(candidate.category)) {

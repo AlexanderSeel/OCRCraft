@@ -9,11 +9,16 @@ import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
 import { applyMainPartProgramming } from "./main-part-programming";
 import { composeStructuredSportsTrainingDraft } from "./structured-sports-training-composer";
 import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
+import {
+  filterCandidatesForClubRules,
+  resolveTrainingClubRules,
+} from "./training-club-rule-service";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
 import type { TrainingPhaseRegenerationRequest } from "./training-phase-regeneration-schema";
 
 export async function regenerateTrainingDraftPhase(input: TrainingPhaseRegenerationRequest): Promise<TrainingDraft> {
   const { request, phase: targetKind, current } = input;
+  const rules = await resolveTrainingClubRules(request);
   const rawCandidates = await listTrainingDraftCandidates({
     audience: request.audience,
     minAge: request.minAge,
@@ -21,7 +26,8 @@ export async function regenerateTrainingDraftPhase(input: TrainingPhaseRegenerat
     location: request.location,
     availableObstacleExerciseIds: request.availableObstacleExerciseIds,
   });
-  const candidates = filterCandidatesForDeclaredEquipment(rawCandidates, request.availableEquipment);
+  const equipmentFiltered = filterCandidatesForDeclaredEquipment(rawCandidates, request.availableEquipment);
+  const candidates = filterCandidatesForClubRules(request, equipmentFiltered, rules);
   const candidateById = new Map(candidates.map((candidate) => [candidate.id, candidate]));
   const budgets = getTrainingPhaseBudgets(request.durationMinutes);
 
@@ -65,7 +71,7 @@ export async function regenerateTrainingDraftPhase(input: TrainingPhaseRegenerat
   return applyMainPartProgramming(request, {
     source: request.builderMode === "ai" ? "ai" : "deterministic",
     session,
-    validationIssues: validateTrainingSession(session, undefined, request.availableEquipment),
+    validationIssues: validateTrainingSession(session, rules, request.availableEquipment),
     warnings: [...replacementDraft.warnings, `${TRAINING_PHASE_LABELS[targetKind]} wurde neu erzeugt; die beiden anderen Phasen wurden unverändert aus der geprüften Auswahl übernommen.`],
   });
 }

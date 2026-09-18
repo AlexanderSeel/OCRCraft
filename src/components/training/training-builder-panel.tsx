@@ -49,6 +49,7 @@ const formatLabels: Readonly<Record<TrainingFormat, string>> = {
   "run-exercise": "Run + Exercise",
   technique: "Technik",
   relay: "Team / Relay",
+  partner: "Partner Workout",
 };
 
 export interface TrainingBuilderSourceOption {
@@ -61,6 +62,7 @@ export interface TrainingBuilderSourceOption {
 export interface TrainingBuilderInitialState {
   readonly sourceTrainingId: string;
   readonly sourceTitle: string;
+  readonly groupId?: string;
   readonly builderMode: QuickCreateBuilderMode;
   readonly audience: string;
   readonly minAge?: number;
@@ -181,10 +183,14 @@ export function TrainingBuilderPanel({
 
   const canGenerate = goals.length > 0 && formats.length > 0;
   const selectedGoalLabels = useMemo(() => new Set(goals), [goals]);
-  const effectiveTeamSize = organizationMode === "team"
-    ? clampInteger(teamSize, 2, Math.min(20, Math.max(2, participants)))
-    : undefined;
-  const effectiveGroupSplitCount = organizationMode === "solo" && groupSplitCount != null
+  const partnerWorkout = formats.includes("partner");
+  const effectiveOrganizationMode: "solo" | "team" = partnerWorkout ? "team" : organizationMode;
+  const effectiveTeamSize = partnerWorkout
+    ? 2
+    : effectiveOrganizationMode === "team"
+      ? clampInteger(teamSize, 2, Math.min(20, Math.max(2, participants)))
+      : undefined;
+  const effectiveGroupSplitCount = effectiveOrganizationMode === "solo" && groupSplitCount != null
     ? clampInteger(groupSplitCount, 1, Math.min(20, Math.max(1, participants)))
     : undefined;
   const totalRequestedExercises = warmupExerciseCount
@@ -236,6 +242,7 @@ export function TrainingBuilderPanel({
 
   function input(): QuickCreateDraftClientInput {
     return {
+      groupId: initialState?.groupId,
       groupType: audience,
       ageRange,
       participantCount: participants,
@@ -254,7 +261,7 @@ export function TrainingBuilderPanel({
       mainPartProgramming,
       cooldownExerciseCount,
       mainPartCount,
-      organizationMode,
+      organizationMode: effectiveOrganizationMode,
       teamSize: effectiveTeamSize,
       groupSplitCount: effectiveGroupSplitCount,
       sourceTrainingIds: builderMode === "ai" ? sourceTrainingIds : [],
@@ -548,7 +555,16 @@ export function TrainingBuilderPanel({
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <h2 className="text-lg font-black">Format & Belastung</h2>
-          <div className="mt-3 flex flex-wrap gap-2">{TRAINING_FORMATS.filter((format) => format !== "free").map((format) => <Toggle key={format} active={formats.includes(format)} onClick={() => { setFormats(toggle(formats, format)); invalidate(); }}>{formatLabels[format]}</Toggle>)}</div>
+          <div className="mt-3 flex flex-wrap gap-2">{TRAINING_FORMATS.filter((format) => format !== "free").map((format) => <Toggle key={format} active={formats.includes(format)} onClick={() => {
+            const selecting = !formats.includes(format);
+            setFormats(toggle(formats, format));
+            if (format === "partner" && selecting) {
+              setOrganizationMode("team");
+              setTeamSize(2);
+              setGroupSplitCount(undefined);
+            }
+            invalidate();
+          }}>{formatLabels[format]}</Toggle>)}</div>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">{([ ["technique", "Technik"], ["balanced", "Ausgewogen"], ["conditioning", "Conditioning"] ] as const).map(([id, label]) => <Toggle key={id} active={intensity === id} onClick={() => { setIntensity(id); invalidate(); }}>{label}</Toggle>)}</div>
           <Disclosure className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" summaryClassName="font-black" summary="Equipment-Bestand">
             <div className="mt-4"><EquipmentAvailabilityPicker onChange={(id, value) => { setAvailableEquipment((current) => ({ ...current, [id]: value })); invalidate(); }} options={equipmentOptions} value={availableEquipment} /></div>

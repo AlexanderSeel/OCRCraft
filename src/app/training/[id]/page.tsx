@@ -374,6 +374,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                           <option value="run-exercise">Run + Exercise</option>
                                           <option value="technique">Technik</option>
                                           <option value="relay">Team / Relay</option>
+                                          <option value="partner">Partner Workout</option>
                                         </select>
                                       </label>
                                       <label className="grid gap-1 text-xs font-bold">

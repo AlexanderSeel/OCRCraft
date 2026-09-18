@@ -73,6 +73,7 @@ export interface PersistedTrainingPhase {
 }
 
 export interface TrainingSessionDetail extends TrainingSessionListItem {
+  readonly groupId: string | null;
   readonly notes: string | null;
   readonly routeName: string | null;
   readonly routeDistanceMetres: number | null;
@@ -295,7 +296,7 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
         (SELECT count(*) FROM training_phases p JOIN training_items i ON i.training_phase_id=p.id WHERE p.training_session_id=s.id),
         s.created_at,s.notes,s.updated_at,
         s.route_name,s.route_distance_metres,s.route_surface,s.route_gps_reference,s.route_notes,
-        COALESCE(s.organization_mode,'solo'),s.team_size,s.group_split_count
+        COALESCE(s.organization_mode,'solo'),s.team_size,s.group_split_count,s.group_id::VARCHAR
       FROM training_sessions s
       WHERE s.id=$id::UUID
       `,
@@ -367,6 +368,7 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
       locale: String(sessionRow[5]) as "de" | "en",
       itemCount: Number(sessionRow[6]),
       createdAt: String(sessionRow[7]),
+      groupId: sessionRow[18] == null ? null : String(sessionRow[18]),
       notes: sessionRow[8] == null ? null : String(sessionRow[8]),
       updatedAt: String(sessionRow[9]),
       routeName: sessionRow[10] == null ? null : String(sessionRow[10]),
