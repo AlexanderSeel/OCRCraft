@@ -6,7 +6,6 @@ import { z } from "zod";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { createDatabaseBackup } from "@/server/db/backup-service";
 import { recordAuditEvent } from "@/server/db/audit-service";
-import { rebuildSearchIndex } from "@/server/search/search-index-service";
 import { activateSearchProfile, deleteSearchProfile, saveSearchProfile } from "@/server/search/search-profile-repository";
 import { reseedAllDatabaseData } from "@/server/db/reseed-service";
 import { resolveDuplicateTask } from "@/server/exercises/duplicate-review-service";

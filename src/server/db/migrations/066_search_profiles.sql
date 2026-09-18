@@ -4,6 +4,11 @@ CREATE TABLE IF NOT EXISTS search_profiles (
   exact_weight INTEGER NOT NULL DEFAULT 100,
   prefix_weight INTEGER NOT NULL DEFAULT 75,
   alias_weight INTEGER NOT NULL DEFAULT 50,
+  summary_weight INTEGER NOT NULL DEFAULT 20,
+  taxonomy_weight INTEGER NOT NULL DEFAULT 25,
+  body_regions_weight INTEGER NOT NULL DEFAULT 25,
+  equipment_weight INTEGER NOT NULL DEFAULT 20,
+  instructions_weight INTEGER NOT NULL DEFAULT 10,
   is_active BOOLEAN NOT NULL DEFAULT false,
   updated_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
   UNIQUE(name)
