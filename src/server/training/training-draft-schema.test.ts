@@ -59,6 +59,28 @@ describe("training draft request equipment, obstacles, groups and location", () 
     }).success).toBe(false);
   });
 
+  it("requires partner workouts to use exact pairs", () => {
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["partner"],
+      organizationMode: "team",
+      teamSize: 2,
+    }).success).toBe(true);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["partner"],
+      organizationMode: "solo",
+    }).success).toBe(false);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      formats: ["partner"],
+      organizationMode: "team",
+      teamSize: 4,
+    }).success).toBe(false);
+  });
+
   it("accepts explicit zero stock and rejects duplicate or invalid stock entries", () => {
     expect(trainingDraftRequestSchema.safeParse({
       ...request,
