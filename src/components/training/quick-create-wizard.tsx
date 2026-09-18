@@ -65,6 +65,11 @@ export interface QuickCreateGroupPreset {
   readonly maxAge: number | null;
   readonly participantCount: number;
   readonly durationMinutes: number | null;
+  readonly defaultLocation: "indoor" | "outdoor" | "mixed";
+  readonly defaultEquipment: readonly {
+    readonly equipmentId: string;
+    readonly quantityAvailable: number;
+  }[];
 }
 
 interface QuickCreateWizardProps {
@@ -77,6 +82,14 @@ function toggleValue(values: readonly string[], value: string): string[] {
   return values.includes(value)
     ? values.filter((entry) => entry !== value)
     : [...values, value];
+}
+
+function equipmentStateFromCatalog(
+  equipmentOptions: readonly EquipmentAvailabilityOption[],
+): Readonly<Record<string, string>> {
+  return Object.fromEntries(equipmentOptions.flatMap((option) =>
+    option.quantityAvailable == null ? [] : [[option.id, String(option.quantityAvailable)]]
+  ));
 }
 
 function ageRangeForPreset(preset: QuickCreateGroupPreset): string {
@@ -109,9 +122,7 @@ export function QuickCreateWizard({
   const [formats, setFormats] = useState<readonly string[]>(["rig-run"]);
   const [location, setLocation] = useState("mixed");
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
-    Object.fromEntries(equipmentOptions.flatMap((option) =>
-      option.quantityAvailable == null ? [] : [[option.id, String(option.quantityAvailable)]]
-    )),
+    equipmentStateFromCatalog(equipmentOptions),
   );
   const [obstacleInventoryDeclared, setObstacleInventoryDeclared] = useState(false);
   const [availableObstacleExerciseIds, setAvailableObstacleExerciseIds] = useState<readonly string[]>(() =>
@@ -168,6 +179,12 @@ export function QuickCreateWizard({
     setAgeRange(ageRangeForPreset(preset));
     setParticipantCount(preset.participantCount);
     if (preset.durationMinutes != null) setDuration(preset.durationMinutes);
+    setLocation(preset.defaultLocation);
+    setAvailableEquipment(
+      preset.defaultEquipment.length > 0
+        ? Object.fromEntries(preset.defaultEquipment.map((item) => [item.equipmentId, String(item.quantityAvailable)]))
+        : equipmentStateFromCatalog(equipmentOptions),
+    );
     invalidateDraft();
   }
 
@@ -296,7 +313,7 @@ export function QuickCreateWizard({
                     </select>
                   </label>
                   <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-                    Übernimmt Zielgruppe, Alter, Teilnehmerzahl und Standarddauer. Die Werte bleiben danach frei anpassbar; beim Speichern bleibt das Training mit der Gruppe verknüpft.
+                    Übernimmt Zielgruppe, Alter, Teilnehmerzahl, Standarddauer, Trainingsort und gruppenspezifische Equipment-Overrides. Die Werte bleiben danach frei anpassbar; beim Speichern bleibt das Training mit der Gruppe verknüpft.
                   </p>
                 </div>
               ) : null}
