@@ -12,10 +12,12 @@ const request = {
   preferredExerciseIds: [],
 };
 
-describe("training draft request equipment inventory and location", () => {
-  it("defaults omitted inventory and location safely", () => {
+describe("training draft request equipment, obstacles, groups and location", () => {
+  it("defaults omitted inventory, rotation groups and location safely", () => {
     const parsed = trainingDraftRequestSchema.parse(request);
     expect(parsed.availableEquipment).toEqual([]);
+    expect(parsed.availableObstacleExerciseIds).toBeUndefined();
+    expect(parsed.groupSplitCount).toBeUndefined();
     expect(parsed.location).toBe("mixed");
   });
 
@@ -23,6 +25,27 @@ describe("training draft request equipment inventory and location", () => {
     expect(trainingDraftRequestSchema.safeParse({ ...request, location: "indoor" }).success).toBe(true);
     expect(trainingDraftRequestSchema.safeParse({ ...request, location: "outdoor" }).success).toBe(true);
     expect(trainingDraftRequestSchema.safeParse({ ...request, location: "parking-lot" }).success).toBe(false);
+  });
+
+  it("accepts solo rotation groups and rejects impossible or team-mode splits", () => {
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      organizationMode: "solo",
+      groupSplitCount: 4,
+    }).success).toBe(true);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      organizationMode: "solo",
+      groupSplitCount: 17,
+    }).success).toBe(false);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      organizationMode: "team",
+      teamSize: 4,
+      groupSplitCount: 4,
+    }).success).toBe(false);
   });
 
   it("accepts explicit zero stock and rejects duplicate or invalid stock entries", () => {
@@ -42,6 +65,34 @@ describe("training draft request equipment inventory and location", () => {
     expect(trainingDraftRequestSchema.safeParse({
       ...request,
       availableEquipment: [{ equipmentId: "rig-id", quantityAvailable: -1 }],
+    }).success).toBe(false);
+  });
+
+  it("treats an empty obstacle inventory as an explicit valid constraint", () => {
+    const parsed = trainingDraftRequestSchema.parse({
+      ...request,
+      availableObstacleExerciseIds: [],
+    });
+    expect(parsed.availableObstacleExerciseIds).toEqual([]);
+  });
+
+  it("accepts unique obstacle exercise ids and rejects duplicates or invalid ids", () => {
+    const wall = "11111111-1111-4111-8111-111111111111";
+    const rig = "22222222-2222-4222-8222-222222222222";
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      availableObstacleExerciseIds: [wall, rig],
+    }).success).toBe(true);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      availableObstacleExerciseIds: [wall, wall],
+    }).success).toBe(false);
+
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      availableObstacleExerciseIds: ["wall"],
     }).success).toBe(false);
   });
 });

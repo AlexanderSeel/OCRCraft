@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { TrainingDraft, TrainingDraftExerciseCandidate } from "@/domain/training/draft";
+import { validateTrainingSession } from "@/domain/training/validation";
 import { composeAiTrainingDraft, composeReviewedAiTrainingDraft } from "./ai-training-composer";
 import { getConfiguredAiTrainingProvider } from "./ai-training-provider";
 import { loadAiTrainingSourceSessions } from "./ai-training-source-context";
@@ -33,7 +34,22 @@ function applySportsQualityAudit(request: TrainingDraftRequest, draft: TrainingD
 }
 
 function finalizeDraft(request: TrainingDraftRequest, draft: TrainingDraft, candidates: readonly TrainingDraftExerciseCandidate[]): TrainingDraft {
-  return applySportsQualityAudit(request, applyMainPartProgramming(request, draft), candidates);
+  const withRotationGroups: TrainingDraft = {
+    ...draft,
+    session: {
+      ...draft.session,
+      group: {
+        ...draft.session.group,
+        groupSplitCount: request.organizationMode === "solo" ? request.groupSplitCount : undefined,
+      },
+    },
+  };
+  const programmed = applyMainPartProgramming(request, withRotationGroups);
+  const revalidated: TrainingDraft = {
+    ...programmed,
+    validationIssues: validateTrainingSession(programmed.session, undefined, request.availableEquipment),
+  };
+  return applySportsQualityAudit(request, revalidated, candidates);
 }
 
 export async function createTrainingDraft(request: TrainingDraftRequest): Promise<TrainingDraft> {

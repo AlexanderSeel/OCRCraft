@@ -82,6 +82,7 @@ export interface TrainingSessionDetail extends TrainingSessionListItem {
   readonly updatedAt: string;
   readonly organizationMode: TrainingOrganizationMode;
   readonly teamSize: number | null;
+  readonly groupSplitCount: number | null;
   readonly phases: readonly PersistedTrainingPhase[];
 }
 
@@ -112,6 +113,7 @@ export async function persistTrainingDraft(
   const sessionTitle = title?.trim() || draft.session.title;
   const organizationMode = draft.session.group.organizationMode ?? "solo";
   const teamSize = organizationMode === "team" ? draft.session.group.teamSize ?? null : null;
+  const groupSplitCount = organizationMode === "solo" ? draft.session.group.groupSplitCount ?? null : null;
 
   await withDuckDbConnection(async (connection) => {
     await connection.run("BEGIN TRANSACTION");
@@ -130,10 +132,10 @@ export async function persistTrainingDraft(
         `
         INSERT INTO training_sessions (
           id, title, group_id, status, source, total_duration_minutes, locale, notes,
-          organization_mode, team_size
+          organization_mode, team_size, group_split_count
         ) VALUES (
           $id::UUID, $title, $groupId::UUID, 'draft', $source, $duration, $locale, $notes,
-          $organizationMode, $teamSize
+          $organizationMode, $teamSize, $groupSplitCount
         )
         `,
         {
@@ -146,6 +148,7 @@ export async function persistTrainingDraft(
           notes,
           organizationMode,
           teamSize,
+          groupSplitCount,
         },
       );
 
@@ -292,7 +295,7 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
         (SELECT count(*) FROM training_phases p JOIN training_items i ON i.training_phase_id=p.id WHERE p.training_session_id=s.id),
         s.created_at,s.notes,s.updated_at,
         s.route_name,s.route_distance_metres,s.route_surface,s.route_gps_reference,s.route_notes,
-        COALESCE(s.organization_mode,'solo'),s.team_size
+        COALESCE(s.organization_mode,'solo'),s.team_size,s.group_split_count
       FROM training_sessions s
       WHERE s.id=$id::UUID
       `,
@@ -373,6 +376,7 @@ export async function getTrainingSessionById(id: string): Promise<TrainingSessio
       routeNotes: sessionRow[14] == null ? null : String(sessionRow[14]),
       organizationMode: String(sessionRow[15] ?? "solo") as TrainingOrganizationMode,
       teamSize: sessionRow[16] == null ? null : Number(sessionRow[16]),
+      groupSplitCount: sessionRow[17] == null ? null : Number(sessionRow[17]),
       phases,
     };
   });

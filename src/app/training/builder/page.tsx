@@ -59,7 +59,7 @@ export default async function TrainingBuilderPage({ searchParams }: PageProps) {
             <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Parameter laden</button>
             {initialState ? <Link className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--border)] px-4 text-sm font-black" href="/training/builder">Zurücksetzen</Link> : null}
           </form>
-          <p className="mt-2 text-xs leading-5 text-[var(--muted)]">Die ursprünglichen Builder-Parameter werden mit der aktuell gespeicherten Hauptteil-/Teamstruktur und Programmierung kombiniert. Das bestehende Training wird nicht überschrieben; Speichern erzeugt immer einen neuen Entwurf.</p>
+          <p className="mt-2 text-xs leading-5 text-[var(--muted)]">Die ursprünglichen Builder-Parameter werden mit der aktuell gespeicherten Hauptteil-/Team-/Rotationsstruktur und Programmierung kombiniert. Das bestehende Training wird nicht überschrieben; Speichern erzeugt immer einen neuen Entwurf.</p>
           {source && !initialState ? <p className="mt-2 text-xs font-bold text-[var(--danger)]">Für dieses Training ist keine gültige Builder-Generation-History verfügbar. Es bleibt unverändert.</p> : null}
         </section>
 
@@ -113,6 +113,7 @@ async function buildInitialState(trainingId: string): Promise<TrainingBuilderIni
     mainPartCount,
     organizationMode: session.organizationMode ?? request.organizationMode,
     teamSize: session.organizationMode === "team" ? session.teamSize ?? request.teamSize : undefined,
+    groupSplitCount: session.organizationMode === "solo" ? session.groupSplitCount ?? request.groupSplitCount : undefined,
     sourceTrainingIds: request.sourceTrainingIds,
     preferredExercises: request.preferredExerciseIds.map((id) => ({ id, label: exerciseById.get(id) ?? id, category: "Gespeicherte Wunschübung" })),
     availableEquipment: request.availableEquipment,

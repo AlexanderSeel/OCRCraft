@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
+import type { TrainingObstacleOption } from "@/server/training/training-draft-repository";
 import { BodyFocusSelector } from "./body-focus-selector";
 import {
   EquipmentAvailabilityPicker,
@@ -12,6 +13,7 @@ import {
   ExerciseAutocompletePicker,
   type SelectedExerciseReference,
 } from "./exercise-autocomplete-picker";
+import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import {
   persistTrainingDraft,
   requestTrainingDraft,
@@ -89,13 +91,18 @@ function ageRangeForPreset(preset: QuickCreateGroupPreset): string {
   return "Offen";
 }
 
-export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: QuickCreateWizardProps) {
+export function QuickCreateWizard({
+  equipmentOptions,
+  obstacleOptions = [],
+  groupPresets = [],
+}: QuickCreateWizardProps) {
   const [step, setStep] = useState(1);
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [groupType, setGroupType] = useState("mixed");
   const [ageRange, setAgeRange] = useState("16+");
   const [participantCount, setParticipantCount] = useState(16);
   const [duration, setDuration] = useState(75);
+  const [groupSplitCount, setGroupSplitCount] = useState<number | undefined>();
   const [goals, setGoals] = useState<readonly string[]>(["Ganzkörper", "OCR-Technik"]);
   const [bodyRegions, setBodyRegions] = useState<readonly string[]>(["forearms-grip", "core"]);
   const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>([]);
@@ -106,6 +113,10 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
     Object.fromEntries(equipmentOptions.flatMap((option) =>
       option.quantityAvailable == null ? [] : [[option.id, String(option.quantityAvailable)]]
     )),
+  );
+  const [obstacleInventoryDeclared, setObstacleInventoryDeclared] = useState(false);
+  const [availableObstacleExerciseIds, setAvailableObstacleExerciseIds] = useState<readonly string[]>(() =>
+    obstacleOptions.map((option) => option.id),
   );
   const [intensity, setIntensity] = useState("balanced");
   const [draft, setDraft] = useState<TrainingDraft | null>(null);
@@ -119,10 +130,20 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
   const selectedGroup = groupOptions.find(([id]) => id === groupType);
   const selectedPreset = groupPresets.find((preset) => preset.id === selectedGroupId);
   const selectedLocation = locationOptions.find(([id]) => id === location);
+  const selectedObstacleNames = useMemo(
+    () => obstacleOptions.filter((option) => availableObstacleExerciseIds.includes(option.id)).map((option) => option.name),
+    [availableObstacleExerciseIds, obstacleOptions],
+  );
   const durationOptions = useMemo(
     () => [...new Set([45, 60, 75, 90, 120, duration])].sort((a, b) => a - b),
     [duration],
   );
+  const effectiveGroupSplitCount = groupSplitCount == null
+    ? undefined
+    : Math.max(1, Math.min(20, participantCount, groupSplitCount));
+  const maxRotationGroupSize = effectiveGroupSplitCount == null
+    ? undefined
+    : Math.ceil(participantCount / effectiveGroupSplitCount);
   const canContinue = useMemo(() => {
     if (step === 2) return goals.length > 0;
     if (step === 3) return formats.length > 0;
@@ -181,9 +202,12 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
       avoidBodyRegions,
       formats,
       location,
+      organizationMode: "solo",
+      groupSplitCount: effectiveGroupSplitCount,
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
         quantity.trim() === "" ? [] : [{ equipmentId, quantityAvailable: Number(quantity) }]
       ),
+      availableObstacleExerciseIds: obstacleInventoryDeclared ? availableObstacleExerciseIds : undefined,
       intensity,
       preferredExerciseIds: preferredExercises.map((item) => item.id),
     };
@@ -422,7 +446,7 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
           {step === 3 ? (
             <div>
               <h3 className="text-lg font-black">Wie und wo soll trainiert werden?</h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">Formate lassen sich kombinieren. Der Ort filtert den realen Übungspool nach seiner hinterlegten Eignung.</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">Formate lassen sich kombinieren. Ort, Rotationsgruppen, Equipment und optional der reale Hindernisbestand begrenzen die praktische Planung.</p>
 
               <div className="mt-5">
                 <div className="text-sm font-black">Trainingsort</div>
@@ -476,6 +500,29 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                 </div>
               </div>
 
+              <div className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+                <label className="grid gap-2 text-sm font-black sm:max-w-xs">
+                  Rotationsgruppen (optional)
+                  <input
+                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                    max={Math.min(20, Math.max(1, participantCount))}
+                    min={1}
+                    onChange={(event) => {
+                      setGroupSplitCount(event.target.value === ""
+                        ? undefined
+                        : Math.max(1, Math.min(20, participantCount, Number(event.target.value) || 1)));
+                      invalidateDraft();
+                    }}
+                    placeholder="Automatisch"
+                    type="number"
+                    value={groupSplitCount ?? ""}
+                  />
+                </label>
+                <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                  Leer = automatische Verteilung auf die aktiven Stationen. Eine feste Zahl steuert Stationskapazität und parallelen Equipmentbedarf. {effectiveGroupSplitCount != null ? `Aktuell: ${effectiveGroupSplitCount} Gruppen mit bis zu ${maxRotationGroupSize} Personen.` : ""}
+                </p>
+              </div>
+
               <details className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
                 <summary className="cursor-pointer text-sm font-black">
                   Verfügbare Ausrüstung für Zirkel prüfen
@@ -494,6 +541,30 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                     }}
                     options={equipmentOptions}
                     value={availableEquipment}
+                  />
+                </div>
+              </details>
+
+              <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={obstacleInventoryDeclared}>
+                <summary className="cursor-pointer text-sm font-black">
+                  Verfügbare OCR-Hindernisse
+                </summary>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                  Optionaler harter Filter für Rig, Wand, Netz, Traverse und andere strukturierte Hindernisstationen. Nicht markierte Hindernisse werden weder lokal noch per AI eingeplant.
+                </p>
+                <div className="mt-4">
+                  <ObstacleAvailabilityPicker
+                    declared={obstacleInventoryDeclared}
+                    onDeclaredChange={(declared) => {
+                      setObstacleInventoryDeclared(declared);
+                      invalidateDraft();
+                    }}
+                    onSelectionChange={(ids) => {
+                      setAvailableObstacleExerciseIds(ids);
+                      invalidateDraft();
+                    }}
+                    options={obstacleOptions}
+                    selectedIds={availableObstacleExerciseIds}
                   />
                 </div>
               </details>
@@ -549,6 +620,9 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                 {[
                   ["Vereinsgruppe", selectedPreset?.name ?? "Keine feste Gruppe"],
                   ["Gruppe", `${selectedGroup?.[1] ?? groupType} · ${ageRange} · ${participantCount} Personen`],
+                  ["Rotationsgruppen", effectiveGroupSplitCount != null
+                    ? `${effectiveGroupSplitCount} Gruppen · bis zu ${maxRotationGroupSize} Personen/Gruppe`
+                    : "Automatische Stationsverteilung"],
                   ["Dauer", `${duration} Minuten`],
                   ["Ziele", goals.join(", ")],
                   ["Körperregionen", bodyRegions.length ? bodyRegions.join(", ") : "Keine Vorgabe"],
@@ -556,6 +630,11 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
                   ["Wunschübungen", preferredExercises.length ? preferredExercises.map((item) => item.label).join(", ") : "Keine Vorgabe"],
                   ["Ort", selectedLocation?.[1] ?? location],
                   ["Formate", formats.join(", ")],
+                  ["Hindernisse", obstacleInventoryDeclared
+                    ? selectedObstacleNames.length > 0
+                      ? `${selectedObstacleNames.length} verfügbar: ${selectedObstacleNames.join(", ")}`
+                      : "Explizit keine Hindernisstation verfügbar"
+                    : "Bestand nicht eingeschränkt"],
                   ["Ausrichtung", intensity],
                 ].map(([label, value]) => (
                   <div className="grid gap-1 px-4 py-3 sm:grid-cols-[140px_1fr]" key={label}>
@@ -660,6 +739,12 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
               <div className="mt-1 font-black">{selectedPreset?.name ?? selectedGroup?.[1]} · {participantCount}</div>
               {selectedPreset ? <div className="mt-1 text-xs text-[var(--sidebar-muted)]">{selectedGroup?.[1]} · {ageRange}</div> : null}
             </div>
+            {effectiveGroupSplitCount != null ? (
+              <div>
+                <div className="text-xs text-[var(--sidebar-muted)]">Rotation</div>
+                <div className="mt-1 text-sm font-bold leading-6">{effectiveGroupSplitCount} Gruppen · max. {maxRotationGroupSize} Personen</div>
+              </div>
+            ) : null}
             <div>
               <div className="text-xs text-[var(--sidebar-muted)]">Zeit</div>
               <div className="mt-1 font-black">{duration} Minuten</div>
@@ -688,6 +773,14 @@ export function QuickCreateWizard({ equipmentOptions, groupPresets = [] }: Quick
               <div className="text-xs text-[var(--sidebar-muted)]">Format</div>
               <div className="mt-1 text-sm font-bold leading-6">{formats.join(" · ") || "Noch auswählen"}</div>
             </div>
+            {obstacleInventoryDeclared ? (
+              <div>
+                <div className="text-xs text-[var(--sidebar-muted)]">Hindernisbestand</div>
+                <div className="mt-1 text-sm font-bold leading-6">
+                  {selectedObstacleNames.length > 0 ? `${selectedObstacleNames.length} Stationen verfügbar` : "Keine Station verfügbar"}
+                </div>
+              </div>
+            ) : null}
           </div>
         </section>
 

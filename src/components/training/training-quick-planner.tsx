@@ -5,6 +5,7 @@ import type { TrainingDraft } from "@/domain/training/draft";
 import { BODY_REGION_OPTIONS, COARSE_BODY_REGION_IDS } from "@/domain/body-regions";
 import type { EquipmentAvailabilityOption } from "./equipment-availability-picker";
 import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
+import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import { TrainingDraftPreview } from "./training-draft-preview";
 
 const goals = ["Ganzkörper", "OCR-Technik", "Grip", "Kraftausdauer", "Laufen", "Core", "Balance", "Koordination"] as const;
@@ -24,7 +25,10 @@ interface TrainingQuickPlannerProps {
   readonly obstacleOptions?: readonly TrainingObstacleOption[];
 }
 
-export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPlannerProps) {
+export function TrainingQuickPlanner({
+  equipmentOptions = [],
+  obstacleOptions = [],
+}: TrainingQuickPlannerProps) {
   const [audience, setAudience] = useState("adults");
   const [participants, setParticipants] = useState(12);
   const [duration, setDuration] = useState(60);
@@ -38,6 +42,11 @@ export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPla
   const [mainPartCount, setMainPartCountState] = useState(1);
   const [organizationMode, setOrganizationMode] = useState<"solo" | "team">("solo");
   const [teamSize, setTeamSize] = useState(4);
+  const [groupSplitCount, setGroupSplitCount] = useState<number | undefined>();
+  const [obstacleInventoryDeclared, setObstacleInventoryDeclared] = useState(false);
+  const [availableObstacleExerciseIds, setAvailableObstacleExerciseIds] = useState<readonly string[]>(() =>
+    obstacleOptions.map((option) => option.id),
+  );
   const [draft, setDraft] = useState<TrainingDraft | null>(null);
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -91,9 +100,13 @@ export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPla
       mainPartCount,
       organizationMode,
       teamSize: organizationMode === "team" ? Math.min(teamSize, participants) : undefined,
+      groupSplitCount: organizationMode === "solo" && groupSplitCount != null
+        ? Math.min(groupSplitCount, participants, 20)
+        : undefined,
       sourceTrainingIds: [],
       preferredExerciseIds: [],
       availableEquipment: automaticEquipment,
+      availableObstacleExerciseIds: obstacleInventoryDeclared ? availableObstacleExerciseIds : undefined,
       locale: "de",
     };
   }
@@ -151,7 +164,7 @@ export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPla
         <div>
           <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Quickplaner · lokal</div>
           <h2 className="mt-1 text-xl font-black">Mit wenigen Angaben direkt zum Training</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Kein AI-Aufruf. OCRCraft nutzt den freigegebenen Übungspool und die Sportlogik für Belastung, Bewegungsmuster, Muskelbalance, Alter, Equipment und Wiederholungen.</p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Kein AI-Aufruf. OCRCraft nutzt den freigegebenen Übungspool und die Sportlogik für Belastung, Bewegungsmuster, Muskelbalance, Alter, Equipment, Hindernisbestand, Rotationsgruppen und Wiederholungen.</p>
         </div>
         <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5 text-xs font-black">Deterministisch</span>
       </div>
@@ -172,7 +185,18 @@ export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPla
           <NumberField label="Warm-up Übungen" value={warmupCount} min={1} max={6} onChange={(value) => { setWarmupCount(value); invalidateDraft(); }} />
           <NumberField label="Hauptteile" value={mainPartCount} min={1} max={4} onChange={setMainPartCount} />
           <NumberField label="Cooldown Übungen" value={cooldownCount} min={1} max={6} onChange={(value) => { setCooldownCount(value); invalidateDraft(); }} />
-          {organizationMode === "team" ? <NumberField label="Teamgröße" value={teamSize} min={2} max={Math.max(2, participants)} onChange={(value) => { setTeamSize(value); invalidateDraft(); }} /> : <div className="hidden lg:block" />}
+          {organizationMode === "team" ? (
+            <NumberField label="Teamgröße" value={teamSize} min={2} max={Math.max(2, participants)} onChange={(value) => { setTeamSize(value); invalidateDraft(); }} />
+          ) : (
+            <OptionalNumberField
+              label="Rotationsgruppen"
+              max={Math.min(20, Math.max(1, participants))}
+              min={1}
+              onChange={(value) => { setGroupSplitCount(value); invalidateDraft(); }}
+              placeholder="Automatisch"
+              value={groupSplitCount}
+            />
+          )}
         </div>
         <div className={`mt-3 grid gap-3 ${mainPartCount === 1 ? "sm:max-w-xs" : "sm:grid-cols-2 lg:grid-cols-4"}`}>
           {mainPartCounts.map((count, index) => (
@@ -187,10 +211,32 @@ export function TrainingQuickPlanner({ equipmentOptions = [] }: TrainingQuickPla
           ))}
         </div>
         <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
+          {organizationMode === "solo" && groupSplitCount != null
+            ? `${participants} Teilnehmende werden für Kapazitäts- und Materialprüfung als ${groupSplitCount} Rotationsgruppen mit bis zu ${Math.ceil(participants / groupSplitCount)} Personen je Gruppe gerechnet. `
+            : "Ohne feste Rotationsgruppen verteilt OCRCraft die Teilnehmenden automatisch über die aktiven Stationen. "}
           {automaticEquipment.length > 0
-            ? `Der Quickplaner verwendet automatisch ${automaticEquipment.length} bekannte Equipment-Bestände aus OCRCraft. Für Outdoor werden vorhandene Outdoor-Ersatzvarianten berücksichtigt.`
-            : "Es ist kein Equipment-Bestand hinterlegt. Der Planer arbeitet deshalb ohne Bestandsvorgabe und weist mögliche Materialkonflikte im Entwurf aus."}
+            ? `Der Quickplaner verwendet außerdem ${automaticEquipment.length} bekannte Equipment-Bestände. Für Outdoor werden vorhandene Outdoor-Ersatzvarianten berücksichtigt.`
+            : "Es ist kein Equipment-Bestand hinterlegt; mögliche Materialkonflikte werden als unbekannt ausgewiesen."}
         </p>
+
+        <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4" open={obstacleInventoryDeclared}>
+          <summary className="cursor-pointer text-sm font-black">OCR-Hindernisbestand</summary>
+          <div className="mt-3">
+            <ObstacleAvailabilityPicker
+              declared={obstacleInventoryDeclared}
+              onDeclaredChange={(declared) => {
+                setObstacleInventoryDeclared(declared);
+                invalidateDraft();
+              }}
+              onSelectionChange={(ids) => {
+                setAvailableObstacleExerciseIds(ids);
+                invalidateDraft();
+              }}
+              options={obstacleOptions}
+              selectedIds={availableObstacleExerciseIds}
+            />
+          </div>
+        </details>
       </div>
 
       <div className="mt-5 flex flex-wrap justify-end gap-2">
@@ -213,4 +259,8 @@ function Select({ label, value, onChange, options }: { readonly label: string; r
 
 function NumberField({ label, value, min, max, onChange }: { readonly label: string; readonly value: number; readonly min: number; readonly max: number; readonly onChange: (value: number) => void }) {
   return <label className="grid gap-1.5 text-sm font-black">{label}<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" max={max} min={min} onChange={(event) => onChange(Math.max(min, Math.min(max, Number(event.target.value) || min)))} type="number" value={value} /></label>;
+}
+
+function OptionalNumberField({ label, value, min, max, placeholder, onChange }: { readonly label: string; readonly value?: number; readonly min: number; readonly max: number; readonly placeholder?: string; readonly onChange: (value: number | undefined) => void }) {
+  return <label className="grid gap-1.5 text-sm font-black">{label}<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" max={max} min={min} onChange={(event) => onChange(event.target.value === "" ? undefined : Math.max(min, Math.min(max, Number(event.target.value) || min)))} placeholder={placeholder} type="number" value={value ?? ""} /></label>;
 }

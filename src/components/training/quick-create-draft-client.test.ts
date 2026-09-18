@@ -53,6 +53,12 @@ describe("normalizeTrainingDraftRequest", () => {
           { equipmentId: "sandbag", quantityAvailable: 6 },
           { equipmentId: "cones", quantityAvailable: 0 },
         ],
+        availableObstacleExerciseIds: [
+          "33333333-3333-4333-8333-333333333333",
+          "33333333-3333-4333-8333-333333333333",
+          "not-an-obstacle-id",
+          "44444444-4444-4444-8444-444444444444",
+        ],
       }),
     ).toEqual({
       audience: "kids",
@@ -74,6 +80,7 @@ describe("normalizeTrainingDraftRequest", () => {
       mainPartProgramming: [{ mode: "standard" }],
       organizationMode: "solo",
       teamSize: undefined,
+      groupSplitCount: undefined,
       sourceTrainingIds: [
         "11111111-1111-4111-8111-111111111111",
         "22222222-2222-4222-8222-222222222222",
@@ -83,10 +90,66 @@ describe("normalizeTrainingDraftRequest", () => {
         { equipmentId: "sandbag", quantityAvailable: 6 },
         { equipmentId: "cones", quantityAvailable: 0 },
       ],
+      availableObstacleExerciseIds: [
+        "33333333-3333-4333-8333-333333333333",
+        "44444444-4444-4444-8444-444444444444",
+      ],
       minAge: 8,
       maxAge: 12,
       locale: "de",
     });
+  });
+
+  it("normalizes explicit solo rotation groups and removes them in team mode", () => {
+    const base = {
+      groupType: "adults",
+      ageRange: "18+",
+      participantCount: 20,
+      durationMinutes: 60,
+      goals: ["OCR-Technik"],
+      bodyRegions: [],
+      formats: ["circuit"],
+      intensity: "balanced",
+      preferredExerciseIds: [],
+    };
+
+    expect(normalizeTrainingDraftRequest({
+      ...base,
+      organizationMode: "solo",
+      groupSplitCount: 4,
+    }).groupSplitCount).toBe(4);
+
+    expect(normalizeTrainingDraftRequest({
+      ...base,
+      organizationMode: "solo",
+      groupSplitCount: 50,
+    }).groupSplitCount).toBe(20);
+
+    const team = normalizeTrainingDraftRequest({
+      ...base,
+      organizationMode: "team",
+      teamSize: 5,
+      groupSplitCount: 4,
+    });
+    expect(team.teamSize).toBe(5);
+    expect(team.groupSplitCount).toBeUndefined();
+  });
+
+  it("preserves the difference between undeclared and explicitly empty obstacle inventory", () => {
+    const base = {
+      groupType: "adults",
+      ageRange: "18+",
+      participantCount: 10,
+      durationMinutes: 60,
+      goals: ["OCR-Technik"],
+      bodyRegions: [],
+      formats: ["circuit"],
+      intensity: "balanced",
+      preferredExerciseIds: [],
+    };
+
+    expect(normalizeTrainingDraftRequest(base).availableObstacleExerciseIds).toBeUndefined();
+    expect(normalizeTrainingDraftRequest({ ...base, availableObstacleExerciseIds: [] }).availableObstacleExerciseIds).toEqual([]);
   });
 
   it("falls back to safe audience, location, intensity and local builder values", () => {
@@ -114,6 +177,8 @@ describe("normalizeTrainingDraftRequest", () => {
     expect(request.minAge).toBeUndefined();
     expect(request.maxAge).toBeUndefined();
     expect(request.availableEquipment).toEqual([]);
+    expect(request.availableObstacleExerciseIds).toBeUndefined();
+    expect(request.groupSplitCount).toBeUndefined();
     expect(request.avoidBodyRegions).toEqual([]);
   });
 });

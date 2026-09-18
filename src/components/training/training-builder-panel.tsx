@@ -25,6 +25,7 @@ import {
   type SelectedExerciseReference,
 } from "./exercise-autocomplete-picker";
 import { MainPartProgrammingEditor } from "./main-part-programming-editor";
+import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
 import {
   persistTrainingDraft,
@@ -80,6 +81,7 @@ export interface TrainingBuilderInitialState {
   readonly mainPartCount?: number;
   readonly organizationMode?: "solo" | "team";
   readonly teamSize?: number;
+  readonly groupSplitCount?: number;
   readonly sourceTrainingIds?: readonly string[];
   readonly preferredExercises: readonly SelectedExerciseReference[];
   readonly availableEquipment: readonly {
@@ -129,6 +131,7 @@ function initialMainPartProgramming(initialState?: TrainingBuilderInitialState):
 
 export function TrainingBuilderPanel({
   equipmentOptions,
+  obstacleOptions = [],
   sourceTrainingOptions = [],
   initialState,
 }: TrainingBuilderPanelProps) {
@@ -155,12 +158,17 @@ export function TrainingBuilderPanel({
   const [mainPartCount, setMainPartCountState] = useState(initialState?.mainPartCount ?? 1);
   const [organizationMode, setOrganizationMode] = useState<"solo" | "team">(initialState?.organizationMode ?? "solo");
   const [teamSize, setTeamSize] = useState(initialState?.teamSize ?? 4);
+  const [groupSplitCount, setGroupSplitCount] = useState<number | undefined>(initialState?.groupSplitCount);
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
     initialState
       ? Object.fromEntries(initialState.availableEquipment.map((item) => [item.equipmentId, String(item.quantityAvailable)]))
       : Object.fromEntries(equipmentOptions.flatMap((option) =>
           option.quantityAvailable == null ? [] : [[option.id, String(option.quantityAvailable)]]
         )),
+  );
+  const [obstacleInventoryDeclared, setObstacleInventoryDeclared] = useState(initialState?.availableObstacleExerciseIds != null);
+  const [availableObstacleExerciseIds, setAvailableObstacleExerciseIds] = useState<readonly string[]>(() =>
+    initialState?.availableObstacleExerciseIds ?? obstacleOptions.map((option) => option.id),
   );
   const [draft, setDraft] = useState<TrainingDraft | null>(null);
   const [title, setTitle] = useState(initialState ? `${initialState.sourceTitle} – angepasst` : "");
@@ -174,6 +182,9 @@ export function TrainingBuilderPanel({
   const selectedGoalLabels = useMemo(() => new Set(goals), [goals]);
   const effectiveTeamSize = organizationMode === "team"
     ? clampInteger(teamSize, 2, Math.min(20, Math.max(2, participants)))
+    : undefined;
+  const effectiveGroupSplitCount = organizationMode === "solo" && groupSplitCount != null
+    ? clampInteger(groupSplitCount, 1, Math.min(20, Math.max(1, participants)))
     : undefined;
   const totalRequestedExercises = warmupExerciseCount
     + cooldownExerciseCount
@@ -244,11 +255,13 @@ export function TrainingBuilderPanel({
       mainPartCount,
       organizationMode,
       teamSize: effectiveTeamSize,
+      groupSplitCount: effectiveGroupSplitCount,
       sourceTrainingIds: builderMode === "ai" ? sourceTrainingIds : [],
       preferredExerciseIds: preferredExercises.map((exercise) => exercise.id),
       availableEquipment: Object.entries(availableEquipment).flatMap(([equipmentId, quantity]) =>
         quantity.trim() === "" ? [] : [{ equipmentId, quantityAvailable: Number(quantity) }]
       ),
+      availableObstacleExerciseIds: obstacleInventoryDeclared ? availableObstacleExerciseIds : undefined,
     };
   }
 
@@ -353,7 +366,7 @@ export function TrainingBuilderPanel({
           {builderMode === "ai" ? (
             <div className="mt-3 space-y-3">
               <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--muted)]">
-                AI muss serverseitig konfiguriert sein. Sie darf keine neuen Übungs-IDs erfinden und kann Alters-, Orts-, Ausschluss-, Equipment- oder Sicherheitsfilter nicht umgehen.
+                AI muss serverseitig konfiguriert sein. Sie darf keine neuen Übungs-IDs erfinden und kann Alters-, Orts-, Ausschluss-, Equipment-, Hindernis- oder Sicherheitsfilter nicht umgehen.
               </p>
               {sourceTrainingOptions.length > 0 ? (
                 <details className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
@@ -411,7 +424,7 @@ export function TrainingBuilderPanel({
             <div>
               <h2 className="text-lg font-black">Trainingsstruktur & Organisation</h2>
               <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                Steuert die exakte Anzahl der Übungen und die konkrete Programmierung je Hauptteil. Mehrere Hauptteile werden als getrennte Blöcke geplant und gespeichert.
+                Steuert die exakte Anzahl der Übungen, Rotationsgruppen und die konkrete Programmierung je Hauptteil. Mehrere Hauptteile werden als getrennte Blöcke geplant und gespeichert.
               </p>
             </div>
             <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5 text-xs font-black">
@@ -475,16 +488,31 @@ export function TrainingBuilderPanel({
                 onChange={(value) => { setTeamSize(value); invalidate(); }}
               />
             ) : (
-              <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm leading-5 text-[var(--muted)]">
-                Solo/Rotation: Kapazitäts- und Equipmentprüfung rechnet mit Stationsverteilung statt fester Teamgröße.
-              </div>
+              <Field label="Rotationsgruppen (optional)">
+                <input
+                  className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                  max={Math.min(20, Math.max(1, participants))}
+                  min={1}
+                  onChange={(event) => {
+                    setGroupSplitCount(event.target.value === "" ? undefined : clampInteger(Number(event.target.value), 1, Math.min(20, Math.max(1, participants))));
+                    invalidate();
+                  }}
+                  placeholder="Automatisch"
+                  type="number"
+                  value={groupSplitCount ?? ""}
+                />
+              </Field>
             )}
           </div>
           {organizationMode === "team" ? (
             <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
               Der lokale Planer bevorzugt bei Teamtraining Teamwork-/Drill-Übungen und berücksichtigt die Teamgröße bei Stationskapazität und gleichzeitigem Equipmentbedarf. Die AI erhält dieselben Werte als verbindliche Strukturvorgabe.
             </p>
-          ) : null}
+          ) : (
+            <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
+              Leer = automatische Verteilung über die aktiven Stationen. Mit einer festen Zahl, z. B. 4 Gruppen bei 20 Personen, prüft OCRCraft mit bis zu 5 Personen je Rotationsgruppe und berechnet parallelen Equipmentbedarf entsprechend.
+            </p>
+          )}
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
@@ -516,7 +544,7 @@ export function TrainingBuilderPanel({
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <h2 className="text-lg font-black">Wunschübungen & Hindernisse</h2>
-          <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Optional als starke Trainerpräferenz. Beide Engines versuchen diese Übungen einzubauen, solange Phase, Alter, Ausschlüsse und Sicherheitsregeln passen.</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Optional als starke Trainerpräferenz. Beide Engines versuchen diese Übungen einzubauen, solange Phase, Alter, Ausschlüsse, Hindernisbestand und Sicherheitsregeln passen.</p>
           <div className="mt-4">
             <ExerciseAutocompletePicker description="Durchsucht den freigegebenen Übungspool nach Namen, Aliasen und strukturierten Metadaten." label="Bevorzugte Übungen" maxItems={8} onChange={(items) => { setPreferredExercises(items); invalidate(); }} selected={preferredExercises} />
           </div>
@@ -529,6 +557,19 @@ export function TrainingBuilderPanel({
           <details className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
             <summary className="cursor-pointer font-black">Equipment-Bestand</summary>
             <div className="mt-4"><EquipmentAvailabilityPicker onChange={(id, value) => { setAvailableEquipment((current) => ({ ...current, [id]: value })); invalidate(); }} options={equipmentOptions} value={availableEquipment} /></div>
+          </details>
+          <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={obstacleInventoryDeclared}>
+            <summary className="cursor-pointer font-black">OCR-Hindernisbestand</summary>
+            <p className="mt-2 text-xs leading-5 text-[var(--muted)]">Wenn der Vereinsbestand aktiviert ist, werden nicht markierte Hindernisstationen hart aus lokaler und AI-Planung sowie aus späteren Übungsalternativen ausgeschlossen.</p>
+            <div className="mt-4">
+              <ObstacleAvailabilityPicker
+                declared={obstacleInventoryDeclared}
+                onDeclaredChange={(declared) => { setObstacleInventoryDeclared(declared); invalidate(); }}
+                onSelectionChange={(ids) => { setAvailableObstacleExerciseIds(ids); invalidate(); }}
+                options={obstacleOptions}
+                selectedIds={availableObstacleExerciseIds}
+              />
+            </div>
           </details>
         </section>
 
@@ -558,14 +599,14 @@ export function TrainingBuilderPanel({
           <li>Warm-up, ein bis vier Hauptteile und Cooldown mit exakter Zeit- und Übungsanzahl.</li>
           <li>Jeder Hauptteil kann unabhängig als Intervall, Rundenblock, Ladder/Pyramide, Chipper oder Every-X programmiert werden.</li>
           <li>Bei mehreren Hauptteilen werden Übungen blockübergreifend variiert und nicht unnötig wiederholt.</li>
-          <li>Teamgröße fließt in Stationskapazität, Teamwork-Gewichtung und gleichzeitigen Equipmentbedarf ein.</li>
+          <li>Teamgröße oder explizite Rotationsgruppen fließen in Stationskapazität und gleichzeitigen Equipmentbedarf ein.</li>
           <li>Technik und Koordination vor unnötiger Ermüdung; Conditioning danach, wenn gewählt.</li>
           <li>Abdeckung gewünschter Muskeln plus typische Gegenmuskeln und Gegenbewegungen.</li>
           <li>Push/Pull, Squat/Hinge und Rumpfrotation/Stabilisation werden für eine ausgewogene Einheit bevorzugt ergänzt.</li>
           <li>Hohe Stoßbelastungen und hohe Risiken werden nicht unnötig direkt hintereinander geplant.</li>
           <li>Drei direkt aufeinanderfolgende Übungen mit derselben lokalen Muskel-/Körperregion werden im Qualitätscheck beanstandet.</li>
           <li>Übungen aus den letzten Trainings erhalten einen weichen Wiederholungs-Malus; Trainer-Wunschübungen können ihn bewusst überstimmen.</li>
-          <li>Alter, Ort, Ausschlussbereiche, Risiko, Equipment und Stationskapazität bleiben harte Grenzen.</li>
+          <li>Alter, Ort, Ausschlussbereiche, Risiko, Equipment, Hindernisbestand und Stationskapazität bleiben harte Grenzen.</li>
           <li>Outdoor-Varianten verwenden bei Outdoor-Planung ihr eigenes geprüftes Ersatz-Equipment statt Studio-Geräten.</li>
           <li>Level-Varianten stammen aus dem freigegebenen Übungskatalog statt aus erfundenen Übungen.</li>
           <li>Phasen und einzelne Übungen können separat neu geplant bzw. leichter/schwerer/materialärmer ersetzt werden.</li>

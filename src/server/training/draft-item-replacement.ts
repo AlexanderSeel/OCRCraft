@@ -55,6 +55,7 @@ export async function replaceDraftExerciseWithAlternative(input: DraftItemReplac
       participantCount: request.participantCount,
       organizationMode: request.organizationMode,
       teamSize: request.organizationMode === "team" ? request.teamSize : undefined,
+      groupSplitCount: request.organizationMode === "solo" ? request.groupSplitCount : undefined,
     },
     totalDurationMinutes: request.durationMinutes,
     focus: request.goals,
