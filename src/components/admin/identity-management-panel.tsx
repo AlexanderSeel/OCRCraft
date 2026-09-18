@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import type { AppUser, UserRole } from "@/server/auth/identity-service";
 import {
   TRAINER_QUALIFICATION_LABELS,
@@ -50,7 +51,7 @@ export function IdentityManagementPanel({ users, createAction, updateAction, log
         {user.profileImageDataUrl || user.profileImageUri ? <img alt="" className="size-12 shrink-0 rounded-full object-cover" src={user.profileImageDataUrl ?? user.profileImageUri ?? ""} /> : <div aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--surface-elevated)] text-sm font-black">{initials(user.displayName)}</div>}
         <div className="min-w-0 flex-1"><div className="font-black">{user.firstName} {user.lastName}</div><div className="truncate text-xs text-[var(--muted)]">@{user.username} · {user.email}{user.education ? ` · ${user.education}` : ""}{user.specialties ? ` · ${user.specialties}` : ""}</div></div>
         <span className="rounded-full border border-[var(--border)] px-2 py-1 text-[11px] font-black">{roleLabel(user.role)} · {TRAINER_QUALIFICATION_LABELS[user.trainerQualificationLevel]} · {user.active ? "Aktiv" : "Inaktiv"}</span>
-        <button className="min-h-9 rounded-lg border border-[var(--border)] px-3 text-xs font-black" onClick={() => setEditing(user)} type="button">Bearbeiten</button>
+        <Link className="min-h-9 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/admin/users/${user.id}/edit`}>Bearbeiten</Link>
       </article>)}</div>
       {filtered.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Keine Profile gefunden.</p> : null}
     </section>

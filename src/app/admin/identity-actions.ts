@@ -48,6 +48,7 @@ export async function createUserAction(formData: FormData): Promise<void> {
 }
 
 export async function updateUserAction(formData: FormData): Promise<void> {
+  const userId = String(formData.get("id") ?? "");
   try {
     const image = formData.get("profileImage");
     let profileImageData: string | undefined;
@@ -73,20 +74,22 @@ export async function updateUserAction(formData: FormData): Promise<void> {
       profileImageData,
       profileImageContentType,
     });
-  } catch {
-    redirect("/admin?tab=users&userError=1");
+  } catch (error) {
+    const code = error instanceof Error && error.message.includes("authorized") ? "permission" : "invalid";
+    redirect(`/admin/users/${encodeURIComponent(userId)}/edit?error=${code}`);
   }
-  redirect("/admin?tab=users&userSaved=1");
+  redirect(`/admin/users/${encodeURIComponent(userId)}/edit?saved=1`);
 }
 
 export async function setUserPasswordAction(formData: FormData): Promise<void> {
+  const userId = String(formData.get("id") ?? "");
   try {
     await setAppUserPassword(String(formData.get("id") ?? ""), String(formData.get("password") ?? ""));
   } catch (error) {
     const code = error instanceof Error && error.message.includes("authorized") ? "permission" : "invalid";
-    redirect(`/admin?tab=users&userError=${code}`);
+    redirect(`/admin/users/${encodeURIComponent(userId)}/edit?error=${code}`);
   }
-  redirect("/admin?tab=users&userSaved=password");
+  redirect(`/admin/users/${encodeURIComponent(userId)}/edit?saved=password`);
 }
 
 export async function deleteUserAction(formData: FormData): Promise<void> {
