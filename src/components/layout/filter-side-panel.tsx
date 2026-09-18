@@ -5,7 +5,7 @@ import { useState } from "react";
 export function FilterSidePanel({ title = "Filter", children }: { readonly title?: string; readonly children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   return (
-    <aside className={`relative h-fit rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)] transition-[width] lg:sticky lg:top-24 ${collapsed ? "lg:w-14" : "lg:w-full"}`}>
+    <aside className={`relative h-fit min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)] transition-[width] lg:sticky lg:top-24 ${collapsed ? "lg:w-14" : "lg:w-full"}`}>
       <div className={`flex min-h-14 items-center border-b border-[var(--border)] ${collapsed ? "justify-center px-1" : "justify-between gap-3 px-4"}`}>
         {!collapsed ? <h2 className="text-sm font-black">{title}</h2> : <span aria-hidden="true" className="text-lg">☷</span>}
         <button aria-expanded={!collapsed} aria-label={collapsed ? `${title} vergrößern` : `${title} verkleinern`} className="grid size-10 shrink-0 place-items-center rounded-lg border border-[var(--border)] text-lg font-black hover:bg-[var(--surface-subtle)]" onClick={() => setCollapsed((value) => !value)} title={collapsed ? `${title} vergrößern` : `${title} verkleinern`} type="button">{collapsed ? "›" : "‹"}</button>

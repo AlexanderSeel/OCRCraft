@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import {
   getMediaCatalogSummary,
   listMediaCatalog,
@@ -75,8 +76,10 @@ export default async function MediaPage({ searchParams }: PageProps) {
           <Metric label="Fehlgeschlagen" value={summary.failed} />
         </section>
 
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-start">
+        <FilterSidePanel title="Medienfilter">
         <form
-          className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] md:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_160px_160px_180px_150px_auto]"
+          className="grid min-w-0 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1"
           method="get"
         >
           <label className="grid gap-1 text-sm font-bold">
@@ -116,6 +119,8 @@ export default async function MediaPage({ searchParams }: PageProps) {
             Filtern
           </button>
         </form>
+        </FilterSidePanel>
+        <div className="min-w-0 space-y-6">
 
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
           <span>{assets.length} Medien im aktuellen Filter</span>
@@ -131,6 +136,8 @@ export default async function MediaPage({ searchParams }: PageProps) {
         ) : (
           <EmptyState />
         )}
+        </div>
+        </div>
       </div>
     </AppShell>
   );

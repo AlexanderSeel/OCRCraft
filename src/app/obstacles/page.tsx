@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import {
   getObstacleCatalogSummary,
   listObstacleCatalog,
@@ -50,8 +51,10 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
           <Metric label="Mit Club-Maßen" value={summary.withClubDimensions} />
         </section>
 
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-start">
+        <FilterSidePanel title="Hindernisfilter">
         <form
-          className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] md:grid-cols-[minmax(0,2fr)_180px_180px_auto]"
+          className="grid min-w-0 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1"
           method="get"
         >
           <label className="grid gap-1 text-sm font-bold">
@@ -83,6 +86,8 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
             Filtern
           </button>
         </form>
+        </FilterSidePanel>
+        <div className="min-w-0 space-y-6">
 
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
           <span>{obstacles.length} Hindernisse / obstacle-spezifische Übungen</span>
@@ -103,6 +108,8 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
             </p>
           </section>
         )}
+        </div>
+        </div>
       </div>
     </AppShell>
   );

@@ -96,16 +96,16 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       }
     >
       <div className="space-y-6">
-        <div className="grid gap-4 lg:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)] lg:items-start">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-start">
         <FilterSidePanel title="Übungsfilter">
         <form
-          className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] md:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_180px_160px_120px_auto]"
+          className="grid min-w-0 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1"
           method="get"
         >
-          <label className="grid gap-1 text-sm font-bold xl:col-span-1">
+          <label className="grid min-w-0 gap-1 text-sm font-bold">
             Suchen
             <input
-              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+              className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
               defaultValue={query}
               name="q"
               placeholder="z. B. Monkey Bars, Kniebeugen, Lauf ABC ..."
@@ -114,7 +114,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           <label className="grid gap-1 text-sm font-bold">
             Bereich
             <select
-              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+              className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
               defaultValue={category ?? ""}
               name="category"
             >
@@ -129,7 +129,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           <label className="grid gap-1 text-sm font-bold">
             Status
             <select
-              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+              className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
               defaultValue={archived ? "archived" : "active"}
               name="status"
             >
@@ -139,7 +139,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           </label>
           <label className="grid gap-1 text-sm font-bold">
             Pro Seite
-            <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={String(pageSize)} name="size">
+            <select className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={String(pageSize)} name="size">
               {[20, 40, 80, 120].map((size) => <option key={size} value={size}>{size}</option>)}
             </select>
           </label>
@@ -150,13 +150,13 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             Filtern
           </button>
 
-          <div className="relative md:col-span-2 xl:col-span-5">
+          <div className="relative">
             <Disclosure className="group" summaryClassName="flex min-h-11 items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black" summary={
               <>
                 <span>Muskelgruppen{selectedMuscles.length ? ` · ${selectedMuscles.length} gewählt` : ""}</span><span aria-hidden="true">⌄</span>
               </>
             }>
-              <div className="absolute left-0 top-14 z-40 max-h-[min(60vh,30rem)] w-[min(42rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-2 shadow-[var(--shadow-raised)]">
+              <div className="absolute left-0 top-14 z-40 max-h-[min(60vh,30rem)] w-full max-w-full overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-2 shadow-[var(--shadow-raised)]">
               <MuscleMap
                 compact
                 key={selectedMuscles.join(",") || "none"}
@@ -171,13 +171,13 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             </Disclosure>
             {selectedMuscles.length ? <div className="mt-2 flex flex-wrap gap-2">{selectedMuscles.map((id) => { const label = bodyRegionOptions.find((option) => option.id === id)?.labelDe ?? id; return <Link className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-bold" href={removeMuscleHref(params, id)} key={id}>{label}<span aria-hidden="true">×</span><span className="sr-only">{label} entfernen</span></Link>; })}</div> : null}
           </div>
-          <div className="relative md:col-span-2 xl:col-span-5">
+          <div className="relative">
             <Disclosure className="group" summaryClassName="flex min-h-11 items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black" summary={
               <>
                 <span>Trainingsfacetten{selectedFacets.length ? ` · ${selectedFacets.length} gewählt` : ""}</span><span aria-hidden="true">⌄</span>
               </>
             }>
-              <div className="absolute left-0 right-0 top-14 z-40 grid max-h-60 grid-cols-2 gap-1.5 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-2 shadow-[var(--shadow-raised)] sm:grid-cols-3 lg:grid-cols-5">
+              <div className="absolute left-0 right-0 top-14 z-40 grid max-h-60 grid-cols-1 gap-1.5 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-2 shadow-[var(--shadow-raised)]">
                 {tagOptions.map((tag) => <label className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-2 py-2 text-xs font-bold" key={tag.id}><input defaultChecked={selectedFacets.includes(tag.id)} name="facet" type="checkbox" value={tag.id} />{tag.labelDe}</label>)}
               </div>
             </Disclosure>
