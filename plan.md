@@ -384,7 +384,7 @@ Reference entry points:
 - [x] imported preview images are linked with `Gym-Visual-Lizenz` attribution and marked as templates for later AI replacement
 - [x] ExerciseDB free catalogue import supports cursor pagination, rate-limit retries and private non-commercial attribution
 - [ ] protected hard delete
-- [ ] progressions/regressions
+- [x] progressions/regressions
 - [ ] duplicate detection / bulk edit / import-export
 - [x] duplicate review engine with explainable similarity score and safe archive-based merge action
 
@@ -470,8 +470,8 @@ Reference entry points:
 - [x] persist generated draft as a real training session
 - [x] location selection with real indoor/outdoor candidate filtering
 - [x] Quick Create equipment inventory input with inventory-aware circuit warnings
-- [ ] Quick Create obstacle availability
-- [ ] group split / station capacity input
+- [x] Quick Create obstacle availability
+- [x] group split / station capacity input
 - [x] avoid-region selection
 - [x] optionally select a target muscle together with its opposing/antagonist group for deliberate balanced session planning
 - [x] use enriched structured exercise detail payload for deterministic ranking beyond current tags/body/category guidance
@@ -483,12 +483,12 @@ Reference entry points:
 - [x] Tabata/AMRAP/EMOM concepts
 - [x] Rig & Run / Run + Exercise
 - [x] Technique / Team-Relay
-- [ ] generic interval block
-- [ ] rounds for time/quality
-- [ ] ladder/reverse ladder/pyramid/chipper
+- [x] generic interval block
+- [x] rounds for time/quality
+- [x] ladder/reverse ladder/pyramid/chipper
 - [ ] partner workout
-- [ ] configurable `every X metres/minutes/checkpoint`
-- [ ] work/rest arithmetic validation
+- [x] configurable `every X metres/minutes/checkpoint`
+- [x] work/rest arithmetic validation
 
 ## 10. Training editor
 
@@ -547,7 +547,7 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [x] Level 1/2/3 selection is restricted to stored approved variants; Kids proposals are deterministically constrained to Level 1 and unsafe Level 3 escalation is downgraded
 - [x] provider-selected main formats must be among the trainer-selected formats; provider output cannot override trainer format constraints
 - [x] AI result is rehydrated from the current approved catalogue and revalidated before save
-- [ ] AI-assisted multi-session combine/recomposition using multiple previous sessions as explicit source context
+- [x] AI-assisted multi-session combine/recomposition using multiple previous sessions as explicit source context
 - [ ] AI-created exercise drafts + separate trainer approval workflow before they can become active catalogue exercises
 
 ### Local non-AI sports planner
@@ -585,8 +585,8 @@ Principle: **retrieve approved data → compose → deterministic validation →
 - [x] DB foundation
 - [x] Group CRUD UI with archive/restore
 - [x] age/participant/duration defaults
-- [ ] location/equipment defaults
-- [ ] skill distribution + preferred formats
+- [x] location/equipment defaults
+- [x] skill distribution + preferred formats
 - [ ] club-rule profile
 - [ ] Kids/Youth/Beginner/Advanced/Competition/Running/Open presets
 
@@ -812,7 +812,7 @@ No athlete surveillance or unnecessary personal data.
 - [x] persisted Training Session CRUD foundation
 - [x] AI/local Training Builder from approved exercise pool with shared deterministic validation
 - [ ] AI-created exercise proposal + trainer approval workflow
-- [ ] AI-assisted multi-session recomposition
+- [x] AI-assisted multi-session recomposition
 - [ ] selectable JSON import/export with duplicate compare/resolution workflow
 - [ ] authentication/RBAC before global Admin mutations
 

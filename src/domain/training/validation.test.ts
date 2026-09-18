@@ -201,6 +201,73 @@ describe("training validation", () => {
     );
   });
 
+  it("uses an explicit rotation-group split for station capacity and equipment demand", () => {
+    const session = createSession();
+    const circuit: TrainingSession = {
+      ...session,
+      group: {
+        ...session.group,
+        participantCount: 12,
+        organizationMode: "solo",
+        groupSplitCount: 4,
+      },
+      phases: session.phases.map((phase) => phase.kind !== "main" ? phase : {
+        ...phase,
+        items: [
+          {
+            ...phase.items[0]!,
+            format: "circuit" as const,
+            exercise: {
+              ...phase.items[0]!.exercise,
+              stationCapacity: 2,
+              equipmentRequirements: [{
+                equipmentId: "medicine-ball",
+                name: "Medizinball",
+                quantityPerStation: 1,
+              }],
+            },
+          },
+          {
+            ...phase.items[0]!,
+            id: "main-item-2",
+            format: "circuit" as const,
+            exercise: {
+              ...phase.items[0]!.exercise,
+              id: "carry",
+              name: "Carry Station",
+              stationCapacity: 2,
+              equipmentRequirements: [{
+                equipmentId: "medicine-ball",
+                name: "Medizinball",
+                quantityPerStation: 1,
+              }],
+            },
+          },
+        ],
+      }),
+    };
+
+    const issues = validateTrainingSession(circuit, undefined, [
+      { equipmentId: "medicine-ball", quantityAvailable: 3 },
+    ]);
+
+    expect(issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        code: "station-capacity",
+        participantCount: 12,
+        participantsAtExercise: 3,
+        stationCapacity: 2,
+        recommendedStationCount: 2,
+      }),
+      expect.objectContaining({
+        code: "equipment-conflict",
+        equipmentId: "medicine-ball",
+        requiredQuantity: 4,
+        availableQuantity: 3,
+      }),
+    ]));
+  });
+
   it("warns when simultaneous circuit stations exceed declared equipment stock", () => {
     const session = createSession();
     const circuit: TrainingSession = {

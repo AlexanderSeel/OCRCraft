@@ -1,7 +1,8 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import type { TrainingLocation } from "@/domain/training/model";
+import type { ClubRuleProfileKey } from "@/domain/training/club-rules";
+import type { TrainingFormat, TrainingLocation } from "@/domain/training/model";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import type { DuckDBConnection } from "@duckdb/node-api";
@@ -16,6 +17,12 @@ export interface ClubGroupEquipmentDefault {
   readonly quantityAvailable: number;
 }
 
+export interface ClubGroupSkillDistribution {
+  readonly beginnerPercent: number;
+  readonly intermediatePercent: number;
+  readonly advancedPercent: number;
+}
+
 export interface ClubGroupInput {
   readonly name: string;
   readonly audience: ClubGroupAudience;
@@ -27,12 +34,18 @@ export interface ClubGroupInput {
   readonly maximumRiskLevel: ClubGroupRiskLevel | null;
   readonly defaultLocation?: TrainingLocation;
   readonly defaultEquipment?: readonly ClubGroupEquipmentDefault[];
+  readonly skillDistribution?: ClubGroupSkillDistribution | null;
+  readonly preferredFormats?: readonly TrainingFormat[];
+  readonly ruleProfile?: ClubRuleProfileKey;
 }
 
-export interface ClubGroup extends Omit<ClubGroupInput, "defaultLocation" | "defaultEquipment"> {
+export interface ClubGroup extends Omit<ClubGroupInput, "defaultLocation" | "defaultEquipment" | "skillDistribution" | "preferredFormats" | "ruleProfile"> {
   readonly id: string;
   readonly defaultLocation: TrainingLocation;
   readonly defaultEquipment: readonly ClubGroupEquipmentDefault[];
+  readonly skillDistribution: ClubGroupSkillDistribution | null;
+  readonly preferredFormats: readonly TrainingFormat[];
+  readonly ruleProfile: ClubRuleProfileKey;
   readonly archived: boolean;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -43,7 +56,7 @@ function assertUuid(value: string): void {
   if (!UUID_PATTERN.test(value)) throw new Error("Gruppe ist ungültig.");
 }
 
-function rowToGroup(row: readonly unknown[]): Omit<ClubGroup, "defaultEquipment"> {
+function rowToGroup(row: readonly unknown[]): Omit<ClubGroup, "defaultEquipment" | "preferredFormats"> {
   return {
     id: String(row[0]),
     name: String(row[1]),
@@ -55,10 +68,16 @@ function rowToGroup(row: readonly unknown[]): Omit<ClubGroup, "defaultEquipment"
     defaultLocale: String(row[7]) as "de" | "en",
     maximumRiskLevel: row[8] == null ? null : String(row[8]) as ClubGroupRiskLevel,
     defaultLocation: String(row[9] ?? "mixed") as TrainingLocation,
-    archived: Boolean(row[10]),
-    createdAt: String(row[11]),
-    updatedAt: String(row[12]),
-    linkedTrainingCount: Number(row[13]),
+    ruleProfile: String(row[10] ?? "standard") as ClubRuleProfileKey,
+    skillDistribution: row[11] == null || row[12] == null || row[13] == null ? null : {
+      beginnerPercent: Number(row[11]),
+      intermediatePercent: Number(row[12]),
+      advancedPercent: Number(row[13]),
+    },
+    archived: Boolean(row[14]),
+    createdAt: String(row[15]),
+    updatedAt: String(row[16]),
+    linkedTrainingCount: Number(row[17]),
   };
 }
 
@@ -84,6 +103,24 @@ async function replaceGroupEquipmentDefaults(
   }
 }
 
+async function replaceGroupPreferredFormats(
+  connection: DuckDBConnection,
+  groupId: string,
+  formats: readonly TrainingFormat[],
+): Promise<void> {
+  await connection.run(
+    "DELETE FROM club_group_preferred_formats WHERE group_id=$groupId::UUID",
+    { groupId },
+  );
+  for (const [sortOrder, format] of formats.entries()) {
+    await connection.run(
+      `INSERT INTO club_group_preferred_formats (group_id,format,sort_order)
+       VALUES ($groupId::UUID,$format,$sortOrder)`,
+      { groupId, format, sortOrder },
+    );
+  }
+}
+
 export async function listClubGroups(includeArchived = false): Promise<readonly ClubGroup[]> {
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
@@ -100,6 +137,10 @@ export async function listClubGroups(includeArchived = false): Promise<readonly 
         g.default_locale,
         g.maximum_risk_level,
         COALESCE(g.default_location,'mixed'),
+        COALESCE(g.rule_profile,'standard'),
+        g.skill_beginner_percent,
+        g.skill_intermediate_percent,
+        g.skill_advanced_percent,
         g.archived,
         g.created_at,
         g.updated_at,
@@ -134,9 +175,27 @@ export async function listClubGroups(includeArchived = false): Promise<readonly 
       equipmentByGroup.set(groupId, items);
     }
 
+    const formatReader = await connection.runAndReadAll(
+      `
+      SELECT group_id::VARCHAR,format
+      FROM club_group_preferred_formats
+      WHERE list_contains(string_split($groupIds, ','), group_id::VARCHAR)
+      ORDER BY group_id::VARCHAR,sort_order,format
+      `,
+      { groupIds: baseGroups.map((group) => group.id).join(",") },
+    );
+    const formatsByGroup = new Map<string, TrainingFormat[]>();
+    for (const row of formatReader.getRows()) {
+      const groupId = String(row[0]);
+      const items = formatsByGroup.get(groupId) ?? [];
+      items.push(String(row[1]) as TrainingFormat);
+      formatsByGroup.set(groupId, items);
+    }
+
     return baseGroups.map((group) => ({
       ...group,
       defaultEquipment: equipmentByGroup.get(group.id) ?? [],
+      preferredFormats: formatsByGroup.get(group.id) ?? [],
     }));
   });
 }
@@ -151,10 +210,12 @@ export async function createClubGroup(input: ClubGroupInput): Promise<string> {
         `
         INSERT INTO club_groups (
           id, name, audience, min_age, max_age, default_participant_count,
-          default_duration_minutes, default_locale, maximum_risk_level, default_location
+          default_duration_minutes, default_locale, maximum_risk_level, default_location, rule_profile,
+          skill_beginner_percent, skill_intermediate_percent, skill_advanced_percent
         ) VALUES (
           $id::UUID, $name, $audience, $minAge, $maxAge, $participants,
-          $duration, $locale, $risk, $location
+          $duration, $locale, $risk, $location, $ruleProfile,
+          $skillBeginner, $skillIntermediate, $skillAdvanced
         )
         `,
         {
@@ -168,9 +229,14 @@ export async function createClubGroup(input: ClubGroupInput): Promise<string> {
           locale: input.defaultLocale,
           risk: input.maximumRiskLevel,
           location: input.defaultLocation ?? "mixed",
+          ruleProfile: input.ruleProfile ?? "standard",
+          skillBeginner: input.skillDistribution?.beginnerPercent ?? null,
+          skillIntermediate: input.skillDistribution?.intermediatePercent ?? null,
+          skillAdvanced: input.skillDistribution?.advancedPercent ?? null,
         },
       );
       await replaceGroupEquipmentDefaults(connection, id, input.defaultEquipment ?? []);
+      await replaceGroupPreferredFormats(connection, id, input.preferredFormats ?? []);
       await connection.run("COMMIT");
     } catch (error) {
       await connection.run("ROLLBACK");
@@ -199,6 +265,10 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
           default_locale=$locale,
           maximum_risk_level=$risk,
           default_location=COALESCE($location, default_location),
+          rule_profile=COALESCE($ruleProfile, rule_profile),
+          skill_beginner_percent=$skillBeginner,
+          skill_intermediate_percent=$skillIntermediate,
+          skill_advanced_percent=$skillAdvanced,
           updated_at=current_timestamp
         WHERE id=$id::UUID
         RETURNING id::VARCHAR
@@ -214,6 +284,10 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
           locale: input.defaultLocale,
           risk: input.maximumRiskLevel,
           location: input.defaultLocation ?? null,
+          ruleProfile: input.ruleProfile ?? null,
+          skillBeginner: input.skillDistribution?.beginnerPercent ?? null,
+          skillIntermediate: input.skillDistribution?.intermediatePercent ?? null,
+          skillAdvanced: input.skillDistribution?.advancedPercent ?? null,
         },
       );
       if (reader.getRows().length === 0) {
@@ -223,12 +297,41 @@ export async function updateClubGroup(id: string, input: ClubGroupInput): Promis
       if (input.defaultEquipment !== undefined) {
         await replaceGroupEquipmentDefaults(connection, id, input.defaultEquipment);
       }
+      if (input.preferredFormats !== undefined) {
+        await replaceGroupPreferredFormats(connection, id, input.preferredFormats);
+      }
       await connection.run("COMMIT");
       return true;
     } catch (error) {
       await connection.run("ROLLBACK");
       throw error;
     }
+  });
+}
+
+export interface ClubGroupRuleSettings {
+  readonly ruleProfile: ClubRuleProfileKey;
+  readonly maximumRiskLevel: ClubGroupRiskLevel | null;
+}
+
+export async function getClubGroupRuleSettings(id: string): Promise<ClubGroupRuleSettings | null> {
+  if (!UUID_PATTERN.test(id)) return null;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `
+      SELECT COALESCE(rule_profile,'standard'),maximum_risk_level
+      FROM club_groups
+      WHERE id=$id::UUID AND archived=false
+      `,
+      { id },
+    );
+    const row = reader.getRows()[0];
+    if (!row) return null;
+    return {
+      ruleProfile: String(row[0] ?? "standard") as ClubRuleProfileKey,
+      maximumRiskLevel: row[1] == null ? null : String(row[1]) as ClubGroupRiskLevel,
+    };
   });
 }
 

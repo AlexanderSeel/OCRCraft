@@ -61,6 +61,7 @@ describe("normalizeTrainingDraftRequest", () => {
         ],
       }),
     ).toEqual({
+      groupId: "11111111-1111-4111-8111-111111111111",
       audience: "kids",
       participantCount: 14,
       durationMinutes: 60,

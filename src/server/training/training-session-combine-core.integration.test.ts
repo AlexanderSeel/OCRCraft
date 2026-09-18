@@ -132,6 +132,47 @@ describe("combineTrainingSessionsCore", () => {
     }
   });
 
+  it("preserves a matching rotation-group split and clears conflicting splits", async () => {
+    const connection = await createFixture();
+    try {
+      await connection.run(
+        "UPDATE training_sessions SET group_split_count=3 WHERE id IN ($first::UUID,$second::UUID)",
+        { first: SESSION_A, second: SESSION_B },
+      );
+      await combineTrainingSessionsCore(connection, {
+        targetSessionId: TARGET,
+        firstSessionId: SESSION_A,
+        secondSessionId: SESSION_B,
+      });
+
+      let reader = await connection.runAndReadAll(
+        "SELECT group_split_count FROM training_sessions WHERE id=$id::UUID",
+        { id: TARGET },
+      );
+      expect(Number(reader.getRows()[0]?.[0])).toBe(3);
+
+      await connection.run("DELETE FROM training_phases WHERE training_session_id=$id::UUID", { id: TARGET });
+      await connection.run("DELETE FROM training_sessions WHERE id=$id::UUID", { id: TARGET });
+      await connection.run(
+        "UPDATE training_sessions SET group_split_count=4 WHERE id=$id::UUID",
+        { id: SESSION_B },
+      );
+
+      await combineTrainingSessionsCore(connection, {
+        targetSessionId: TARGET,
+        firstSessionId: SESSION_A,
+        secondSessionId: SESSION_B,
+      });
+      reader = await connection.runAndReadAll(
+        "SELECT group_split_count FROM training_sessions WHERE id=$id::UUID",
+        { id: TARGET },
+      );
+      expect(reader.getRows()[0]?.[0]).toBeNull();
+    } finally {
+      connection.closeSync();
+    }
+  });
+
   it("drops group linkage when source groups differ", async () => {
     const connection = await createFixture();
     try {

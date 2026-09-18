@@ -61,6 +61,7 @@ export interface ParsedAgeRange {
 }
 
 export interface NormalizedTrainingDraftRequest {
+  readonly groupId?: string;
   readonly audience: Audience;
   readonly participantCount: number;
   readonly durationMinutes: number;
@@ -201,6 +202,7 @@ export function normalizeTrainingDraftRequest(input: QuickCreateDraftClientInput
   }
 
   return {
+    groupId: input.groupId && UUID_PATTERN.test(input.groupId) ? input.groupId : undefined,
     audience,
     participantCount,
     durationMinutes: boundedInteger(input.durationMinutes, 60, 30, 180),
