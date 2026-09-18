@@ -95,7 +95,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Erwachsenen-, Kids- und Youth-Vorlagen für Ausdauer, Koordination, Kraft, Mobility, Teamwork und Parcours ergänzen; jede der sechs Kategorien ist in allen drei Zielgruppen vertreten.
 - [x] Spiele als vollwertigen Katalogtyp `game` ausbauen: eigener Spielebereich, Anlage über denselben vollständigen Übungseditor, 12 zweisprachige OCRCraft-Eigenspiele für Kids/Youth/Erwachsene sowie direkte Berücksichtigung durch lokale/AI-Trainingsplanung über die bestehende Kandidaten- und Sicherheitslogik.
 - [x] Teamwettkämpfe als reguläres Trainingsformat integrieren: 3er-Spezialisten mit Kraft/Schnelligkeit/Technik und gemeinsamem Finisher sowie 3er-Rotation, 4er Relay Gauntlet, 2er Switch-Duell und 3er Checkpoint-Endurance; Presets setzen Teamgröße, Komplexe und Runden, bleiben im Builder editierbar und laufen durch dieselben Alters-/Risiko-/Equipment-/Sicherheitsregeln.
-- [ ] Keine externen Texte/Bilder ohne passende Lizenz übernehmen.
+- [x] Externe Inhalte lizenzgeschützt importieren: Ohne expliziten **und als geprüft bestätigten** Lizenz-/Rechtenachweis werden nur Quellen-/Metadaten referenziert; fremde Instruktionstexte und Medienreferenzen werden unterdrückt. Medien bleiben selbst mit Lizenz bis zur separaten Rechteprüfung auf `pending`.
 
 ### Medien
 

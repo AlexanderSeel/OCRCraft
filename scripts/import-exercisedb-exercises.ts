@@ -28,10 +28,15 @@ async function fetchAll(): Promise<ExerciseDbRecord[]> {
 
 function toImportRecord(record: ExerciseDbRecord) {
   const steps = (record.instructions ?? []).map((step) => step.replace(/^Step:\s*\d+\s*/i, "").trim()).filter(Boolean);
-  return { id: record.exerciseId, name: record.name, category: (record.bodyParts?.[0] ?? "strength").toLowerCase(), body_part: (record.bodyParts?.[0] ?? ""), equipment: (record.equipments ?? []).join(","), target: (record.targetMuscles ?? []).join(","), secondary_muscles: record.secondaryMuscles ?? [], instruction_steps: { en: steps }, instructions: { en: steps.join(" ") }, gif_url: record.gifUrl, source_provider: "exercisedb.dev", source_url: `https://oss.exercisedb.dev/docs#${record.exerciseId}`, license_label: "ExerciseDB / AscendAPI Attribution" };
+  const verifiedLicenseLabel = process.env.OCRCRAFT_EXERCISEDB_LICENSE_LABEL?.trim() || undefined;
+  const licenseVerified = Boolean(verifiedLicenseLabel) && process.env.OCRCRAFT_EXERCISEDB_LICENSE_VERIFIED === "1";
+  return { id: record.exerciseId, name: record.name, category: (record.bodyParts?.[0] ?? "strength").toLowerCase(), body_part: (record.bodyParts?.[0] ?? ""), equipment: (record.equipments ?? []).join(","), target: (record.targetMuscles ?? []).join(","), secondary_muscles: record.secondaryMuscles ?? [], instruction_steps: { en: steps }, instructions: { en: steps.join(" ") }, gif_url: record.gifUrl, source_provider: "exercisedb.dev", source_url: `https://oss.exercisedb.dev/docs#${record.exerciseId}`, license_label: verifiedLicenseLabel, license_verified: licenseVerified };
 }
 
 async function main() {
+  if (!process.env.OCRCRAFT_EXERCISEDB_LICENSE_LABEL?.trim() || process.env.OCRCRAFT_EXERCISEDB_LICENSE_VERIFIED !== "1") {
+    console.warn("Keine ausdrücklich verifizierte ExerciseDB-Lizenz konfiguriert: externe Instruktionstexte und Medien werden nur als Quelle referenziert und nicht übernommen.");
+  }
   const cachePath = path.join(process.cwd(), "data", "exercisedb-exercises.json");
   let records: ExerciseDbRecord[];
   if (process.argv.includes("--refresh") || process.env.OCRCRAFT_EXERCISEDB_USE_CACHE !== "1") {

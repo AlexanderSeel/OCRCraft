@@ -7,6 +7,7 @@ import type { DuckDBConnection } from "@duckdb/node-api";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { adaptHasaneyldrmExercises, type ExerciseImportDraft, type HasaneyldrmExercise } from "./hasaneyldrm-exercises-adapter";
+import { evaluateExternalContentLicense } from "./external-content-license-policy";
 
 export interface HasaneyldrmImportResult {
   readonly imported: number;
@@ -42,6 +43,8 @@ function externalMediaUrl(value: string | undefined): string | null {
 }
 
 async function ensureExternalMedia(connection: DuckDBConnection, exerciseId: string, draft: ExerciseImportDraft): Promise<void> {
+  const license = evaluateExternalContentLicense(draft.mediaReference.licenseLabel, draft.mediaReference.licenseVerified);
+  if (!license.licensedCopyAllowed) return;
   const imageUrl = externalMediaUrl(draft.mediaReference.image ?? draft.mediaReference.gif);
   const videoUrl = externalMediaUrl(draft.mediaReference.video);
   const references = [
@@ -88,9 +91,9 @@ async function ensureExternalMedia(connection: DuckDBConnection, exerciseId: str
       uri: reference.url,
       contentType: reference.contentType,
       sha: createHash("sha256").update(reference.url).digest("hex"),
-      license: draft.mediaReference.licenseLabel,
+      license: license.normalizedLicenseLabel,
       source: draft.sourceReference,
-      usage: `Externe Referenz; vor Freigabe Lizenz, Quelle und ggf. Einwilligung prüfen. ${draft.mediaReference.licenseLabel}.`,
+      usage: `Externe Referenz; vor Freigabe Quelle, Lizenzumfang und ggf. Einwilligung prüfen. ${license.normalizedLicenseLabel}.`,
       thumbnail: reference.thumbnailUrl,
       attribution: draft.mediaReference.attribution ?? null,
     });
@@ -108,7 +111,7 @@ function detailText(locale: "de" | "en", draft: ExerciseImportDraft, step: strin
   const prefix = locale === "de" ? "[Übersetzung erforderlich] " : "";
   return {
     purpose: `${pending}${prefix}Imported exercise from the reviewed external dataset.`,
-    setup: `${pending}${prefix}Check the equipment, clear the training area and follow the original English instructions.`,
+    setup: `${pending}${prefix}Check the equipment, clear the training area and follow the reviewed OCRCraft instructions stored with this draft.`,
     startPosition: `${pending}${prefix}Use a stable, pain-free starting position appropriate for the exercise.`,
     finishReset: `${pending}${prefix}Return under control and reset the equipment.`,
     breathingCue: `${pending}${prefix}Breathe steadily and do not hold your breath.`,
@@ -140,7 +143,7 @@ async function persistDraft(connection: DuckDBConnection, record: HasaneyldrmExe
   const sameName = await connection.runAndReadAll(`SELECT e.id::VARCHAR FROM exercises e JOIN exercise_translations t ON t.exercise_id=e.id WHERE t.locale='en' AND lower(t.name)=lower($name) LIMIT 1`, { name: draft.nameEn });
   if (sameName.getRows()[0]?.[0]) {
     const existingId = String(sameName.getRows()[0][0]);
-    await connection.run("INSERT OR IGNORE INTO exercise_source_references (exercise_id,provider,title,source_url,source_type,license_label,notes) VALUES ($id,$provider,$title,$sourceUrl,'dataset',$license,$notes)", { id: existingId, provider: draft.sourceMetadata.provider, title: draft.sourceMetadata.title, sourceUrl, license: draft.mediaReference.licenseLabel, notes: `duplicate_of_existing_name; source_record_id=${draft.sourceRecordId}` });
+    await connection.run("INSERT OR IGNORE INTO exercise_source_references (exercise_id,provider,title,source_url,source_type,license_label,notes) VALUES ($id,$provider,$title,$sourceUrl,'dataset',$license,$notes)", { id: existingId, provider: draft.sourceMetadata.provider, title: draft.sourceMetadata.title, sourceUrl, license: draft.mediaReference.licenseLabel, notes: `duplicate_of_existing_name; source_record_id=${draft.sourceRecordId}; content_mode=${draft.mediaReference.licenseVerified ? "licensed_copy" : "reference_only"}` });
     await ensureExternalMedia(connection, existingId, draft);
     return "skipped";
   }
@@ -197,7 +200,7 @@ async function persistDraft(connection: DuckDBConnection, record: HasaneyldrmExe
     const equipment = await connection.runAndReadAll("SELECT id::VARCHAR FROM equipment WHERE seed_key=$key", { key });
     if (equipment.getRows()[0]?.[0]) await connection.run("INSERT OR IGNORE INTO exercise_equipment VALUES ($id,$equipment,1)", { id: exerciseId, equipment: String(equipment.getRows()[0][0]) });
   }
-  await connection.run("INSERT INTO exercise_source_references (exercise_id,provider,title,source_url,source_type,license_label,notes) VALUES ($id,$provider,$title,$sourceUrl,'dataset',$license,$notes)", { id: exerciseId, provider: draft.sourceMetadata.provider, title: draft.sourceMetadata.title, sourceUrl, license: draft.mediaReference.licenseLabel, notes: `source_record_id=${draft.sourceRecordId}; media_usage=${draft.mediaReference.usage}; image=${draft.mediaReference.image ?? ""}; gif=${draft.mediaReference.gif ?? ""}; video=${draft.mediaReference.video ?? ""}` });
+  await connection.run("INSERT INTO exercise_source_references (exercise_id,provider,title,source_url,source_type,license_label,notes) VALUES ($id,$provider,$title,$sourceUrl,'dataset',$license,$notes)", { id: exerciseId, provider: draft.sourceMetadata.provider, title: draft.sourceMetadata.title, sourceUrl, license: draft.mediaReference.licenseLabel, notes: `source_record_id=${draft.sourceRecordId}; content_mode=${draft.mediaReference.licenseLabel ? "licensed_copy" : "reference_only"}; media_usage=${draft.mediaReference.usage}; image=${draft.mediaReference.image ?? ""}; gif=${draft.mediaReference.gif ?? ""}; video=${draft.mediaReference.video ?? ""}` });
   await ensureExternalMedia(connection, exerciseId, draft);
   for (const locale of ["de", "en"] as const) await connection.run(`INSERT OR REPLACE INTO search_documents_${locale} (document_id,entity_type,entity_id,title,aliases,summary,tags,body_regions,equipment,instructions) VALUES ($documentId,'exercise',$id,$title,$title,$summary,'external-import',$regions,$equipment,$instructions)`, { documentId: `exercise:${exerciseId}`, id: exerciseId, title: locale === "de" ? deName : draft.nameEn, summary: locale === "de" ? deSummary : enSummary, regions: draft.bodyRegionIds.join(" "), equipment: draft.equipmentSeedKeys.join(" "), instructions: draft.executionStepsEn.join(" ") });
   await connection.run("UPDATE search_index_state SET status='dirty',last_error=NULL WHERE locale IN ('de','en')");

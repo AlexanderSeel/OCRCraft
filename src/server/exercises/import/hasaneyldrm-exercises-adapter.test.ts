@@ -8,18 +8,40 @@ describe("hasaneyldrm exercise adapter", () => {
       equipment: "Kettlebell", instructions: { en: "Squat while holding the kettlebell." },
       instruction_steps: { en: ["Stand tall.", "Lower with control.", "Drive up."] },
       image: "https://example.com/image.jpg", video: "videos/goblet-squat.mp4", attribution: "Gym Visual",
+      license_label: "CC BY 4.0",
+      license_verified: true,
     });
     expect(draft.seedKey).toBe("imported-goblet-squat-42");
     expect(draft.bodyRegionIds).toContain("quadriceps");
     expect(draft.equipmentSeedKeys).toEqual(["kettlebell"]);
     expect(draft.translationStatus).toBe("required");
     expect(draft.reviewStatus).toBe("draft");
-    expect(draft.mediaReference.licenseLabel).toBe("Gym-Visual-Lizenz");
+    expect(draft.mediaReference.licenseLabel).toBe("CC BY 4.0");
+    expect(draft.mediaReference.licenseVerified).toBe(true);
     expect(draft.mediaReference.usage).toBe("template_only");
     expect(draft.mediaReference.video).toBe("videos/goblet-squat.mp4");
     expect(draft.sourceMetadata.sourceType).toBe("dataset");
     expect(draft.sourceMetadata.provider).toBe("hasaneyldrm/exercises-dataset");
-    expect(draft.warnings.join(" ")).toContain("license/source review");
+    expect(draft.warnings.join(" ")).toContain("pending until source/license review");
+  });
+
+  it("does not copy external text or media without an explicit usable license/right label", () => {
+    const draft = adaptHasaneyldrmExercise({
+      id: 7,
+      name: "External Exercise",
+      body_part: "cardio",
+      instructions: { en: "Copyrighted source description." },
+      instruction_steps: { en: ["Source step one.", "Source step two.", "Source step three."] },
+      image: "https://example.com/source.jpg",
+      license_label: "CC BY 4.0",
+      license_verified: false,
+    });
+    expect(draft.summaryEn).not.toContain("Copyrighted source description");
+    expect(draft.executionStepsEn.join(" ")).not.toContain("Source step one");
+    expect(draft.mediaReference.image).toBeUndefined();
+    expect(draft.mediaReference.licenseLabel).toBeNull();
+    expect(draft.mediaReference.licenseVerified).toBe(false);
+    expect(draft.warnings.join(" ")).toContain("not copied");
   });
 
   it("rejects non-array batch input and supplies safe fallback steps", () => {
