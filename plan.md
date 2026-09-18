@@ -62,7 +62,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Suche und Planung
 
-- [ ] Gemeinsame Katalogansicht für Training, Spiele, Hindernisse und Outdoor mit Liste/Klein/Mittel/Groß/Detail, einheitlichen Filtern und serverseitiger Pagination.
+- [ ] Gemeinsame Katalogansicht für Training, Spiele, Hindernisse, Übungen, Medien, AI-Entwürfe, Gruppen und Outdoor mit Liste/Klein/Mittel/Groß/Detail, einheitlichem Filter-Sidepanel, Suchzustand, Ergebniszähler, Seitengröße und serverseitiger Pagination; bestehende Einzelimplementierungen werden auf gemeinsame Komponenten migriert.
 
 - [x] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten: Exact/Prefix/Alias, Kurzbeschreibung, Ziele/Tags/Bewegungsmuster, Körperregionen, Equipment und Instruktionen werden über das aktive persistierte Suchprofil gewichtet; DuckDB-BM25 bleibt die Volltextbasis und ENV-Gewichte dienen nur als Fallback.
 - [x] Autocomplete aus Übungs-, Trainingsziel-, Equipment-, Tag-, Bewegungsmuster- und Körperregionsdaten ergänzen.

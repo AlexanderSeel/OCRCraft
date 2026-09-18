@@ -48,12 +48,12 @@ Für den privaten Vereinsbetrieb kann die lokale Bootstrap-Identität verwendet 
 
 Trainings können über `/training/<id>/trainer` als schreibgeschützte Ansicht ohne Login geteilt werden. Diese Ansicht enthält keine Bearbeitungsaktionen.
 
-Trainerprofile lassen sich im eigenen Tab „Benutzer & Profile“ mit Filter, Vorname, Nachname, Username, E-Mail, Ausbildung, Schwerpunkten, Kurzprofil und Bildreferenz pflegen; bestehende Profile werden über einen Bearbeiten-Dialog aktualisiert. Bei neu erstellten Trainings wird das Profil kompakt in der Trainer- und Readonly-Ansicht angezeigt.
+Trainerprofile lassen sich im eigenen Tab „Benutzer & Profile“ mit Filter, Vorname, Nachname, Username, E-Mail, Ausbildung, Schwerpunkten, Kurzprofil und Bildreferenz pflegen; bestehende Profile werden auf einer eigenen Bearbeitungsseite aktualisiert. Bei neu erstellten Trainings wird das Profil kompakt in der Trainer- und Readonly-Ansicht angezeigt.
 Profilbilder können als JPEG, PNG oder WebP bis 2 MB hochgeladen und in DuckDB gespeichert werden. Fehlt ein Bild, erscheinen automatisch die Initialen aus Vor- und Nachnamen.
 
 ### Administration
 
-Administration und Einstellungen liegen in einem gemeinsamen Bereich mit fünf Tabs: Übersicht, Datenbank, Datenqualität, Benutzer & Profile und Einstellungen. Dort sind Seed-Vollständigkeit, Dublettenprüfung, DuckDB-/FTS-Status, der bestätigungspflichtige Datenbank-Reset und das optionale Muskelkarten-Debugging getrennt erreichbar.
+Administration und Einstellungen liegen in einem gemeinsamen Bereich mit sieben Tabs: Übersicht, Datenbank, Datenqualität, Aufgabenqueue, Benutzer & Profile, Einstellungen und Outdoor-Varianten. Outdoor-Varianten sind zusätzlich direkt über den Hauptmenüpunkt „Outdoor“ erreichbar.
 
 Im Datenbank-Tab können Übungen, Details, Zuordnungen, Trainings, Gruppen, Medien und Provenienz selektiv als versioniertes JSON exportiert werden. `ocrcraft-portable`-Dateien werden vor dem transaktionalen Import auf Schema, erlaubte Tabellen und Spalten geprüft; der Import ist auf Super-Admins begrenzt.
 
@@ -69,6 +69,7 @@ Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit e
 
 - Light-, Dark- und System-Theme mit semantischen Tokens
 - responsive Traineroberflächen für Desktop, Tablet und mobile Nutzung
+- gemeinsames Bedienkonzept für Kataloge: Filter-Sidepanel, Suche, Größenwahl und Pagination werden für Übungen, Training, Spiele, Hindernisse, Medien, AI-Entwürfe, Gruppen und Outdoor schrittweise vereinheitlicht; der verbleibende Umfang ist in `plan.md` dokumentiert
 - einklappbare Hauptnavigation mit persistiertem Icon-Modus sowie wiederverwendbare Sidepanel-Filter in Übungs-, Medien- und Hinderniskatalog
 - zentrale Dialog-Komponente mit ARIA-Rolle, Fokusfalle, Escape, Backdrop-Schließen, Scroll-Lock und Fokus-Rückgabe
 - AppShell hält den Seitenkopf auf kontextbezogene Seitenaktionen begrenzt; Darstellung und Diagnose liegen im gemeinsamen Einstellungen-Tab der Administration

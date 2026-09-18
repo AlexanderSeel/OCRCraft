@@ -10,6 +10,7 @@ const navigation = [
   ["Spiele", "/games"],
   ["AI-Entwürfe", "/exercises/ai-drafts"],
   ["Hindernisse", "/obstacles"],
+  ["Outdoor", "/admin/outdoor-variants"],
   ["Gruppen", "/groups"],
   ["Medien", "/media"],
 ] as const;
@@ -86,6 +87,7 @@ function NavIcon({ label }: { readonly label: string }) {
     Spiele: "M8 8h8m-9 4h2m6 0h2m-5-7v3m-7.5 9.5 1.4-8.2A4 4 0 0 1 9.8 6h4.4a4 4 0 0 1 3.9 3.3l1.4 8.2a2 2 0 0 1-3.4 1.7L14 17H10l-2.1 2.2a2 2 0 0 1-3.4-1.7Z",
     "AI-Entwürfe": "m12 3 1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3Zm6 13 .7 2.3L21 19l-2.3.7L18 22l-.7-2.3L15 19l2.3-.7L18 16Z",
     Hindernisse: "M4 20 12 4l8 16m-13-5h10M8 13h8",
+    Outdoor: "M12 3v18m-7-7 7-7 7 7M5 20h14",
     Gruppen: "M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20m6-8a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm5-6.5a3 3 0 0 1 0 5.8M18 20v-1.5a3.5 3.5 0 0 0-2-3.2",
     Medien: "M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13ZM7 16l3.5-4 2.5 3 1.8-2.2L18 16M8 8.5h.01",
   };
