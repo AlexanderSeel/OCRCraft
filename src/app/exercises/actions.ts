@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   createExercise,
+  hardDeleteExercise,
   setExerciseArchived,
   updateExercise,
 } from "@/server/exercises/exercise-repository";
@@ -99,4 +100,13 @@ export async function setExerciseArchivedAction(
   revalidatePath("/games");
   revalidatePath(`/exercises/${id}/edit`);
   redirect(archived ? "/exercises" : `/exercises/${id}/edit?restored=1`);
+}
+
+export async function hardDeleteExerciseAction(id: string, formData: FormData): Promise<void> {
+  if (String(formData.get("confirmation") ?? "") !== "ENDGÜLTIG LÖSCHEN") {
+    redirect(`/exercises/${id}/edit?hardDeleteError=confirmation`);
+  }
+  await hardDeleteExercise(id);
+  revalidatePath("/exercises");
+  redirect("/exercises");
 }

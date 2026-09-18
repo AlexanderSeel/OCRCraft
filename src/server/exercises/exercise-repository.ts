@@ -10,6 +10,7 @@ import type {
 } from "@/domain/exercise/model";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
+import { requireSuperAdmin } from "@/server/auth/identity-service";
 import { safeExerciseImageUri } from "./exercise-image-uri";
 import type { DuckDBConnection } from "@duckdb/node-api";
 
@@ -257,6 +258,50 @@ export async function setExerciseArchived(id: string, archived: boolean): Promis
         { id, archived },
       );
       await updateSearchDocuments(connection, id);
+      await connection.run("COMMIT");
+    } catch (error) {
+      await connection.run("ROLLBACK");
+      throw error;
+    }
+  });
+}
+
+/** Permanently removes only an archived, non-seed exercise with no operational references. */
+export async function hardDeleteExercise(id: string): Promise<void> {
+  await requireSuperAdmin();
+  await ensureDatabaseReady();
+  await withDuckDbConnection(async (connection) => {
+    await connection.run("BEGIN TRANSACTION");
+    try {
+      const exerciseReader = await connection.runAndReadAll(
+        "SELECT archived, seed_key FROM exercises WHERE id=$id::UUID",
+        { id },
+      );
+      const exercise = exerciseReader.getRows()[0];
+      if (!exercise) throw new Error("exercise-not-found");
+      if (!Boolean(exercise[0])) throw new Error("hard-delete-requires-archive");
+      if (exercise[1] != null && String(exercise[1]).trim() !== "") throw new Error("seed-exercise-cannot-be-deleted");
+
+      const references = await connection.runAndReadAll(`
+        SELECT 'training' AS source FROM training_items WHERE exercise_id=$id::UUID
+        UNION ALL SELECT 'media' FROM exercise_media_assets WHERE exercise_id=$id::UUID
+        UNION ALL SELECT 'source' FROM exercise_source_references WHERE exercise_id=$id::UUID
+        UNION ALL SELECT 'ai-draft' FROM ai_exercise_drafts WHERE approved_exercise_id=$id::UUID
+      `, { id });
+      if (references.getRows().length > 0) throw new Error(`hard-delete-has-references:${String(references.getRows()[0]?.[0] ?? "unknown")}`);
+
+      await connection.run("DELETE FROM exercise_progression_relations WHERE exercise_id=$id::UUID OR related_exercise_id=$id::UUID", { id });
+      for (const table of [
+        "exercise_duplicate_tasks", "exercise_muscle_oppositions",
+        "exercise_body_regions", "exercise_equipment", "exercise_movement_patterns", "exercise_tags",
+        "exercise_training_goals", "exercise_aliases", "exercise_execution_steps", "exercise_coaching_cues",
+        "exercise_common_mistakes", "exercise_details", "exercise_training_phases", "exercise_image_generation_jobs", "exercise_obstacle_guidance",
+        "exercise_outdoor_variant_equipment", "exercise_running_guidance", "exercise_obstacle_guidance",
+        "exercise_carry_guidance",
+      ]) {
+        await connection.run(`DELETE FROM ${table} WHERE exercise_id=$id::UUID`, { id });
+      }
+      await connection.run("DELETE FROM exercises WHERE id=$id::UUID", { id });
       await connection.run("COMMIT");
     } catch (error) {
       await connection.run("ROLLBACK");

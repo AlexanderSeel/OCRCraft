@@ -14,11 +14,12 @@ import { ExerciseObstacleGuidanceEditor } from "@/components/exercises/exercise-
 import { ExerciseProgressionEditor } from "@/components/exercises/exercise-progression-editor";
 import { getExerciseClassificationEditorData } from "@/server/exercises/exercise-classification-repository";
 import { getExerciseById, getExerciseProgressionRelations, listExerciseRelationOptions } from "@/server/exercises/exercise-repository";
+import { getOptionalCurrentActor } from "@/server/auth/identity-service";
 import { getExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
 import { getExerciseOutdoorVariantEditorData } from "@/server/exercises/exercise-outdoor-variant-repository";
 import { getObstacleGuidanceEditorData } from "@/server/obstacles/obstacle-editor-repository";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
-import { setExerciseArchivedAction, updateExerciseAction } from "../../actions";
+import { hardDeleteExerciseAction, setExerciseArchivedAction, updateExerciseAction } from "../../actions";
 import { updateExerciseClassificationAction } from "../classification-actions";
 import {
   updateExerciseLogisticsAction,
@@ -52,6 +53,7 @@ interface PageProps {
     progressionError?: string;
     obstacleSaved?: string;
     obstacleError?: string;
+    hardDeleteError?: string;
   }>;
 }
 
@@ -60,6 +62,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const status = await searchParams;
   const exercise = await getExerciseById(id);
   if (!exercise) notFound();
+  const actor = await getOptionalCurrentActor();
 
   const [classification, facets, outdoorVariant, obstacleGuidance, guidanceDeMap, guidanceEnMap, progressionRelations, relationOptions] = await Promise.all([
     getExerciseClassificationEditorData(exercise.id),
@@ -84,6 +87,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const updateDetailAction = updateLocalizedExerciseDetailsAction.bind(null, exercise.id);
   const updateLogisticsAction = updateExerciseLogisticsAction.bind(null, exercise.id);
   const toggleArchivedAction = setExerciseArchivedAction.bind(null, exercise.id, !exercise.archived);
+  const hardDeleteAction = hardDeleteExerciseAction.bind(null, exercise.id);
   const addProgressionAction = addExerciseProgressionRelationAction.bind(null, exercise.id);
   const deleteProgressionAction = deleteExerciseProgressionRelationAction.bind(null, exercise.id);
   const manualExercise = exercise.seedKey == null;
@@ -154,6 +158,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         {status.outdoorError === "save" ? <ErrorNotice>Die Outdoor-Variante konnte nicht gespeichert werden. Prüfe Texte und Equipment-Auswahl.</ErrorNotice> : null}
         {status.obstacleError === "invalid" ? <ErrorNotice>Die Hindernis-Guidance ist unvollständig oder enthält ungültige Werte.</ErrorNotice> : null}
         {status.obstacleError === "save" ? <ErrorNotice>Die Hindernis-Guidance konnte nicht gespeichert werden.</ErrorNotice> : null}
+        {status.hardDeleteError === "confirmation" ? <ErrorNotice>Für das endgültige Löschen muss die Bestätigung exakt eingegeben werden.</ErrorNotice> : null}
 
         <details className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" open={Boolean(status.created || status.saved)}>
           <summary className="min-h-8 cursor-pointer font-bold">Stammdaten bearbeiten</summary>
@@ -283,6 +288,16 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
             </form>
           </div>
         </section>
+        {exercise.archived && exercise.seedKey == null && actor?.role === "super_admin" ? (
+          <section className="rounded-2xl border border-[var(--danger)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+            <h2 className="font-black text-[var(--danger)]">Endgültig löschen</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">Nur archivierte Vereinsübungen ohne Trainings-, Medien- oder Quellenreferenzen können dauerhaft gelöscht werden. Seeds sind geschützt.</p>
+            <form action={hardDeleteAction} className="mt-4 flex flex-wrap items-end gap-3">
+              <label className="grid gap-1 text-xs font-bold"><span>Bestätigung</span><input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3" name="confirmation" placeholder="ENDGÜLTIG LÖSCHEN" required /></label>
+              <button className="min-h-10 rounded-lg bg-[var(--danger)] px-4 text-sm font-black text-white" type="submit">Dauerhaft löschen</button>
+            </form>
+          </section>
+        ) : null}
       </div>
     </AppShell>
   );
