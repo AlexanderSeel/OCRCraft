@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { TRAINING_FORMATS } from "@/domain/training/model";
 import {
   createClubGroup,
   setClubGroupArchived,
@@ -31,6 +32,10 @@ const groupSchema = z.object({
     equipmentId: z.string().uuid(),
     quantityAvailable: z.number().int().min(0).max(500),
   })).max(100),
+  skillBeginnerPercent: optionalInteger(0, 100),
+  skillIntermediatePercent: optionalInteger(0, 100),
+  skillAdvancedPercent: optionalInteger(0, 100),
+  preferredFormats: z.array(z.enum(TRAINING_FORMATS)).max(TRAINING_FORMATS.length),
 }).superRefine((value, context) => {
   if (value.minAge != null && value.maxAge != null && value.minAge > value.maxAge) {
     context.addIssue({
@@ -39,6 +44,44 @@ const groupSchema = z.object({
       message: "Das maximale Alter muss mindestens so hoch wie das Mindestalter sein.",
     });
   }
+  const skillValues = [
+    value.skillBeginnerPercent,
+    value.skillIntermediatePercent,
+    value.skillAdvancedPercent,
+  ];
+  const definedSkillValues = skillValues.filter((item): item is number => item != null);
+  if (definedSkillValues.length !== 0 && definedSkillValues.length !== 3) {
+    context.addIssue({
+      code: "custom",
+      path: ["skillBeginnerPercent"],
+      message: "Skill-Verteilung muss vollständig oder leer sein.",
+    });
+  } else if (definedSkillValues.length === 3 && definedSkillValues.reduce((sum, item) => sum + item, 0) !== 100) {
+    context.addIssue({
+      code: "custom",
+      path: ["skillAdvancedPercent"],
+      message: "Skill-Verteilung muss zusammen 100 % ergeben.",
+    });
+  }
+}).transform((value) => {
+  const {
+    skillBeginnerPercent,
+    skillIntermediatePercent,
+    skillAdvancedPercent,
+    ...rest
+  } = value;
+  return {
+    ...rest,
+    skillDistribution: skillBeginnerPercent == null
+      || skillIntermediatePercent == null
+      || skillAdvancedPercent == null
+      ? null
+      : {
+          beginnerPercent: skillBeginnerPercent,
+          intermediatePercent: skillIntermediatePercent,
+          advancedPercent: skillAdvancedPercent,
+        },
+  };
 });
 
 const groupTargetSchema = z.object({
@@ -76,6 +119,10 @@ function parseGroupForm(formData: FormData) {
     maximumRiskLevel: formData.get("maximumRiskLevel"),
     defaultLocation: formData.get("defaultLocation"),
     defaultEquipment,
+    skillBeginnerPercent: formData.get("skillBeginnerPercent"),
+    skillIntermediatePercent: formData.get("skillIntermediatePercent"),
+    skillAdvancedPercent: formData.get("skillAdvancedPercent"),
+    preferredFormats: formData.getAll("preferredFormats"),
   });
 }
 
