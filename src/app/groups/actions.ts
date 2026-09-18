@@ -26,6 +26,11 @@ const groupSchema = z.object({
     (value) => value === "" ? null : value,
     z.enum(["low", "medium", "high"]).nullable(),
   ),
+  defaultLocation: z.enum(["indoor", "outdoor", "mixed"]),
+  defaultEquipment: z.array(z.object({
+    equipmentId: z.string().uuid(),
+    quantityAvailable: z.number().int().min(0).max(500),
+  })).max(100),
 }).superRefine((value, context) => {
   if (value.minAge != null && value.maxAge != null && value.minAge > value.maxAge) {
     context.addIssue({
@@ -41,7 +46,25 @@ const groupTargetSchema = z.object({
   archived: z.enum(["true", "false"]).transform((value) => value === "true"),
 });
 
+function parseGroupEquipment(formData: FormData) {
+  const defaults: { equipmentId: string; quantityAvailable: number }[] = [];
+  const seen = new Set<string>();
+  for (const [key, rawValue] of formData.entries()) {
+    if (!key.startsWith("equipmentQty:")) continue;
+    const equipmentId = key.slice("equipmentQty:".length);
+    const value = String(rawValue).trim();
+    if (value === "") continue;
+    const id = z.string().uuid().safeParse(equipmentId);
+    const quantity = z.coerce.number().int().min(0).max(500).safeParse(value);
+    if (!id.success || !quantity.success || seen.has(equipmentId)) return null;
+    seen.add(equipmentId);
+    defaults.push({ equipmentId, quantityAvailable: quantity.data });
+  }
+  return defaults;
+}
+
 function parseGroupForm(formData: FormData) {
+  const defaultEquipment = parseGroupEquipment(formData);
   return groupSchema.safeParse({
     name: formData.get("name"),
     audience: formData.get("audience"),
@@ -51,6 +74,8 @@ function parseGroupForm(formData: FormData) {
     defaultDurationMinutes: formData.get("defaultDurationMinutes"),
     defaultLocale: formData.get("defaultLocale"),
     maximumRiskLevel: formData.get("maximumRiskLevel"),
+    defaultLocation: formData.get("defaultLocation"),
+    defaultEquipment,
   });
 }
 
