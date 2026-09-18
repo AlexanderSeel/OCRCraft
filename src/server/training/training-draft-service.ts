@@ -8,6 +8,10 @@ import { loadAiTrainingSourceSessions } from "./ai-training-source-context";
 import { applyMainPartProgramming } from "./main-part-programming";
 import { composeStructuredSportsTrainingDraft } from "./structured-sports-training-composer";
 import { filterCandidatesForDeclaredEquipment } from "./training-candidate-constraints";
+import {
+  filterCandidatesForClubRules,
+  resolveTrainingClubRules,
+} from "./training-club-rule-service";
 import { listTrainingDraftCandidates } from "./training-draft-repository";
 import type { TrainingDraftPersistenceRequest } from "./training-draft-persistence-schema";
 import type { ReviewedAiTrainingPersistence } from "./reviewed-training-draft-schema";
@@ -16,7 +20,10 @@ import { assessStructuredTrainingGoalCoverage } from "./training-goal-coverage";
 import { assessTrainingSportsQuality } from "./training-sports-quality";
 import { persistTrainingDraft } from "./training-session-repository";
 
-async function approvedCandidatesFor(request: TrainingDraftRequest) {
+async function approvedCandidatesFor(
+  request: TrainingDraftRequest,
+  rules: Parameters<typeof filterCandidatesForClubRules>[2],
+) {
   const candidates = await listTrainingDraftCandidates({
     audience: request.audience,
     minAge: request.minAge,
@@ -24,7 +31,8 @@ async function approvedCandidatesFor(request: TrainingDraftRequest) {
     location: request.location,
     availableObstacleExerciseIds: request.availableObstacleExerciseIds,
   });
-  return filterCandidatesForDeclaredEquipment(candidates, request.availableEquipment);
+  const equipmentFiltered = filterCandidatesForDeclaredEquipment(candidates, request.availableEquipment);
+  return filterCandidatesForClubRules(request, equipmentFiltered, rules);
 }
 
 function applySportsQualityAudit(request: TrainingDraftRequest, draft: TrainingDraft, candidates: readonly TrainingDraftExerciseCandidate[]): TrainingDraft {
@@ -33,7 +41,12 @@ function applySportsQualityAudit(request: TrainingDraftRequest, draft: TrainingD
   return { ...draft, warnings: [...draft.warnings, ...quality.warnings, ...goalWarnings] };
 }
 
-function finalizeDraft(request: TrainingDraftRequest, draft: TrainingDraft, candidates: readonly TrainingDraftExerciseCandidate[]): TrainingDraft {
+function finalizeDraft(
+  request: TrainingDraftRequest,
+  draft: TrainingDraft,
+  candidates: readonly TrainingDraftExerciseCandidate[],
+  rules: Parameters<typeof filterCandidatesForClubRules>[2],
+): TrainingDraft {
   const withRotationGroups: TrainingDraft = {
     ...draft,
     session: {
@@ -47,13 +60,14 @@ function finalizeDraft(request: TrainingDraftRequest, draft: TrainingDraft, cand
   const programmed = applyMainPartProgramming(request, withRotationGroups);
   const revalidated: TrainingDraft = {
     ...programmed,
-    validationIssues: validateTrainingSession(programmed.session, undefined, request.availableEquipment),
+    validationIssues: validateTrainingSession(programmed.session, rules, request.availableEquipment),
   };
   return applySportsQualityAudit(request, revalidated, candidates);
 }
 
 export async function createTrainingDraft(request: TrainingDraftRequest): Promise<TrainingDraft> {
-  const candidates = await approvedCandidatesFor(request);
+  const rules = await resolveTrainingClubRules(request);
+  const candidates = await approvedCandidatesFor(request, rules);
   if (request.builderMode === "ai") {
     const provider = getConfiguredAiTrainingProvider();
     if (!provider) throw new Error("AI Training Builder ist nicht konfiguriert. Nutze den lokalen Sportalgorithmus oder setze OCRCRAFT_AI_BASE_URL und OCRCRAFT_AI_MODEL.");
@@ -63,7 +77,7 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
     const recompositionWarnings = sourceSessions.length > 0
       ? [`AI-Rekomposition verwendet ${sourceSessions.length} ausgewählte Quelltrainings als Kontext; aktuelle Trainer-Randbedingungen und der freigegebene Übungspool bleiben maßgeblich.`]
       : [];
-    return finalizeDraft(request, { ...draft, warnings: [...draft.warnings, ...recompositionWarnings] }, candidates);
+    return finalizeDraft(request, { ...draft, warnings: [...draft.warnings, ...recompositionWarnings] }, candidates, rules);
   }
 
   const draft = composeStructuredSportsTrainingDraft({
@@ -88,7 +102,7 @@ export async function createTrainingDraft(request: TrainingDraftRequest): Promis
     organizationMode: request.organizationMode,
     teamSize: request.teamSize,
   }, candidates);
-  return finalizeDraft(request, draft, candidates);
+  return finalizeDraft(request, draft, candidates, rules);
 }
 
 export async function createDeterministicTrainingDraft(request: TrainingDraftRequest): Promise<TrainingDraft> {
@@ -108,9 +122,10 @@ export async function createAndPersistDeterministicTrainingDraft(input: Training
 }
 
 export async function persistReviewedAiTrainingDraft(input: ReviewedAiTrainingPersistence): Promise<{ readonly id: string; readonly draft: TrainingDraft }> {
-  const candidates = await approvedCandidatesFor(input.request);
+  const rules = await resolveTrainingClubRules(input.request);
+  const candidates = await approvedCandidatesFor(input.request, rules);
   const reviewedDraft = composeReviewedAiTrainingDraft(input, candidates);
-  const draft = finalizeDraft(input.request, reviewedDraft, candidates);
+  const draft = finalizeDraft(input.request, reviewedDraft, candidates, rules);
   const provider = getConfiguredAiTrainingProvider();
   const id = await persistTrainingDraft(draft, {
     title: input.title,
