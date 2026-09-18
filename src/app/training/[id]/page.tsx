@@ -9,6 +9,7 @@ import { TrainingItemAlternatives } from "@/components/training/training-item-al
 import { TrainingItemGuidance } from "@/components/training/training-item-guidance";
 import { TrainingItemReorderZone } from "@/components/training/training-item-reorder-zone";
 import { TRAINING_PHASE_LABELS } from "@/domain/training/model";
+import { mainPartProgrammingLabel } from "@/server/training/main-part-programming";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 import { getLatestTrainingGeneration } from "@/server/training/training-generation-repository";
 import { getTrainingSessionById } from "@/server/training/training-session-repository";
@@ -307,8 +308,8 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                   ) : (
                     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm" key={part.index}>
                       <span className="font-black">{part.title}</span>
-                      {part.programming && part.programming.mode !== "standard" ? (
-                        <span className="ml-2 text-[var(--muted)]">· {programmingSummary(part.programming)}</span>
+                      {part.programming && (part.programming.mode !== "standard" || part.programming.partnerMode) ? (
+                        <span className="ml-2 text-[var(--muted)]">· {mainPartProgrammingLabel(part.programming)}</span>
                       ) : null}
                     </div>
                   ))}
@@ -565,19 +566,6 @@ function mainPartSummaries(items: readonly {
     }
   }
   return [...summaries.values()].sort((left, right) => left.index - right.index);
-}
-
-function programmingSummary(programming: import("@/domain/training/model").MainPartProgramming): string {
-  if (programming.mode === "interval") return `${programming.workSeconds ?? 0}s Arbeit / ${programming.restSeconds ?? 0}s Pause`;
-  if (programming.mode === "rounds") return `${programming.rounds ?? 1} Runden · ${programming.scoreMode === "time" ? "auf Zeit" : "auf Qualität"}`;
-  if (programming.mode === "ladder") return `Ladder ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}`;
-  if (programming.mode === "reverse-ladder") return `Reverse Ladder ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}`;
-  if (programming.mode === "pyramid") return `Pyramide ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}→${programming.ladderStart ?? 1}`;
-  if (programming.mode === "chipper") return "Chipper";
-  if (programming.mode === "every") return programming.everyUnit === "checkpoint"
-    ? `jeder ${programming.everyValue ?? 1}. Checkpoint`
-    : `alle ${programming.everyValue ?? 1} ${programming.everyUnit === "minutes" ? "Min." : "m"}`;
-  return "Standard / frei";
 }
 
 function savedMessage(saved: string): string {

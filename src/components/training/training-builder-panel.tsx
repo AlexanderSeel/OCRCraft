@@ -491,6 +491,7 @@ export function TrainingBuilderPanel({
                   index={index}
                   key={index}
                   onChange={(value) => updateMainPartProgramming(index, value)}
+                  partnerWorkout={partnerWorkout}
                   value={programming}
                 />
               ))}

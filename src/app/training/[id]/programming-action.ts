@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { MAIN_PART_EVERY_UNITS, MAIN_PART_PROGRAMMING_MODES, MAIN_PART_SCORE_MODES } from "@/domain/training/model";
+import { MAIN_PART_EVERY_UNITS, MAIN_PART_PROGRAMMING_MODES, MAIN_PART_SCORE_MODES, PARTNER_WORK_MODES } from "@/domain/training/model";
 import { updateTrainingMainPartProgramming } from "@/server/training/training-main-part-programming-repository";
 import { mainPartProgrammingSchema } from "@/server/training/training-draft-schema";
 
@@ -31,6 +31,11 @@ const formSchema = z.object({
     (value) => value === "" || value == null ? undefined : value,
     z.enum(MAIN_PART_EVERY_UNITS).optional(),
   ),
+  partnerMode: z.preprocess(
+    (value) => value === "" || value == null ? undefined : value,
+    z.enum(PARTNER_WORK_MODES).optional(),
+  ),
+  partnerSwitchSeconds: optionalInteger(5, 1800),
 });
 
 export async function updateTrainingMainPartProgrammingAction(formData: FormData): Promise<void> {
@@ -48,6 +53,8 @@ export async function updateTrainingMainPartProgrammingAction(formData: FormData
     ladderStep: formData.get("ladderStep"),
     everyValue: formData.get("everyValue"),
     everyUnit: formData.get("everyUnit"),
+    partnerMode: formData.get("partnerMode"),
+    partnerSwitchSeconds: formData.get("partnerSwitchSeconds"),
   });
   if (!parsed.success) redirect(`/training/${fallbackId}?error=programming`);
 
@@ -62,6 +69,8 @@ export async function updateTrainingMainPartProgrammingAction(formData: FormData
     ladderStep: parsed.data.ladderStep,
     everyValue: parsed.data.everyValue,
     everyUnit: parsed.data.everyUnit,
+    partnerMode: parsed.data.partnerMode,
+    partnerSwitchSeconds: parsed.data.partnerSwitchSeconds,
   });
   if (!programming.success) redirect(`/training/${parsed.data.sessionId}?error=programming`);
 

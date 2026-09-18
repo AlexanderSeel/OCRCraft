@@ -4,10 +4,12 @@ import { useState } from "react";
 import {
   MAIN_PART_EVERY_UNITS,
   MAIN_PART_PROGRAMMING_MODES,
+  PARTNER_WORK_MODES,
   type MainPartEveryUnit,
   type MainPartProgramming,
   type MainPartProgrammingMode,
   type MainPartScoreMode,
+  type PartnerWorkMode,
 } from "@/domain/training/model";
 import { updateTrainingMainPartProgrammingAction } from "@/app/training/[id]/programming-action";
 import { Disclosure } from "@/components/ui/disclosure";
@@ -18,6 +20,13 @@ interface PersistedMainPartProgrammingFormProps {
   readonly title: string;
   readonly initialProgramming?: MainPartProgramming | null;
 }
+
+const partnerModeLabels: Readonly<Record<PartnerWorkMode, string>> = {
+  "you-go-i-go": "You-go-I-go",
+  synchronized: "Synchron",
+  alternating: "Alternierend",
+  "shared-target": "Gemeinsames Ziel",
+};
 
 const modeLabels: Readonly<Record<MainPartProgrammingMode, string>> = {
   standard: "Standard / frei",
@@ -39,20 +48,26 @@ export function PersistedMainPartProgrammingForm({
   const [programming, setProgramming] = useState<MainPartProgramming>(initialProgramming ?? { mode: "standard" });
 
   function setMode(mode: MainPartProgrammingMode) {
-    if (mode === "interval") return setProgramming({ mode, workSeconds: 40, restSeconds: 20 });
-    if (mode === "rounds") return setProgramming({ mode, rounds: 3, scoreMode: "quality" });
-    if (mode === "ladder") return setProgramming({ mode, ladderStart: 2, ladderEnd: 10, ladderStep: 2 });
-    if (mode === "reverse-ladder") return setProgramming({ mode, ladderStart: 10, ladderEnd: 2, ladderStep: 2 });
-    if (mode === "pyramid") return setProgramming({ mode, ladderStart: 2, ladderEnd: 10, ladderStep: 2 });
-    if (mode === "every") return setProgramming({ mode, everyValue: 500, everyUnit: "metres" });
-    setProgramming({ mode });
+    const partner = {
+      partnerMode: programming.partnerMode,
+      partnerSwitchSeconds: programming.partnerMode === "alternating"
+        ? programming.partnerSwitchSeconds ?? 30
+        : undefined,
+    };
+    if (mode === "interval") return setProgramming({ mode, workSeconds: 40, restSeconds: 20, ...partner });
+    if (mode === "rounds") return setProgramming({ mode, rounds: 3, scoreMode: "quality", ...partner });
+    if (mode === "ladder") return setProgramming({ mode, ladderStart: 2, ladderEnd: 10, ladderStep: 2, ...partner });
+    if (mode === "reverse-ladder") return setProgramming({ mode, ladderStart: 10, ladderEnd: 2, ladderStep: 2, ...partner });
+    if (mode === "pyramid") return setProgramming({ mode, ladderStart: 2, ladderEnd: 10, ladderStep: 2, ...partner });
+    if (mode === "every") return setProgramming({ mode, everyValue: 500, everyUnit: "metres", ...partner });
+    setProgramming({ mode, ...partner });
   }
 
   return (
     <Disclosure
       className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]"
       summaryClassName="px-4 py-3 text-sm font-black"
-      summary={`${title} programmieren${programming.mode !== "standard" ? ` · ${shortLabel(programming)}` : ""}`}
+      summary={`${title} programmieren${programming.mode !== "standard" || programming.partnerMode ? ` · ${shortLabel(programming)}` : ""}`}
     >
       <form action={updateTrainingMainPartProgrammingAction} className="grid gap-3 border-t border-[var(--border)] p-4">
         <input name="sessionId" type="hidden" value={sessionId} />
@@ -125,6 +140,39 @@ export function PersistedMainPartProgrammingForm({
           <p className="text-xs leading-5 text-[var(--muted)]">Die Übungen dieses Hauptteils werden nacheinander vollständig abgearbeitet.</p>
         ) : null}
 
+        {programming.partnerMode ? (
+          <div className="grid gap-3 border-t border-[var(--border)] pt-3 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-xs font-bold">
+              Partner-Arbeitsweise
+              <select
+                className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                name="partnerMode"
+                onChange={(event) => {
+                  const partnerMode = event.target.value as PartnerWorkMode;
+                  setProgramming({
+                    ...programming,
+                    partnerMode,
+                    partnerSwitchSeconds: partnerMode === "alternating" ? programming.partnerSwitchSeconds ?? 30 : undefined,
+                  });
+                }}
+                value={programming.partnerMode}
+              >
+                {PARTNER_WORK_MODES.map((mode) => <option key={mode} value={mode}>{partnerModeLabels[mode]}</option>)}
+              </select>
+            </label>
+            {programming.partnerMode === "alternating" ? (
+              <NumberInput
+                label="Wechsel alle (Sek.)"
+                max={1800}
+                min={5}
+                name="partnerSwitchSeconds"
+                onChange={(partnerSwitchSeconds) => setProgramming({ ...programming, partnerSwitchSeconds })}
+                value={programming.partnerSwitchSeconds ?? 30}
+              />
+            ) : null}
+          </div>
+        ) : null}
+
         <div className="flex justify-end">
           <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-4 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
             Hauptteil-Programmierung speichern
@@ -165,14 +213,24 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function shortLabel(programming: MainPartProgramming): string {
-  if (programming.mode === "interval") return `${programming.workSeconds ?? 0}/${programming.restSeconds ?? 0}s`;
-  if (programming.mode === "rounds") return `${programming.rounds ?? 1} Runden`;
-  if (programming.mode === "ladder") return `Ladder ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}`;
-  if (programming.mode === "reverse-ladder") return `Reverse ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}`;
-  if (programming.mode === "pyramid") return `Pyramide bis ${programming.ladderEnd ?? 1}`;
-  if (programming.mode === "chipper") return "Chipper";
-  if (programming.mode === "every") return programming.everyUnit === "checkpoint"
+  let base = "Standard";
+  if (programming.mode === "interval") base = `${programming.workSeconds ?? 0}/${programming.restSeconds ?? 0}s`;
+  else if (programming.mode === "rounds") base = `${programming.rounds ?? 1} Runden`;
+  else if (programming.mode === "ladder") base = `Ladder ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}`;
+  else if (programming.mode === "reverse-ladder") base = `Reverse ${programming.ladderStart ?? 1}→${programming.ladderEnd ?? 1}`;
+  else if (programming.mode === "pyramid") base = `Pyramide bis ${programming.ladderEnd ?? 1}`;
+  else if (programming.mode === "chipper") base = "Chipper";
+  else if (programming.mode === "every") base = programming.everyUnit === "checkpoint"
     ? `jeder ${programming.everyValue ?? 1}. Checkpoint`
     : `alle ${programming.everyValue ?? 1} ${programming.everyUnit === "minutes" ? "Min." : "m"}`;
-  return "Standard";
+
+  if (!programming.partnerMode) return base;
+  const partner = programming.partnerMode === "synchronized"
+    ? "synchron"
+    : programming.partnerMode === "alternating"
+      ? `Wechsel ${programming.partnerSwitchSeconds ?? 30}s`
+      : programming.partnerMode === "shared-target"
+        ? "gemeinsames Ziel"
+        : "You-go-I-go";
+  return `${base} · ${partner}`;
 }

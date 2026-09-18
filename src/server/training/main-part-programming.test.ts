@@ -96,4 +96,26 @@ describe("main-part programming", () => {
     expect(mainPartProgrammingLabel({ mode: "pyramid", ladderStart: 2, ladderEnd: 10, ladderStep: 2 })).toContain("Pyramide");
     expect(mainPartProgrammingLabel({ mode: "every", everyValue: 400, everyUnit: "metres" })).toBe("Alle 400 m");
   });
+  it("adds deterministic pair defaults and partner-facing labels", () => {
+    const partnerRequest = trainingDraftRequestSchema.parse({
+      ...request,
+      formats: ["partner"],
+      organizationMode: "team",
+      teamSize: 2,
+      participantCount: 9,
+      mainPartProgramming: [
+        { mode: "rounds", rounds: 3, scoreMode: "quality" },
+        { mode: "standard", partnerMode: "alternating", partnerSwitchSeconds: 45 },
+      ],
+    });
+    const result = applyMainPartProgramming(partnerRequest, draft);
+    const main = result.session.phases.find((phase) => phase.kind === "main");
+    expect(main?.items[0]?.programming?.partnerMode).toBe("you-go-i-go");
+    expect(main?.items[2]?.programming).toMatchObject({ partnerMode: "alternating", partnerSwitchSeconds: 45 });
+    expect(mainPartProgrammingLabel(main?.items[0]?.programming)).toContain("You-go-I-go");
+    expect(mainPartProgrammingLabel(main?.items[2]?.programming)).toContain("Wechsel alle 45s");
+    expect(result.warnings.some((warning) => warning.includes("keine vollständigen Paare"))).toBe(true);
+  });
+
+
 });

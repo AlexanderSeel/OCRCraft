@@ -5,6 +5,7 @@ import {
   MAIN_PART_EVERY_UNITS,
   MAIN_PART_PROGRAMMING_MODES,
   MAIN_PART_SCORE_MODES,
+  PARTNER_WORK_MODES,
   TRAINING_FORMATS,
   TRAINING_LOCATIONS,
   type Audience,
@@ -13,6 +14,7 @@ import {
   type MainPartProgramming,
   type MainPartProgrammingMode,
   type MainPartScoreMode,
+  type PartnerWorkMode,
   type TrainingEquipmentAvailability,
   type TrainingFormat,
   type TrainingLocation,
@@ -111,6 +113,7 @@ const ORGANIZATION_MODES = new Set<string>(["solo", "team"]);
 const PROGRAMMING_MODE_SET = new Set<string>(MAIN_PART_PROGRAMMING_MODES);
 const SCORE_MODE_SET = new Set<string>(MAIN_PART_SCORE_MODES);
 const EVERY_UNIT_SET = new Set<string>(MAIN_PART_EVERY_UNITS);
+const PARTNER_WORK_MODE_SET = new Set<string>(PARTNER_WORK_MODES);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function isAudience(value: string): value is Audience { return AUDIENCE_SET.has(value); }
@@ -124,6 +127,7 @@ function isOrganizationMode(value: string): value is TrainingOrganizationMode { 
 function isProgrammingMode(value: string): value is MainPartProgrammingMode { return PROGRAMMING_MODE_SET.has(value); }
 function isScoreMode(value: string | undefined): value is MainPartScoreMode { return value != null && SCORE_MODE_SET.has(value); }
 function isEveryUnit(value: string | undefined): value is MainPartEveryUnit { return value != null && EVERY_UNIT_SET.has(value); }
+function isPartnerWorkMode(value: string | undefined): value is PartnerWorkMode { return value != null && PARTNER_WORK_MODE_SET.has(value); }
 
 function boundedInteger(value: number | undefined, fallback: number, min: number, max: number): number {
   if (!Number.isFinite(value) || !Number.isInteger(value)) return fallback;
@@ -137,21 +141,31 @@ function normalizeMainPartExerciseCounts(values: readonly number[] | undefined, 
 
 function normalizeProgramming(value: MainPartProgramming | undefined): MainPartProgramming {
   const mode: MainPartProgrammingMode = value?.mode && isProgrammingMode(value.mode) ? value.mode : "standard";
-  if (mode === "interval") return { mode, workSeconds: boundedInteger(value?.workSeconds, 40, 5, 3600), restSeconds: boundedInteger(value?.restSeconds, 20, 0, 1800) };
-  if (mode === "rounds") return { mode, rounds: boundedInteger(value?.rounds, 3, 1, 50), scoreMode: isScoreMode(value?.scoreMode) ? value.scoreMode : "quality" };
+  const partnerMode = isPartnerWorkMode(value?.partnerMode) ? value.partnerMode : undefined;
+  const partner: Pick<MainPartProgramming, "partnerMode" | "partnerSwitchSeconds"> = partnerMode
+    ? {
+        partnerMode,
+        partnerSwitchSeconds: partnerMode === "alternating"
+          ? boundedInteger(value?.partnerSwitchSeconds, 30, 5, 1800)
+          : undefined,
+      }
+    : {};
+
+  if (mode === "interval") return { mode, workSeconds: boundedInteger(value?.workSeconds, 40, 5, 3600), restSeconds: boundedInteger(value?.restSeconds, 20, 0, 1800), ...partner };
+  if (mode === "rounds") return { mode, rounds: boundedInteger(value?.rounds, 3, 1, 50), scoreMode: isScoreMode(value?.scoreMode) ? value.scoreMode : "quality", ...partner };
   if (mode === "ladder") {
-    const start = boundedInteger(value?.ladderStart, 2, 1, 100);
-    const end = Math.max(start + 1, boundedInteger(value?.ladderEnd, 10, 1, 200));
-    return { mode, ladderStart: start, ladderEnd: end, ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50) };
+    const ladderStart = boundedInteger(value?.ladderStart, 2, 1, 100);
+    const ladderEnd = Math.max(ladderStart + 1, boundedInteger(value?.ladderEnd, 10, 1, 200));
+    return { mode, ladderStart, ladderEnd, ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50), ...partner };
   }
   if (mode === "reverse-ladder") {
-    const start = boundedInteger(value?.ladderStart, 10, 2, 200);
-    const end = Math.min(start - 1, boundedInteger(value?.ladderEnd, 2, 1, 199));
-    return { mode, ladderStart: start, ladderEnd: end, ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50) };
+    const ladderStart = boundedInteger(value?.ladderStart, 10, 2, 200);
+    const ladderEnd = Math.min(ladderStart - 1, boundedInteger(value?.ladderEnd, 2, 1, 199));
+    return { mode, ladderStart, ladderEnd, ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50), ...partner };
   }
-  if (mode === "pyramid") return { mode, ladderStart: boundedInteger(value?.ladderStart, 2, 1, 100), ladderEnd: boundedInteger(value?.ladderEnd, 10, 2, 200), ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50) };
-  if (mode === "every") return { mode, everyValue: boundedInteger(value?.everyValue, 500, 1, 10000), everyUnit: isEveryUnit(value?.everyUnit) ? value.everyUnit : "metres" };
-  return { mode };
+  if (mode === "pyramid") return { mode, ladderStart: boundedInteger(value?.ladderStart, 2, 1, 100), ladderEnd: boundedInteger(value?.ladderEnd, 10, 2, 200), ladderStep: boundedInteger(value?.ladderStep, 2, 1, 50), ...partner };
+  if (mode === "every") return { mode, everyValue: boundedInteger(value?.everyValue, 500, 1, 10000), everyUnit: isEveryUnit(value?.everyUnit) ? value.everyUnit : "metres", ...partner };
+  return { mode, ...partner };
 }
 
 function normalizeMainPartProgramming(values: readonly MainPartProgramming[] | undefined, mainPartCount: number): readonly MainPartProgramming[] {
