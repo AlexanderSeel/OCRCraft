@@ -143,7 +143,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - Training CRUD, Phasen, Items, Level 1–3, Alternativen, Reorder, Duplicate/Combine und gespeicherte Builderbedingungen.
 - Gruppen-Grundmodell, Lauf-/OCR-Formate, Team-/Stationskapazität, Übergangszeiten und strukturierte Hauptteilprogrammierung.
 - OpenAI-`gpt-image-2`-Bildpipeline mit Dry Run, stabilen Seed-Dateinamen, Quellen-/Reviewmetadaten und S3-Abstraktion.
-- Wiederverwendbare Dialog-/Disclosure-Komponenten mit Fokusmanagement, Escape, Fokusfalle, Scroll-Lock, sichtbarem Fokus und konsistenten Panels.
+- Wiederverwendbare Dialog-/Disclosure-Komponenten mit Fokusmanagement, Escape, Fokusfalle, Scroll-Lock, sichtbarem Fokus und konsistenten Panels; große Katalogfilter öffnen als zentrierte Dialoge statt im Sidepanel zu wachsen.
 - Einklappbare Hauptnavigation mit persistiertem Icon-Modus, semantischen SVG-Menüicons und wiederverwendbarem Filter-Sidepanel; Übungs-, Medien- und Hinderniskatalog nutzen beide Muster mit responsiv begrenzten Eingaben und Popovern.
 - Gemeinsamer Administrationsbereich mit Tabs für Übersicht, Datenbank, Datenqualität und Einstellungen; doppelte Settings-/Admin-Navigation entfernt.
 - Dynamischer Vollständigkeitsbericht für Seed-Bestand und gesamten Übungskatalog sowie Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes.

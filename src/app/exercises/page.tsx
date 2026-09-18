@@ -3,8 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
 import { MuscleMap } from "@/components/body/muscle-map";
-import { Disclosure } from "@/components/ui/disclosure";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
+import { ExerciseFilterPopover } from "@/components/exercises/exercise-filter-popover";
 import { expandBodyRegionIds } from "@/domain/body-regions";
 import {
   exerciseCategoryLabels,
@@ -151,12 +151,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           </button>
 
           <div className="relative">
-            <Disclosure className="group" summaryClassName="flex min-h-11 items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black" summary={
-              <>
-                <span>Muskelgruppen{selectedMuscles.length ? ` · ${selectedMuscles.length} gewählt` : ""}</span><span aria-hidden="true">⌄</span>
-              </>
-            }>
-              <div className="absolute left-0 top-14 z-40 max-h-[min(60vh,30rem)] w-full max-w-full overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-2 shadow-[var(--shadow-raised)]">
+            <ExerciseFilterPopover count={selectedMuscles.length} title="Muskelgruppen">
               <MuscleMap
                 compact
                 key={selectedMuscles.join(",") || "none"}
@@ -167,20 +162,15 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                 title="Muskel- & Körperregionen"
                 value={selectedMuscles.map((id) => ({ id }))}
               />
-              </div>
-            </Disclosure>
+            </ExerciseFilterPopover>
             {selectedMuscles.length ? <div className="mt-2 flex flex-wrap gap-2">{selectedMuscles.map((id) => { const label = bodyRegionOptions.find((option) => option.id === id)?.labelDe ?? id; return <Link className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-bold" href={removeMuscleHref(params, id)} key={id}>{label}<span aria-hidden="true">×</span><span className="sr-only">{label} entfernen</span></Link>; })}</div> : null}
           </div>
           <div className="relative">
-            <Disclosure className="group" summaryClassName="flex min-h-11 items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black" summary={
-              <>
-                <span>Trainingsfacetten{selectedFacets.length ? ` · ${selectedFacets.length} gewählt` : ""}</span><span aria-hidden="true">⌄</span>
-              </>
-            }>
-              <div className="absolute left-0 right-0 top-14 z-40 grid max-h-60 grid-cols-1 gap-1.5 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-2 shadow-[var(--shadow-raised)]">
+            <ExerciseFilterPopover count={selectedFacets.length} title="Trainingsfacetten">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {tagOptions.map((tag) => <label className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-2 py-2 text-xs font-bold" key={tag.id}><input defaultChecked={selectedFacets.includes(tag.id)} name="facet" type="checkbox" value={tag.id} />{tag.labelDe}</label>)}
               </div>
-            </Disclosure>
+            </ExerciseFilterPopover>
             {selectedFacets.length ? <div className="mt-2 flex flex-wrap gap-2">{selectedFacets.map((id) => { const label = tagOptions.find((option) => option.id === id)?.labelDe ?? id; return <Link className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-bold" href={removeFacetHref(params, id)} key={id}>{label}<span aria-hidden="true">×</span><span className="sr-only">{label} entfernen</span></Link>; })}</div> : null}
           </div>
         </form>
