@@ -109,7 +109,7 @@ export async function getDuplicateComparisonRecords(
           FROM exercise_body_regions ebr WHERE ebr.exercise_id=e.id), ''),
         COALESCE(d.purpose, ''), COALESCE(d.setup, ''), COALESCE(d.safety_notes, ''),
         (SELECT m.storage_uri FROM exercise_media_assets m
-          WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
+          WHERE m.exercise_id=e.id AND m.generation_status='generated' AND (m.review_status IS NULL OR m.review_status<>'rejected')
           ORDER BY m.created_at DESC, m.id DESC LIMIT 1)
       FROM exercises e
       LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
