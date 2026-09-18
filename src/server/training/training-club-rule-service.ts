@@ -44,8 +44,8 @@ export function filterCandidatesForClubRules(
   return candidates.filter((candidate) =>
     !restricted.has(candidate.id)
     && (rules.safetyMinimumAge == null
-      || candidate.minimumAge == null
-      || candidate.minimumAge <= rules.safetyMinimumAge)
+      || candidate.minAge == null
+      || candidate.minAge <= rules.safetyMinimumAge)
     && riskAllowedByClubRules(candidate.riskLevel, rules)
     && impactAllowedByClubRules(
       effectiveAudience,
