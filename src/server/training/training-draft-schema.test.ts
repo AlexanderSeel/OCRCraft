@@ -21,6 +21,17 @@ describe("training draft request equipment, obstacles, groups and location", () 
     expect(parsed.location).toBe("mixed");
   });
 
+  it("accepts a valid group id and rejects malformed group ids", () => {
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      groupId: "11111111-1111-4111-8111-111111111111",
+    }).success).toBe(true);
+    expect(trainingDraftRequestSchema.safeParse({
+      ...request,
+      groupId: "group-kids",
+    }).success).toBe(false);
+  });
+
   it("accepts explicit indoor/outdoor location and rejects unknown values", () => {
     expect(trainingDraftRequestSchema.safeParse({ ...request, location: "indoor" }).success).toBe(true);
     expect(trainingDraftRequestSchema.safeParse({ ...request, location: "outdoor" }).success).toBe(true);
