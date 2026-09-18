@@ -75,7 +75,7 @@ export async function withDuckDbReadConnection<T>(
     const connection = await instance.connect();
     try { return await operation(connection); }
     finally { connection.closeSync(); instance.closeSync(); }
-  }, 1_500);
+  }, 10_000);
 }
 
 interface LockHandle {
