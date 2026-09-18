@@ -5,6 +5,7 @@ import {
   listMediaCatalog,
   type MediaCatalogItem,
 } from "@/server/media/media-catalog-repository";
+import { updateMediaReviewStatusAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,8 @@ interface PageProps {
     generation?: string;
     source?: string;
     type?: string;
+    reviewSaved?: string;
+    reviewError?: string;
   }>;
 }
 
@@ -53,6 +56,16 @@ export default async function MediaPage({ searchParams }: PageProps) {
       )}
     >
       <div className="space-y-6">
+        {params.reviewSaved ? (
+          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            Medienreview gespeichert: {reviewLabel(params.reviewSaved)}.
+          </p>
+        ) : null}
+        {params.reviewError ? (
+          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+            Reviewstatus konnte nicht gespeichert werden.
+          </p>
+        ) : null}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
           <Metric label="Gesamt" value={summary.total} />
           <Metric label="Generiert" value={summary.generated} />
@@ -168,7 +181,26 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
         {asset.errorMessage ? <p className="rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs font-bold text-[var(--danger)]">{asset.errorMessage}</p> : null}
 
         <div className="flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
-          <Link className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" href={`/exercises/${asset.exerciseId}`}>
+          <form action={updateMediaReviewStatusAction} className="flex flex-wrap gap-2">
+            <input name="assetId" type="hidden" value={asset.id} />
+            <input name="exerciseId" type="hidden" value={asset.exerciseId} />
+            {asset.reviewStatus !== "approved" ? (
+              <button className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" name="reviewStatus" type="submit" value="approved">
+                Freigeben
+              </button>
+            ) : null}
+            {asset.reviewStatus !== "rejected" ? (
+              <button className="rounded-lg border border-[var(--danger)] px-3 py-2 text-xs font-black text-[var(--danger)]" name="reviewStatus" type="submit" value="rejected">
+                Ablehnen
+              </button>
+            ) : null}
+            {asset.reviewStatus !== "pending" ? (
+              <button className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" name="reviewStatus" type="submit" value="pending">
+                Review öffnen
+              </button>
+            ) : null}
+          </form>
+          <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/exercises/${asset.exerciseId}`}>
             Übung öffnen
           </Link>
           <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/exercises/${asset.exerciseId}/edit`}>
