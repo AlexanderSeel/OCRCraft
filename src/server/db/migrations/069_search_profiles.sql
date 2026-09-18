@@ -16,6 +16,12 @@ CREATE TABLE IF NOT EXISTS search_profiles (
   updated_at TIMESTAMP NOT NULL DEFAULT current_timestamp
 );
 
+ALTER TABLE search_profiles ADD COLUMN IF NOT EXISTS summary_weight INTEGER DEFAULT 20;
+ALTER TABLE search_profiles ADD COLUMN IF NOT EXISTS taxonomy_weight INTEGER DEFAULT 25;
+ALTER TABLE search_profiles ADD COLUMN IF NOT EXISTS body_regions_weight INTEGER DEFAULT 25;
+ALTER TABLE search_profiles ADD COLUMN IF NOT EXISTS equipment_weight INTEGER DEFAULT 20;
+ALTER TABLE search_profiles ADD COLUMN IF NOT EXISTS instructions_weight INTEGER DEFAULT 10;
+
 INSERT INTO search_profiles (
   name,is_active,exact_weight,prefix_weight,alias_weight,summary_weight,
   taxonomy_weight,body_regions_weight,equipment_weight,instructions_weight
