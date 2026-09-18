@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   defaultProviderBaseUrl,
+  evaluateAiProviderRoutingState,
   evaluateAiUsageLimits,
   providerProtocol,
   providerSupportsCapability,
@@ -29,6 +30,44 @@ describe("AI provider routing core", () => {
     expect(providerSupportsOAuth("copilot")).toBe(true);
     expect(providerSupportsOAuth("openai")).toBe(false);
     expect(providerSupportsOAuth("anthropic")).toBe(false);
+  });
+
+  it("reports why a provider is not route-ready", () => {
+    const base = {
+      enabled: true,
+      providerKind: "openai" as const,
+      authMode: "environment" as const,
+      environmentKeyAvailable: true,
+      hasStoredApiKey: false,
+      hasOAuthCredential: false,
+      capabilities: ["training"] as const,
+      textModelId: "gpt-5.6-sol",
+      imageModelId: null,
+      requestLimitReached: false,
+      textTokenLimitReached: false,
+    };
+    expect(evaluateAiProviderRoutingState(base)).toBe("ready");
+    expect(evaluateAiProviderRoutingState({ ...base, environmentKeyAvailable: false })).toBe("auth_missing");
+    expect(evaluateAiProviderRoutingState({ ...base, requestLimitReached: true })).toBe("limit_reached");
+    expect(evaluateAiProviderRoutingState({ ...base, textModelId: null })).toBe("model_missing");
+    expect(evaluateAiProviderRoutingState({ ...base, capabilities: [] })).toBe("unassigned");
+    expect(evaluateAiProviderRoutingState({ ...base, enabled: false })).toBe("inactive");
+  });
+
+  it("allows unauthenticated local OpenAI-compatible endpoints", () => {
+    expect(evaluateAiProviderRoutingState({
+      enabled: true,
+      providerKind: "openai-compatible",
+      authMode: "environment",
+      environmentKeyAvailable: false,
+      hasStoredApiKey: false,
+      hasOAuthCredential: false,
+      capabilities: ["exercise_draft"],
+      textModelId: "local-model",
+      imageModelId: null,
+      requestLimitReached: false,
+      textTokenLimitReached: false,
+    })).toBe("ready");
   });
 
   it("treats text token budgets as token counts rather than currency", () => {

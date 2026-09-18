@@ -9,6 +9,7 @@ import {
   defaultImageModel,
   defaultProviderBaseUrl,
   defaultProviderKeyEnvironment,
+  evaluateAiProviderRoutingState,
   evaluateAiUsageLimits,
   providerKindLabel,
   providerProtocol,
@@ -18,6 +19,7 @@ import {
   type AiProviderAuthMode,
   type AiProviderKind,
   type AiProviderProtocol,
+  type AiProviderRoutingState,
 } from "./ai-provider-core";
 import {
   getGoogleAiProjectId,
@@ -70,6 +72,7 @@ export interface AiProviderSettingsView {
   readonly usage: AiProviderUsageSummary;
   readonly assignments: readonly AiProviderAssignmentView[];
   readonly keyStorageAvailable: boolean;
+  readonly routingState: AiProviderRoutingState;
 }
 
 export interface ResolvedAiProvider {
@@ -212,28 +215,59 @@ export async function listAiProviderSettings(): Promise<readonly AiProviderSetti
       const id = String(row[0]);
       const providerKind = aiProviderKindSchema.parse(String(row[1]));
       const envName = row[9] == null ? null : String(row[9]);
+      const authMode = String(row[8]) as AiProviderAuthMode;
+      const hasStoredApiKey = Boolean(row[10]);
+      const hasOAuthCredential = Boolean(row[11]);
+      const environmentKeyAvailable = Boolean(envName && process.env[envName]?.trim());
+      const monthlyTextTokenLimit = numberOrNull(row[13]);
+      const monthlyRequestLimit = numberOrNull(row[14]);
+      const usage = usageFromRow(row, 15);
+      const providerAssignments = assignments.get(id) ?? [];
+      const limits = evaluateAiUsageLimits({
+        requests: usage.requests,
+        totalTokens: usage.totalTokens,
+        monthlyRequestLimit,
+        monthlyTextTokenLimit,
+      });
+      const textModelId = row[6] == null ? null : String(row[6]);
+      const imageModelId = row[7] == null ? defaultImageModel(providerKind) : String(row[7]);
+      const enabled = Boolean(row[4]);
+
       return {
         id,
         providerKind,
         protocol: String(row[2]) as AiProviderProtocol,
         displayName: String(row[3]),
-        enabled: Boolean(row[4]),
+        enabled,
         baseUrl: row[5] == null ? defaultProviderBaseUrl(providerKind) : String(row[5]),
-        textModelId: row[6] == null ? null : String(row[6]),
-        imageModelId: row[7] == null ? defaultImageModel(providerKind) : String(row[7]),
-        authMode: String(row[8]) as AiProviderAuthMode,
+        textModelId,
+        imageModelId,
+        authMode,
         apiKeyEnv: envName,
-        hasStoredApiKey: Boolean(row[10]),
-        environmentKeyAvailable: Boolean(envName && process.env[envName]?.trim()),
+        hasStoredApiKey,
+        environmentKeyAvailable,
         oauthSupported: providerSupportsOAuth(providerKind),
         oauthClientConfigured: isAiProviderOAuthClientConfigured(providerKind) && canStoreAiProviderSecret(),
-        hasOAuthCredential: Boolean(row[11]),
+        hasOAuthCredential,
         oauthExpiresAt: row[12] == null ? null : String(row[12]),
-        monthlyTextTokenLimit: numberOrNull(row[13]),
-        monthlyRequestLimit: numberOrNull(row[14]),
-        usage: usageFromRow(row, 15),
-        assignments: assignments.get(id) ?? [],
+        monthlyTextTokenLimit,
+        monthlyRequestLimit,
+        usage,
+        assignments: providerAssignments,
         keyStorageAvailable: canStoreAiProviderSecret(),
+        routingState: evaluateAiProviderRoutingState({
+          enabled,
+          providerKind,
+          authMode,
+          environmentKeyAvailable,
+          hasStoredApiKey,
+          hasOAuthCredential,
+          capabilities: providerAssignments.map((assignment) => assignment.capability),
+          textModelId,
+          imageModelId,
+          requestLimitReached: limits.requestLimitReached,
+          textTokenLimitReached: limits.textTokenLimitReached,
+        }),
       };
     });
   });

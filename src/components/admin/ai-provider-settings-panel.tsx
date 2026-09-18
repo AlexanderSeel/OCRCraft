@@ -5,6 +5,7 @@ import { Dialog } from "@/components/ui/dialog";
 import {
   aiCapabilityLabel,
   aiPriorityLabel,
+  aiProviderRoutingStateLabel,
   defaultImageModel,
   defaultProviderBaseUrl,
   defaultProviderKeyEnvironment,
@@ -16,7 +17,7 @@ import {
   type AiProviderKind,
 } from "@/server/ai/ai-provider-core";
 import type { AiProviderSettingsView } from "@/server/ai/ai-provider-settings-repository";
-import type { AiModelOption } from "@/server/ai/ai-model-discovery";
+import { getKnownAiModels, type AiModelOption } from "@/server/ai/ai-model-catalog";
 
 interface Props {
   readonly providers: readonly AiProviderSettingsView[];
@@ -162,10 +163,8 @@ export function AiProviderSettingsPanel({
                       : <span>{provider.environmentKeyAvailable ? "ENV verfügbar" : "ENV fehlt"}</span>}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={provider.enabled
-                    ? "rounded-full bg-[var(--success-bg)] px-2.5 py-1 text-xs font-black text-[var(--success-foreground)]"
-                    : "rounded-full bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-black text-[var(--muted)]"}>
-                    {provider.enabled ? "Aktiv" : "Inaktiv"}
+                  <span className={routingStateClassName(provider.routingState)}>
+                    {aiProviderRoutingStateLabel(provider.routingState)}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
@@ -224,8 +223,13 @@ function AiProviderEditor({
   const [authMode, setAuthMode] = useState<AiProviderAuthMode>(provider?.authMode ?? "environment");
   const [apiKeyEnv, setApiKeyEnv] = useState(provider?.apiKeyEnv ?? defaultProviderKeyEnvironment(initialKind) ?? "");
   const [apiKey, setApiKey] = useState("");
-  const [models, setModels] = useState<readonly AiModelOption[]>([]);
+  const [models, setModels] = useState<readonly AiModelOption[]>(getKnownAiModels(initialKind));
   const [modelWarning, setModelWarning] = useState<string | null>(null);
+  const [modelCheck, setModelCheck] = useState<string | null>(
+    getKnownAiModels(initialKind).length > 0
+      ? String(getKnownAiModels(initialKind).length) + " bekannte Modelle verfügbar"
+      : null,
+  );
   const [loadingModels, setLoadingModels] = useState(false);
   const supportsImage = providerSupportsCapability(providerKind, "image");
   const supportsOAuth = providerSupportsOAuth(providerKind);
@@ -236,8 +240,10 @@ function AiProviderEditor({
     setBaseUrl(defaultProviderBaseUrl(next) ?? "");
     setApiKeyEnv(defaultProviderKeyEnvironment(next) ?? "");
     if (!providerSupportsOAuth(next) && authMode === "oauth") setAuthMode("environment");
-    setModels([]);
+    const known = getKnownAiModels(next);
+    setModels(known);
     setModelWarning(null);
+    setModelCheck(known.length > 0 ? String(known.length) + " bekannte Modelle verfügbar" : null);
   }
 
   async function loadModels() {
@@ -259,13 +265,21 @@ function AiProviderEditor({
       const payload = await response.json() as {
         readonly models?: readonly AiModelOption[];
         readonly warning?: string | null;
+        readonly live?: boolean;
         readonly message?: string;
       };
       if (!response.ok) throw new Error(payload.message || "Modelle konnten nicht geladen werden.");
-      setModels(payload.models ?? []);
+      const nextModels = payload.models ?? [];
+      setModels(nextModels);
       setModelWarning(payload.warning ?? null);
+      setModelCheck(payload.live
+        ? "Verbindung erfolgreich · " + String(nextModels.filter((model) => model.source === "live").length) + " Modelle live geladen"
+        : nextModels.length > 0
+          ? "Live-Verbindung nicht verfügbar · bekannte Modelle bleiben auswählbar"
+          : "Keine Modelle verfügbar");
     } catch (error) {
       setModelWarning(error instanceof Error ? error.message : "Modelle konnten nicht geladen werden.");
+      setModelCheck("Verbindungsprüfung fehlgeschlagen");
     } finally {
       setLoadingModels(false);
     }
@@ -321,15 +335,16 @@ function AiProviderEditor({
           {providerKind !== "openai-compatible" ? <span className="text-xs font-normal text-[var(--muted)]">{providerKind === "copilot" ? "Der offizielle Copilot SDK verwaltet den Endpunkt." : "Standard-URL wird automatisch verwaltet."}</span> : null}
         </label>
         <div className="grid content-start gap-2">
-          <span className="text-sm font-bold">Verfügbare Modelle</span>
+          <span className="text-sm font-bold">Verbindung und Modelle</span>
           <button
             className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black"
             disabled={loadingModels}
             onClick={loadModels}
             type="button"
           >
-            {loadingModels ? "Modelle werden geladen …" : "Modelle vom Provider abrufen"}
+            {loadingModels ? "Provider wird geprüft …" : "Verbindung prüfen & Modelle aktualisieren"}
           </button>
+          {modelCheck ? <span className="text-xs font-bold text-[var(--foreground)]">{modelCheck}</span> : null}
           {modelWarning ? <span className="text-xs text-[var(--warning)]">{modelWarning}</span> : null}
         </div>
       </div>
@@ -587,6 +602,16 @@ function ErrorNotice({ code }: { readonly code: string }) {
             ? "Die AI-Konfiguration ist unvollständig. Prüfe Modelle, URL und Funktionszuweisungen."
             : "AI-Einstellungen konnten nicht gespeichert werden.";
   return <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">{message}</p>;
+}
+
+function routingStateClassName(state: AiProviderSettingsView["routingState"]): string {
+  if (state === "ready") {
+    return "rounded-full bg-[var(--success-bg)] px-2.5 py-1 text-xs font-black text-[var(--success-foreground)]";
+  }
+  if (state === "inactive" || state === "unassigned") {
+    return "rounded-full bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-black text-[var(--muted)]";
+  }
+  return "rounded-full bg-[var(--danger-bg)] px-2.5 py-1 text-xs font-black text-[var(--danger)]";
 }
 
 function formatNumber(value: number): string {
