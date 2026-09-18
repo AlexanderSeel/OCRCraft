@@ -57,12 +57,14 @@ export async function createExerciseAction(
 
   let id: string;
   try {
-    id = await createExercise(validation.draft);
+    const initialExerciseType = formData.get("initialExerciseType") === "game" ? "game" : "drill";
+    id = await createExercise(validation.draft, initialExerciseType);
   } catch {
     return { message: "Die Übung konnte nicht gespeichert werden." };
   }
 
   revalidatePath("/exercises");
+  revalidatePath("/games");
   redirect(`/exercises/${id}/edit?created=1`);
 }
 
@@ -82,6 +84,7 @@ export async function updateExerciseAction(
   }
 
   revalidatePath("/exercises");
+  revalidatePath("/games");
   revalidatePath(`/exercises/${id}/edit`);
   redirect(`/exercises/${id}/edit?saved=1`);
 }
@@ -93,6 +96,7 @@ export async function setExerciseArchivedAction(
   await requireTrainer();
   await setExerciseArchived(id, archived);
   revalidatePath("/exercises");
+  revalidatePath("/games");
   revalidatePath(`/exercises/${id}/edit`);
   redirect(archived ? "/exercises" : `/exercises/${id}/edit?restored=1`);
 }

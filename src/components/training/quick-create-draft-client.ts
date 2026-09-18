@@ -25,6 +25,7 @@ export type QuickCreateBuilderMode = "local" | "ai";
 export type DraftAlternativeMode = "easier" | "harder" | "equipment";
 
 export interface QuickCreateDraftClientInput {
+  readonly templateKey?: string;
   readonly groupId?: string;
   readonly groupType: string;
   readonly ageRange: string;
@@ -61,6 +62,7 @@ export interface ParsedAgeRange {
 }
 
 export interface NormalizedTrainingDraftRequest {
+  readonly templateKey?: string;
   readonly groupId?: string;
   readonly audience: Audience;
   readonly participantCount: number;
@@ -169,6 +171,8 @@ export function parseAgeRange(value: string): ParsedAgeRange {
 }
 
 export function normalizeTrainingDraftRequest(input: QuickCreateDraftClientInput): NormalizedTrainingDraftRequest {
+  const templateKey = input.templateKey?.trim();
+  const normalizedTemplateKey = templateKey && /^[a-z0-9][a-z0-9-]{2,79}$/.test(templateKey) ? templateKey : undefined;
   const audience: Audience = isAudience(input.groupType) ? input.groupType : "mixed";
   const participantCount = boundedInteger(input.participantCount, 1, 1, 200);
   const bodyRegions = [...new Set(input.bodyRegions.filter(isBodyRegion))];
@@ -202,6 +206,7 @@ export function normalizeTrainingDraftRequest(input: QuickCreateDraftClientInput
   }
 
   return {
+    ...(normalizedTemplateKey ? { templateKey: normalizedTemplateKey } : {}),
     groupId: input.groupId && UUID_PATTERN.test(input.groupId) ? input.groupId : undefined,
     audience,
     participantCount,

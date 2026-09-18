@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { QuickCreateWizard } from "@/components/training/quick-create-wizard";
+import { getTrainingTemplateByKey } from "@/domain/training/training-template-catalog";
 import { listClubGroups } from "@/server/groups/group-repository";
 import {
   listTrainingEquipmentOptions,
@@ -9,7 +10,11 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default async function QuickCreatePage() {
+interface PageProps { readonly searchParams: Promise<{ template?: string }>; }
+
+export default async function QuickCreatePage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const initialTemplate = getTrainingTemplateByKey(params.template);
   const [equipmentOptions, obstacleOptions, groups] = await Promise.all([
     listTrainingEquipmentOptions(),
     listTrainingObstacleOptions(),
@@ -38,6 +43,20 @@ export default async function QuickCreatePage() {
       )}
     >
       <QuickCreateWizard
+        initialTemplate={initialTemplate ? {
+          key: initialTemplate.key,
+          title: initialTemplate.titleDe,
+          audience: initialTemplate.audience,
+          minAge: initialTemplate.minAge,
+          maxAge: initialTemplate.maxAge,
+          participantCount: initialTemplate.defaultParticipants,
+          durationMinutes: initialTemplate.durationMinutes,
+          goals: initialTemplate.goals,
+          bodyRegions: initialTemplate.bodyRegions,
+          formats: initialTemplate.formats,
+          location: initialTemplate.location,
+          intensity: initialTemplate.intensity,
+        } : undefined}
         equipmentOptions={equipmentOptions}
         obstacleOptions={obstacleOptions}
         groupPresets={groups.map((group) => ({

@@ -39,6 +39,7 @@ const goalOptions = [
   "Balance",
   "Koordination",
   "Mobility",
+  "Teamwork",
 ] as const;
 
 const formatOptions = [
@@ -60,6 +61,21 @@ const locationOptions = [
   ["indoor", "Indoor", "Nur Übungen verwenden, die für Indoor-Training geeignet sind"],
   ["outdoor", "Outdoor", "Nur Übungen verwenden, die für Outdoor-Training geeignet sind"],
 ] as const;
+
+export interface QuickCreateTemplatePreset {
+  readonly key: string;
+  readonly title: string;
+  readonly audience: "kids" | "youth" | "adults" | "mixed";
+  readonly minAge: number | null;
+  readonly maxAge: number | null;
+  readonly participantCount: number;
+  readonly durationMinutes: number;
+  readonly goals: readonly string[];
+  readonly bodyRegions: readonly string[];
+  readonly formats: readonly string[];
+  readonly location: "indoor" | "outdoor" | "mixed";
+  readonly intensity: "technique" | "balanced" | "conditioning";
+}
 
 export interface QuickCreateGroupPreset {
   readonly id: string;
@@ -83,6 +99,7 @@ export interface QuickCreateGroupPreset {
 }
 
 interface QuickCreateWizardProps {
+  readonly initialTemplate?: QuickCreateTemplatePreset;
   readonly equipmentOptions: readonly EquipmentAvailabilityOption[];
   readonly obstacleOptions?: readonly TrainingObstacleOption[];
   readonly groupPresets?: readonly QuickCreateGroupPreset[];
@@ -102,35 +119,40 @@ function equipmentStateFromCatalog(
   ));
 }
 
-function ageRangeForPreset(preset: QuickCreateGroupPreset): string {
-  if (preset.minAge != null && preset.maxAge != null) {
-    return preset.minAge === preset.maxAge
-      ? String(preset.minAge)
-      : `${preset.minAge}–${preset.maxAge}`;
-  }
-  if (preset.minAge != null) return `${preset.minAge}+`;
-  if (preset.maxAge != null) return `bis ${preset.maxAge}`;
+function ageRangeFromBounds(minAge: number | null, maxAge: number | null): string {
+  if (minAge != null && maxAge != null) return minAge === maxAge ? String(minAge) : `${minAge}–${maxAge}`;
+  if (minAge != null) return `${minAge}+`;
+  if (maxAge != null) return `bis ${maxAge}`;
   return "Offen";
 }
 
+function ageRangeForTemplate(template: QuickCreateTemplatePreset): string {
+  return ageRangeFromBounds(template.minAge, template.maxAge);
+}
+
+function ageRangeForPreset(preset: QuickCreateGroupPreset): string {
+  return ageRangeFromBounds(preset.minAge, preset.maxAge);
+}
+
 export function QuickCreateWizard({
+  initialTemplate,
   equipmentOptions,
   obstacleOptions = [],
   groupPresets = [],
 }: QuickCreateWizardProps) {
   const [step, setStep] = useState(1);
   const [selectedGroupId, setSelectedGroupId] = useState("");
-  const [groupType, setGroupType] = useState("mixed");
-  const [ageRange, setAgeRange] = useState("16+");
-  const [participantCount, setParticipantCount] = useState(16);
-  const [duration, setDuration] = useState(75);
+  const [groupType, setGroupType] = useState(initialTemplate?.audience ?? "mixed");
+  const [ageRange, setAgeRange] = useState(() => initialTemplate ? ageRangeForTemplate(initialTemplate) : "16+");
+  const [participantCount, setParticipantCount] = useState(initialTemplate?.participantCount ?? 16);
+  const [duration, setDuration] = useState(initialTemplate?.durationMinutes ?? 75);
   const [groupSplitCount, setGroupSplitCount] = useState<number | undefined>();
-  const [goals, setGoals] = useState<readonly string[]>(["Ganzkörper", "OCR-Technik"]);
-  const [bodyRegions, setBodyRegions] = useState<readonly string[]>(["forearms-grip", "core"]);
+  const [goals, setGoals] = useState<readonly string[]>(initialTemplate?.goals ?? ["Ganzkörper", "OCR-Technik"]);
+  const [bodyRegions, setBodyRegions] = useState<readonly string[]>(initialTemplate?.bodyRegions ?? ["forearms-grip", "core"]);
   const [avoidBodyRegions, setAvoidBodyRegions] = useState<readonly string[]>([]);
   const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>([]);
-  const [formats, setFormats] = useState<readonly string[]>(DEFAULT_FORMATS);
-  const [location, setLocation] = useState("mixed");
+  const [formats, setFormats] = useState<readonly string[]>(initialTemplate?.formats ?? DEFAULT_FORMATS);
+  const [location, setLocation] = useState(initialTemplate?.location ?? "mixed");
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
     equipmentStateFromCatalog(equipmentOptions),
   );
@@ -138,11 +160,11 @@ export function QuickCreateWizard({
   const [availableObstacleExerciseIds, setAvailableObstacleExerciseIds] = useState<readonly string[]>(() =>
     obstacleOptions.map((option) => option.id),
   );
-  const [intensity, setIntensity] = useState("balanced");
+  const [intensity, setIntensity] = useState(initialTemplate?.intensity ?? "balanced");
   const [draft, setDraft] = useState<TrainingDraft | null>(null);
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
-  const [sessionTitle, setSessionTitle] = useState("");
+  const [sessionTitle, setSessionTitle] = useState(initialTemplate?.title ?? "");
   const [persisting, setPersisting] = useState(false);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [persistedId, setPersistedId] = useState<string | null>(null);
@@ -219,6 +241,7 @@ export function QuickCreateWizard({
 
   function currentDraftInput(): QuickCreateDraftClientInput {
     return {
+      templateKey: initialTemplate?.key,
       groupId: selectedGroupId || undefined,
       groupType,
       ageRange,
@@ -304,6 +327,16 @@ export function QuickCreateWizard({
         </header>
 
         <div className="min-h-[500px] p-5 sm:p-6">
+          {initialTemplate ? (
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--accent-strong)] bg-[var(--accent-soft)] p-4">
+              <div>
+                <div className="text-xs font-black uppercase tracking-[0.1em]">Vorlage geladen</div>
+                <div className="mt-1 font-black">{initialTemplate.title}</div>
+                <p className="mt-1 text-xs opacity-80">Alle Werte bleiben anpassbar; der Template-Key wird beim Speichern als Provenienz erhalten.</p>
+              </div>
+              <Link className="rounded-lg border border-current px-3 py-2 text-xs font-black" href="/training/templates">Andere Vorlage</Link>
+            </div>
+          ) : null}
           {step === 1 ? (
             <div>
               <h3 className="text-lg font-black">Für wen und wie lange?</h3>
@@ -599,11 +632,11 @@ export function QuickCreateWizard({
               <h3 className="text-lg font-black">Wie anspruchsvoll?</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Belastungssteuerung darf konfigurierte Sicherheitsregeln nie überschreiben.</p>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                {[
+                {([
                   ["technique", "Technik zuerst", "Mehr Qualität, längere Lernfenster"],
                   ["balanced", "Ausgewogen", "Technik und Conditioning kombinieren"],
                   ["conditioning", "Conditioning", "Mehr Lauf-/Kraftausdauer bei sauberer Technik"],
-                ].map(([id, label, description]) => (
+                ] as const).map(([id, label, description]) => (
                   <button
                     className={`rounded-xl border p-4 text-left ${
                       intensity === id

@@ -153,6 +153,23 @@ describe("normalizeTrainingDraftRequest", () => {
     expect(normalizeTrainingDraftRequest({ ...base, availableObstacleExerciseIds: [] }).availableObstacleExerciseIds).toEqual([]);
   });
 
+  it("preserves a valid template key and drops malformed values", () => {
+    const base = {
+      groupType: "adults",
+      ageRange: "18+",
+      participantCount: 10,
+      durationMinutes: 60,
+      goals: ["Ganzkörper"],
+      bodyRegions: [],
+      formats: ["circuit"],
+      intensity: "balanced",
+      preferredExerciseIds: [],
+    };
+
+    expect(normalizeTrainingDraftRequest({ ...base, templateKey: "adult-ocr-base-engine" }).templateKey).toBe("adult-ocr-base-engine");
+    expect(normalizeTrainingDraftRequest({ ...base, templateKey: "../bad key" }).templateKey).toBeUndefined();
+  });
+
   it("falls back to safe audience, location, intensity and local builder values", () => {
     const request = normalizeTrainingDraftRequest({
       groupType: "unknown",

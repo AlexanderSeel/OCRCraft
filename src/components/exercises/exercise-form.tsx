@@ -7,6 +7,7 @@ import {
   exercisePhases,
   exerciseRiskLevels,
 } from "@/domain/exercise/model";
+import type { ExerciseType } from "@/domain/exercise/classification";
 import type { ExerciseEditorRecord } from "@/server/exercises/exercise-repository";
 import type { ExerciseFormState } from "@/app/exercises/actions";
 
@@ -16,16 +17,18 @@ interface ExerciseFormProps {
     formData: FormData,
   ) => Promise<ExerciseFormState>;
   readonly exercise?: ExerciseEditorRecord;
+  readonly initialExerciseType?: ExerciseType;
   readonly submitLabel: string;
 }
 
 const initialState: ExerciseFormState = {};
 
-export function ExerciseForm({ action, exercise, submitLabel }: ExerciseFormProps) {
+export function ExerciseForm({ action, exercise, initialExerciseType, submitLabel }: ExerciseFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
     <form action={formAction} className="space-y-6">
+      {initialExerciseType ? <input name="initialExerciseType" type="hidden" value={initialExerciseType} /> : null}
       {state.message ? (
         <div className="rounded-xl border border-[var(--warning)] bg-[var(--warning-bg)] p-4 text-sm font-semibold text-[var(--warning)]">
           {state.message}
