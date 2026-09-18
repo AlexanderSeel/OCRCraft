@@ -2,9 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { MuscleMap } from "@/components/body/muscle-map";
+import { ExerciseImagePreview } from "@/components/exercises/exercise-image-preview";
+import { VideoPopoverButton } from "@/components/media/video-popover-button";
 import { exerciseCategoryLabels, exercisePhaseLabels } from "@/domain/exercise/model";
 import { getExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
 import { getExerciseById, getExerciseProgressionRelations } from "@/server/exercises/exercise-repository";
+import { listExerciseMediaChoices } from "@/server/media/media-catalog-repository";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 
 export const dynamic = "force-dynamic";
@@ -18,11 +21,12 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
   const exercise = await getExerciseById(id);
   if (!exercise) notFound();
 
-  const [facets, guidanceDeMap, guidanceEnMap, progressionRelations] = await Promise.all([
+  const [facets, guidanceDeMap, guidanceEnMap, progressionRelations, mediaChoices] = await Promise.all([
     getExerciseFacetEditorData(id),
     getTrainingExerciseGuidanceMap([id], "de"),
     getTrainingExerciseGuidanceMap([id], "en"),
     getExerciseProgressionRelations(id),
+    listExerciseMediaChoices(id),
   ]);
   const guidance = guidanceDeMap[id];
   const guidanceEn = guidanceEnMap[id];
@@ -70,6 +74,36 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
           <MetaTag label="Alter" value={exercise.minAge == null ? "Kein Limit" : `ab ${exercise.minAge}`} />
           <MetaTag label="Status" value={exercise.archived ? "Archiviert" : "Aktiv"} />
         </section>
+
+        {mediaChoices.length ? (
+          <Card title="Bild & Video">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.8fr)]">
+              <div>
+                {mediaChoices.find((media) => media.isPrimary && media.url && media.mediaType !== "video")?.url || mediaChoices.find((media) => media.url && media.mediaType !== "video")?.url ? (
+                  <div className="relative aspect-video overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)]">
+                    <ExerciseImagePreview
+                      alt={`Bild der Übung ${exercise.nameDe}`}
+                      priority
+                      src={mediaChoices.find((media) => media.isPrimary && media.url && media.mediaType !== "video")?.url ?? mediaChoices.find((media) => media.url && media.mediaType !== "video")?.url ?? ""}
+                    />
+                  </div>
+                ) : (
+                  <div className="grid aspect-video place-items-center rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-center text-sm text-[var(--muted)]">Kein Bild hinterlegt.</div>
+                )}
+              </div>
+              <div className="space-y-3">
+                <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Verfügbare Videos</div>
+                {mediaChoices.filter((media) => media.mediaType === "video" && media.url).map((media) => (
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" key={media.id}>
+                    <div className="min-w-0"><div className="font-black">Video</div><div className="mt-1 truncate text-xs text-[var(--muted)]">{media.reviewStatus}</div></div>
+                    <VideoPopoverButton title={exercise.nameDe} thumbnailUrl={mediaChoices.find((candidate) => candidate.mediaType !== "video" && candidate.url)?.url} videoUrl={media.url!} />
+                  </div>
+                ))}
+                {!mediaChoices.some((media) => media.mediaType === "video" && media.url) ? <p className="text-sm text-[var(--muted)]">Kein Video hinterlegt.</p> : null}
+              </div>
+            </div>
+          </Card>
+        ) : null}
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           <div className="space-y-5">

@@ -15,3 +15,9 @@ data/*.write.lock
 /public/generated/exercises/
 .DS_Store
 Thumbs.db
+
+# Playwright test output
+/test-results/
+/playwright-report/
+/blob-report/
+.playwright/
