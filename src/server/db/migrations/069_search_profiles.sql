@@ -16,16 +16,23 @@ CREATE TABLE IF NOT EXISTS search_profiles (
   updated_at TIMESTAMP NOT NULL DEFAULT current_timestamp
 );
 
+-- Migration 66 already created a smaller search_profiles table. CREATE TABLE IF
+-- NOT EXISTS does not evolve it, so add every later profile field explicitly.
+ALTER TABLE search_profiles ADD COLUMN IF NOT EXISTS summary_weight INTEGER DEFAULT 20;
+ALTER TABLE search_profiles ADD COLUMN IF NOT EXISTS taxonomy_weight INTEGER DEFAULT 25;
+ALTER TABLE search_profiles ADD COLUMN IF NOT EXISTS body_regions_weight INTEGER DEFAULT 25;
+ALTER TABLE search_profiles ADD COLUMN IF NOT EXISTS equipment_weight INTEGER DEFAULT 20;
+ALTER TABLE search_profiles ADD COLUMN IF NOT EXISTS instructions_weight INTEGER DEFAULT 10;
+ALTER TABLE search_profiles ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT current_timestamp;
+
 INSERT INTO search_profiles (
   name,is_active,exact_weight,prefix_weight,alias_weight,summary_weight,
   taxonomy_weight,body_regions_weight,equipment_weight,instructions_weight
-)
-SELECT * FROM (VALUES
-  ('Ausgewogen',true,100,75,50,20,25,25,20,10),
+) VALUES
+  ('Ausgewogen',false,100,75,50,20,25,25,20,10),
   ('Anatomie & Trainingsziel',false,100,70,45,15,35,60,10,10),
   ('Equipment & Aufbau',false,100,70,40,15,15,10,60,30)
-) AS v(name,is_active,exact_weight,prefix_weight,alias_weight,summary_weight,taxonomy_weight,body_regions_weight,equipment_weight,instructions_weight)
-WHERE NOT EXISTS (SELECT 1 FROM search_profiles);
+ON CONFLICT(name) DO NOTHING;
 
 INSERT INTO schema_migrations (version,name)
 VALUES (69,'search_profiles');

@@ -21,11 +21,18 @@ export function SeedCompletenessReportView({ report }: SeedCompletenessReportPro
           <div className="text-2xl font-black">{report.completenessPercent}%</div>
           <div className="text-xs font-semibold text-[var(--muted)]">{report.completeExercises} von {report.totalExercises} Seeds vollständig</div>
           <div className="mt-1 text-xs font-semibold text-[var(--muted)]">Katalog: {report.completeCatalogExercises} von {report.totalCatalogExercises}</div>
+          <div className="mt-1 text-xs font-semibold text-[var(--muted)]">Fachreview: {report.reviewedExercises} bestanden{report.qualityReviewOpen > 0 ? ` · ${report.qualityReviewOpen} offen` : ""}</div>
           <div aria-valuemax={100} aria-valuemin={0} aria-valuenow={report.completenessPercent} className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--border)]" role="progressbar">
             <div className="h-full rounded-full bg-[var(--success-foreground)]" style={{ width: `${report.completenessPercent}%` }} />
           </div>
         </div>
       </div>
+
+      {report.qualityReviewOpen > 0 ? (
+        <p className="mt-4 rounded-xl border border-[var(--warning)] bg-[var(--warning-bg)] p-3 text-sm font-semibold text-[var(--warning)]">
+          {report.qualityReviewOpen} versionierte Seeds erfüllen das fachliche Review-Gate noch nicht vollständig.
+        </p>
+      ) : null}
 
       {report.totalExercises === 0 ? (
         <p className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">
