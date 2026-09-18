@@ -48,6 +48,8 @@ export default async function QuickCreatePage() {
           maxAge: group.maxAge,
           participantCount: group.defaultParticipantCount,
           durationMinutes: group.defaultDurationMinutes,
+          defaultLocation: group.defaultLocation,
+          defaultEquipment: group.defaultEquipment,
         }))}
       />
     </AppShell>
