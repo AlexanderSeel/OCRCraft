@@ -86,6 +86,8 @@ Die S3-Zugangsdaten können über `AWS_ACCESS_KEY_ID` und `AWS_SECRET_ACCESS_KEY
 - `OCRCRAFT_BACKUP_RETENTION` begrenzt die Anzahl der aufbewahrten Backups.
 - Vor jedem Restore wird automatisch ein Sicherheitsbackup erstellt.
 - Für eine vollständige Wiederherstellung müssen Datenbank, Backup-Verzeichnis und `public/generated/` beziehungsweise der konfigurierte S3-Speicher gemeinsam gesichert werden.
+- Mindestens eine regelmäßige Sicherung muss **außerhalb der OCRCraft-Maschine** liegen. Für Dateisystem-Medien bedeutet das eine Kopie von DuckDB, `data/backups/` und `public/generated/` auf ein externes Ziel; bei S3 müssen DuckDB/Backups separat off-machine gesichert und für den Bucket Versionierung oder ein unabhängiges Replikations-/Backupziel aktiviert werden.
+- Medienreviews speichern Reviewer, Zeitpunkt, Übungsreferenz und – bei externen Medien – Quellen-/Lizenzreferenz in DuckDB. Diese Metadaten müssen zusammen mit den Medienobjekten gesichert werden, damit eine Wiederherstellung fachliche Freigaben nachvollziehbar erhält.
 - Restore-Dateinamen werden exakt bestätigt; Pfadbestandteile werden abgewiesen.
 
 Nach einem Restore die Anwendung einmal neu starten und im Adminbereich den DuckDB-/FTS-Status prüfen. Bei einem abgebrochenen Prozess darf eine `.wal`-Datei nicht manuell gelöscht werden. OCRCraft bewahrt sie zur Diagnose auf und versucht eine kontrollierte Wiedereröffnung.

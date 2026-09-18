@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
-import { deleteExternalMediaAsset, retireLegacyTriptychsAfterApprovedSequence, saveExternalMediaAsset, setMediaReviewStatus } from "@/server/media/media-catalog-repository";
-import { requireAdmin } from "@/server/auth/identity-service";
+import { deleteExternalMediaAsset, retireLegacyTriptychsAfterApprovedSequence, saveExternalMediaAsset, saveMediaSequenceAssessment, setMediaReviewStatus } from "@/server/media/media-catalog-repository";
+import { requireAdmin, requireTrainer } from "@/server/auth/identity-service";
 import { recordAuditEvent } from "@/server/db/audit-service";
 import { hasConfiguredExerciseImageProvider } from "@/server/images/configured-image-generator";
 import { deleteOrphanedMediaObjects } from "@/server/media/media-maintenance-service";
@@ -20,6 +20,7 @@ const reviewSchema = z.object({
 });
 
 export async function updateMediaReviewStatusAction(formData: FormData): Promise<void> {
+  const actor = await requireTrainer();
   const parsed = reviewSchema.safeParse({
     assetId: formData.get("assetId"),
     exerciseId: formData.get("exerciseId"),
@@ -29,11 +30,19 @@ export async function updateMediaReviewStatusAction(formData: FormData): Promise
 
   let updated = false;
   try {
-    updated = await setMediaReviewStatus(parsed.data.assetId, parsed.data.reviewStatus);
+    updated = await setMediaReviewStatus(parsed.data.assetId, parsed.data.reviewStatus, actor.id);
   } catch {
     redirect("/media?reviewError=save");
   }
-  if (!updated) redirect("/media?reviewError=missing");
+  if (!updated) redirect("/media?reviewError=blocked");
+  await recordAuditEvent({
+    action: "media.review_status.update",
+    entityType: "exercise_media_asset",
+    entityId: parsed.data.assetId,
+    actorType: "user",
+    actorId: actor.id,
+    metadata: { reviewStatus: parsed.data.reviewStatus },
+  }).catch(() => undefined);
 
   revalidatePath("/media");
   revalidatePath("/exercises");
@@ -255,4 +264,56 @@ export async function finalizeLegacyTriptychMigrationAction(formData: FormData):
   revalidatePath("/media");
   revalidatePath("/exercises/" + exerciseId.data);
   redirect("/media?legacyRetired=" + String(retired));
+}
+
+
+const sequenceAssessmentSchema = z.object({
+  assetId: z.string().uuid(),
+  exerciseId: z.string().uuid(),
+  biomechanicsReview: z.enum(["unreviewed", "pass", "needs_changes"]),
+  textMatchReview: z.enum(["unreviewed", "pass", "needs_changes"]),
+  reviewNotes: z.string().trim().max(2000),
+});
+
+export async function updateSequenceMediaAssessmentAction(formData: FormData): Promise<void> {
+  const actor = await requireTrainer();
+  const parsed = sequenceAssessmentSchema.safeParse({
+    assetId: formData.get("assetId"),
+    exerciseId: formData.get("exerciseId"),
+    biomechanicsReview: formData.get("biomechanicsReview"),
+    textMatchReview: formData.get("textMatchReview"),
+    reviewNotes: String(formData.get("reviewNotes") ?? ""),
+  });
+  if (!parsed.success) redirect("/media?sequenceError=invalid");
+
+  let updated = false;
+  try {
+    updated = await saveMediaSequenceAssessment({
+      assetId: parsed.data.assetId,
+      biomechanicsReview: parsed.data.biomechanicsReview,
+      textMatchReview: parsed.data.textMatchReview,
+      reviewNotes: parsed.data.reviewNotes,
+      reviewerId: actor.id,
+    });
+    if (updated) {
+      await recordAuditEvent({
+        action: "media.sequence_assessment.update",
+        entityType: "exercise_media_asset",
+        entityId: parsed.data.assetId,
+        actorType: "user",
+        actorId: actor.id,
+        metadata: {
+          biomechanicsReview: parsed.data.biomechanicsReview,
+          textMatchReview: parsed.data.textMatchReview,
+        },
+      });
+    }
+  } catch {
+    redirect("/media?sequenceError=save");
+  }
+  if (!updated) redirect("/media?sequenceError=missing");
+
+  revalidatePath("/media");
+  revalidatePath("/exercises/" + parsed.data.exerciseId);
+  redirect("/media?sequenceSaved=1");
 }

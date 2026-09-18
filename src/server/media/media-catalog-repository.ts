@@ -43,6 +43,12 @@ export interface MediaCatalogItem {
   readonly rightsStatus: string;
   readonly consentRequired: boolean;
   readonly consentConfirmed: boolean;
+  readonly biomechanicsReview: "unreviewed" | "pass" | "needs_changes";
+  readonly textMatchReview: "unreviewed" | "pass" | "needs_changes";
+  readonly reviewNotes: string | null;
+  readonly reviewedBy: string | null;
+  readonly reviewerName: string | null;
+  readonly reviewedAt: string | null;
   readonly generatedAt: string | null;
   readonly createdAt: string;
   readonly errorMessage: string | null;
@@ -130,6 +136,17 @@ export async function listMediaCatalog({
         COALESCE(m.rights_status,'unreviewed'),
         COALESCE(m.consent_required,false),
         COALESCE(m.consent_confirmed,false),
+        COALESCE(m.biomechanics_review,'unreviewed'),
+        COALESCE(m.text_match_review,'unreviewed'),
+        m.review_notes,
+        m.reviewed_by::VARCHAR,
+        (
+          SELECT u.display_name
+          FROM app_users u
+          WHERE u.id=m.reviewed_by
+          LIMIT 1
+        ),
+        m.reviewed_at::VARCHAR,
         m.generated_at,
         m.created_at,
         m.error_message
@@ -185,9 +202,15 @@ export async function listMediaCatalog({
       rightsStatus: String(row[23] ?? "unreviewed"),
       consentRequired: Boolean(row[24]),
       consentConfirmed: Boolean(row[25]),
-      generatedAt: row[26] == null ? null : String(row[26]),
-      createdAt: String(row[27]),
-      errorMessage: row[28] == null ? null : String(row[28]),
+      biomechanicsReview: String(row[26] ?? "unreviewed") as "unreviewed" | "pass" | "needs_changes",
+      textMatchReview: String(row[27] ?? "unreviewed") as "unreviewed" | "pass" | "needs_changes",
+      reviewNotes: row[28] == null ? null : String(row[28]),
+      reviewedBy: row[29] == null ? null : String(row[29]),
+      reviewerName: row[30] == null ? null : String(row[30]),
+      reviewedAt: row[31] == null ? null : String(row[31]),
+      generatedAt: row[32] == null ? null : String(row[32]),
+      createdAt: String(row[33]),
+      errorMessage: row[34] == null ? null : String(row[34]),
     }));
   });
 }
@@ -271,26 +294,81 @@ export async function listMediaGenerationCandidates(
 export async function setMediaReviewStatus(
   assetId: string,
   reviewStatus: "pending" | "approved" | "rejected",
+  reviewerId: string,
 ): Promise<boolean> {
-  if (!UUID_PATTERN.test(assetId)) return false;
+  if (!UUID_PATTERN.test(assetId) || !UUID_PATTERN.test(reviewerId)) return false;
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(`
       UPDATE exercise_media_assets
-      SET review_status=$reviewStatus, updated_at=current_timestamp
+      SET
+        review_status=$reviewStatus,
+        reviewed_by=CASE WHEN $reviewStatus='pending' THEN NULL ELSE $reviewerId::UUID END,
+        reviewed_at=CASE WHEN $reviewStatus='pending' THEN NULL ELSE current_timestamp END,
+        updated_at=current_timestamp
       WHERE id=$assetId::UUID
         AND (
           $reviewStatus<>'approved'
-          OR source_type<>'external_reference'
           OR (
-            COALESCE(rights_status,'unreviewed')='approved'
-            AND COALESCE(trim(license_label),'')<>''
-            AND COALESCE(trim(source_reference),'')<>''
-            AND (COALESCE(consent_required,false)=false OR COALESCE(consent_confirmed,false)=true)
+            (
+              source_type<>'external_reference'
+              OR (
+                COALESCE(rights_status,'unreviewed')='approved'
+                AND COALESCE(trim(license_label),'')<>''
+                AND COALESCE(trim(source_reference),'')<>''
+                AND (COALESCE(consent_required,false)=false OR COALESCE(consent_confirmed,false)=true)
+              )
+            )
+            AND (
+              NOT (source_type='ai_generated' AND illustration_format='exercise_sequence')
+              OR (
+                COALESCE(biomechanics_review,'unreviewed')='pass'
+                AND COALESCE(text_match_review,'unreviewed')='pass'
+              )
+            )
           )
         )
       RETURNING id::VARCHAR
-    `, { assetId, reviewStatus });
+    `, { assetId, reviewStatus, reviewerId });
+    return reader.getRows().length === 1;
+  });
+}
+
+export async function saveMediaSequenceAssessment(input: {
+  readonly assetId: string;
+  readonly biomechanicsReview: "unreviewed" | "pass" | "needs_changes";
+  readonly textMatchReview: "unreviewed" | "pass" | "needs_changes";
+  readonly reviewNotes: string;
+  readonly reviewerId: string;
+}): Promise<boolean> {
+  if (!UUID_PATTERN.test(input.assetId) || !UUID_PATTERN.test(input.reviewerId)) return false;
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      UPDATE exercise_media_assets
+      SET
+        biomechanics_review=$biomechanicsReview,
+        text_match_review=$textMatchReview,
+        review_notes=$reviewNotes,
+        reviewed_by=$reviewerId::UUID,
+        reviewed_at=current_timestamp,
+        review_status=CASE
+          WHEN $biomechanicsReview='pass' AND $textMatchReview='pass' THEN review_status
+          ELSE 'pending'
+        END,
+        updated_at=current_timestamp
+      WHERE id=$assetId::UUID
+        AND source_type='ai_generated'
+        AND illustration_format='exercise_sequence'
+        AND generation_status='generated'
+      RETURNING id::VARCHAR
+    `, {
+      assetId: input.assetId,
+      biomechanicsReview: input.biomechanicsReview,
+      textMatchReview: input.textMatchReview,
+      reviewNotes: input.reviewNotes.trim().slice(0, 2000) || null,
+      reviewerId: input.reviewerId,
+    });
     return reader.getRows().length === 1;
   });
 }
@@ -352,6 +430,21 @@ export async function saveExternalMediaAsset(input: SaveExternalMediaAssetInput)
             rights_status=$rightsStatus,
             consent_required=$consentRequired,
             consent_confirmed=$consentConfirmed,
+            review_status=CASE
+              WHEN $rightsStatus='approved' AND ($consentRequired=false OR $consentConfirmed=true)
+                THEN review_status
+              ELSE 'pending'
+            END,
+            reviewed_by=CASE
+              WHEN $rightsStatus='approved' AND ($consentRequired=false OR $consentConfirmed=true)
+                THEN reviewed_by
+              ELSE NULL
+            END,
+            reviewed_at=CASE
+              WHEN $rightsStatus='approved' AND ($consentRequired=false OR $consentConfirmed=true)
+                THEN reviewed_at
+              ELSE NULL
+            END,
             updated_at=current_timestamp
         WHERE id=$assetId::UUID AND source_type='external_reference'
         RETURNING id::VARCHAR

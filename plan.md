@@ -104,8 +104,8 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 - [x] Verwaiste Medien in Dateisystem/S3 gegen DuckDB-Referenzen erkennen; nicht referenzierte Storage-Objekte werden nur nach Admin-Bestätigung gelöscht, fehlende referenzierte Objekte bleiben als Prüfhinweis sichtbar.
 - [x] S3-kompatible Speicherung produktionsfest machen: validierte Production-URLs, Bucket-Healthcheck, paginierte Inventarisierung, Cache-Control, Objektmetadaten sowie optionale SSE-S3/KMS-Verschlüsselung sind dokumentiert und getestet.
 - [x] Legacy-Triptychon kontrolliert in Sequenzbilder migrieren: neue Sequenz wird zuerst erzeugt und reviewed; Legacy-Assets werden erst nach freigegebener Sequenz als ersetzt/abgelehnt markiert und bleiben nachvollziehbar erhalten.
-- [ ] Generierte Sequenzen auf biomechanische Plausibilität und Textübereinstimmung prüfen.
-- [ ] Review-Felder (`reviewed_by`, Quelle/Übungsreferenz) und Off-Machine-Backup dokumentieren.
+- [x] Generierte Sequenzen besitzen einen verpflichtenden fachlichen Review für biomechanische Plausibilität und Übereinstimmung mit den strukturierten Ausführungsschritten; Freigabe ist erst nach zwei bestandenen Prüfungen möglich.
+- [x] Medienreview mit `reviewed_by`, `reviewed_at`, Review-Notiz sowie bestehender Quellen-/Übungsreferenz persistieren; Off-Machine-Backup für DuckDB und Medien-Storage ist im Betriebshandbuch dokumentiert.
 
 ### KI
 
