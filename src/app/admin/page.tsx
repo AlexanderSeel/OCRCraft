@@ -4,6 +4,8 @@ import { MuscleMapDebugSetting } from "@/components/admin/muscle-map-debug-setti
 import { DuplicateReviewPanel } from "@/components/admin/duplicate-review-panel";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import { Disclosure } from "@/components/ui/disclosure";
+import { Alert, EmptyState } from "@/components/ui/feedback";
+import { Card, CardHeader } from "@/components/ui/card";
 import { AdminTabs, normalizeAdminTab } from "@/components/admin/admin-tabs";
 import { AiProviderSettingsPanel } from "@/components/admin/ai-provider-settings-panel";
 import { SearchProfileSettingsPanel } from "@/components/admin/search-profile-settings-panel";
@@ -81,20 +83,20 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     >
       <div className="space-y-6">
         <AdminTabs active={activeTab} />
-        {queueDeleted === "1" ? <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Der fehlgeschlagene Medienjob wurde gelöscht.</p> : null}
-        {queueDeleted === "0" ? <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Der Fehler konnte nicht gelöscht werden. Der Eintrag ist möglicherweise bereits entfernt oder noch nicht fehlgeschlagen.</p> : null}
+        {queueDeleted === "1" ? <Alert tone="success">Der fehlgeschlagene Medienjob wurde gelöscht.</Alert> : null}
+        {queueDeleted === "0" ? <Alert tone="danger">Der Fehler konnte nicht gelöscht werden. Der Eintrag ist möglicherweise bereits entfernt oder noch nicht fehlgeschlagen.</Alert> : null}
         {activeTab === "overview" && seedCompleteness ? <SeedCompletenessReportView report={seedCompleteness} /> : null}
         {activeTab === "quality" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität</div><h2 className="mt-1 text-xl font-black">Doppelungen prüfen</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Die Engine vergleicht normalisierte Namen, Aliase, Equipment, Körperregionen und externe IDs. Zusammenführen archiviert den überzähligen Datensatz und erhält die Trainingshistorie.</p></div>
             <form action={scanDuplicateExercisesAction}><ActionProgressButton className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" pendingLabel="Vergleiche Namen, Aliase und Zuordnungen …">Jetzt prüfen</ActionProgressButton></form>
           </div>
-          {duplicateTasks.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Keine offenen Doppelungsaufgaben.</p> : <DuplicateReviewPanel bulkAction={resolveDuplicateExercisesBulkAction} comparisonRecords={Object.fromEntries(comparisonRecords)} resolveAction={resolveDuplicateExerciseAction} tasks={duplicateTasks} />}
+          {duplicateTasks.length === 0 ? <EmptyState title="Keine offenen Doppelungsaufgaben">Die Qualitätsprüfung ist aktuell ohne offene Treffer.</EmptyState> : <DuplicateReviewPanel bulkAction={resolveDuplicateExercisesBulkAction} comparisonRecords={Object.fromEntries(comparisonRecords)} resolveAction={resolveDuplicateExerciseAction} tasks={duplicateTasks} />}
           <TranslationCompletenessReport report={getDictionaryCompletenessReport()} />
         </section> : null}
         {activeTab === "queue" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Betrieb</div><h2 className="mt-1 text-xl font-black">Hintergrundaufgaben</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Laufende Prüfungen und Wartungsaktionen blockieren die Oberfläche nicht. Fehlgeschlagene Aufgaben können erneut gestartet oder abgeschlossene Einträge gelöscht werden.</p></div>
-          <div className="mt-5 grid gap-3">{appTasks.length === 0 && queueIssues.length === 0 ? <p className="rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Noch keine Aufgaben vorhanden.</p> : <>{appTasks.map((task) => <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={task.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-black">{task.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">{task.status} · {task.createdAt}</p></div><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{task.progress}%</span></div>{task.progressMessage ? <p className="mt-2 text-sm text-[var(--muted)]">{task.progressMessage}</p> : null}{task.errorMessage ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{task.errorMessage}</p> : null}<div className="mt-3 flex flex-wrap gap-2">{task.status === "running" || task.status === "queued" ? <form action={cancelAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--danger)] px-3 py-1.5 text-xs font-black text-[var(--danger)]">Abbrechen</button></form> : null}{task.status === "failed" || task.status === "cancelled" ? <form action={retryAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Erneut starten</button></form> : null}{task.status === "succeeded" || task.status === "failed" || task.status === "cancelled" ? <form action={deleteAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Löschen</button></form> : null}</div></article>)}{queueIssues.filter((issue) => issue.source === "media").map((issue) => <article className="rounded-xl border border-[var(--danger)] bg-[var(--surface-subtle)] p-4" key={`media-${issue.id}`}><div className="flex items-start justify-between gap-3"><div><h3 className="font-black">{issue.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">KI-Bildjob · {issue.status} · {issue.createdAt}</p></div><span className="text-xs font-black">{issue.progress}%</span></div>{issue.message ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{issue.message}</p> : null}{issue.status === "media:failed" ? <form action={deleteFailedMediaJobAction} className="mt-3"><input name="id" type="hidden" value={issue.id} /><button className="rounded-lg border border-[var(--danger)] px-3 py-1.5 text-xs font-black text-[var(--danger)]">Fehler löschen</button></form> : null}</article>)}</>}</div>
+          <div className="mt-5 grid gap-3">{appTasks.length === 0 && queueIssues.length === 0 ? <EmptyState title="Noch keine Aufgaben vorhanden">Laufende und abgeschlossene Hintergrundaufgaben werden hier angezeigt.</EmptyState> : <>{appTasks.map((task) => <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={task.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-black">{task.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">{task.status} · {task.createdAt}</p></div><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{task.progress}%</span></div>{task.progressMessage ? <p className="mt-2 text-sm text-[var(--muted)]">{task.progressMessage}</p> : null}{task.errorMessage ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{task.errorMessage}</p> : null}<div className="mt-3 flex flex-wrap gap-2">{task.status === "running" || task.status === "queued" ? <form action={cancelAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--danger)] px-3 py-1.5 text-xs font-black text-[var(--danger)]">Abbrechen</button></form> : null}{task.status === "failed" || task.status === "cancelled" ? <form action={retryAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Erneut starten</button></form> : null}{task.status === "succeeded" || task.status === "failed" || task.status === "cancelled" ? <form action={deleteAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Löschen</button></form> : null}</div></article>)}{queueIssues.filter((issue) => issue.source === "media").map((issue) => <article className="rounded-xl border border-[var(--danger)] bg-[var(--surface-subtle)] p-4" key={`media-${issue.id}`}><div className="flex items-start justify-between gap-3"><div><h3 className="font-black">{issue.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">KI-Bildjob · {issue.status} · {issue.createdAt}</p></div><span className="text-xs font-black">{issue.progress}%</span></div>{issue.message ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{issue.message}</p> : null}{issue.status === "media:failed" ? <form action={deleteFailedMediaJobAction} className="mt-3"><input name="id" type="hidden" value={issue.id} /><button className="rounded-lg border border-[var(--danger)] px-3 py-1.5 text-xs font-black text-[var(--danger)]">Fehler löschen</button></form> : null}</article>)}</>}</div>
         </section> : null}
         {activeTab === "database" ? <section id="database-settings" className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="max-w-3xl">
@@ -106,14 +108,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </div>
 
           {reseeded === "1" ? (
-            <p aria-live="polite" className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+            <Alert tone="success">
               Die Datenbank wurde mit den aktuellen Initialdaten neu aufgebaut.
-            </p>
+            </Alert>
           ) : null}
-          {backup ? <p aria-live="polite" className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Backup erstellt: {backup}</p> : null}
-          {backupError ? <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Das Datenbank-Backup konnte nicht erstellt werden.</p> : null}
-          {restored ? <p aria-live="polite" className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Backup wiederhergestellt: {restored}. Vorher wurde automatisch ein Sicherheitsbackup erstellt.</p> : null}
-          {restoreError ? <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">{restoreError === "confirmation" ? "Zur Wiederherstellung muss der Dateiname exakt bestätigt werden." : "Das Backup konnte nicht wiederhergestellt werden."}</p> : null}
+          {backup ? <Alert tone="success">Backup erstellt: {backup}</Alert> : null}
+          {backupError ? <Alert tone="danger">Das Datenbank-Backup konnte nicht erstellt werden.</Alert> : null}
+          {restored ? <Alert tone="success">Backup wiederhergestellt: {restored}. Vorher wurde automatisch ein Sicherheitsbackup erstellt.</Alert> : null}
+          {restoreError ? <Alert tone="danger">{restoreError === "confirmation" ? "Zur Wiederherstellung muss der Dateiname exakt bestätigt werden." : "Das Backup konnte nicht wiederhergestellt werden."}</Alert> : null}
           <form action={createDatabaseBackupAction} className="mt-4">
             <ActionProgressButton className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-4 text-sm font-black" pendingLabel="Backup wird erstellt …">Datenbank sichern</ActionProgressButton>
           </form>
@@ -139,11 +141,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             {backups.length === 0 ? <p className="mt-2 text-sm text-[var(--muted)]">Noch kein Backup vorhanden.</p> : <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{backups.slice(0, 5).map((item) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2" key={item.fileName}><span><span className="font-bold text-[var(--foreground)]">{item.fileName}</span><span className="ml-2">{formatBytes(item.bytes)} · {item.createdAt}</span></span><form action={restoreDatabaseBackupAction} className="flex items-center gap-2"><input aria-label={`${item.fileName} bestätigen`} className="h-8 w-36 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-2 text-[10px]" name="confirmation" placeholder="Dateiname bestätigen" /><input name="fileName" type="hidden" value={item.fileName} /><button className="rounded-lg border border-[var(--danger)] px-2 py-1.5 text-[10px] font-black text-[var(--danger)]" type="submit">Wiederherstellen</button></form></li>)}</ul>}
           </div>
           {reseedError ? (
-            <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+            <Alert tone="danger">
               {reseedError === "confirmation"
                 ? "Die Bestätigungsphrase stimmt nicht. Es wurden keine Daten geändert."
                 : "Die Datenbank konnte nicht neu aufgebaut werden. Die Transaktion wurde zurückgerollt."}
-            </p>
+            </Alert>
           ) : null}
 
           <Disclosure className="group relative mt-4 max-w-md" summaryClassName="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-[var(--danger)] px-4 py-2.5 text-sm font-black text-[var(--danger)] hover:bg-[var(--danger-bg)]" summary={
@@ -177,11 +179,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
         {activeTab === "users" ? (
           <>
-            {loginError ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Anmeldung fehlgeschlagen. Prüfe E-Mail und Vereinszugangscode.</p> : null}
-            {loggedIn || loggedOut ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">{loggedIn ? "Anmeldung erfolgreich." : "Abmeldung erfolgreich."}</p> : null}
-            {userError ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">{userError === "permission" ? "Keine Berechtigung. Benutzer, Rollen und Passwörter dürfen nur Super-Admins ändern." : userError === "delete" ? "Benutzer konnte nicht gelöscht werden. Prüfe Verknüpfungen und Berechtigung." : "Benutzeränderung nicht möglich. Prüfe Eingaben."}</p> : null}
-            {userSaved ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">{userSaved === "password" ? "Passwort wurde gesetzt." : userSaved === "deleted" ? "Benutzer wurde gelöscht." : "Benutzeränderung gespeichert."}</p> : null}
-            {userError === "access-code" ? <p aria-live="assertive" className="mb-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Der Vereinscode konnte nicht gespeichert werden.</p> : null}
+            {loginError ? <Alert tone="danger">Anmeldung fehlgeschlagen. Prüfe E-Mail und Vereinszugangscode.</Alert> : null}
+            {loggedIn || loggedOut ? <Alert tone="success">{loggedIn ? "Anmeldung erfolgreich." : "Abmeldung erfolgreich."}</Alert> : null}
+            {userError ? <Alert tone="danger">{userError === "permission" ? "Keine Berechtigung. Benutzer, Rollen und Passwörter dürfen nur Super-Admins ändern." : userError === "delete" ? "Benutzer konnte nicht gelöscht werden. Prüfe Verknüpfungen und Berechtigung." : "Benutzeränderung nicht möglich. Prüfe Eingaben."}</Alert> : null}
+            {userSaved ? <Alert tone="success">{userSaved === "password" ? "Passwort wurde gesetzt." : userSaved === "deleted" ? "Benutzer wurde gelöscht." : "Benutzeränderung gespeichert."}</Alert> : null}
+            {userError === "access-code" ? <Alert tone="danger">Der Vereinscode konnte nicht gespeichert werden.</Alert> : null}
             <IdentityManagementPanel
               createAction={createUserAction}
               deleteAction={deleteUserAction}
@@ -198,8 +200,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
         {activeTab === "roles" ? (
           <>
-            {roleError ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Rollenänderung nicht möglich. Prüfe Berechtigung und Eingaben.</p> : null}
-            {roleSaved ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">{roleSaved === "deleted" ? "Rolle wurde gelöscht." : roleSaved === "assigned" ? "Rollenzuweisung gespeichert." : "Rolle wurde gespeichert."}</p> : null}
+            {roleError ? <Alert tone="danger">Rollenänderung nicht möglich. Prüfe Berechtigung und Eingaben.</Alert> : null}
+            {roleSaved ? <Alert tone="success">{roleSaved === "deleted" ? "Rolle wurde gelöscht." : roleSaved === "assigned" ? "Rollenzuweisung gespeichert." : "Rolle wurde gespeichert."}</Alert> : null}
             <RolePermissionsPanel assignAction={assignRoleAction} assignments={roleAssignments} createAction={createRoleAction} deleteAction={deleteRoleAction} roles={accessRoles} updateAction={updateRoleAction} users={appUsers} />
           </>
         ) : null}
@@ -297,10 +299,10 @@ function StatusBadge({ status }: { readonly status: string }) {
 
 function AdminArea({ title, text, status }: { readonly title: string; readonly text: string; readonly status: string }) {
   return (
-    <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-      <div className="flex items-start justify-between gap-3"><h2 className="font-black">{title}</h2><span className="text-xs font-bold text-[var(--muted)]">{status}</span></div>
+    <Card className="p-5">
+      <CardHeader title={title}><span className="text-xs font-bold text-[var(--muted)]">{status}</span></CardHeader>
       <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{text}</p>
-    </article>
+    </Card>
   );
 }
 

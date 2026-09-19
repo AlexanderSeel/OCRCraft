@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { Disclosure } from "@/components/ui/disclosure";
+import { Alert } from "@/components/ui/feedback";
 import { AddTrainingItemForm } from "@/components/training/add-training-item-form";
 import { PersistedMainPartProgrammingForm } from "@/components/training/persisted-main-part-programming-form";
 import { ReplaceTrainingItemForm } from "@/components/training/replace-training-item-form";
@@ -109,12 +110,12 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
     >
       <div className="space-y-6">
         {query.saved ? (
-          <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             {savedMessage(query.saved)}
-          </div>
+          </Alert>
         ) : null}
         {query.error ? (
-          <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">
+          <Alert tone="danger">
             {query.error === "duplicate"
               ? "Training konnte nicht dupliziert werden. Bitte erneut versuchen."
               : query.error === "item-level"
@@ -127,7 +128,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                 : query.error === "restore" ? "Version konnte nicht wiederhergestellt werden."
                 : query.error === "template" ? "Vereinsvorlage konnte nicht gespeichert werden. Bitte Eingaben und Training prüfen."
                   : "Änderung konnte nicht gespeichert werden. Bitte Eingaben prüfen und erneut versuchen."}
-          </div>
+          </Alert>
         ) : null}
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">

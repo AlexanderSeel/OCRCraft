@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { MuscleMap } from "@/components/body/muscle-map";
 import { ExerciseImagePreview } from "@/components/exercises/exercise-image-preview";
 import { VideoPopoverButton } from "@/components/media/video-popover-button";
+import { Card, CardHeader } from "@/components/ui/card";
 import { exerciseCategoryLabels, exercisePhaseLabels } from "@/domain/exercise/model";
 import { getExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
 import { getExerciseById, getExerciseProgressionRelations } from "@/server/exercises/exercise-repository";
@@ -76,7 +77,8 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
         </section>
 
         {mediaChoices.length ? (
-          <Card title="Bild & Video">
+          <Card className="p-5">
+            <CardHeader title="Bild & Video" />
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.8fr)]">
               <div>
                 {mediaChoices.find((media) => media.isPrimary && media.url && media.mediaType !== "video")?.url || mediaChoices.find((media) => media.url && media.mediaType !== "video")?.url ? (
@@ -107,12 +109,14 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           <div className="space-y-5">
-            <Card title="Kurz erklärt">
+            <Card className="p-5">
+              <CardHeader title="Kurz erklärt" />
               <TextBlock value={exercise.summaryDe || guidance?.summary} fallback="Noch keine Kurzbeschreibung hinterlegt." />
               {guidance?.purpose ? <SubSection title="Trainingszweck">{guidance.purpose}</SubSection> : null}
             </Card>
 
-            <Card title="Ausführung">
+            <Card className="p-5">
+              <CardHeader title="Ausführung" />
               <div className="grid gap-4 lg:grid-cols-2">
                 <div className="space-y-4">
                   <OptionalSection title="Aufbau" value={guidance?.setup} />
@@ -132,7 +136,8 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
               </div>
             </Card>
 
-            <Card title="Coaching">
+            <Card className="p-5">
+              <CardHeader title="Coaching" />
               <div className="grid gap-4 lg:grid-cols-2">
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Coaching-Cues</h3>
@@ -150,7 +155,8 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
               </div>
             </Card>
 
-            <Card title="Häufige Fehler & Korrektur">
+            <Card className="p-5">
+              <CardHeader title="Häufige Fehler & Korrektur" />
               {guidance?.commonMistakes.length ? (
                 <div className="grid gap-3 lg:grid-cols-2">
                   {guidance.commonMistakes.map((entry, index) => (
@@ -163,7 +169,8 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
               ) : <p className="text-sm text-[var(--muted)]">Noch keine typischen Fehler hinterlegt.</p>}
             </Card>
 
-            <Card title="Sicherheit & Logistik">
+            <Card className="p-5">
+              <CardHeader title="Sicherheit & Logistik" />
               <div className="grid gap-4 lg:grid-cols-2">
                 <div className="space-y-4">
                   <OptionalSection title="Sicherheit" value={guidance?.safetyNotes} prominent />
@@ -188,7 +195,8 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
               </div>
             </Card>
 
-            <Card title="Dosierung & Skalierung">
+            <Card className="p-5">
+              <CardHeader title="Dosierung & Skalierung" />
               <div className="grid gap-3 lg:grid-cols-3">
                 <LevelCard title="Einsteiger" value={guidance?.beginnerPrescription} />
                 <LevelCard title="Standard" value={guidance?.standardPrescription} />
@@ -206,7 +214,8 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
             </Card>
 
             {progressionRelations.length ? (
-              <Card title="Verknüpfte Progressionen">
+              <Card className="p-5">
+                <CardHeader title="Verknüpfte Progressionen" />
                 <div className="grid gap-3 sm:grid-cols-2">
                   {progressionRelations.map((relation) => (
                     <Link
@@ -225,7 +234,8 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
           </div>
 
           <aside className="space-y-5">
-            <Card title="Muskeln & Gegenmuskeln">
+            <Card className="p-5">
+              <CardHeader title="Muskeln & Gegenmuskeln" />
               {facets.selected.bodyRegions.length ? (
                 <MuscleMap
                   disabled
@@ -240,7 +250,8 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
               </div>
             </Card>
 
-            <Card title="Trainings-Metadaten">
+            <Card className="p-5">
+              <CardHeader title="Trainings-Metadaten" />
               <FacetList title="Bewegungsmuster" values={movementPatterns.map((item) => item.labelDe)} />
               <FacetList title="Tags" values={tags.map((item) => item.labelDe)} />
               <FacetList
@@ -250,7 +261,8 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
               <FacetList title="Aliase" values={exercise.aliasesDe} />
             </Card>
 
-            <Card title="Quelle / Provenienz">
+            <Card className="p-5">
+              <CardHeader title="Quelle / Provenienz" />
               <dl className="space-y-3 text-sm">
                 <InfoValue label="Katalogschlüssel" value={exercise.seedKey ?? "Manuell angelegt"} />
                 <InfoValue label="Quelle" value={exercise.sourceProvider ?? "OCRCraft"} />
@@ -283,15 +295,6 @@ export default async function ExerciseDetailPage({ params }: PageProps) {
         ) : null}
       </div>
     </AppShell>
-  );
-}
-
-function Card({ title, children }: { readonly title: string; readonly children: React.ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-      <h2 className="mb-4 text-lg font-black">{title}</h2>
-      {children}
-    </section>
   );
 }
 

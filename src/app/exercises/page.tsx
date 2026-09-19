@@ -6,6 +6,8 @@ import { MuscleMap } from "@/components/body/muscle-map";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import { ExerciseFilterPopover } from "@/components/exercises/exercise-filter-popover";
 import { ExerciseImagePreview } from "@/components/exercises/exercise-image-preview";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/feedback";
 import { expandBodyRegionIds } from "@/domain/body-regions";
 import {
   exerciseCategoryLabels,
@@ -227,8 +229,9 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           {exercises.map((exercise, index) => {
             const affectedMuscles = bodyRegionMap[exercise.id] ?? [];
             return (
-            <article
-              className="exercise-card flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]"
+            <Card
+              as="article"
+              className="exercise-card flex flex-col overflow-hidden"
               key={exercise.id}
             >
               {exercise.imageUrl ? (
@@ -343,7 +346,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                   </Link>
                 </div>
               </div>
-            </article>
+            </Card>
             );
           })}
         </section>
@@ -352,9 +355,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         <CatalogPagination href={(nextPage) => pageHref(nextPage, params)} label="Übungen" page={page} totalPages={Math.max(1, Math.ceil(filteredTotal / pageSize))} />
 
         {exercises.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--muted)]">
-            Keine Übung passt zu diesem Filter.
-          </div>
+          <EmptyState title="Keine Übungen gefunden">Keine Übung passt zu diesem Filter.</EmptyState>
         ) : null}
         </div>
         </div>

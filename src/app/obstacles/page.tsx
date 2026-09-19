@@ -12,6 +12,8 @@ import {
 import { listObstacleCandidates, type ObstacleCandidate } from "@/server/obstacles/obstacle-assignment-repository";
 import { assignExerciseAsObstacleAction } from "./actions";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
+import { Alert } from "@/components/ui/feedback";
+import { Card } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 
@@ -62,24 +64,24 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
     >
       <OverviewLayout storageKey="ocrcraft-obstacles-view"><div className="space-y-6">
         {params.assignment === "added" ? (
-          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             Die Übung wurde als Hindernis übernommen. Vorhandene Übungsdaten wurden als Ausgangspunkt für die Hindernis-Guidance verwendet.
-          </p>
+          </Alert>
         ) : null}
         {params.assignment === "already" ? (
-          <p className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm font-bold">
+          <Alert>
             Die Übung ist bereits als Hindernis zugeordnet.
-          </p>
+          </Alert>
         ) : null}
         {params.assignment === "removed" ? (
-          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             Die Hindernis-Zuordnung wurde entfernt. Die Übung selbst bleibt vollständig erhalten.
-          </p>
+          </Alert>
         ) : null}
         {params.assignmentError ? (
-          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+          <Alert tone="danger">
             Die Hindernis-Zuordnung konnte nicht geändert werden.
-          </p>
+          </Alert>
         ) : null}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Metric label="Aktiv" value={summary.active} />
@@ -171,7 +173,7 @@ function pageHref(page: number, query: string, risk: string, archived: boolean, 
 
 function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) {
   return (
-    <article className="catalog-card min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
+    <Card as="article" className="catalog-card min-w-0 overflow-hidden">
       <div className="grid md:grid-cols-[180px_minmax(0,1fr)]">
         <div className="min-h-44 bg-[var(--surface-subtle)]">
           {obstacle.imageUrl ? (
@@ -239,7 +241,7 @@ function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) 
           </div>
         </div>
       </div>
-    </article>
+    </Card>
   );
 }
 

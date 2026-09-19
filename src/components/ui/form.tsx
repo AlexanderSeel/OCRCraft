@@ -1,5 +1,18 @@
 import type { ReactNode } from "react";
 
+export const buttonBaseClass = "inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-black transition focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60";
+
+export const buttonVariantClass = {
+  primary: "bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]",
+  secondary: "border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-subtle)]",
+  danger: "border border-[var(--danger)] text-[var(--danger)] hover:bg-[var(--danger-bg)]",
+  ghost: "text-[var(--foreground)] hover:bg-[var(--surface-subtle)]",
+} as const;
+
+export function buttonClass(variant: keyof typeof buttonVariantClass = "primary", className = "") {
+  return `${buttonBaseClass} ${buttonVariantClass[variant]} ${className}`.trim();
+}
+
 export const formControlClass = [
   "min-h-11 w-full rounded-xl border border-[var(--border-strong)]",
   "bg-[var(--surface)] px-3 text-sm text-[var(--foreground)]",
@@ -89,7 +102,7 @@ export function PrimaryFormButton({
 }) {
   return (
     <button
-      className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+      className={buttonClass("primary", "px-5")}
       disabled={disabled}
       type={type}
     >

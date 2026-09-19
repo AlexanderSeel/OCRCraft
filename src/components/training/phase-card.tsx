@@ -2,6 +2,7 @@ import {
   TRAINING_PHASE_LABELS,
   type TrainingPhase,
 } from "@/domain/training/model";
+import { Card } from "@/components/ui/card";
 
 interface TrainingPhaseCardProps {
   readonly phase: TrainingPhase;
@@ -17,7 +18,7 @@ export function TrainingPhaseCard({ phase }: TrainingPhaseCardProps) {
   const duration = phase.items.reduce((total, item) => total + item.durationMinutes, 0);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
+    <Card className="overflow-hidden">
       <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-5 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <span aria-hidden="true" className={`h-9 w-1.5 rounded-full ${phaseAccent[phase.kind]}`} />
@@ -56,6 +57,6 @@ export function TrainingPhaseCard({ phase }: TrainingPhaseCardProps) {
           </article>
         ))}
       </div>
-    </section>
+    </Card>
   );
 }

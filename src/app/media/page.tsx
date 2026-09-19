@@ -8,6 +8,8 @@ import { OrphanedMediaCleanupForm } from "@/components/media/orphaned-media-clea
 import { ExternalMediaManager } from "@/components/media/external-media-manager";
 import { VideoPopoverButton } from "@/components/media/video-popover-button";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
+import { Alert, EmptyState } from "@/components/ui/feedback";
+import { Card } from "@/components/ui/card";
 import {
   getMediaCatalogSummary,
   listMediaCatalog,
@@ -107,85 +109,85 @@ export default async function MediaPage({ searchParams }: PageProps) {
     >
       <OverviewLayout storageKey="ocrcraft-media-view"><div className="space-y-6">
         {params.reviewSaved ? (
-          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             Medienreview gespeichert: {reviewLabel(params.reviewSaved)}.
-          </p>
+          </Alert>
         ) : null}
         {params.reviewError ? (
-          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+          <Alert tone="danger">
             {params.reviewError === "qualification"
               ? "Medienfreigabe blockiert: hierfür ist mindestens die strukturierte Qualifikation Trainer C erforderlich."
               : params.reviewError === "blocked"
                 ? "Freigabe ist noch gesperrt: externe Rechte/Einwilligung bzw. Biomechanik- und Textprüfung müssen vollständig bestanden sein."
                 : "Reviewstatus konnte nicht gespeichert werden."}
-          </p>
+          </Alert>
         ) : null}
         {params.batchQueued ? (
-          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             {params.batchQueued} KI-Bildjob(s) wurden in die Warteschlange gestellt
             {Number(params.batchSkipped ?? 0) > 0 ? `; ${params.batchSkipped} Auswahl(en) waren bereits eingeplant oder nicht aktiv` : ""}.
-          </p>
+          </Alert>
         ) : null}
         {params.batchError ? (
-          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+          <Alert tone="danger">
             {batchErrorLabel(params.batchError)}
-          </p>
+          </Alert>
         ) : null}
         {params.jobRetried ? (
-          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             {params.jobRetried === "queued"
               ? "Der KI-Bildjob wurde erneut in die Warteschlange gestellt."
               : "Für diese Übung läuft bereits ein KI-Bildjob."}
-          </p>
+          </Alert>
         ) : null}
         {params.cleanupRemoved ? (
-          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             {params.cleanupRemoved} nicht referenzierte Storage-Objekt(e) wurden entfernt.
-          </p>
+          </Alert>
         ) : null}
         {params.cleanupError ? (
-          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+          <Alert tone="danger">
             Die Medienbereinigung konnte nicht vollständig ausgeführt werden.
-          </p>
+          </Alert>
         ) : null}
         {params.externalSaved ? (
-          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             Externes Medium wurde gespeichert.
-          </p>
+          </Alert>
         ) : null}
         {params.externalDeleted ? (
-          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             Externes Medium wurde entfernt.
-          </p>
+          </Alert>
         ) : null}
         {params.externalError ? (
-          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+          <Alert tone="danger">
             Externes Medium konnte nicht gespeichert werden. Prüfe HTTPS-URLs, Lizenz und Einwilligungsstatus.
-          </p>
+          </Alert>
         ) : null}
         {params.legacyRetired ? (
-          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             {params.legacyRetired} Legacy-Triptychon-Asset(s) wurden nach Freigabe der Sequenz als ersetzt markiert.
-          </p>
+          </Alert>
         ) : null}
         {params.legacyError ? (
-          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+          <Alert tone="danger">
             {params.legacyError === "approval"
               ? "Die Migration kann erst abgeschlossen werden, wenn mindestens eine erzeugte Sequenz fachlich freigegeben wurde."
               : "Die Legacy-Migration konnte nicht abgeschlossen werden."}
-          </p>
+          </Alert>
         ) : null}
         {params.sequenceSaved ? (
-          <p className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             Sequenzprüfung wurde gespeichert.
-          </p>
+          </Alert>
         ) : null}
         {params.sequenceError ? (
-          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">
+          <Alert tone="danger">
             {params.sequenceError === "qualification"
               ? "Fachliche Sequenzfreigabe blockiert: „Bestanden“ darf erst ab Trainer C vergeben werden. Korrekturbedarf kann weiterhin dokumentiert werden."
               : "Die fachliche Sequenzprüfung konnte nicht gespeichert werden."}
-          </p>
+          </Alert>
         ) : null}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
           <Metric label="Gesamt" value={summary.total} />
@@ -412,7 +414,9 @@ export default async function MediaPage({ searchParams }: PageProps) {
             {assets.map((asset) => <MediaCard asset={asset} key={asset.id} />)}
           </section>
         ) : (
-          <EmptyState />
+          <EmptyState title="Keine Medien gefunden">
+            Der aktuelle Filter trifft auf keinen Medieneintrag. Medien werden immer einer Übung zugeordnet und bleiben über deren Datensatz nachvollziehbar.
+          </EmptyState>
         )}
         </div>
         <CatalogPagination href={(nextPage) => pageHref(nextPage, query, reviewStatus, generationStatus, sourceType, mediaType, pageSize)} label="Medien" page={page} totalPages={Math.max(1, Math.ceil(assetTotal / pageSize))} />
@@ -446,7 +450,7 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
     textMatchReview: asset.textMatchReview,
   });
   return (
-    <article className="catalog-card min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
+    <Card as="article" className="catalog-card min-w-0 overflow-hidden">
       <div className="aspect-[16/10] bg-[var(--surface-subtle)]">
         {asset.mediaType === "video" && asset.thumbnailUrl ? (
           <ImageLightbox alt={`${asset.exerciseName} · Video-Thumbnail`} className="h-full w-full object-contain" containerClassName="relative h-full" src={asset.thumbnailUrl} />
@@ -595,7 +599,7 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
           ) : null}
         </div>
       </div>
-    </article>
+    </Card>
   );
 }
 
@@ -773,17 +777,6 @@ function StatusBadge({ asset }: { readonly asset: MediaCatalogItem }) {
     <span className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-black">
       {label}
     </span>
-  );
-}
-
-function EmptyState() {
-  return (
-    <section className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center">
-      <h2 className="text-lg font-black">Keine Medien gefunden</h2>
-      <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--muted)]">
-        Der aktuelle Filter trifft auf keinen Medieneintrag. Medien werden immer einer Übung zugeordnet und bleiben über deren Datensatz nachvollziehbar.
-      </p>
-    </section>
   );
 }
 

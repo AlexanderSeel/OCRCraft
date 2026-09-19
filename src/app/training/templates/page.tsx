@@ -4,6 +4,8 @@ import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel } from "@/components/catalog/catalog-filter-panel";
 import { CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
 import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { Alert, EmptyState } from "@/components/ui/feedback";
+import { Card } from "@/components/ui/card";
 import {
   TRAINING_TEMPLATES,
   TRAINING_TEMPLATE_FOCUS_KEYS,
@@ -55,19 +57,19 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
     >
       <OverviewLayout storageKey="ocrcraft-template-view"><div className="space-y-6">
         {params.saved === "archived" ? (
-          <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             Vereinsvorlage wurde archiviert.
-          </div>
+          </Alert>
         ) : null}
         {params.error ? (
-          <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">
+          <Alert tone="danger">
             {params.error === "use"
               ? "Vereinsvorlage konnte nicht verwendet werden. Prüfe, ob alle referenzierten Übungen noch aktiv sind."
               : "Vereinsvorlage konnte nicht archiviert werden."}
-          </div>
+          </Alert>
         ) : null}
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+        <Card className="p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-black">Vereinsvorlagen</h2>
@@ -80,7 +82,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
           {clubTemplates.length ? (
             <div className="mt-4 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
               {clubTemplates.map((item) => (
-                <article className="catalog-card min-w-0 flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={item.id}>
+                <Card as="article" className="catalog-card min-w-0 flex flex-col rounded-xl bg-[var(--surface-subtle)] p-4" key={item.id}>
                   <div className="flex flex-wrap gap-2 text-xs font-black text-[var(--muted)]">
                     <span>{item.totalDurationMinutes} Min.</span>
                     <span>· {item.itemCount} Übungen</span>
@@ -106,17 +108,18 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
                       </button>
                     </form>
                   </div>
-                </article>
+                </Card>
               ))}
             </div>
           ) : (
-            <p className="mt-4 rounded-xl bg-[var(--surface-subtle)] p-4 text-sm text-[var(--muted)]">
+            <EmptyState title="Noch keine Vereinsvorlagen">
               Noch keine Vereinsvorlage gespeichert. Öffne ein bestehendes Training und nutze „Als Vereinsvorlage speichern“.
-            </p>
+            </EmptyState>
           )}
-        </section>
+        </Card>
 
-        <CatalogFilterPanel hasFilters={Boolean(audience || focus || page !== 1 || pageSize !== 12)} resetHref="/training/templates" title="Vorlagenfilter">
+        <div className="grid gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
+          <CatalogFilterPanel hasFilters={Boolean(audience || focus || page !== 1 || pageSize !== 12)} resetHref="/training/templates" title="Vorlagenfilter">
             <label className="grid gap-2 text-sm font-bold">
               Zielgruppe
               <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={audience} name="audience">
@@ -132,19 +135,20 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
               </select>
             </label>
             <CatalogPageSize options={[6, 12, 24]} value={pageSize} />
-        </CatalogFilterPanel>
+          </CatalogFilterPanel>
 
-        <section className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0 space-y-6">
+          <section className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-black"><CatalogResultCount from={filteredTemplates.length ? (page - 1) * pageSize + 1 : 0} label={filteredTemplates.length === 1 ? "Vorlage" : "Vorlagen"} to={Math.min(page * pageSize, filteredTemplates.length)} total={filteredTemplates.length} /></h2>
             <p className="mt-1 text-sm text-[var(--muted)]">Jede Vorlage definiert Planungsparameter; konkrete Übungen kommen erst beim Erzeugen aus dem freigegebenen Katalog.</p>
           </div>
           <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs font-black">{templates.length} versionierte Startvorlagen</span>
-        </section>
+          </section>
 
-        <section className="catalog-results grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          <section className="catalog-results grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {templates.map((item) => (
-            <article className="catalog-card min-w-0 flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" key={item.key}>
+            <Card as="article" className="catalog-card min-w-0 flex flex-col p-5" key={item.key}>
               <div className="flex flex-wrap gap-2 text-xs font-black">
                 <span className="rounded-full bg-[var(--surface-subtle)] px-2.5 py-1">{trainingTemplateAudienceLabel(item.audience)}</span>
                 <span className="rounded-full bg-[var(--surface-subtle)] px-2.5 py-1">{trainingTemplateFocusLabel(item.focus)}</span>
@@ -175,10 +179,12 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
                   Vorlage in Quick Create öffnen
                 </Link>
               </div>
-            </article>
+            </Card>
           ))}
-        </section>
-        <CatalogPagination href={(nextPage) => pageHref(nextPage, audience, focus, pageSize)} label="Vorlagen" page={page} totalPages={Math.max(1, Math.ceil(filteredTemplates.length / pageSize))} />
+          </section>
+          <CatalogPagination href={(nextPage) => pageHref(nextPage, audience, focus, pageSize)} label="Vorlagen" page={page} totalPages={Math.max(1, Math.ceil(filteredTemplates.length / pageSize))} />
+          </div>
+        </div>
       </div></OverviewLayout>
     </AppShell>
   );

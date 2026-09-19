@@ -12,6 +12,7 @@ export interface UiDictionary {
   readonly themeDark: string;
   readonly skipToContent: string;
   readonly pageActions: string;
+  readonly breadcrumbLabel: string;
   readonly mobileNavigation: string;
   readonly navigationLabel: string;
 }
@@ -19,11 +20,11 @@ export interface UiDictionary {
 export const dictionaries: Readonly<Record<Locale, UiDictionary>> = {
   de: {
     navigation: { overview: "Übersicht", training: "Training", exercises: "Übungen", games: "Spiele", aiDrafts: "AI-Entwürfe", obstacles: "Hindernisse", outdoor: "Outdoor", groups: "Gruppen", media: "Medien" },
-    language: "Sprache", languageGerman: "Deutsch", languageEnglish: "English", appearance: "Darstellung", themeSystem: "System", themeLight: "Hell", themeDark: "Dunkel", skipToContent: "Zum Hauptinhalt springen", pageActions: "Seitenaktionen", mobileNavigation: "Hauptnavigation mobil", navigationLabel: "Hauptnavigation",
+    language: "Sprache", languageGerman: "Deutsch", languageEnglish: "English", appearance: "Darstellung", themeSystem: "System", themeLight: "Hell", themeDark: "Dunkel", skipToContent: "Zum Hauptinhalt springen", pageActions: "Seitenaktionen", breadcrumbLabel: "Brotkrümelnavigation", mobileNavigation: "Hauptnavigation mobil", navigationLabel: "Hauptnavigation",
   },
   en: {
     navigation: { overview: "Overview", training: "Training", exercises: "Exercises", games: "Games", aiDrafts: "AI drafts", obstacles: "Obstacles", outdoor: "Outdoor", groups: "Groups", media: "Media" },
-    language: "Language", languageGerman: "German", languageEnglish: "English", appearance: "Appearance", themeSystem: "System", themeLight: "Light", themeDark: "Dark", skipToContent: "Skip to main content", pageActions: "Page actions", mobileNavigation: "Mobile main navigation", navigationLabel: "Main navigation",
+    language: "Language", languageGerman: "German", languageEnglish: "English", appearance: "Appearance", themeSystem: "System", themeLight: "Light", themeDark: "Dark", skipToContent: "Skip to main content", pageActions: "Page actions", breadcrumbLabel: "Breadcrumb navigation", mobileNavigation: "Mobile main navigation", navigationLabel: "Main navigation",
   },
 };
 

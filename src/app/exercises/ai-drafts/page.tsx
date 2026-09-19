@@ -4,6 +4,8 @@ import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
 import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
 import { Disclosure } from "@/components/ui/disclosure";
+import { Alert, EmptyState } from "@/components/ui/feedback";
+import { Card } from "@/components/ui/card";
 import { exerciseCategoryLabels, exercisePhaseLabels } from "@/domain/exercise/model";
 import { getConfiguredAiExerciseDraftProvider } from "@/server/exercises/ai-exercise-draft-provider";
 import { countAiExerciseDrafts, listAiExerciseDrafts } from "@/server/exercises/ai-exercise-draft-repository";
@@ -63,7 +65,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
     >
       <OverviewLayout storageKey="ocrcraft-ai-drafts-view"><div className="space-y-6">
         {query.saved ? (
-          <Notice>{query.saved === "rejected" ? "AI-Entwurf wurde verworfen." : "AI-Entwurf wurde erzeugt und wartet auf Trainerprüfung."}</Notice>
+          <Alert tone="success">{query.saved === "rejected" ? "AI-Entwurf wurde verworfen." : "AI-Entwurf wurde erzeugt und wartet auf Trainerprüfung."}</Alert>
         ) : null}
         {query.error ? <ErrorNotice code={query.error} /> : null}
 
@@ -123,13 +125,13 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
           <div className="min-w-0 space-y-4">
           <div className="text-sm text-[var(--muted)]"><CatalogResultCount from={draftTotal ? (page - 1) * pageSize + 1 : 0} label={draftTotal === 1 ? "Entwurf" : "Entwürfe"} to={Math.min(page * pageSize, draftTotal)} total={draftTotal} /></div>
           {drafts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center text-sm text-[var(--muted)]">
-              {showHistory ? "Noch keine AI-Übungsentwürfe vorhanden." : "Keine offenen AI-Übungsentwürfe."}
-            </div>
+            <EmptyState title={showHistory ? "Noch keine AI-Übungsentwürfe" : "Keine offenen AI-Übungsentwürfe"}>
+              {showHistory ? "Es wurden bisher keine AI-Übungsentwürfe gespeichert." : "Alle AI-Übungsentwürfe wurden bearbeitet oder es gibt aktuell keine neuen Vorschläge."}
+            </EmptyState>
           ) : (
             <div className="catalog-results grid gap-4 xl:grid-cols-2">
               {drafts.map((draft) => (
-                <article className="catalog-card min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" key={draft.id}>
+                <Card as="article" className="catalog-card min-w-0 p-5" key={draft.id}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="text-xs font-black uppercase tracking-[0.1em] text-[var(--muted)]">
@@ -213,7 +215,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
                       </Link>
                     </div>
                   ) : null}
-                </article>
+                </Card>
               ))}
             </div>
           )}
@@ -233,10 +235,6 @@ function pageHref(page: number, history: boolean, query: string, size: number): 
   return "/exercises/ai-drafts?" + params.toString();
 }
 
-function Notice({ children }: { readonly children: React.ReactNode }) {
-  return <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">{children}</div>;
-}
-
 function ErrorNotice({ code }: { readonly code: string }) {
   const message = code === "not-configured"
     ? "AI-Übungsentwürfe sind nicht konfiguriert."
@@ -249,7 +247,7 @@ function ErrorNotice({ code }: { readonly code: string }) {
           : code === "rejection"
             ? "Der Entwurf konnte nicht verworfen werden."
             : "Der AI-Entwurf konnte nicht erzeugt werden.";
-  return <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">{message}</div>;
+  return <Alert tone="danger">{message}</Alert>;
 }
 
 function Meta({ label, value }: { readonly label: string; readonly value: string }) {

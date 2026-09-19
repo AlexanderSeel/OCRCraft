@@ -14,9 +14,43 @@ const forbiddenPatterns = [
     pattern: />\s*Copy Coordinates\s*</,
   },
 ];
+const requiredPatterns = [
+  {
+    file: join(sourceRoot, "components", "navigation", "breadcrumbs.tsx"),
+    name: "Breadcrumbs benötigen ein zugängliches Nav-Label",
+    pattern: /<nav\s+aria-label=/,
+  },
+  {
+    file: join(sourceRoot, "components", "navigation", "breadcrumbs.tsx"),
+    name: "Breadcrumbs benötigen eine aktuelle Seite",
+    pattern: /aria-current="page"/,
+  },
+  {
+    file: join(sourceRoot, "components", "ui", "feedback.tsx"),
+    name: "Alerts benötigen Live-Regionen",
+    pattern: /aria-live=/,
+  },
+  {
+    file: join(sourceRoot, "components", "ui", "feedback.tsx"),
+    name: "Feedback-Komponenten benötigen semantische Rollen",
+    pattern: /role=\{tone === "danger" \? "alert" : "status"\}/,
+  },
+  {
+    file: join(sourceRoot, "components", "ui", "card.tsx"),
+    name: "Cards müssen semantische Elementtypen unterstützen",
+    pattern: /as\?: "article" \| "div" \| "section"/,
+  },
+];
 
 const files = await collectSourceFiles(sourceRoot);
 const violations = [];
+
+for (const { file, name, pattern } of requiredPatterns) {
+  const content = await readFile(file, "utf8");
+  if (!pattern.test(content)) {
+    violations.push(`${relative(process.cwd(), file)} ${name}`);
+  }
+}
 
 for (const file of files) {
   const content = await readFile(file, "utf8");

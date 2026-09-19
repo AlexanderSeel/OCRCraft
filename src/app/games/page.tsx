@@ -4,6 +4,8 @@ import { OverviewLayout } from "@/components/overview-layout";
 import { ExerciseImagePreview } from "@/components/exercises/exercise-image-preview";
 import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
+import { EmptyState } from "@/components/ui/feedback";
+import { Card } from "@/components/ui/card";
 import { exerciseCategoryLabels, type ExerciseCategory } from "@/domain/exercise/model";
 import { countExercises, listExercises } from "@/server/exercises/exercise-repository";
 
@@ -73,7 +75,7 @@ export default async function GamesPage({ searchParams }: PageProps) {
         {games.length ? (
           <section className="catalog-results grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {games.map((game, index) => (
-              <article className="catalog-card min-w-0 flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]" key={game.id}>
+              <Card as="article" className="catalog-card min-w-0 flex flex-col overflow-hidden" key={game.id}>
                 {game.imageUrl ? (
                   <div className="relative aspect-[16/9] overflow-hidden bg-[var(--surface-subtle)]">
                     <ExerciseImagePreview alt={`Spielillustration: ${game.name}`} priority={index === 0} src={game.imageUrl} />
@@ -100,14 +102,13 @@ export default async function GamesPage({ searchParams }: PageProps) {
                     <Link className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-black" href={`/exercises/${game.id}/edit`}>{archived ? "Ansehen / Wiederherstellen" : "Bearbeiten"}</Link>
                   </div>
                 </div>
-              </article>
+              </Card>
             ))}
           </section>
         ) : (
-          <section className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center">
-            <h2 className="text-lg font-black">Keine Spiele gefunden</h2>
-            <p className="mt-2 text-sm text-[var(--muted)]">Passe den Filter an oder lege ein neues Spiel an. Es erhält anschließend denselben vollständigen Editor wie jede Übung.</p>
-          </section>
+          <EmptyState title="Keine Spiele gefunden">
+            Passe den Filter an oder lege ein neues Spiel an. Es erhält anschließend denselben vollständigen Editor wie jede Übung.
+          </EmptyState>
         )}
 
         <CatalogPagination href={(nextPage) => pageHref(nextPage, query, archived, pageSize)} label="Spiele" page={page} totalPages={totalPages} />

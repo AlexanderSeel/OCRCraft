@@ -7,6 +7,7 @@ import type { EquipmentAvailabilityOption } from "./equipment-availability-picke
 import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
 import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import { TrainingDraftPreview } from "./training-draft-preview";
+import { Card } from "@/components/ui/card";
 
 const goals = ["Ganzkörper", "OCR-Technik", "Grip", "Kraftausdauer", "Laufen", "Core", "Balance", "Koordination"] as const;
 const formats = [
@@ -160,7 +161,7 @@ export function TrainingQuickPlanner({
   }
 
   return (
-    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+    <Card className="p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Quickplaner · lokal</div>
@@ -258,7 +259,7 @@ export function TrainingQuickPlanner({
       {error ? <p className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">{error}</p> : null}
       {savedId ? <p className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Training gespeichert: {savedId}</p> : null}
       {draft ? <div className="mt-6 border-t border-[var(--border)] pt-6"><TrainingDraftPreview draft={draft} /></div> : null}
-    </section>
+    </Card>
   );
 }
 

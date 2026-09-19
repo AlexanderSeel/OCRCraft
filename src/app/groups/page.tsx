@@ -11,6 +11,8 @@ import {
 } from "@/domain/training/group-presets";
 import type { TrainingFormat } from "@/domain/training/model";
 import { Disclosure } from "@/components/ui/disclosure";
+import { Alert, EmptyState } from "@/components/ui/feedback";
+import { Card } from "@/components/ui/card";
 import type { ClubGroup } from "@/server/groups/group-repository";
 import { listClubGroupsPage } from "@/server/groups/group-repository";
 import {
@@ -84,14 +86,14 @@ export default async function GroupsPage({ searchParams }: PageProps) {
     >
       <OverviewLayout storageKey="ocrcraft-groups-view"><div className="space-y-6">
         {query.saved ? (
-          <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">
+          <Alert tone="success">
             {savedMessage(query.saved)}
-          </div>
+          </Alert>
         ) : null}
         {query.error ? (
-          <div className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">
+          <Alert tone="danger">
             Gruppe konnte nicht gespeichert werden. Bitte Eingaben und Altersbereich prüfen.
-          </div>
+          </Alert>
         ) : null}
 
         {!archivedView ? (
@@ -168,8 +170,9 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         </div>
         <section className="catalog-results grid gap-4 xl:grid-cols-2">
           {groups.map((group) => (
-            <article
-              className="catalog-card min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
+            <Card
+              as="article"
+              className="catalog-card min-w-0 p-5"
               key={group.id}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -235,19 +238,16 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                   </button>
                 </form>
               </div>
-            </article>
+            </Card>
           ))}
         </section>
 
         {groups.length === 0 ? (
-          <section className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center">
-            <h2 className="text-lg font-black">{archivedView ? "Keine archivierten Gruppen" : "Noch keine Gruppen"}</h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--muted)]">
+          <EmptyState title={archivedView ? "Keine archivierten Gruppen" : "Noch keine Gruppen"}>
               {archivedView
                 ? "Archivierte Gruppen erscheinen hier und können jederzeit wiederhergestellt werden."
                 : "Lege Gruppen für Kinder, Jugend, Erwachsene oder gemischte Trainings an. Die Standardwerte können später von Quick Create übernommen werden."}
-            </p>
-          </section>
+          </EmptyState>
         ) : null}
         <CatalogPagination href={(nextPage) => pageHref(nextPage, archivedView, searchQuery, audienceFilter, pageSize)} label="Gruppen" page={page} totalPages={Math.max(1, Math.ceil(groupPage.total / pageSize))} />
         </div>

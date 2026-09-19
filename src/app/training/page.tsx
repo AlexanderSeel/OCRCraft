@@ -3,6 +3,8 @@ import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
 import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/feedback";
 import { TRAINING_TEMPLATES } from "@/domain/training/training-template-catalog";
 import { listTrainingSessionsPage, type TrainingSessionStatus } from "@/server/training/training-session-repository";
 
@@ -126,8 +128,9 @@ export default async function TrainingPage({ searchParams }: PageProps) {
         {sessions.length > 0 ? (
           <section className="catalog-results grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
             {sessions.map((session) => (
-              <article
-                className="catalog-card min-w-0 flex min-h-56 flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
+              <Card
+                as="article"
+                className="catalog-card min-w-0 flex min-h-56 flex-col p-5"
                 key={session.id}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -186,17 +189,14 @@ export default async function TrainingPage({ searchParams }: PageProps) {
                     </Link>
                   </div>
                 </div>
-              </article>
+              </Card>
             ))}
           </section>
         ) : (
-          <section className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-[var(--shadow-card)]">
-            <h2 className="text-lg font-black">{archived ? "Archiv ist leer" : "Noch kein Training gespeichert"}</h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--muted)]">
+          <EmptyState title={archived ? "Archiv ist leer" : "Noch kein Training gespeichert"}>
               {archived
                 ? "Archivierte Einheiten erscheinen hier und können über ihre Detailseite wieder aktiviert werden."
                 : "Nutze den Training Builder für gezielte lokale/AI-Planung oder Quick Create für einen schnellen deterministischen Entwurf."}
-            </p>
             {!archived ? (
               <div className="mt-5 flex flex-wrap justify-center gap-2">
                 <Link
@@ -213,7 +213,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
                 </Link>
               </div>
             ) : null}
-          </section>
+          </EmptyState>
         )}
         <CatalogPagination href={(nextPage) => pageHref(nextPage, archived, query, selectedStatus, pageSize)} label="Trainings" page={page} totalPages={Math.max(1, Math.ceil(sessionPage.total / pageSize))} />
       </div></OverviewLayout>
