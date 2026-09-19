@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
-import { CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
 import { CLUB_RULE_PROFILES } from "@/domain/training/club-rules";
 import {
   GROUP_PRESETS,
@@ -12,7 +12,7 @@ import {
 import type { TrainingFormat } from "@/domain/training/model";
 import { Disclosure } from "@/components/ui/disclosure";
 import type { ClubGroup } from "@/server/groups/group-repository";
-import { listClubGroups } from "@/server/groups/group-repository";
+import { listClubGroupsPage } from "@/server/groups/group-repository";
 import {
   listYouthSafetyProfiles,
   type YouthSafetyProfile,
@@ -42,7 +42,7 @@ const GROUP_FORMAT_OPTIONS: readonly (readonly [TrainingFormat, string])[] = [
 ];
 
 interface PageProps {
-  readonly searchParams: Promise<{ archived?: string; saved?: string; error?: string; preset?: string; q?: string; audience?: string; size?: string }>;
+  readonly searchParams: Promise<{ archived?: string; saved?: string; error?: string; preset?: string; q?: string; audience?: string; size?: string; page?: string }>;
 }
 
 export default async function GroupsPage({ searchParams }: PageProps) {
@@ -50,20 +50,16 @@ export default async function GroupsPage({ searchParams }: PageProps) {
   const archivedView = query.archived === "1";
   const selectedPreset = archivedView ? undefined : getGroupPreset(query.preset);
   const searchQuery = query.q?.trim().toLocaleLowerCase("de-DE") ?? "";
-  const audienceFilter = ["adults", "kids", "youth", "mixed"].includes(query.audience ?? "") ? query.audience : "";
+  const audienceFilter = ["adults", "kids", "youth", "mixed"].includes(query.audience ?? "") ? query.audience ?? "" : "";
   const requestedSize = Number(query.size ?? 40);
   const pageSize = [20, 40, 80].includes(requestedSize) ? requestedSize : 40;
-  const [allGroups, equipmentOptions, safetyProfiles] = await Promise.all([
-    listClubGroups(archivedView),
+  const page = Math.max(1, Number(query.page ?? "1") || 1);
+  const [groupPage, equipmentOptions, safetyProfiles] = await Promise.all([
+    listClubGroupsPage({ includeArchived: archivedView, query: searchQuery, audience: audienceFilter, limit: pageSize, offset: (page - 1) * pageSize }),
     listTrainingEquipmentOptions("de"),
     listYouthSafetyProfiles(false),
   ]);
-  const groups = allGroups.filter((group) => {
-    if (Boolean(group.archived) !== archivedView) return false;
-    if (audienceFilter && group.audience !== audienceFilter) return false;
-    if (searchQuery && !group.name.toLocaleLowerCase("de-DE").includes(searchQuery)) return false;
-    return true;
-  });
+  const groups = groupPage.items;
 
   return (
     <AppShell
@@ -168,7 +164,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         </CatalogFilterPanel>
         <div className="min-w-0 space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
-          <CatalogResultCount from={groups.length ? 1 : 0} label={groups.length === 1 ? "Gruppe" : "Gruppen"} to={groups.length} total={groups.length} />
+          <CatalogResultCount from={groupPage.total ? (page - 1) * pageSize + 1 : 0} label={groupPage.total === 1 ? "Gruppe" : "Gruppen"} to={Math.min(page * pageSize, groupPage.total)} total={groupPage.total} />
         </div>
         <section className="catalog-results grid gap-4 xl:grid-cols-2">
           {groups.map((group) => (
@@ -253,11 +249,19 @@ export default async function GroupsPage({ searchParams }: PageProps) {
             </p>
           </section>
         ) : null}
+        <CatalogPagination href={(nextPage) => pageHref(nextPage, archivedView, searchQuery, audienceFilter, pageSize)} label="Gruppen" page={page} totalPages={Math.max(1, Math.ceil(groupPage.total / pageSize))} />
         </div>
         </div>
       </div></OverviewLayout>
     </AppShell>
   );
+}
+
+function pageHref(page: number, archived: boolean, query: string, audience: string, size: number): string {
+  const params = new URLSearchParams({ page: String(page), size: String(size), archived: archived ? "1" : "0" });
+  if (query) params.set("q", query);
+  if (audience) params.set("audience", audience);
+  return "/groups?" + params.toString();
 }
 
 function GroupFields({

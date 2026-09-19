@@ -52,6 +52,13 @@ export interface TrainingSessionListItem {
   readonly trainerProfile: TrainerProfile | null;
 }
 
+export interface TrainingSessionPage {
+  readonly items: readonly TrainingSessionListItem[];
+  readonly total: number;
+  readonly totalMinutes: number;
+  readonly draftCount: number;
+}
+
 export interface TrainerProfile {
   readonly name: string;
   readonly education: string | null;
@@ -286,18 +293,46 @@ export async function listTrainingSessions(
       { includeArchived, limit },
     );
 
-    return reader.getRows().map((row) => ({
-      id: String(row[0]),
-      title: String(row[1]),
-      status: String(row[2]) as TrainingSessionStatus,
-      source: String(row[3]),
-      totalDurationMinutes: Number(row[4]),
-      locale: String(row[5]) as "de" | "en",
-      itemCount: Number(row[6]),
-      createdAt: String(row[7]),
-      trainerProfile: row[8] == null ? null : { name: String(row[8]), education: row[9] == null ? null : String(row[9]), bio: row[10] == null ? null : String(row[10]), specialties: row[11] == null ? null : String(row[11]), imageUri: row[12] == null ? null : String(row[12]), imageDataUrl: row[13] == null || row[14] == null ? null : `data:${String(row[14])};base64,${String(row[13])}` },
-    }));
+    return reader.getRows().map(mapTrainingSessionRow);
   });
+}
+
+export async function listTrainingSessionsPage(input: {
+  readonly includeArchived: boolean;
+  readonly query?: string;
+  readonly status?: TrainingSessionStatus | "";
+  readonly limit: number;
+  readonly offset: number;
+}): Promise<TrainingSessionPage> {
+  await ensureDatabaseReady();
+  const limit = Math.max(1, Math.min(100, Math.trunc(input.limit)));
+  const offset = Math.max(0, Math.trunc(input.offset));
+  const query = input.query?.trim() ?? "";
+  const status = input.status ?? "";
+  return withDuckDbConnection(async (connection) => {
+    const where = "WHERE ($includeArchived OR s.status <> 'archived') AND ($status='' OR s.status=$status) AND ($query='' OR lower(s.title) LIKE '%' || lower($query) || '%')";
+    const summary = await connection.runAndReadAll(`SELECT count(*),COALESCE(sum(s.total_duration_minutes),0),count(*) FILTER (WHERE s.status='draft') FROM training_sessions s ${where}`, { includeArchived: input.includeArchived, status, query });
+    const reader = await connection.runAndReadAll(
+      `SELECT s.id::VARCHAR,s.title,s.status,s.source,s.total_duration_minutes,s.locale,(SELECT count(*) FROM training_phases p JOIN training_items i ON i.training_phase_id=p.id WHERE p.training_session_id=s.id),s.created_at,u.display_name,u.education,u.bio,u.specialties,u.profile_image_uri,u.profile_image_data,u.profile_image_content_type FROM training_sessions s LEFT JOIN app_users u ON u.id=s.created_by ${where} ORDER BY s.created_at DESC LIMIT $limit OFFSET $offset`,
+      { includeArchived: input.includeArchived, status, query, limit, offset },
+    );
+    const summaryRow = summary.getRows()[0];
+    return { items: reader.getRows().map(mapTrainingSessionRow), total: Number(summaryRow?.[0] ?? 0), totalMinutes: Number(summaryRow?.[1] ?? 0), draftCount: Number(summaryRow?.[2] ?? 0) };
+  });
+}
+
+function mapTrainingSessionRow(row: readonly unknown[]): TrainingSessionListItem {
+  return {
+    id: String(row[0]),
+    title: String(row[1]),
+    status: String(row[2]) as TrainingSessionStatus,
+    source: String(row[3]),
+    totalDurationMinutes: Number(row[4]),
+    locale: String(row[5]) as "de" | "en",
+    itemCount: Number(row[6]),
+    createdAt: String(row[7]),
+    trainerProfile: row[8] == null ? null : { name: String(row[8]), education: row[9] == null ? null : String(row[9]), bio: row[10] == null ? null : String(row[10]), specialties: row[11] == null ? null : String(row[11]), imageUri: row[12] == null ? null : String(row[12]), imageDataUrl: row[13] == null || row[14] == null ? null : `data:${String(row[14])};base64,${String(row[13])}` },
+  };
 }
 
 export async function getTrainingSessionById(id: string): Promise<TrainingSessionDetail | null> {

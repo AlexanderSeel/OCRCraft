@@ -85,6 +85,8 @@ export async function saveAiExerciseDraft(
 export async function listAiExerciseDrafts(
   status?: AiExerciseDraftStatus,
   limit = 100,
+  query = "",
+  offset = 0,
 ): Promise<readonly AiExerciseDraftRecord[]> {
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
@@ -92,14 +94,23 @@ export async function listAiExerciseDrafts(
       `
       SELECT ${SELECT_COLUMNS}
       FROM ai_exercise_drafts
-      WHERE $status='' OR status=$status
+      WHERE ($status='' OR status=$status)
+        AND ($query='' OR name_de ILIKE '%' || $query || '%' OR name_en ILIKE '%' || $query || '%' OR provider_id ILIKE '%' || $query || '%')
       ORDER BY CASE status WHEN 'pending' THEN 0 WHEN 'approving' THEN 1 WHEN 'approved' THEN 2 ELSE 3 END,
         created_at DESC
-      LIMIT $limit
+      LIMIT $limit OFFSET $offset
       `,
-      { status: status ?? "", limit },
+      { status: status ?? "", query: query.trim(), limit, offset: Math.max(0, Math.trunc(offset)) },
     );
     return reader.getRows().map(rowToRecord);
+  });
+}
+
+export async function countAiExerciseDrafts(status?: AiExerciseDraftStatus, query = ""): Promise<number> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll("SELECT count(*) FROM ai_exercise_drafts WHERE ($status='' OR status=$status) AND ($query='' OR name_de ILIKE '%' || $query || '%' OR name_en ILIKE '%' || $query || '%' OR provider_id ILIKE '%' || $query || '%')", { status: status ?? "", query: query.trim() });
+    return Number(reader.getRows()[0]?.[0] ?? 0);
   });
 }
 

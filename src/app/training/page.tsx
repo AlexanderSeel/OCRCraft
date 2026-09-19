@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
-import { listTrainingSessions } from "@/server/training/training-session-repository";
+import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
+import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { listTrainingSessionsPage, type TrainingSessionStatus } from "@/server/training/training-session-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -13,18 +15,21 @@ const STATUS_LABELS = {
 } as const;
 
 interface PageProps {
-  readonly searchParams: Promise<{ status?: string }>;
+  readonly searchParams: Promise<{ status?: string; q?: string; page?: string; size?: string }>;
 }
 
 export default async function TrainingPage({ searchParams }: PageProps) {
-  const { status } = await searchParams;
+  const { status, q, page: pageParam, size: sizeParam } = await searchParams;
   const archived = status === "archived";
-  const allSessions = await listTrainingSessions(archived, 200);
-  const sessions = archived
-    ? allSessions.filter((session) => session.status === "archived")
-    : allSessions;
-  const totalMinutes = sessions.reduce((sum, session) => sum + session.totalDurationMinutes, 0);
-  const draftCount = sessions.filter((session) => session.status === "draft").length;
+  const query = q?.trim() ?? "";
+  const selectedStatus = ["draft", "ready", "completed", "archived"].includes(status ?? "") ? status as TrainingSessionStatus : "";
+  const requestedSize = Number(sizeParam ?? "24");
+  const pageSize = [12, 24, 48].includes(requestedSize) ? requestedSize : 24;
+  const page = Math.max(1, Number(pageParam ?? "1") || 1);
+  const sessionPage = await listTrainingSessionsPage({ includeArchived: archived, query, status: archived ? "archived" : selectedStatus === "archived" ? "" : selectedStatus, limit: pageSize, offset: (page - 1) * pageSize });
+  const sessions = sessionPage.items;
+  const totalMinutes = sessionPage.totalMinutes;
+  const draftCount = sessionPage.draftCount;
 
   return (
     <AppShell
@@ -96,6 +101,14 @@ export default async function TrainingPage({ searchParams }: PageProps) {
           <Metric label="Offene Entwürfe" value={draftCount} />
           <Metric label="Geplante Minuten" value={totalMinutes} />
         </section>
+
+        <CatalogFilterPanel hasFilters={Boolean(query || selectedStatus || page !== 1 || pageSize !== 24)} resetHref={archived ? "/training?status=archived" : "/training"} title="Trainingsfilter">
+          <label className="grid gap-1 text-sm font-bold">Suchen<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={query} name="q" placeholder="Trainingstitel …" /></label>
+          {!archived ? <label className="grid gap-1 text-sm font-bold">Status<select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={selectedStatus} name="status"><option value="">Alle aktiven</option><option value="draft">Entwurf</option><option value="ready">Bereit</option><option value="completed">Abgeschlossen</option></select></label> : null}
+          <CatalogPageSize options={[12, 24, 48]} value={pageSize} />
+        </CatalogFilterPanel>
+
+        <section className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]"><CatalogResultCount from={sessionPage.total ? (page - 1) * pageSize + 1 : 0} to={Math.min(page * pageSize, sessionPage.total)} total={sessionPage.total} label={sessionPage.total === 1 ? "Training" : "Trainings"} /></section>
 
         <div className="flex justify-end text-sm font-bold">
           {archived ? (
@@ -201,9 +214,18 @@ export default async function TrainingPage({ searchParams }: PageProps) {
             ) : null}
           </section>
         )}
+        <CatalogPagination href={(nextPage) => pageHref(nextPage, archived, query, selectedStatus, pageSize)} label="Trainings" page={page} totalPages={Math.max(1, Math.ceil(sessionPage.total / pageSize))} />
       </div></OverviewLayout>
     </AppShell>
   );
+}
+
+function pageHref(page: number, archived: boolean, query: string, status: string, size: number): string {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (archived) params.set("status", "archived");
+  else if (status) params.set("status", status);
+  if (query) params.set("q", query);
+  return "/training?" + params.toString();
 }
 
 function sourceLabel(source: string): string {

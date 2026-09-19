@@ -14,6 +14,7 @@ export interface MediaCatalogFilters {
   readonly sourceType?: string;
   readonly mediaType?: string;
   readonly limit?: number;
+  readonly offset?: number;
 }
 
 export interface MediaCatalogItem {
@@ -105,6 +106,7 @@ export async function listMediaCatalog({
   sourceType = "",
   mediaType = "",
   limit = 120,
+  offset = 0,
 }: MediaCatalogFilters = {}): Promise<readonly MediaCatalogItem[]> {
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
@@ -165,7 +167,7 @@ export async function listMediaCatalog({
         CASE m.review_status WHEN 'pending' THEN 0 WHEN 'rejected' THEN 1 ELSE 2 END,
         m.created_at DESC,
         m.id DESC
-      LIMIT $limit
+      LIMIT $limit OFFSET $offset
     `, {
       query: query.trim(),
       reviewStatus,
@@ -173,6 +175,7 @@ export async function listMediaCatalog({
       sourceType,
       mediaType,
       limit: Math.max(1, Math.min(500, limit)),
+      offset: Math.max(0, Math.trunc(offset)),
     });
 
     return reader.getRows().map((row) => ({
@@ -212,6 +215,19 @@ export async function listMediaCatalog({
       createdAt: String(row[33]),
       errorMessage: row[34] == null ? null : String(row[34]),
     }));
+  });
+}
+
+export async function countMediaCatalog(filters: Omit<MediaCatalogFilters, "limit" | "offset"> = {}): Promise<number> {
+  await ensureDatabaseReady();
+  const query = filters.query?.trim() ?? "";
+  const reviewStatus = filters.reviewStatus ?? "";
+  const generationStatus = filters.generationStatus ?? "";
+  const sourceType = filters.sourceType ?? "";
+  const mediaType = filters.mediaType ?? "";
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`SELECT count(*) FROM exercise_media_assets m JOIN exercises e ON e.id=m.exercise_id LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de' WHERE ($query='' OR COALESCE(t.name,e.canonical_name) ILIKE '%' || $query || '%' OR COALESCE(e.seed_key,'') ILIKE '%' || $query || '%') AND ($reviewStatus='' OR m.review_status=$reviewStatus) AND ($generationStatus='' OR m.generation_status=$generationStatus) AND ($sourceType='' OR m.source_type=$sourceType) AND ($mediaType='' OR m.media_type=$mediaType)`, { query, reviewStatus, generationStatus, sourceType, mediaType });
+    return Number(reader.getRows()[0]?.[0] ?? 0);
   });
 }
 

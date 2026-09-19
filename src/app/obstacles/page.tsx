@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
-import { FilterSidePanel } from "@/components/layout/filter-side-panel";
+import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
+import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
 import { RemoveObstacleAssignmentForm } from "@/components/obstacles/remove-obstacle-assignment-form";
 import {
   getObstacleCatalogSummary,
-  listObstacleCatalog,
+  listObstacleCatalogPage,
   type ObstacleCatalogItem,
 } from "@/server/obstacles/obstacle-catalog-repository";
 import { listObstacleCandidates, type ObstacleCandidate } from "@/server/obstacles/obstacle-assignment-repository";
@@ -21,6 +22,8 @@ interface PageProps {
     candidateQ?: string;
     assignment?: string;
     assignmentError?: string;
+    page?: string;
+    size?: string;
   }>;
 }
 
@@ -30,12 +33,16 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
   const riskLevel = allowed(params.risk, ["low", "medium", "high"]);
   const archived = params.status === "archived";
   const candidateQuery = params.candidateQ?.trim() ?? "";
+  const requestedSize = Number(params.size ?? "24");
+  const pageSize = [12, 24, 48].includes(requestedSize) ? requestedSize : 24;
+  const page = Math.max(1, Number(params.page ?? "1") || 1);
 
-  const [summary, obstacles, candidates] = await Promise.all([
+  const [summary, obstaclePage, candidates] = await Promise.all([
     getObstacleCatalogSummary(),
-    listObstacleCatalog({ query, riskLevel, archived }),
+    listObstacleCatalogPage({ query, riskLevel, archived, limit: pageSize, offset: (page - 1) * pageSize }),
     candidateQuery ? listObstacleCandidates(candidateQuery) : Promise.resolve([]),
   ]);
+  const obstacles = obstaclePage.items;
 
   return (
     <AppShell
@@ -100,11 +107,7 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
         </section>
 
         <div className="grid gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
-        <FilterSidePanel title="Hindernisfilter">
-        <form
-          className="grid min-w-0 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1"
-          method="get"
-        >
+        <CatalogFilterPanel hasFilters={Boolean(query || riskLevel || archived || page !== 1 || pageSize !== 24)} resetHref="/obstacles" title="Hindernisfilter">
           <label className="grid gap-1 text-sm font-bold">
             Suchen
             <input
@@ -130,18 +133,12 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
               <option value="archived">Archiviert</option>
             </select>
           </label>
-          <button className="self-end rounded-xl bg-[var(--control-strong)] px-5 py-3 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
-            Filtern
-          </button>
-        </form>
-        </FilterSidePanel>
+          <CatalogPageSize options={[12, 24, 48]} value={pageSize} />
+        </CatalogFilterPanel>
         <div className="min-w-0 space-y-6">
 
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
-          <span>{obstacles.length} Hindernisse / obstacle-spezifische Übungen</span>
-          {(query || riskLevel || archived) ? (
-            <Link className="font-black underline underline-offset-4" href="/obstacles">Filter zurücksetzen</Link>
-          ) : null}
+          <CatalogResultCount from={obstaclePage.total ? (page - 1) * pageSize + 1 : 0} to={Math.min(page * pageSize, obstaclePage.total)} total={obstaclePage.total} label={obstaclePage.total === 1 ? "Hindernis" : "Hindernisse"} />
         </div>
 
         {obstacles.length ? (
@@ -157,10 +154,18 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
           </section>
         )}
         </div>
+        <CatalogPagination href={(nextPage) => pageHref(nextPage, query, riskLevel, archived, pageSize)} label="Hindernisse" page={page} totalPages={Math.max(1, Math.ceil(obstaclePage.total / pageSize))} />
         </div>
       </div></OverviewLayout>
     </AppShell>
   );
+}
+
+function pageHref(page: number, query: string, risk: string, archived: boolean, size: number): string {
+  const params = new URLSearchParams({ page: String(page), size: String(size), status: archived ? "archived" : "active" });
+  if (query) params.set("q", query);
+  if (risk) params.set("risk", risk);
+  return "/obstacles?" + params.toString();
 }
 
 function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) {

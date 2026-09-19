@@ -256,6 +256,44 @@ export async function listClubGroups(includeArchived = false): Promise<readonly 
   });
 }
 
+export interface ClubGroupPage {
+  readonly items: readonly ClubGroup[];
+  readonly total: number;
+}
+
+export async function listClubGroupsPage(input: {
+  readonly includeArchived: boolean;
+  readonly query?: string;
+  readonly audience?: string;
+  readonly limit: number;
+  readonly offset: number;
+}): Promise<ClubGroupPage> {
+  await ensureDatabaseReady();
+  const limit = Math.max(1, Math.min(100, Math.trunc(input.limit)));
+  const offset = Math.max(0, Math.trunc(input.offset));
+  const query = input.query?.trim() ?? "";
+  const audience = input.audience?.trim() ?? "";
+  return withDuckDbConnection(async (connection) => {
+    const where = "WHERE ($includeArchived OR g.archived=false) AND ($query='' OR lower(g.name) LIKE '%' || lower($query) || '%') AND ($audience='' OR g.audience=$audience)";
+    const totalReader = await connection.runAndReadAll(`SELECT count(*) FROM club_groups g ${where}`, { includeArchived: input.includeArchived, query, audience });
+    const reader = await connection.runAndReadAll(
+      `SELECT g.id::VARCHAR,g.name,g.audience,g.min_age,g.max_age,g.default_participant_count,g.default_duration_minutes,g.default_locale,g.maximum_risk_level,COALESCE(g.default_location,'mixed'),COALESCE(g.rule_profile,'standard'),g.skill_beginner_percent,g.skill_intermediate_percent,g.skill_advanced_percent,COALESCE(g.default_organization_mode,'solo'),g.default_team_size,g.default_group_split_count,g.default_station_group_size,g.youth_safety_profile_id::VARCHAR,yp.name,g.archived,g.created_at,g.updated_at,(SELECT count(*) FROM training_sessions s WHERE s.group_id=g.id) AS linked_training_count
+       FROM club_groups g LEFT JOIN club_youth_safety_profiles yp ON yp.id=g.youth_safety_profile_id ${where} ORDER BY g.archived,g.name LIMIT $limit OFFSET $offset`,
+      { includeArchived: input.includeArchived, query, audience, limit, offset },
+    );
+    const baseGroups = reader.getRows().map(rowToGroup);
+    if (baseGroups.length === 0) return { items: [], total: Number(totalReader.getRows()[0]?.[0] ?? 0) };
+    const groupIds = baseGroups.map((group) => group.id).join(",");
+    const equipmentReader = await connection.runAndReadAll("SELECT group_id::VARCHAR,equipment_id::VARCHAR,quantity_available FROM club_group_equipment_defaults WHERE list_contains(string_split($groupIds, ','), group_id::VARCHAR) ORDER BY group_id::VARCHAR,equipment_id::VARCHAR", { groupIds });
+    const equipmentByGroup = new Map<string, ClubGroupEquipmentDefault[]>();
+    for (const row of equipmentReader.getRows()) (equipmentByGroup.get(String(row[0])) ?? (equipmentByGroup.set(String(row[0]), []), equipmentByGroup.get(String(row[0]))!)).push({ equipmentId: String(row[1]), quantityAvailable: Number(row[2]) });
+    const formatReader = await connection.runAndReadAll("SELECT group_id::VARCHAR,format FROM club_group_preferred_formats WHERE list_contains(string_split($groupIds, ','), group_id::VARCHAR) ORDER BY group_id::VARCHAR,sort_order,format", { groupIds });
+    const formatsByGroup = new Map<string, TrainingFormat[]>();
+    for (const row of formatReader.getRows()) (formatsByGroup.get(String(row[0])) ?? (formatsByGroup.set(String(row[0]), []), formatsByGroup.get(String(row[0]))!)).push(String(row[1]) as TrainingFormat);
+    return { items: baseGroups.map((group) => ({ ...group, defaultEquipment: equipmentByGroup.get(group.id) ?? [], preferredFormats: formatsByGroup.get(group.id) ?? [] })), total: Number(totalReader.getRows()[0]?.[0] ?? 0) };
+  });
+}
+
 export async function createClubGroup(input: ClubGroupInput): Promise<string> {
   await ensureDatabaseReady();
   const id = randomUUID();

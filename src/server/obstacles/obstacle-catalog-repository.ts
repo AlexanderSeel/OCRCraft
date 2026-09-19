@@ -10,6 +10,7 @@ export interface ObstacleCatalogFilters {
   readonly riskLevel?: string;
   readonly archived?: boolean;
   readonly limit?: number;
+  readonly offset?: number;
 }
 
 export interface ObstacleCatalogItem {
@@ -43,6 +44,11 @@ export interface ObstacleCatalogSummary {
   readonly archived: number;
   readonly highRisk: number;
   readonly withClubDimensions: number;
+}
+
+export interface ObstacleCatalogPage {
+  readonly items: readonly ObstacleCatalogItem[];
+  readonly total: number;
 }
 
 export async function getObstacleCatalogSummary(): Promise<ObstacleCatalogSummary> {
@@ -79,9 +85,30 @@ export async function listObstacleCatalog({
   riskLevel = "",
   archived = false,
   limit = 120,
+  offset = 0,
 }: ObstacleCatalogFilters = {}): Promise<readonly ObstacleCatalogItem[]> {
+  const page = await listObstacleCatalogPage({ query, riskLevel, archived, limit, offset });
+  return page.items;
+}
+
+export async function listObstacleCatalogPage({
+  query = "",
+  riskLevel = "",
+  archived = false,
+  limit = 120,
+  offset = 0,
+}: ObstacleCatalogFilters = {}): Promise<ObstacleCatalogPage> {
   await ensureDatabaseReady();
+  const boundedLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
+  const boundedOffset = Math.max(0, Math.trunc(offset));
   return withDuckDbConnection(async (connection) => {
+    const from = `FROM exercises e
+      JOIN exercise_obstacle_guidance g ON g.exercise_id=e.id AND g.locale='de'
+      LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'`;
+    const conditions = `WHERE e.archived=$archived
+        AND ($riskLevel='' OR e.risk_level=$riskLevel)
+        AND ($query='' OR COALESCE(t.name,e.canonical_name) ILIKE '%' || $query || '%' OR COALESCE(e.seed_key,'') ILIKE '%' || $query || '%' OR g.equipment_configuration ILIKE '%' || $query || '%' OR g.execution ILIKE '%' || $query || '%')`;
+    const countReader = await connection.runAndReadAll(`SELECT count(*) ${from} ${conditions}`, { query: query.trim(), riskLevel, archived });
     const reader = await connection.runAndReadAll(`
       SELECT
         e.id::VARCHAR,
@@ -117,32 +144,23 @@ export async function listObstacleCatalog({
           WHERE m.exercise_id=e.id AND m.generation_status='generated' AND m.review_status<>'rejected'
           ORDER BY COALESCE(m.is_primary,false) DESC,m.created_at DESC,m.id DESC\n          LIMIT 1
         )
-      FROM exercises e
-      JOIN exercise_obstacle_guidance g ON g.exercise_id=e.id AND g.locale='de'
-      LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
+      ${from}
       LEFT JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de'
-      WHERE e.archived=$archived
-        AND ($riskLevel='' OR e.risk_level=$riskLevel)
-        AND (
-          $query=''
-          OR COALESCE(t.name,e.canonical_name) ILIKE '%' || $query || '%'
-          OR COALESCE(e.seed_key,'') ILIKE '%' || $query || '%'
-          OR g.equipment_configuration ILIKE '%' || $query || '%'
-          OR g.execution ILIKE '%' || $query || '%'
-        )
+      ${conditions}
       ORDER BY
         CASE e.risk_level WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
         COALESCE(t.name,e.canonical_name),
         e.id
-      LIMIT $limit
+      LIMIT $limit OFFSET $offset
     `, {
       query: query.trim(),
       riskLevel,
       archived,
-      limit: Math.max(1, Math.min(500, limit)),
+      limit: boundedLimit,
+      offset: boundedOffset,
     });
 
-    return reader.getRows().map((row) => ({
+    return { items: reader.getRows().map((row) => ({
       exerciseId: String(row[0]),
       seedKey: row[1] == null ? null : String(row[1]),
       name: String(row[2]),
@@ -166,7 +184,7 @@ export async function listObstacleCatalog({
       clubReachCm: row[20] == null ? null : Number(row[20]),
       equipment: String(row[21] ?? "").split(" | ").filter(Boolean),
       imageUrl: safeExerciseImageUri(row[22]),
-    }));
+    })), total: Number(countReader.getRows()[0]?.[0] ?? 0) };
   });
 }
 

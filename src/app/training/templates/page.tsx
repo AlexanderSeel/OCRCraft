@@ -2,7 +2,8 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel } from "@/components/catalog/catalog-filter-panel";
-import { CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
+import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
 import {
   TRAINING_TEMPLATES,
   TRAINING_TEMPLATE_FOCUS_KEYS,
@@ -17,7 +18,7 @@ import { archiveClubTrainingTemplateAction, instantiateClubTrainingTemplateActio
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  readonly searchParams: Promise<{ audience?: string; focus?: string; saved?: string; error?: string }>;
+  readonly searchParams: Promise<{ audience?: string; focus?: string; saved?: string; error?: string; page?: string; size?: string }>;
 }
 
 const audiences: readonly Audience[] = ["adults", "kids", "youth"];
@@ -28,9 +29,13 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
   const focus = TRAINING_TEMPLATE_FOCUS_KEYS.includes(params.focus as TrainingTemplateFocus)
     ? params.focus as TrainingTemplateFocus
     : "";
-  const templates = TRAINING_TEMPLATES.filter((item) =>
+  const filteredTemplates = TRAINING_TEMPLATES.filter((item) =>
     (!audience || item.audience === audience) && (!focus || item.focus === focus)
   );
+  const requestedSize = Number(params.size ?? "12");
+  const pageSize = [6, 12, 24].includes(requestedSize) ? requestedSize : 12;
+  const page = Math.max(1, Number(params.page ?? "1") || 1);
+  const templates = filteredTemplates.slice((page - 1) * pageSize, page * pageSize);
   const clubTemplates = await listClubTrainingTemplates(false, 100);
 
   return (
@@ -111,7 +116,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
           )}
         </section>
 
-        <CatalogFilterPanel hasFilters={Boolean(audience || focus)} resetHref="/training/templates" title="Vorlagenfilter">
+        <CatalogFilterPanel hasFilters={Boolean(audience || focus || page !== 1 || pageSize !== 12)} resetHref="/training/templates" title="Vorlagenfilter">
             <label className="grid gap-2 text-sm font-bold">
               Zielgruppe
               <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={audience} name="audience">
@@ -126,11 +131,12 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
                 {TRAINING_TEMPLATE_FOCUS_KEYS.map((value) => <option key={value} value={value}>{trainingTemplateFocusLabel(value)}</option>)}
               </select>
             </label>
+            <CatalogPageSize options={[6, 12, 24]} value={pageSize} />
         </CatalogFilterPanel>
 
         <section className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-black"><CatalogResultCount from={templates.length ? 1 : 0} label={templates.length === 1 ? "Vorlage" : "Vorlagen"} to={templates.length} total={templates.length} /></h2>
+            <h2 className="text-lg font-black"><CatalogResultCount from={filteredTemplates.length ? (page - 1) * pageSize + 1 : 0} label={filteredTemplates.length === 1 ? "Vorlage" : "Vorlagen"} to={Math.min(page * pageSize, filteredTemplates.length)} total={filteredTemplates.length} /></h2>
             <p className="mt-1 text-sm text-[var(--muted)]">Jede Vorlage definiert Planungsparameter; konkrete Übungen kommen erst beim Erzeugen aus dem freigegebenen Katalog.</p>
           </div>
           <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs font-black">{templates.length} versionierte Startvorlagen</span>
@@ -172,9 +178,17 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
             </article>
           ))}
         </section>
+        <CatalogPagination href={(nextPage) => pageHref(nextPage, audience, focus, pageSize)} label="Vorlagen" page={page} totalPages={Math.max(1, Math.ceil(filteredTemplates.length / pageSize))} />
       </div></OverviewLayout>
     </AppShell>
   );
+}
+
+function pageHref(page: number, audience: string, focus: string, size: number): string {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (audience) params.set("audience", audience);
+  if (focus) params.set("focus", focus);
+  return "/training/templates?" + params.toString();
 }
 
 function formatTemplateDate(value: string): string {

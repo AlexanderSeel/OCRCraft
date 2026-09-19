@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
-import { FilterSidePanel } from "@/components/layout/filter-side-panel";
-import { CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
+import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
 import { MediaJobRefresh } from "@/components/media/media-job-refresh";
 import { OrphanedMediaCleanupForm } from "@/components/media/orphaned-media-cleanup-form";
 import { ExternalMediaManager } from "@/components/media/external-media-manager";
@@ -10,6 +10,7 @@ import { VideoPopoverButton } from "@/components/media/video-popover-button";
 import {
   getMediaCatalogSummary,
   listMediaCatalog,
+  countMediaCatalog,
   listMediaGenerationCandidates,
   listLegacyTriptychMigrationCandidates,
   type LegacyTriptychMigrationCandidate,
@@ -51,6 +52,8 @@ interface PageProps {
     legacyError?: string;
     sequenceSaved?: string;
     sequenceError?: string;
+    page?: string;
+    size?: string;
   }>;
 }
 
@@ -62,15 +65,21 @@ export default async function MediaPage({ searchParams }: PageProps) {
   const sourceType = allowed(params.source, ["ai_generated", "club_created", "external_reference"]);
   const mediaType = allowed(params.type, ["image", "video", "illustration"]);
   const missingQuery = params.missingQ?.trim() ?? "";
+  const requestedSize = Number(params.size ?? "24");
+  const pageSize = [12, 24, 48].includes(requestedSize) ? requestedSize : 24;
+  const page = Math.max(1, Number(params.page ?? "1") || 1);
 
-  const [summary, assets, generationQueue, missingImageExercises, recentJobs, maintenance, legacyCandidates] = await Promise.all([
+  const [summary, assetTotal, assets, generationQueue, missingImageExercises, recentJobs, maintenance, legacyCandidates] = await Promise.all([
     getMediaCatalogSummary(),
+    countMediaCatalog({ query, reviewStatus, generationStatus, sourceType, mediaType }),
     listMediaCatalog({
       query,
       reviewStatus,
       generationStatus,
       sourceType,
       mediaType,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
     }),
     getMediaGenerationQueueSummary(),
     listMediaGenerationCandidates(missingQuery, 24),
@@ -187,11 +196,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
         </section>
 
         <div className="grid gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
-        <FilterSidePanel title="Medienfilter">
-        <form
-          className="grid min-w-0 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1"
-          method="get"
-        >
+        <CatalogFilterPanel hasFilters={Boolean(query || reviewStatus || generationStatus || sourceType || mediaType || page !== 1 || pageSize !== 24)} resetHref="/media" title="Medienfilter">
           <label className="grid gap-1 text-sm font-bold">
             Suchen
             <input
@@ -225,18 +230,12 @@ export default async function MediaPage({ searchParams }: PageProps) {
             ["image", "Bild"],
             ["video", "Video"],
           ]} />
-          <button className="self-end rounded-xl bg-[var(--control-strong)] px-5 py-3 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
-            Filtern
-          </button>
-        </form>
-        </FilterSidePanel>
+          <CatalogPageSize options={[12, 24, 48]} value={pageSize} />
+        </CatalogFilterPanel>
         <div className="min-w-0 space-y-6">
 
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
-          <CatalogResultCount from={assets.length ? 1 : 0} label="Medien im aktuellen Filter" to={assets.length} total={assets.length} />
-          {(query || reviewStatus || generationStatus || sourceType || mediaType) ? (
-            <Link className="font-black underline underline-offset-4" href="/media">Filter zurücksetzen</Link>
-          ) : null}
+          <CatalogResultCount from={assetTotal ? (page - 1) * pageSize + 1 : 0} label="Medien im aktuellen Filter" to={Math.min(page * pageSize, assetTotal)} total={assetTotal} />
         </div>
 
         <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
@@ -415,10 +414,21 @@ export default async function MediaPage({ searchParams }: PageProps) {
           <EmptyState />
         )}
         </div>
+        <CatalogPagination href={(nextPage) => pageHref(nextPage, query, reviewStatus, generationStatus, sourceType, mediaType, pageSize)} label="Medien" page={page} totalPages={Math.max(1, Math.ceil(assetTotal / pageSize))} />
         </div>
       </div></OverviewLayout>
     </AppShell>
   );
+}
+
+function pageHref(page: number, query: string, review: string, generation: string, source: string, type: string, size: number): string {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (query) params.set("q", query);
+  if (review) params.set("review", review);
+  if (generation) params.set("generation", generation);
+  if (source) params.set("source", source);
+  if (type) params.set("type", type);
+  return "/media?" + params.toString();
 }
 
 function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
