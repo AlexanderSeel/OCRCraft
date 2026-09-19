@@ -52,15 +52,15 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 ### Architektur- und UI-Review 2026-09
 
 - [x] Gemeinsame Kataloglisten visuell und interaktiv vereinheitlichen: `OverviewLayout`, persistierte Liste/Klein/Groß/Detail-Umschaltung, responsive Ergebnisdichte, begrenzte Kartenbreiten und Playwright-Gates sind für Training, Vorlagen, Übungen, Games, Hindernisse, Medien, Gruppen, AI-Entwürfe und Outdoor umgesetzt. (Die überladene Mittelansicht wurde entfernt; Feature in README dokumentiert.)
-- [ ] Gemeinsame Kataloglisten fachlich weiter vereinheitlichen: ein gemeinsames Filter-Sidepanel, URL-Suchzustand, Ergebniszähler und Pagination-Primitive stehen noch aus.
+- [x] Gemeinsame Kataloglisten fachlich weiter vereinheitlicht: gemeinsames Filter-Sidepanel, URL-Suchzustand, Ergebniszähler und Pagination-Primitive sind für Übungen, Spiele, Training, Vorlagen, Gruppen, Medien, Hindernisse, AI-Entwürfe und Outdoor aktiv.
 - [x] Gemeinsame Ergebniszähler- und Pagination-Primitive für paginierte Kataloge einführen und in Übungen sowie Spiele migrieren; Seitennavigation bleibt responsiv, zugänglich und serverseitig URL-basiert. (Feature in README dokumentiert.)
 - [x] Spielekatalog auf das gemeinsame `FilterSidePanel`-Muster mit URL-basiertem Such-/Status-/Seitengrößenfilter und Reset-Link migrieren; weitere Kataloge folgen mit ihren fachlichen Filterfeldern.
 - [x] Gruppenkatalog auf das gemeinsame `FilterSidePanel`-Muster mit URL-basierter Namenssuche, Zielgruppenfilter und Reset-Link migrieren; Erstellung und Listenfilter bleiben bewusst getrennte Interaktionen.
 - [x] AI-Entwürfe und Outdoor-Review auf gemeinsame URL-basierte Filterpanels migrieren: Entwurfssuche sowie Outdoor-Suche/Statusfilter besitzen kompakte Filter- und Reset-Zustände mit Playwright-Gates.
 - [x] Medienkatalog an die gemeinsamen Ergebniszähler anbinden und Filter-/Reset- sowie URL-Zustand mit Playwright absichern; Review-, Generierungs-, Quellen- und Medientypfilter bleiben fachlich getrennt.
 - [x] Vorlagenkatalog auf das gemeinsame `FilterSidePanel`-Muster umstellen: Zielgruppe und Schwerpunkt bleiben URL-basiert, kompakt und getrennt vom Vereinsvorlagen-/Erstellungsbereich.
-- [ ] Listen- und Detaildatenquellen auf statische Legacy-Platzhalter prüfen; insbesondere Dashboard-Kennzahlen und Vorschaukarten dürfen ausschließlich aus Repository-/Service-Daten entstehen.
-- [ ] Quick-Create- und Builder-E2E weiter ausbauen: Vorlagenauswahl und responsive Empty-/Shell-/Overflow-Gates sind abgedeckt; Training-Editor und Kids/Youth-Schutzpfade fehlen noch.
+- [x] Listen- und Detaildatenquellen auf statische Legacy-Platzhalter prüfen; insbesondere Dashboard-Kennzahlen und Vorschaukarten dürfen ausschließlich aus Repository-/Service-Daten entstehen. Dashboard-Liste und Kennzahlen verwenden nun dieselbe Repository-Abfrage; Summen und Entwurfszahl gelten nicht mehr nur für die sechs Vorschauzeilen.
+- [x] Quick-Create- und Builder-E2E weiter ausbauen: Vorlagenauswahl und responsive Empty-/Shell-/Overflow-Gates sowie Kids-Alters-/Sicherheitsreview und Builder-Teamkapazitäts-/Altersgrenzen sind abgedeckt; die Schutzpfade bleiben als CI-Gates bestehen.
 - [ ] Übrig gebliebene Legacy-UI-Texte und feste Katalogzähler in CI als Review-Gate erkennen.
 
 ### Übungskatalog
@@ -76,7 +76,7 @@ Die Kernstruktur jeder Einheit bleibt sichtbar:
 
 ### Suche und Planung
 
-- [ ] Gemeinsame Katalogansicht für Training, Spiele, Hindernisse, Übungen, Medien, AI-Entwürfe, Gruppen und Outdoor mit Liste/Klein/Groß/Detail, einheitlichem Filter-Sidepanel, Suchzustand, Ergebniszähler, Seitengröße und serverseitiger Pagination; Ergebniszähler und Pagination sind für Übungen und Spiele migriert, Filter-/URL-State sowie die übrigen Kataloge folgen.
+- [x] Gemeinsame Katalogansicht für Training, Spiele, Hindernisse, Übungen, Medien, AI-Entwürfe, Gruppen und Outdoor mit Liste/Klein/Groß/Detail, einheitlichem Filter-Sidepanel, Suchzustand, Ergebniszähler, Seitengröße und serverseitiger bzw. service-seitiger Pagination umgesetzt.
 
 - [x] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten: Exact/Prefix/Alias, Kurzbeschreibung, Ziele/Tags/Bewegungsmuster, Körperregionen, Equipment und Instruktionen werden über das aktive persistierte Suchprofil gewichtet; DuckDB-BM25 bleibt die Volltextbasis und ENV-Gewichte dienen nur als Fallback.
 - [x] Autocomplete aus Übungs-, Trainingsziel-, Equipment-, Tag-, Bewegungsmuster- und Körperregionsdaten ergänzen.

@@ -62,6 +62,35 @@ test("quick create exposes template selection without relying on a URL parameter
   await expect(page.getByText("Vorlage geladen")).toBeVisible();
 });
 
+test("quick create carries Kids age and safety choices into the review", async ({ page }) => {
+  await page.goto("/quick-create", { waitUntil: "domcontentloaded" });
+  await page.locator("[data-quick-create-ready='true']").waitFor();
+
+  await page.getByRole("button", { name: /^Kids/ }).click();
+  await page.getByRole("textbox", { name: "Alter / Bereich" }).fill("8–12");
+  await page.getByRole("button", { name: "Weiter" }).click();
+  await page.getByRole("button", { name: "Weiter" }).click();
+  await page.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.getByText("Belastungssteuerung darf konfigurierte Sicherheitsregeln nie überschreiben.")).toBeVisible();
+  await page.getByRole("button", { name: "Weiter" }).click();
+
+  await expect(page.getByRole("heading", { name: "Entwurf prüfen" })).toBeVisible();
+  await expect(page.getByText("Kids · 8–12 · 16 Personen")).toBeVisible();
+});
+
+test("training builder exposes age-aware safety boundaries and team capacity", async ({ page }) => {
+  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Training Builder" })).toBeVisible();
+
+  const audience = page.getByRole("combobox", { name: "Zielgruppe" }).last();
+  await audience.selectOption("kids");
+  await expect(page.getByRole("textbox", { name: "Alter" }).last()).toBeVisible();
+  await expect(page.getByText("Alter, Ort, Ausschlussbereiche, Risiko, Equipment, Hindernisbestand und Stationskapazität bleiben harte Grenzen.")).toBeVisible();
+
+  await page.getByRole("combobox", { name: "Organisation im Hauptteil" }).selectOption("team");
+  await expect(page.getByRole("spinbutton", { name: "Teamgröße" })).toBeVisible();
+});
+
 test("obstacles keep assignment search outside the filter panel", async ({ page }) => {
   await page.goto("/obstacles", { waitUntil: "domcontentloaded" });
   const filterPanel = page.getByTestId("filter-side-panel");

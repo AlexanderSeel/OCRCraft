@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
-import { FilterSidePanel } from "@/components/layout/filter-side-panel";
-import { CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
+import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
 import {
   listOutdoorVariantCandidates,
   type OutdoorVariantCandidatePreview,
@@ -25,6 +25,8 @@ interface PageProps {
     error?: string;
     q?: string;
     status?: string;
+    page?: string;
+    size?: string;
   }>;
 }
 
@@ -41,6 +43,10 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
     if (statusFilter === "review") return candidate.status === "unmappable" || candidate.status === "missing-details";
     return !statusFilter || candidate.status === statusFilter;
   });
+  const requestedSize = Number(result.size ?? "12");
+  const pageSize = [6, 12, 24].includes(requestedSize) ? requestedSize : 12;
+  const page = Math.max(1, Number(result.page ?? "1") || 1);
+  const visibleCandidates = filteredCandidates.slice((page - 1) * pageSize, page * pageSize);
   const ready = candidates.filter((candidate) => candidate.status === "ready");
   const existing = candidates.filter((candidate) => candidate.status === "existing");
   const needsReview = candidates.filter((candidate) => candidate.status === "unmappable" || candidate.status === "missing-details");
@@ -130,8 +136,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
           </div>
 
           <div className="grid min-w-0 gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
-          <FilterSidePanel title="Outdoor-Filter">
-            <form className="grid min-w-0 gap-3" method="get">
+          <CatalogFilterPanel hasFilters={Boolean(searchQuery || statusFilter || page !== 1 || pageSize !== 12)} resetHref="/admin/outdoor-variants" title="Outdoor-Filter">
               <label className="grid gap-1 text-sm font-bold">
                 Suchen
                 <input className="h-11 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={result.q ?? ""} name="q" placeholder="z. B. Cable, Bench ..." />
@@ -145,27 +150,33 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
                   <option value="review">Manuell prüfen</option>
                 </select>
               </label>
-              <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 py-3 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Filtern</button>
-              {(searchQuery || statusFilter) ? <Link className="text-center text-xs font-black underline underline-offset-4" href="/admin/outdoor-variants">Filter zurücksetzen</Link> : null}
-            </form>
-          </FilterSidePanel>
+              <CatalogPageSize options={[6, 12, 24]} value={pageSize} />
+          </CatalogFilterPanel>
           <div className="min-w-0">
-          <div className="mb-4 text-sm text-[var(--muted)]"><CatalogResultCount from={filteredCandidates.length ? 1 : 0} label={filteredCandidates.length === 1 ? "Übung" : "Übungen"} to={filteredCandidates.length} total={filteredCandidates.length} /></div>
-          {filteredCandidates.length === 0 ? (
+          <div className="mb-4 text-sm text-[var(--muted)]"><CatalogResultCount from={filteredCandidates.length ? (page - 1) * pageSize + 1 : 0} label={filteredCandidates.length === 1 ? "Übung" : "Übungen"} to={Math.min(page * pageSize, filteredCandidates.length)} total={filteredCandidates.length} /></div>
+          {visibleCandidates.length === 0 ? (
             <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] p-5 text-sm text-[var(--muted)]">
               Keine importierte aktive Übung mit erkannter Studio-Equipment-Abhängigkeit gefunden.
             </div>
           ) : (
             <div className="catalog-results mt-5 space-y-3">
-              {filteredCandidates.map((candidate) => <CandidateCard candidate={candidate} key={candidate.exerciseId} />)}
+              {visibleCandidates.map((candidate) => <CandidateCard candidate={candidate} key={candidate.exerciseId} />)}
             </div>
           )}
+          <CatalogPagination href={(nextPage) => pageHref(nextPage, searchQuery, statusFilter ?? "", pageSize)} label="Outdoor-Varianten" page={page} totalPages={Math.max(1, Math.ceil(filteredCandidates.length / pageSize))} />
           </div>
           </div>
         </section>
       </div></OverviewLayout>
     </AppShell>
   );
+}
+
+function pageHref(page: number, query: string, status: string, size: number): string {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (query) params.set("q", query);
+  if (status) params.set("status", status);
+  return "/admin/outdoor-variants?" + params.toString();
 }
 
 function CandidateCard({ candidate }: { readonly candidate: OutdoorVariantCandidatePreview }) {
