@@ -2,6 +2,7 @@ import "server-only";
 
 import { cookies, headers } from "next/headers";
 import { z } from "zod";
+import type { DuckDBConnection } from "@duckdb/node-api";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { isRoleAtLeast } from "./identity-core";
@@ -67,32 +68,20 @@ const APP_USER_SELECT_COLUMNS = [
 export async function requireRole(required: UserRole): Promise<CurrentActor> {
   await ensureDatabaseReady();
   const configuredEmail = emailSchema.safeParse(process.env.OCRCRAFT_ACTOR_EMAIL ?? "").data;
-  const assertedEmail = await resolveAssertedActorEmail();
-  const authRequired = process.env.OCRCRAFT_AUTH_REQUIRED === "1";
-  const email = assertedEmail?.email ?? configuredEmail ?? "owner@ocrcraft.local";
 
   return withDuckDbConnection(async (connection) => {
+    const clubAccessCode = await readClubAccessCode(connection);
+    const assertionSecret = process.env.OCRCRAFT_ACTOR_ASSERTION_SECRET ?? clubAccessCode ?? "";
+    const assertedEmail = await resolveAssertedActorEmail(assertionSecret);
+    const email = assertedEmail?.email ?? configuredEmail;
+    if (!email) throw new Error("No authenticated OCRCraft actor is configured.");
     const reader = await connection.runAndReadAll(
       `SELECT ${APP_USER_SELECT_COLUMNS}
        FROM app_users WHERE lower(email)=lower($email) LIMIT 1`,
       { email },
     );
-    let row = reader.getRows()[0];
-    let source: CurrentActor["source"] = assertedEmail ? "assertion" : "configured";
-
-    if (!row && !authRequired && email === "owner@ocrcraft.local") {
-      await connection.run(
-        `INSERT INTO app_users (email,display_name,role) VALUES ($email,$displayName,'super_admin')`,
-        { email, displayName: "OCRCraft Owner" },
-      );
-      const created = await connection.runAndReadAll(
-        `SELECT ${APP_USER_SELECT_COLUMNS}
-         FROM app_users WHERE lower(email)=lower($email) LIMIT 1`,
-        { email },
-      );
-      row = created.getRows()[0];
-      source = "bootstrap";
-    }
+    const row = reader.getRows()[0];
+    const source: CurrentActor["source"] = assertedEmail ? "assertion" : "configured";
 
     if (!row) throw new Error("No authenticated OCRCraft actor is configured.");
     const actor = toUser(row, source);
@@ -103,8 +92,7 @@ export async function requireRole(required: UserRole): Promise<CurrentActor> {
   });
 }
 
-async function resolveAssertedActorEmail(): Promise<{ readonly email: string } | null> {
-  const secret = process.env.OCRCRAFT_ACTOR_ASSERTION_SECRET;
+async function resolveAssertedActorEmail(secret: string): Promise<{ readonly email: string } | null> {
   if (!secret) return null;
   const headerName = process.env.OCRCRAFT_ACTOR_ASSERTION_HEADER?.trim().toLowerCase() || "x-ocrcraft-actor";
   try {
@@ -125,6 +113,78 @@ export const requireSuperAdmin = () => requireRole("super_admin");
 
 export async function getOptionalCurrentActor(): Promise<CurrentActor | null> {
   try { return await requireTrainer(); } catch { return null; }
+}
+
+export async function hasAppUsers(): Promise<boolean> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll("SELECT count(*) FROM app_users");
+    return Number(reader.getRows()[0]?.[0] ?? 0) > 0;
+  });
+}
+
+export async function findAppUser(identity: string): Promise<AppUser | null> {
+  await ensureDatabaseReady();
+  const normalized = z.string().trim().min(1).max(200).parse(identity);
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `SELECT ${APP_USER_SELECT_COLUMNS}
+       FROM app_users WHERE active=true AND (lower(email)=lower($identity) OR lower(username)=lower($identity)) LIMIT 1`,
+      { identity: normalized },
+    );
+    const row = reader.getRows()[0];
+    return row ? toUser(row) : null;
+  });
+}
+
+export async function getClubAccessCode(): Promise<string | null> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => readClubAccessCode(connection));
+}
+
+export async function saveClubAccessCode(code: string): Promise<void> {
+  await ensureDatabaseReady();
+  const value = z.string().trim().min(4).max(200).parse(code);
+  await requireSuperAdmin();
+  await withDuckDbConnection((connection) => connection.run(
+    "UPDATE app_auth_settings SET club_access_code=$code,updated_at=current_timestamp WHERE id=1",
+    { code: value },
+  ));
+}
+
+export async function createFirstSuperAdmin(input: {
+  readonly email: string;
+  readonly username: string;
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly password: string;
+  readonly clubAccessCode: string;
+}): Promise<AppUser> {
+  await ensureDatabaseReady();
+  const email = emailSchema.parse(input.email);
+  const username = z.string().trim().regex(/^[a-zA-Z0-9._-]{3,40}$/).parse(input.username);
+  const firstName = z.string().trim().min(1).max(80).parse(input.firstName);
+  const lastName = z.string().trim().min(1).max(80).parse(input.lastName);
+  const passwordHash = hashPassword(z.string().min(8).max(200).parse(input.password));
+  const clubAccessCode = z.string().trim().min(4).max(200).parse(input.clubAccessCode);
+  return withDuckDbConnection(async (connection) => {
+    const existing = await connection.runAndReadAll("SELECT count(*) FROM app_users");
+    if (Number(existing.getRows()[0]?.[0] ?? 0) > 0) throw new Error("Bootstrap is already complete.");
+    await connection.run(
+      `INSERT INTO app_users (email,username,first_name,last_name,display_name,role,password_hash,trainer_qualification_level)
+       VALUES ($email,$username,$firstName,$lastName,$displayName,'super_admin',$passwordHash,'none')`,
+      { email, username, firstName, lastName, displayName: `${firstName} ${lastName}`, passwordHash },
+    );
+    await connection.run("UPDATE app_auth_settings SET club_access_code=$code,updated_at=current_timestamp WHERE id=1", { code: clubAccessCode });
+    const reader = await connection.runAndReadAll(`SELECT ${APP_USER_SELECT_COLUMNS} FROM app_users WHERE email=$email`, { email });
+    return toUser(reader.getRows()[0]);
+  });
+}
+
+async function readClubAccessCode(connection: DuckDBConnection): Promise<string | null> {
+  const reader = await connection.runAndReadAll("SELECT club_access_code FROM app_auth_settings WHERE id=1");
+  const stored = reader.getRows()[0]?.[0];
+  return stored == null || String(stored).trim() === "" ? process.env.OCRCRAFT_LOGIN_CODE?.trim() || null : String(stored);
 }
 
 export async function listAppUsers(): Promise<readonly AppUser[]> {
@@ -217,8 +277,10 @@ export async function updateAppUser(input: {
   const profileImageUri = z.string().trim().max(500).refine((value) => !value || /^(https?:\/\/|\/)/.test(value), "Invalid profile image URI.").parse(input.profileImageUri);
   if (id === actor.id && (!input.active || role !== "super_admin")) throw new Error("Cannot demote or deactivate the current super-admin.");
   await withDuckDbConnection(async (connection) => {
-    const duplicate = await connection.runAndReadAll("SELECT count(*)::INTEGER FROM app_users WHERE id<>$id::UUID AND (lower(username)=lower($username) OR lower(email)=lower($email))", { id, username, email });
-    if (Number(duplicate.getRows()[0]?.[0] ?? 0) > 0) throw new Error("Username or email is already in use.");
+    const duplicate = await connection.runAndReadAll("SELECT count(*) FILTER (WHERE lower(username)=lower($username))::INTEGER, count(*) FILTER (WHERE lower(email)=lower($email))::INTEGER FROM app_users WHERE id<>$id::UUID", { id, username, email });
+    const duplicateRow = duplicate.getRows()[0];
+    if (Number(duplicateRow?.[0] ?? 0) > 0) throw new Error("Username is already in use.");
+    if (Number(duplicateRow?.[1] ?? 0) > 0) throw new Error("Email is already in use.");
     await connection.run("UPDATE app_users SET email=$email,username=$username,first_name=$firstName,last_name=$lastName,display_name=$displayName,role=$role,active=$active,education=$education,trainer_qualification_level=$trainerQualificationLevel,bio=$bio,specialties=$specialties,profile_image_uri=$profileImageUri,profile_image_data=COALESCE($profileImageData,profile_image_data),profile_image_content_type=COALESCE($profileImageContentType,profile_image_content_type),updated_at=current_timestamp WHERE id=$id::UUID", { id, email, username, firstName, lastName, displayName, role, active: input.active, education: education || null, trainerQualificationLevel, bio: bio || null, specialties: specialties || null, profileImageUri: profileImageUri || null, profileImageData: input.profileImageData ?? null, profileImageContentType: input.profileImageContentType ?? null });
   });
 }

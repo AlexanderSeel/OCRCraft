@@ -13,18 +13,19 @@ Die Anwendung führt ausstehende Migrationen beim ersten Datenzugriff aus. Der P
 
 ## Identität und Rollen
 
-Für den lokalen Vereinsbetrieb wird beim ersten Zugriff automatisch `owner@ocrcraft.local` als `super_admin` angelegt. Für einen kontrollierten Betrieb:
+Beim ersten Aufruf ohne Benutzer öffnet OCRCraft automatisch `/setup`. Dort wird der erste Super-Admin mit Passwort und Vereinscode angelegt. Danach führt jeder App-Aufruf ohne gültige Anmeldung zu `/login`.
+
+Für einen kontrollierten Betrieb können zusätzlich folgende Variablen gesetzt werden:
 
 ```text
-OCRCRAFT_AUTH_REQUIRED=1
 OCRCRAFT_ACTOR_EMAIL=trainer@example.org
 OCRCRAFT_LOGIN_CODE=<vereins-code>
 OCRCRAFT_ACTOR_ASSERTION_SECRET=<langes-secret>
 ```
 
-Der konfigurierte Actor muss als aktiver Benutzer in DuckDB vorhanden sein. Schreibende globale Aktionen prüfen die Rolle serverseitig; die UI-Prüfung ersetzt keine Autorisierung. Eine vorgeschaltete Vereinsanmeldung muss nach erfolgreicher Anmeldung die Actor-E-Mail für den Prozess setzen.
+Der konfigurierte Actor muss als aktiver Benutzer in DuckDB vorhanden sein. Schreibende globale Aktionen prüfen die Rolle serverseitig; die UI-Prüfung ersetzt keine Autorisierung. Der Vereinscode kann nach dem Erststart im Adminbereich unter „Benutzer & Profile“ geändert werden.
 
-Der lokale Login-Dialog verwendet die E-Mail als Benutzernamen und einen individuellen Passwort-Hash. Neue Benutzer werden im Adminbereich mit einem Passwort von mindestens acht Zeichen angelegt; Klartextpasswörter werden nie gespeichert. Für die initiale Einrichtung kann zusätzlich `OCRCRAFT_LOGIN_CODE` als gemeinsamer Fallback-Code gesetzt werden. Der Code wird nur serverseitig verglichen; die Anmeldung erstellt ein acht Stunden gültiges, httpOnly Cookie.
+Der lokale Login verwendet E-Mail oder Username und ein individuelles Passwort. Alternativ kann der gespeicherte Vereinscode verwendet werden. Neue Benutzer werden im Adminbereich mit einem Passwort von mindestens acht Zeichen angelegt; Klartextpasswörter werden nie gespeichert. Die Anmeldung erstellt ein acht Stunden gültiges, httpOnly Cookie. Der aktuell angemeldete Benutzer wird in der Kopfzeile angezeigt.
 
 Für einen vorgeschalteten Login ohne gemeinsam genutzte Prozessvariable kann der Proxy pro Request den Header `x-ocrcraft-actor` setzen. Der Wert hat die Form `email|unixSeconds|hexSignature`; signiert wird `email|unixSeconds` mit HMAC-SHA256 und `OCRCRAFT_ACTOR_ASSERTION_SECRET`. Assertions sind fünf Minuten gültig. Der Proxy muss den Header von außen entfernen und selbst neu setzen; das Secret darf nicht an Browser oder Clients gelangen. Mit `OCRCRAFT_ACTOR_ASSERTION_HEADER` kann ein anderer Headername verwendet werden.
 

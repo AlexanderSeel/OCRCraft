@@ -15,6 +15,7 @@
 ## P1 – Trainer-Workflow und UI
 
 - [x] Tailgrids-kompatible lokale UI-Schicht abgeschlossen: Overlay/Popover, Form-Felder, Pagination, Tabs, Sidebar und Toast sind als lokale OCRCraft-Komponenten konsolidiert und in [`docs/ui-components.md`](./docs/ui-components.md) dokumentiert; es gibt keine Tailgrids-Laufzeitabhängigkeit.
+- [x] Authentifizierungs-Bootstrap abgeschlossen: leere Benutzerbasis führt zu `/setup`, Login und Vereinscode sind serverseitig validiert, geschützte App-Seiten leiten ohne Sitzung zu `/login`, und der aktuelle Benutzer ist global sichtbar.
 
 ## P3 – Internationalisierung
 

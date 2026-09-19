@@ -15,9 +15,9 @@ import { listDatabaseBackups } from "@/server/db/backup-service";
 import { listAiProviderSettings } from "@/server/ai/ai-provider-settings-repository";
 import { activateSearchProfileAction, cancelAppTaskAction, createDatabaseBackupAction, deleteAiProviderSettingsAction, deleteAppTaskAction, deleteFailedMediaJobAction, deleteSearchProfileAction, disconnectAiProviderOAuthAction, rebuildSearchIndexesAction, reseedDatabaseAction, resolveDuplicateExerciseAction, resolveDuplicateExercisesBulkAction, restoreDatabaseBackupAction, retryAppTaskAction, saveAiProviderSettingsAction, saveSearchProfileAction, scanDuplicateExercisesAction } from "./actions";
 import { getDuplicateComparisonRecords, listDuplicateReviewTasks } from "@/server/exercises/duplicate-review-service";
-import { listAppUsers } from "@/server/auth/identity-service";
+import { getClubAccessCode, listAppUsers } from "@/server/auth/identity-service";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
-import { createUserAction, deleteUserAction, loginAction, logoutAction, setUserPasswordAction, updateUserAction } from "./identity-actions";
+import { createUserAction, deleteUserAction, loginAction, logoutAction, saveClubAccessCodeAction, setUserPasswordAction, updateUserAction } from "./identity-actions";
 import { IdentityManagementPanel } from "@/components/admin/identity-management-panel";
 import { listAppTasks, listQueueIssues } from "@/server/queue/app-task-repository";
 import { listAccessRoles, listUserRoleAssignments } from "@/server/auth/permission-service";
@@ -56,7 +56,7 @@ interface AdminPageProps {
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const params = await searchParams;
   const activeTab = normalizeAdminTab(params.tab);
-  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers, aiProviders, appTasks, searchProfiles, queueIssues, accessRoles, roleAssignments] = await Promise.all([
+  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers, aiProviders, appTasks, searchProfiles, queueIssues, accessRoles, roleAssignments, clubAccessCode] = await Promise.all([
     activeTab === "database" ? getSearchIndexStates() : Promise.resolve([]),
     activeTab === "overview" ? getSeedCompletenessReport() : Promise.resolve(null),
     activeTab === "quality" ? listDuplicateReviewTasks() : Promise.resolve([]),
@@ -69,6 +69,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     activeTab === "queue" ? listQueueIssues() : Promise.resolve([]),
     activeTab === "roles" ? listAccessRoles() : Promise.resolve([]),
     activeTab === "roles" ? listUserRoleAssignments() : Promise.resolve({}),
+    activeTab === "users" ? getClubAccessCode() : Promise.resolve(null),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
   const { reseeded, reseedError, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved, searchSaved, searchError, queueDeleted, roleSaved, roleError } = params;
@@ -180,6 +181,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             {loggedIn || loggedOut ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">{loggedIn ? "Anmeldung erfolgreich." : "Abmeldung erfolgreich."}</p> : null}
             {userError ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">{userError === "permission" ? "Keine Berechtigung. Benutzer, Rollen und Passwörter dürfen nur Super-Admins ändern." : userError === "delete" ? "Benutzer konnte nicht gelöscht werden. Prüfe Verknüpfungen und Berechtigung." : "Benutzeränderung nicht möglich. Prüfe Eingaben."}</p> : null}
             {userSaved ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">{userSaved === "password" ? "Passwort wurde gesetzt." : userSaved === "deleted" ? "Benutzer wurde gelöscht." : "Benutzeränderung gespeichert."}</p> : null}
+            {userError === "access-code" ? <p aria-live="assertive" className="mb-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Der Vereinscode konnte nicht gespeichert werden.</p> : null}
             <IdentityManagementPanel
               createAction={createUserAction}
               deleteAction={deleteUserAction}
@@ -187,6 +189,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               logoutAction={logoutAction}
               setPasswordAction={setUserPasswordAction}
               updateAction={updateUserAction}
+              saveAccessCodeAction={saveClubAccessCodeAction}
+              accessCodeConfigured={Boolean(clubAccessCode)}
               users={appUsers}
             />
           </>

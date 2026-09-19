@@ -13,7 +13,7 @@ import { IdentityLoginDialog } from "./identity-login-dialog";
 
 type Action = (formData: FormData) => Promise<void>;
 
-export function IdentityManagementPanel({ users, createAction, updateAction, loginAction, logoutAction, setPasswordAction, deleteAction }: {
+export function IdentityManagementPanel({ users, createAction, updateAction, loginAction, logoutAction, setPasswordAction, deleteAction, saveAccessCodeAction, accessCodeConfigured }: {
   readonly users: readonly AppUser[];
   readonly createAction: Action;
   readonly updateAction: Action;
@@ -21,6 +21,8 @@ export function IdentityManagementPanel({ users, createAction, updateAction, log
   readonly deleteAction: Action;
   readonly loginAction: Action;
   readonly logoutAction: Action;
+  readonly saveAccessCodeAction: Action;
+  readonly accessCodeConfigured: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<AppUser | null>(null);
@@ -36,6 +38,7 @@ export function IdentityManagementPanel({ users, createAction, updateAction, log
       <div className="flex items-center gap-2"><IdentityLoginDialog action={loginAction} /><form action={logoutAction}><button className="min-h-10 rounded-lg border border-[var(--border)] px-3 text-xs font-black" type="submit">Abmelden</button></form></div>
     </div>
     <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <div className="mb-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4"><h3 className="text-lg font-black">Vereinscode</h3><p className="mt-1 text-sm text-[var(--muted)]">Der Code kann alternativ zum Passwort verwendet werden. Aktueller Status: {accessCodeConfigured ? "gesetzt" : "nicht gesetzt"}.</p><form action={saveAccessCodeAction} className="mt-3 flex flex-wrap items-end gap-3"><label className="grid min-w-60 flex-1 gap-1 text-sm font-bold" htmlFor="admin-club-access-code">Neuer Vereinscode<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" id="admin-club-access-code" minLength={4} name="clubAccessCode" required type="password" /></label><ActionProgressButton className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" pendingLabel="Vereinscode wird gespeichert …">Code speichern</ActionProgressButton></form></div>
       <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-lg font-black">Vereinsmitglieder</h3><p className="mt-1 text-sm text-[var(--muted)]">{filtered.length} von {users.length} Profilen</p></div><label className="grid gap-1 text-xs font-black">Filtern<input aria-label="Benutzer filtern" className="min-h-10 w-64 max-w-full rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-normal" onChange={(event) => setQuery(event.target.value)} placeholder="Vorname, Username, E-Mail …" value={query} /></label></div>
       <form action={createAction} className="mt-5 grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
         <label className="grid gap-1 text-xs font-black">Vorname<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" name="firstName" required /></label>

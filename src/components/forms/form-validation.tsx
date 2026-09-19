@@ -7,6 +7,9 @@ let errorSequence = 0;
 
 export function FormValidation() {
   useEffect(() => {
+    const firstInvalidField = document.querySelector<HTMLElement>('[aria-invalid="true"]');
+    firstInvalidField?.focus();
+
     const onInvalid = (event: Event) => {
       const field = event.target;
       if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) return;

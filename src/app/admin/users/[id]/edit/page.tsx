@@ -4,12 +4,79 @@ import { ActionProgressButton } from "@/components/admin/action-progress-button"
 import { TRAINER_QUALIFICATION_LABELS, TRAINER_QUALIFICATION_LEVELS } from "@/domain/training/trainer-qualification";
 import { listAppUsers } from "@/server/auth/identity-service";
 import { deleteUserAction, setUserPasswordAction, updateUserAction } from "../../../identity-actions";
+
 export const dynamic = "force-dynamic";
-export default async function EditUserPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; saved?: string }> }) {
+
+type UserEditField = "email" | "role" | "username" | "firstName" | "lastName" | "education" | "trainerQualificationLevel" | "bio" | "specialties" | "profileImage" | "profileImageUri";
+type FieldErrors = Partial<Record<UserEditField, string>>;
+
+export default async function EditUserPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; field?: string; saved?: string }> }) {
   const [{ id }, query, users] = await Promise.all([params, searchParams, listAppUsers()]);
   const user = users.find((item) => item.id === id);
   if (!user) return <AppShell title="Benutzer nicht gefunden" subtitle="Das Profil ist nicht mehr vorhanden."><Link className="inline-flex rounded-lg border border-[var(--border)] px-4 py-2 font-bold" href="/admin?tab=users">Zurück zu Benutzer & Profile</Link></AppShell>;
-  return <AppShell title={`Profil bearbeiten: ${user.firstName} ${user.lastName}`} subtitle="Alle Identitäts- und Zugriffsänderungen werden serverseitig geprüft."><div className="mx-auto max-w-3xl space-y-5"><Link className="inline-flex rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold" href="/admin?tab=users">← Benutzer & Profile</Link>{query.error ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">{errorMessage(query.error)}</p> : null}{query.saved ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">{query.saved === "password" ? "Passwort wurde gesetzt." : "Profil wurde gespeichert."}</p> : null}<form action={updateUserAction} className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:grid-cols-2"><input name="id" type="hidden" value={user.id} /><Field label="Vorname" name="firstName" value={user.firstName} required /><Field label="Nachname" name="lastName" value={user.lastName} required /><Field label="Username" name="username" value={user.username} required pattern="[A-Za-z0-9._-]{3,40}" /><Field label="E-Mail" name="email" value={user.email} required type="email" /><label className="grid gap-1 text-sm font-bold">Rolle<select className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 font-normal" defaultValue={user.role} name="role"><option value="trainer">Trainer</option><option value="admin">Admin</option><option value="super_admin">Super-Admin</option></select></label><label className="grid gap-1 text-sm font-bold">Qualifikationslevel<select className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 font-normal" defaultValue={user.trainerQualificationLevel} name="trainerQualificationLevel">{TRAINER_QUALIFICATION_LEVELS.map((level) => <option key={level} value={level}>{TRAINER_QUALIFICATION_LABELS[level]}</option>)}</select></label><Field label="Ausbildung" name="education" value={user.education ?? ""} /><Field label="Schwerpunkte" name="specialties" value={user.specialties ?? ""} /><label className="grid gap-1 text-sm font-bold sm:col-span-2">Kurzprofil<textarea className="min-h-28 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-3 font-normal" defaultValue={user.bio ?? ""} name="bio" /></label><label className="grid gap-1 text-sm font-bold">Profilbild hochladen<input accept="image/jpeg,image/png,image/webp" className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-2 font-normal" name="profileImage" type="file" /><span className="text-xs font-normal text-[var(--muted)]">JPEG, PNG oder WebP, maximal 2 MB</span></label><Field label="Profilbild-URL" name="profileImageUri" value={user.profileImageUri ?? ""} /><label className="flex items-center gap-2 text-sm font-bold sm:col-span-2"><input defaultChecked={user.active} name="active" type="checkbox" /> Benutzer aktiv</label><ActionProgressButton className="min-h-11 rounded-lg bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)] sm:col-span-2" pendingLabel="Profil wird gespeichert …">Änderungen speichern</ActionProgressButton></form><section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"><h2 className="text-lg font-black">Zugang verwalten</h2><form action={setUserPasswordAction} className="mt-3 flex flex-wrap items-end gap-3"><input name="id" type="hidden" value={user.id} /><label className="grid min-w-60 flex-1 gap-1 text-sm font-bold">Neues Passwort<input className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 font-normal" minLength={8} name="password" required type="password" /></label><ActionProgressButton className="min-h-11 rounded-lg border border-[var(--border)] px-4 text-sm font-black" pendingLabel="Passwort wird gesetzt …">Passwort setzen</ActionProgressButton></form><form action={deleteUserAction} className="mt-5 border-t border-[var(--border)] pt-4"><input name="id" type="hidden" value={user.id} /><ActionProgressButton className="min-h-11 rounded-lg border border-[var(--danger)] px-4 text-sm font-black text-[var(--danger)]" pendingLabel="Benutzer wird gelöscht …">Benutzer löschen</ActionProgressButton></form></section></div></AppShell>;
+
+  const fieldErrors = getFieldErrors(query.error, query.field);
+  const firstErrorField = Object.keys(fieldErrors)[0] as UserEditField | undefined;
+  return <AppShell title={`Profil bearbeiten: ${user.firstName} ${user.lastName}`} subtitle="Alle Identitäts- und Zugriffsänderungen werden serverseitig geprüft.">
+    <div className="mx-auto max-w-3xl space-y-5">
+      <Link className="inline-flex rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold" href="/admin?tab=users">← Benutzer & Profile</Link>
+      {query.error ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">{errorMessage(query.error, firstErrorField)}</p> : null}
+      {query.saved ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">{query.saved === "password" ? "Passwort wurde gesetzt." : "Profil wurde gespeichert."}</p> : null}
+      <form action={updateUserAction} className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+        <input name="id" type="hidden" value={user.id} />
+        <Field error={fieldErrors.firstName} label="Vorname" name="firstName" value={user.firstName} required />
+        <Field error={fieldErrors.lastName} label="Nachname" name="lastName" value={user.lastName} required />
+        <Field error={fieldErrors.username} hint="3–40 Zeichen: Buchstaben, Zahlen, Punkt, Unterstrich oder Bindestrich." label="Username" name="username" value={user.username} required pattern="[A-Za-z0-9._-]{3,40}" />
+        <Field error={fieldErrors.email} label="E-Mail" name="email" value={user.email} required type="email" />
+        <SelectField error={fieldErrors.role} label="Rolle" name="role" value={user.role} options={[["trainer", "Trainer"], ["admin", "Admin"], ["super_admin", "Super-Admin"]]} />
+        <SelectField error={fieldErrors.trainerQualificationLevel} label="Qualifikationslevel" name="trainerQualificationLevel" value={user.trainerQualificationLevel} options={TRAINER_QUALIFICATION_LEVELS.map((level) => [level, TRAINER_QUALIFICATION_LABELS[level]] as const)} />
+        <Field error={fieldErrors.education} label="Ausbildung" name="education" value={user.education ?? ""} />
+        <Field error={fieldErrors.specialties} label="Schwerpunkte" name="specialties" value={user.specialties ?? ""} />
+        <TextAreaField error={fieldErrors.bio} label="Kurzprofil" name="bio" value={user.bio ?? ""} />
+        <FileField error={fieldErrors.profileImage} />
+        <Field error={fieldErrors.profileImageUri} label="Profilbild-URL" name="profileImageUri" value={user.profileImageUri ?? ""} />
+        <label className="flex items-center gap-2 text-sm font-bold sm:col-span-2"><input defaultChecked={user.active} name="active" type="checkbox" /> Benutzer aktiv</label>
+        <ActionProgressButton className="min-h-11 rounded-lg bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)] sm:col-span-2" pendingLabel="Profil wird gespeichert …">Änderungen speichern</ActionProgressButton>
+      </form>
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"><h2 className="text-lg font-black">Zugang verwalten</h2><form action={setUserPasswordAction} className="mt-3 flex flex-wrap items-end gap-3"><input name="id" type="hidden" value={user.id} /><label className="grid min-w-60 flex-1 gap-1 text-sm font-bold">Neues Passwort<input className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 font-normal" minLength={8} name="password" required type="password" /></label><ActionProgressButton className="min-h-11 rounded-lg border border-[var(--border)] px-4 text-sm font-black" pendingLabel="Passwort wird gesetzt …">Passwort setzen</ActionProgressButton></form><form action={deleteUserAction} className="mt-5 border-t border-[var(--border)] pt-4"><input name="id" type="hidden" value={user.id} /><ActionProgressButton className="min-h-11 rounded-lg border border-[var(--danger)] px-4 py-2 text-sm font-black text-[var(--danger)]" pendingLabel="Benutzer wird gelöscht …">Benutzer löschen</ActionProgressButton></form></section>
+    </div>
+  </AppShell>;
 }
-function Field({ label, name, value, required = false, pattern, type = "text" }: { label: string; name: string; value: string; required?: boolean; pattern?: string; type?: string }) { return <label className="grid gap-1 text-sm font-bold">{label}<input className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 font-normal" defaultValue={value} name={name} pattern={pattern} required={required} type={type} />{name === "username" ? <span className="text-xs font-normal text-[var(--muted)]">3–40 Zeichen: Buchstaben, Zahlen, Punkt, Unterstrich oder Bindestrich.</span> : null}</label>; }
-function errorMessage(code: string): string { if (code === "permission") return "Keine Berechtigung. Benutzer, Rollen und Passwörter dürfen nur Super-Admins ändern."; if (code === "delete") return "Benutzer konnte nicht gelöscht werden. Prüfe Verknüpfungen und Berechtigung."; if (code === "invalid") return "Eingabe ungültig. Prüfe E-Mail, Username, Pflichtfelder und Bildformat."; return "Die Änderung konnte nicht gespeichert werden."; }
+
+function Field({ error, hint, label, name, value, required = false, pattern, type = "text" }: { error?: string; hint?: string; label: string; name: UserEditField; value: string; required?: boolean; pattern?: string; type?: string }) {
+  const inputId = `user-${name}`;
+  const errorId = `${inputId}-error`;
+  return <label className="grid gap-1 text-sm font-bold" htmlFor={inputId}>{label}<input aria-describedby={error ? errorId : undefined} aria-invalid={error ? "true" : undefined} className={controlClass(error)} defaultValue={value} id={inputId} name={name} pattern={pattern} required={required} type={type} />{hint ? <span className="text-xs font-normal text-[var(--muted)]">{hint}</span> : null}<FieldError id={errorId} message={error} /></label>;
+}
+
+function SelectField({ error, label, name, options, value }: { error?: string; label: string; name: UserEditField; options: readonly (readonly [string, string])[]; value: string }) {
+  const inputId = `user-${name}`;
+  return <label className="grid gap-1 text-sm font-bold" htmlFor={inputId}>{label}<select aria-describedby={error ? `${inputId}-error` : undefined} aria-invalid={error ? "true" : undefined} className={controlClass(error)} defaultValue={value} id={inputId} name={name}>{options.map(([optionValue, optionLabel]) => <option key={optionValue} value={optionValue}>{optionLabel}</option>)}</select><FieldError id={`${inputId}-error`} message={error} /></label>;
+}
+
+function TextAreaField({ error, label, name, value }: { error?: string; label: string; name: UserEditField; value: string }) {
+  const inputId = `user-${name}`;
+  return <label className="grid gap-1 text-sm font-bold sm:col-span-2" htmlFor={inputId}>{label}<textarea aria-describedby={error ? `${inputId}-error` : undefined} aria-invalid={error ? "true" : undefined} className={`${controlClass(error)} min-h-28 py-3`} defaultValue={value} id={inputId} name={name} /><FieldError id={`${inputId}-error`} message={error} /></label>;
+}
+
+function FileField({ error }: { error?: string }) {
+  const inputId = "user-profileImage";
+  return <label className="grid gap-1 text-sm font-bold" htmlFor={inputId}>Profilbild hochladen<input accept="image/jpeg,image/png,image/webp" aria-describedby={`${inputId}-hint${error ? ` ${inputId}-error` : ""}`} aria-invalid={error ? "true" : undefined} className={controlClass(error)} id={inputId} name="profileImage" type="file" /><span className="text-xs font-normal text-[var(--muted)]" id={`${inputId}-hint`}>JPEG, PNG oder WebP, maximal 2 MB</span><FieldError id={`${inputId}-error`} message={error} /></label>;
+}
+
+function FieldError({ id, message }: { id: string; message?: string }) { return message ? <span className="field-error text-sm font-semibold text-[var(--danger)]" id={id} role="alert">{message}</span> : null; }
+function controlClass(error?: string) { return `min-h-11 rounded-lg border ${error ? "border-[var(--danger)] ring-2 ring-[color-mix(in_srgb,var(--danger)_25%,transparent)]" : "border-[var(--border)]"} bg-[var(--surface-subtle)] px-3 font-normal`; }
+
+function getFieldErrors(code?: string, field?: string): FieldErrors {
+  if (code !== "invalid" || !isUserEditField(field)) return {};
+  const messages: Record<UserEditField, string> = {
+    email: "Bitte eine gültige E-Mail-Adresse eingeben.", role: "Bitte eine gültige Rolle auswählen.", username: "Username: 3–40 Zeichen aus Buchstaben, Zahlen, Punkt, Unterstrich oder Bindestrich.",
+    firstName: "Bitte einen Vornamen eingeben.", lastName: "Bitte einen Nachnamen eingeben.", education: "Die Ausbildung darf höchstens 240 Zeichen enthalten.",
+    trainerQualificationLevel: "Bitte ein gültiges Qualifikationslevel auswählen.", bio: "Das Kurzprofil darf höchstens 1.000 Zeichen enthalten.", specialties: "Die Schwerpunkte dürfen höchstens 500 Zeichen enthalten.",
+    profileImage: "Bitte JPEG, PNG oder WebP bis maximal 2 MB auswählen.", profileImageUri: "Bitte eine gültige Profilbild-URL oder einen lokalen Pfad eingeben.",
+  };
+  return { [field]: messages[field] };
+}
+
+function isUserEditField(field?: string): field is UserEditField { return field !== undefined && ["email", "role", "username", "firstName", "lastName", "education", "trainerQualificationLevel", "bio", "specialties", "profileImage", "profileImageUri"].includes(field); }
+function errorMessage(code: string, field?: UserEditField): string { if (code === "permission") return "Änderung nicht möglich: Bitte als aktiver Super-Admin anmelden. Benutzer, Rollen und Passwörter dürfen nur Super-Admins ändern."; if (code === "delete") return "Benutzer konnte nicht gelöscht werden. Prüfe Verknüpfungen und Berechtigung."; if (code === "invalid" && field) return "Bitte korrigiere das markierte Feld."; if (code === "invalid") return "Eingabe ungültig. Bitte prüfe die markierten Felder."; return "Die Änderung konnte nicht gespeichert werden."; }
