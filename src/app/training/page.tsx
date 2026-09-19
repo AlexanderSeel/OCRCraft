@@ -43,19 +43,19 @@ export default async function TrainingPage({ searchParams }: PageProps) {
       actions={archived ? undefined : (
         <div className="flex flex-wrap gap-2">
           <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
             href="/training/templates"
           >
             Vorlagen
           </Link>
           <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
             href="/training/builder"
           >
             Training Builder
           </Link>
           <Link
-            className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
+            className="rounded-md bg-[var(--brand)] px-3.5 py-2.5 text-sm font-black text-[var(--brand-foreground)] hover:bg-[var(--brand-strong)]"
             href="/quick-create"
           >
             + Quick Create
@@ -63,11 +63,11 @@ export default async function TrainingPage({ searchParams }: PageProps) {
         </div>
       )}
     >
-      <OverviewLayout storageKey="ocrcraft-training-view"><div className="space-y-6">
+      <OverviewLayout storageKey="ocrcraft-training-view"><div className="space-y-4">
         {!archived ? (
           <section className="grid gap-3 lg:grid-cols-3">
             <Link
-              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] transition hover:border-[var(--accent-strong)] hover:bg-[var(--surface-subtle)]"
+              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] transition hover:border-[var(--brand)] hover:bg-[var(--surface-elevated)]"
               href="/training/builder"
             >
               <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Gezielte Planung</div>
@@ -77,7 +77,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
               </p>
             </Link>
             <Link
-              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] transition hover:border-[var(--accent-strong)] hover:bg-[var(--surface-subtle)]"
+              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] transition hover:border-[var(--brand)] hover:bg-[var(--surface-elevated)]"
               href="/training/templates"
             >
               <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Wiederverwendbare Planung</div>
@@ -87,7 +87,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
               </p>
             </Link>
             <Link
-              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] transition hover:border-[var(--accent-strong)] hover:bg-[var(--surface-subtle)]"
+              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] transition hover:border-[var(--brand)] hover:bg-[var(--surface-elevated)]"
               href="/quick-create"
             >
               <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Schneller Einstieg</div>
@@ -106,8 +106,8 @@ export default async function TrainingPage({ searchParams }: PageProps) {
         </section>
 
         <CatalogFilterPanel hasFilters={Boolean(query || selectedStatus || page !== 1 || pageSize !== 24)} resetHref={archived ? "/training?status=archived" : "/training"} title="Trainingsfilter">
-          <label className="grid gap-1 text-sm font-bold">Suchen<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={query} name="q" placeholder="Trainingstitel …" /></label>
-          {!archived ? <label className="grid gap-1 text-sm font-bold">Status<select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={selectedStatus} name="status"><option value="">Alle aktiven</option><option value="draft">Entwurf</option><option value="ready">Bereit</option><option value="completed">Abgeschlossen</option></select></label> : null}
+          <label className="grid gap-1 text-sm font-bold">Suchen<input className="h-11 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={query} name="q" placeholder="Trainingstitel …" /></label>
+          {!archived ? <label className="grid gap-1 text-sm font-bold">Status<select className="h-11 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={selectedStatus} name="status"><option value="">Alle aktiven</option><option value="draft">Entwurf</option><option value="ready">Bereit</option><option value="completed">Abgeschlossen</option></select></label> : null}
           <CatalogPageSize options={[12, 24, 48]} value={pageSize} />
         </CatalogFilterPanel>
 
@@ -115,11 +115,11 @@ export default async function TrainingPage({ searchParams }: PageProps) {
 
         <div className="flex justify-end text-sm font-bold">
           {archived ? (
-            <Link className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-subtle)]" href="/training">
+            <Link className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-subtle)]" href="/training">
               Aktive Trainings anzeigen
             </Link>
           ) : (
-            <Link className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-subtle)]" href="/training?status=archived">
+            <Link className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-subtle)]" href="/training?status=archived">
               Archiv anzeigen
             </Link>
           )}
@@ -130,7 +130,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
             {sessions.map((session) => (
               <Card
                 as="article"
-                className="catalog-card min-w-0 flex min-h-56 flex-col p-5"
+                className="catalog-card min-w-0 flex min-h-48 flex-col p-4"
                 key={session.id}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -140,23 +140,23 @@ export default async function TrainingPage({ searchParams }: PageProps) {
                     </div>
                     <h2 className="mt-1 break-words text-lg font-black">{session.title}</h2>
                   </div>
-                  <span className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-bold">
+                  <span className="shrink-0 rounded-sm border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1 text-[11px] font-bold">
                     {STATUS_LABELS[session.status]}
                   </span>
                 </div>
 
-                <dl className="view-secondary mt-5 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl bg-[var(--surface-subtle)] p-3">
+                <dl className="view-secondary mt-4 grid grid-cols-2 gap-2 text-sm">
+                  <div className="rounded-md bg-[var(--surface-subtle)] p-2.5">
                     <dt className="text-xs font-bold text-[var(--muted)]">Dauer</dt>
                     <dd className="mt-1 font-black">{session.totalDurationMinutes} Min.</dd>
                   </div>
-                  <div className="rounded-xl bg-[var(--surface-subtle)] p-3">
+                  <div className="rounded-md bg-[var(--surface-subtle)] p-2.5">
                     <dt className="text-xs font-bold text-[var(--muted)]">Übungen</dt>
                     <dd className="mt-1 font-black">{session.itemCount}</dd>
                   </div>
                 </dl>
 
-                <div className="mt-auto pt-5">
+                <div className="mt-auto pt-4">
                   <div className="view-secondary mb-3 text-xs font-semibold text-[var(--muted)]">
                     Erstellt {formatCreatedAt(session.createdAt)} · {session.locale.toUpperCase()}
                   </div>
@@ -200,13 +200,13 @@ export default async function TrainingPage({ searchParams }: PageProps) {
             {!archived ? (
               <div className="mt-5 flex flex-wrap justify-center gap-2">
                 <Link
-                  className="inline-flex min-h-11 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+                  className="inline-flex min-h-11 items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-black hover:bg-[var(--surface-subtle)]"
                   href="/training/builder"
                 >
                   Training Builder öffnen
                 </Link>
                 <Link
-                  className="inline-flex min-h-11 items-center rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
+                  className="inline-flex min-h-11 items-center rounded-md bg-[var(--brand)] px-4 text-sm font-black text-[var(--brand-foreground)] hover:bg-[var(--brand-strong)]"
                   href="/quick-create"
                 >
                   Quick Create öffnen
@@ -252,7 +252,7 @@ function formatCreatedAt(value: string): string {
 
 function Metric({ label, value }: { readonly label: string; readonly value: number }) {
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[var(--shadow-card)]">
       <div className="text-2xl font-black">{value}</div>
       <div className="mt-1 text-sm font-semibold text-[var(--muted)]">{label}</div>
     </div>

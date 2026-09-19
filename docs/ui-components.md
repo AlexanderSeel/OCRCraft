@@ -30,3 +30,16 @@ OCRCraft verwendet eine lokale, Tailwind-kompatible UI-Schicht. Sie ist bewusst 
 - `globals.css` und semantische Tokens werden nicht durch CLI- oder Fremd-Theme-Updates überschrieben.
 
 Die Accessibility- und Playwright-Gates in `e2e/` prüfen die wichtigsten Shell-, Fokus-, Dialog-, Tastatur- und responsiven Eigenschaften.
+
+
+## Visuelles System 2026
+
+Die UI verwendet seit dem kompakten HyperUI-inspirierten Refresh ein bewusst dichteres Arbeitsflächen-System:
+
+- **Radius:** kleine Radien (`sm` bis `lg`) für Controls und Panels; Pillen bleiben Status/Avatar-Ausnahmen.
+- **Dichte:** Seitenkopf, Sidebar, Filter, Karten und Training-Phasen sind auf Trainer-Workflows statt Marketing-Abstände optimiert; Touch-Ziele bleiben bei ca. 44 px.
+- **Farben:** neutrale helle Flächen bzw. Graphit/Charcoal im Dark Mode; `--brand` (Coral) markiert Erstellung/Branding, `--accent` (Lime) aktive Trainings-/Fortschrittszustände.
+- **Phasen:** `--phase-warmup`, `--phase-main`, `--phase-cooldown` und ihre Soft-Varianten ersetzen generische Blau/Violett-Akzente.
+- **Komposition:** AppShell nutzt maximal 1680 px, kompakte zweizeilige Header-Komposition und eine weiße Light-Sidebar bzw. neutrale Dark-Sidebar.
+
+Die vollständigen Token- und Anwendungsregeln stehen in [`docs/design-system.md`](./design-system.md).

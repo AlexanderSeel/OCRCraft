@@ -23,19 +23,19 @@ export function CollapsibleSidebar() {
   }
 
   return (
-    <aside className={`hidden shrink-0 border-r border-[var(--sidebar-border)] bg-[var(--sidebar)] text-[var(--sidebar-foreground)] transition-[width] lg:flex lg:h-dvh lg:min-h-0 lg:flex-col lg:overflow-y-auto lg:overscroll-contain ${collapsed ? "lg:w-[72px]" : "lg:w-[240px]"}`}>
-      <div className={`flex h-20 items-center border-b border-[var(--sidebar-border)] ${collapsed ? "justify-center px-2" : "gap-3 px-6"}`}>
-        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--accent)] text-lg font-black text-[var(--accent-foreground)]">O</div>
-        {!collapsed ? <div><div className="font-black tracking-tight">OCRCraft</div><div className="text-xs text-[var(--sidebar-muted)]">Club Training Studio</div></div> : null}
+    <aside className={`hidden shrink-0 border-r border-[var(--sidebar-border)] bg-[var(--sidebar)] text-[var(--sidebar-foreground)] transition-[width] lg:flex lg:h-dvh lg:min-h-0 lg:flex-col lg:overflow-y-auto lg:overscroll-contain ${collapsed ? "lg:w-[64px]" : "lg:w-[224px]"}`}>
+      <div className={`flex h-16 items-center border-b border-[var(--sidebar-border)] ${collapsed ? "justify-center px-2" : "gap-2.5 px-3"}`}>
+        <div className="brand-mark grid size-9 shrink-0 place-items-center text-base font-black">O</div>
+        {!collapsed ? <div className="min-w-0"><div className="truncate font-black tracking-[-0.02em]">OCRCraft</div><div className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--sidebar-muted)]">Build · Train · Progress</div></div> : null}
+        {!collapsed ? <button aria-label="Hauptnavigation verkleinern" className="ml-auto grid size-10 shrink-0 place-items-center rounded-md text-lg font-black text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" onClick={toggle} title="Navigation verkleinern" type="button">‹</button> : null}
       </div>
-      <div className={`flex ${collapsed ? "justify-center p-2" : "justify-end px-4 pt-3"}`}>
-        <button aria-label={collapsed ? "Hauptnavigation vergrößern" : "Hauptnavigation verkleinern"} className="grid size-10 place-items-center rounded-lg text-lg font-black text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" onClick={toggle} title={collapsed ? "Navigation vergrößern" : "Navigation verkleinern"} type="button">
-          {collapsed ? "›" : "‹"}
-        </button>
-      </div>
+      {collapsed ? <div className="flex justify-center border-b border-[var(--sidebar-border)] p-1.5"><button aria-label="Hauptnavigation vergrößern" className="grid size-10 place-items-center rounded-md text-lg font-black text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" onClick={toggle} title="Navigation vergrößern" type="button">›</button></div> : null}
       <PrimaryNavigation collapsed={collapsed} variant="sidebar" />
-      <div className={`mt-auto border-t border-[var(--sidebar-border)] ${collapsed ? "space-y-2 p-2" : "space-y-1 p-4"}`}>
-        <Link aria-label="Administration" className={`rounded-lg py-2.5 text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)] ${collapsed ? "mx-auto flex size-12 items-center justify-center" : "block px-3"}`} href="/admin?tab=overview" title="Administration">{collapsed ? <svg aria-hidden="true" className="size-5" fill="none" viewBox="0 0 24 24"><path d="M12 3.5 13.4 5l2-.2.8 1.8 1.8.8-.2 2L19.5 11l-1.4 1.5 1.4 1.5-1.7 1.6.2 2-1.8.8-.8 1.8-2-.2L12 21l-1.5-1.4-2 .2-.8-1.8-1.8-.8.2-2L4.5 14l1.4-1.5L4.5 11l1.6-1.6-.2-2 1.8-.8.8-1.8 2 .2L12 3.5Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.6" /><circle cx="12" cy="12.5" r="2.5" stroke="currentColor" strokeWidth="1.6" /></svg> : "Administration"}</Link>
+      <div className={`mt-auto border-t border-[var(--sidebar-border)] ${collapsed ? "p-1.5" : "p-2.5"}`}>
+        <Link aria-label="Administration" className={`min-h-11 rounded-md text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)] ${collapsed ? "mx-auto flex size-11 items-center justify-center" : "flex items-center gap-3 px-3"}`} href="/admin?tab=overview" title="Administration">
+          <svg aria-hidden="true" className="size-5 shrink-0" fill="none" viewBox="0 0 24 24"><path d="M12 3.5 13.4 5l2-.2.8 1.8 1.8.8-.2 2L19.5 11l-1.4 1.5 1.4 1.5-1.7 1.6.2 2-1.8.8-.8 1.8-2-.2L12 21l-1.5-1.4-2 .2-.8-1.8-1.8-.8.2-2L4.5 14l1.4-1.5L4.5 11l1.6-1.6-.2-2 1.8-.8.8-1.8 2 .2L12 3.5Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.6" /><circle cx="12" cy="12.5" r="2.5" stroke="currentColor" strokeWidth="1.6" /></svg>
+          {!collapsed ? <span>Administration</span> : null}
+        </Link>
       </div>
     </aside>
   );

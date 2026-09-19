@@ -26,21 +26,18 @@ export function PrimaryNavigation({ variant, collapsed = false }: PrimaryNavigat
   if (variant === "mobile") {
     return (
       <nav aria-label={dictionary.mobileNavigation} className="min-w-0 max-w-full overflow-x-auto border-t border-[var(--border)] lg:hidden">
-        <div className="mx-auto flex w-full min-w-0 max-w-[1500px] flex-wrap gap-1 px-4 py-2 sm:px-6">
+        <div className="mx-auto flex w-max min-w-full max-w-[1680px] gap-0.5 px-3 py-1.5 sm:px-4">
           {navigation.map(([key, href]) => {
             const label = dictionary.navigation[key];
             const active = isActivePath(pathname, href);
             return (
               <Link
                 aria-current={active ? "page" : undefined}
-                className={`inline-flex min-h-10 items-center rounded-lg px-3 text-sm font-bold transition ${
-                  active
-                    ? "bg-[var(--accent-soft)] text-[var(--foreground)] ring-1 ring-[var(--accent-strong)]"
-                    : "text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)]"
-                }`}
+                className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-md border-l-2 px-2.5 text-xs font-bold transition ${active ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)]"}`}
                 href={href}
                 key={href}
               >
+                <NavIcon label={key} />
                 {label}
               </Link>
             );
@@ -51,23 +48,20 @@ export function PrimaryNavigation({ variant, collapsed = false }: PrimaryNavigat
   }
 
   return (
-      <nav aria-label={dictionary.navigationLabel} className={`flex-1 space-y-1 ${collapsed ? "p-2" : "p-4"}`}>
+    <nav aria-label={dictionary.navigationLabel} className={`flex-1 space-y-0.5 ${collapsed ? "p-1.5" : "p-2.5"}`}>
       {navigation.map(([key, href]) => {
         const label = dictionary.navigation[key];
         const active = isActivePath(pathname, href);
         return (
           <Link
             aria-current={active ? "page" : undefined}
-                aria-label={label}
-            className={`rounded-lg py-2.5 text-sm font-semibold transition ${collapsed ? "mx-auto flex size-12 items-center justify-center px-0" : "block px-3"} ${
-              active
-                ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
-                : "text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]"
-            }`}
+            aria-label={label}
+            className={`min-h-11 rounded-md border-l-2 text-sm font-semibold transition ${collapsed ? "mx-auto flex size-11 items-center justify-center px-0" : "flex items-center gap-3 px-3"} ${active ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--sidebar-foreground)]" : "border-transparent text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]"}`}
             href={href}
             key={href}
           >
-            {collapsed ? <NavIcon label={key} /> : label}
+            <span className={active ? "text-[var(--brand)]" : ""}><NavIcon label={key} /></span>
+            {!collapsed ? <span className="truncate">{label}</span> : null}
           </Link>
         );
       })}
@@ -87,5 +81,5 @@ function NavIcon({ label }: { readonly label: string }) {
     groups: "M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20m6-8a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm5-6.5a3 3 0 0 1 0 5.8M18 20v-1.5a3.5 3.5 0 0 0-2-3.2",
     media: "M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13ZM7 16l3.5-4 2.5 3 1.8-2.2L18 16M8 8.5h.01",
   };
-  return <svg aria-hidden="true" className="size-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d={paths[label] ?? "M12 5v14M5 12h14"} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>;
+  return <svg aria-hidden="true" className="size-5 shrink-0" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d={paths[label] ?? "M12 5v14M5 12h14"} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>;
 }

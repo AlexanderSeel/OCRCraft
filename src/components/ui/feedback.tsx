@@ -11,7 +11,7 @@ const toneClasses: Record<FeedbackTone, string> = {
 
 export function Alert({ children, tone = "info" }: { readonly children: ReactNode; readonly tone?: FeedbackTone }) {
   return (
-    <div aria-live={tone === "danger" ? "assertive" : "polite"} className={`rounded-xl border p-4 text-sm font-bold ${toneClasses[tone]}`} role={tone === "danger" ? "alert" : "status"}>
+    <div aria-live={tone === "danger" ? "assertive" : "polite"} className={`rounded-md border p-3 text-sm font-bold ${toneClasses[tone]}`} role={tone === "danger" ? "alert" : "status"}>
       {children}
     </div>
   );
@@ -19,7 +19,7 @@ export function Alert({ children, tone = "info" }: { readonly children: ReactNod
 
 export function EmptyState({ title, children }: { readonly title: string; readonly children: ReactNode }) {
   return (
-    <section className="rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-subtle)] p-5 text-center">
+    <section className="rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--surface-subtle)] p-4 text-center">
       <h3 className="font-black">{title}</h3>
       <div className="mt-2 text-sm leading-6 text-[var(--muted)]">{children}</div>
     </section>

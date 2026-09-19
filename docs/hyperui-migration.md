@@ -69,3 +69,8 @@ Die höchste Wirkung bei geringem fachlichem Risiko liegt in diesen Gruppen:
 Jeder Batch braucht einen Light-/Dark-Mode-Abgleich, eine mobile Prüfung,
 Tastatur-/Screenreader-Prüfung sowie `check:ui`, Typecheck, Lint, Unit-, E2E-
 und Build-Prüfungen.
+
+
+## Visuelle Zielschärfung
+
+Der September-2026-Refresh konkretisiert das Zielbild in [`docs/design-system.md`](./design-system.md): weniger Rundung, geringere Flächenverschwendung, neutraler Graphit-Dark-Mode sowie Coral/Lime als kontrollierte Signalfarben. Dashboard und Trainingsübersicht bilden den ersten vollständig auf diese Dichte und Hierarchie angepassten Fachseiten-Batch.

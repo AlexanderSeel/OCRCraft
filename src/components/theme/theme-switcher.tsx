@@ -68,13 +68,13 @@ export function ThemeSwitcher() {
   }
 
   return (
-    <label className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs font-bold text-[var(--muted)]">
+    <label className="inline-flex min-h-11 items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs font-bold text-[var(--muted)]">
       <span className="hidden xl:inline">{dictionary.appearance}</span>
       <select
         data-theme-switcher="true"
         ref={selectRef}
         aria-label="Darstellung"
-        className="min-h-8 rounded-lg border-0 bg-transparent px-1.5 text-sm font-bold text-[var(--foreground)] outline-none"
+        className="min-h-8 rounded-sm border-0 bg-transparent px-1.5 text-sm font-bold text-[var(--foreground)] outline-none"
         defaultValue="system"
         onChange={(event) => changeTheme(event.target.value as ThemePreference)}
       >

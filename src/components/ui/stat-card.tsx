@@ -8,10 +8,11 @@ interface StatCardProps {
 
 export function StatCard({ label, value, detail }: StatCardProps) {
   return (
-    <Card className="p-5">
-      <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">{label}</div>
-      <div className="mt-2 text-2xl font-black tracking-tight">{value}</div>
-      <p className="mt-1 text-sm text-[var(--muted)]">{detail}</p>
+    <Card className="relative overflow-hidden p-4">
+      <span aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5 bg-[var(--brand)]" />
+      <div className="ui-kicker">{label}</div>
+      <div className="mt-1.5 text-2xl font-black tracking-[-0.035em]">{value}</div>
+      <p className="mt-0.5 truncate text-xs text-[var(--muted)]" title={detail}>{detail}</p>
     </Card>
   );
 }
