@@ -31,6 +31,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: UI review gate
+        run: npm run check:ui
+
       - name: Typecheck
         run: npm run typecheck
 

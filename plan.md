@@ -1,195 +1,40 @@
-# OCRCraft – Implementierungsplan
+# OCRCraft – offene Vorhaben
 
-> Primärsprache: Deutsch · Sekundärsprache: Englisch
-> Stack: Next.js/React, TypeScript, Tailwind CSS, DuckDB/FTS
+> Stand: September 2026 · Primärsprache Deutsch, UI-Inhalte bleiben für Englisch übersetzbar.
 
-## Zweck und Arbeitsregeln
+`README.md` dokumentiert die umgesetzten Meilensteine. Diese Datei enthält nur noch Arbeit, die tatsächlich offen ist.
 
-OCRCraft hilft Trainern, sichere OCR- und Breitensport-Einheiten schnell zu planen, anzupassen und wiederzuverwenden. Jede Änderung muss die Trennung `UI → Anwendung/Service → Repository → DuckDB` erhalten. KI schlägt vor; der Trainer prüft und speichert.
+## Arbeitsregeln
 
-Die Kernstruktur jeder Einheit bleibt sichtbar:
+- Die Kernstruktur jeder Einheit bleibt sichtbar: Aufwärmen, Hauptteil, Cooldown & Stretching.
+- Architektur bleibt getrennt: `UI → Anwendung/Service → Repository → DuckDB`.
+- KI schlägt vor; der Trainer prüft, ändert und speichert.
+- Alters-, Risiko-, Vereins-, Equipment- und Kapazitätsregeln bleiben harte Grenzen.
+- Eine Änderung braucht typed boundaries, zugängliche Zustände, Domänenvalidierung und aussagekräftige Tests.
 
-1. Aufwärmen
-2. Hauptteil
-3. Cooldown & Stretching
+## P1 – Trainer-Workflow und UI
 
-## Prioritäten
+- [ ] Tailgrids-kompatible lokale UI-Schicht abschließen: Overlay/Popover, Form-Felder, Pagination, Tabs, Sidebar und Toast als dokumentierte OCRCraft-Komponenten mit semantischen Tokens, Fokus-/Z-Index-Regeln, deutscher UI und Serveraktionen konsolidieren; keine Tailgrids-Laufzeitabhängigkeit und kein CLI-Überschreiben von `globals.css`.
 
-- **P0 – Betriebssicherheit und Daten:** Datenbank, Authentifizierung, Import/Export, Backups und Schutz globaler Mutationen.
-- **P1 – Trainer-Workflow:** Übungsdaten vervollständigen, Editor-Versionen, Suche, Vorlagen und responsive Traineransicht.
-- **P2 – Katalog und Medien:** weitere Übungskohorten, Dubletten, Vorlagenquellen, Medienverwaltung und Bildprüfung.
-- **P3 – Ausbau:** Internationalisierung, Analysen, E2E-Abdeckung und optionale Trainingsformate.
+## P3 – Internationalisierung
 
-## P0 – offen
+- [ ] UI-Dictionaries und Sprachumschaltung für die user-facing Bereiche einführen; Deutsch bleibt Standard, Englisch wird vollständig über Schlüssel statt Inline-Texte steuerbar.
+- [ ] Admin-Ansicht für Übersetzungs-Vollständigkeit ergänzen: fehlende Schlüssel, Fallbacks und verwaiste Dictionary-Einträge sichtbar machen.
+- [ ] Strukturierte Ausführungs-/Coaching-Felder DE/EN vollständig prüfen und fehlende Übersetzungen als Datenqualitätsbefund ausweisen.
 
-### Identität und Betrieb
+## P3 – Qualität und Analysen
 
-- [x] Authentifizierung einführen (signierte, kurzlebige Actor-Assertions aus einem vorgeschalteten Vereins-Login; lokale Bootstrap-/Umgebungsidentität bleibt verfügbar).
-- [x] RBAC für Trainer, Admin und Super-Admin einführen.
-- [x] Globale Admin-Mutationen serverseitig autorisieren.
-- [x] Produktions-Deployment und Betriebsdokumentation ergänzen.
-- [x] Benutzer und Rollen persistieren; externe Anmeldung kann per Actor-Konfiguration erzwungen werden.
-- [x] Erweiterbare Rollen- und Rechteverwaltung: benutzerdefinierte Rollen mit bereichsbezogenen Lese-/Schreib-/Adminrechten, UI-Verwaltung, Benutzerzuweisung, Audit-Events und serverseitiger `requirePermission`-Durchsetzung ergänzt. Die bestehenden globalen Super-Admin-Grenzen bleiben als zusätzliche Schutzschicht erhalten.
-- [x] Audit-Events für zentrale Admin-/Datenbankaktionen persistieren.
-- [x] Persistente Hintergrund-Task-Queue mit globalem Statusindikator, Admin-Steuerung, Abbruch, Wiederholung und Löschung fehlgeschlagener Einträge für Prüf-, Dubletten-Merge-, Index- und Medienaufgaben; Detailstatus wird im Header-Popover und in der Admin-Queue angezeigt.
+- [ ] Quick-Create-, Training-Editor-, Kids/Youth- und Theme-E2E weiter ausbauen: neben den bestehenden Tastatur-, Review-, Builder-, Schutz- und Theme-Gates noch echte Editoränderung, Speichern und geschützte Kids/Youth-Blockierung abdecken.
+- [ ] Übungsnutzung, Körperregionen, Hindernisabdeckung, Laufvolumen, Wiederholungswarnungen und Nulltreffer analysieren; Auswertungen müssen aus Repository-/Service-Daten stammen und Filterzustände erklären.
+- [ ] Vollständigkeits- und KI-Ersetzungsanalysen ergänzen: fehlende DE/EN-/Coaching-/Sicherheitsfelder, Ersatzquote, Blockierungsgründe und Trainerfreigaben nachvollziehbar darstellen.
 
-### Datenbank und portable Daten
-
-- [x] Training-Versionen mit Snapshot und geschützter Wiederherstellung.
-- [x] Lock-gesichertes DuckDB-Backup mit Zeitstempel und Manifest.
-- [x] DuckDB-Restore mit Sicherheitsbackup und sichere Multi-Process-Betriebsanleitung.
-- [x] Konfigurierbare Backup-Rotation und Anzeige der vorhandenen Backups im Adminbereich.
-- [x] Selektierbaren, versionierten JSON-Export implementieren.
-- [x] Exportoptionen für Übungen, Details, Mapping, Trainings, Gruppen, Medien und Provenienz anbieten.
-- [x] Optional Binärmedien mit MIME-Typ, Prüfsumme und Quellenmetadaten exportieren.
-- [x] Import-Preflight, Schema-Version und transaktionalen Schreibvorgang für erlaubte portable Tabellen implementieren.
-- [x] Dublettenklassifikation (`same`, `new`, `probable duplicate`, `conflict`) und Side-by-Side-Vergleich für Importkonflikte abschließen.
-- [x] Konfliktbewusste Feldübernahme im Bulk vollständig abdecken (Merge übernimmt fehlende Übersetzungen, Zuordnungen, Medien und Referenzen; vorhandene Werte der behaltenen Übung bleiben erhalten).
-- [x] Konfliktauflösungstests ergänzen (Auswahlvalidierung und Portable-Medien-Round-trip sind abgedeckt).
-
-## P1 – Trainer-Workflow
-
-### Architektur- und UI-Review 2026-09
-
-- [x] Gemeinsame Kataloglisten visuell und interaktiv vereinheitlichen: `OverviewLayout`, persistierte Liste/Klein/Groß/Detail-Umschaltung, responsive Ergebnisdichte, begrenzte Kartenbreiten und Playwright-Gates sind für Training, Vorlagen, Übungen, Games, Hindernisse, Medien, Gruppen, AI-Entwürfe und Outdoor umgesetzt. (Die überladene Mittelansicht wurde entfernt; Feature in README dokumentiert.)
-- [x] Gemeinsame Kataloglisten fachlich weiter vereinheitlicht: gemeinsames Filter-Sidepanel, URL-Suchzustand, Ergebniszähler und Pagination-Primitive sind für Übungen, Spiele, Training, Vorlagen, Gruppen, Medien, Hindernisse, AI-Entwürfe und Outdoor aktiv.
-- [x] Gemeinsame Ergebniszähler- und Pagination-Primitive für paginierte Kataloge einführen und in Übungen sowie Spiele migrieren; Seitennavigation bleibt responsiv, zugänglich und serverseitig URL-basiert. (Feature in README dokumentiert.)
-- [x] Spielekatalog auf das gemeinsame `FilterSidePanel`-Muster mit URL-basiertem Such-/Status-/Seitengrößenfilter und Reset-Link migrieren; weitere Kataloge folgen mit ihren fachlichen Filterfeldern.
-- [x] Gruppenkatalog auf das gemeinsame `FilterSidePanel`-Muster mit URL-basierter Namenssuche, Zielgruppenfilter und Reset-Link migrieren; Erstellung und Listenfilter bleiben bewusst getrennte Interaktionen.
-- [x] AI-Entwürfe und Outdoor-Review auf gemeinsame URL-basierte Filterpanels migrieren: Entwurfssuche sowie Outdoor-Suche/Statusfilter besitzen kompakte Filter- und Reset-Zustände mit Playwright-Gates.
-- [x] Medienkatalog an die gemeinsamen Ergebniszähler anbinden und Filter-/Reset- sowie URL-Zustand mit Playwright absichern; Review-, Generierungs-, Quellen- und Medientypfilter bleiben fachlich getrennt.
-- [x] Vorlagenkatalog auf das gemeinsame `FilterSidePanel`-Muster umstellen: Zielgruppe und Schwerpunkt bleiben URL-basiert, kompakt und getrennt vom Vereinsvorlagen-/Erstellungsbereich.
-- [x] Listen- und Detaildatenquellen auf statische Legacy-Platzhalter prüfen; insbesondere Dashboard-Kennzahlen und Vorschaukarten dürfen ausschließlich aus Repository-/Service-Daten entstehen. Dashboard-Liste und Kennzahlen verwenden nun dieselbe Repository-Abfrage; Summen und Entwurfszahl gelten nicht mehr nur für die sechs Vorschauzeilen.
-- [x] Quick-Create- und Builder-E2E weiter ausbauen: Vorlagenauswahl und responsive Empty-/Shell-/Overflow-Gates sowie Kids-Alters-/Sicherheitsreview und Builder-Teamkapazitäts-/Altersgrenzen sind abgedeckt; die Schutzpfade bleiben als CI-Gates bestehen.
-- [ ] Übrig gebliebene Legacy-UI-Texte und feste Katalogzähler in CI als Review-Gate erkennen.
-
-### Übungskatalog
-
-- [x] Katalog mit einer kuratierten Lücken-Kohorte erweitern: acht zusätzliche Core-, Mobilitäts-, Koordinations- und OCR-Übergangsdrills schließen bodennahe Stabilitäts-, Sprunggelenk-/Hüft-/BWS-Mobilitäts- und kontrollierte Richtungswechsel-Lücken.
-- [x] Zusätzliche deutsche/englische Aliase und Trainerbegriffe für alle Seeds ergänzen: bewegungsmuster- und kategoriebasierte Trainerbegriffe werden versioniert in die Suche aufgenommen und durch Integrationstests auf vollständige Seed-Abdeckung geprüft.
-- [x] Fachliche Einzelprüfung und Anreicherung aller verbleibenden Seeds abschließen: der Altbestand wurde von generischen Legacy-Coachingtexten bereinigt, kategorien-/bewegungsspezifisch nachgeschärft und erhält pro Seed eine versionierte Qualitätsreviewspur; CI verlangt für jeden Seed ein bestandenes DE/EN-, Sicherheits-, Bewegungsmuster-, Dosierungs- und Metadaten-Gate.
-- [x] Weitere Katalogkohorten versioniert, zweisprachig und mit Detail-/Sicherheits-Gates aufnehmen; die neue Gap-Kohorte besitzt DE/EN-Details, Ausführungsschritte, Coaching, Fehlerkorrektur, Körperregionen, Bewegungsmuster, Ziele, Phasen und Suchdokumente.
-- [x] Zusätzliche Kategorien und Facetten editierbar machen.
-- [x] Progressionen/Regressionen als Katalogverwaltung mit Editor und geschützter Archivierung ausbauen.
-- [x] Geschützte Hard-Delete-Regeln implementieren (nur Super-Admin, archivierte Nicht-Seed-Übung, exakte Bestätigung und keine Betriebsreferenzen).
-- [x] Dublettenprüfung, Bulk-Edit und Import/Export im Admin abschließen.
-
-### Suche und Planung
-
-- [x] Gemeinsame Katalogansicht für Training, Spiele, Hindernisse, Übungen, Medien, AI-Entwürfe, Gruppen und Outdoor mit Liste/Klein/Groß/Detail, einheitlichem Filter-Sidepanel, Suchzustand, Ergebniszähler, Seitengröße und serverseitiger bzw. service-seitiger Pagination umgesetzt.
-
-- [x] Konfigurierbare Gewichte für strukturierte Suchfelder anbieten: Exact/Prefix/Alias, Kurzbeschreibung, Ziele/Tags/Bewegungsmuster, Körperregionen, Equipment und Instruktionen werden über das aktive persistierte Suchprofil gewichtet; DuckDB-BM25 bleibt die Volltextbasis und ENV-Gewichte dienen nur als Fallback.
-- [x] Autocomplete aus Übungs-, Trainingsziel-, Equipment-, Tag-, Bewegungsmuster- und Körperregionsdaten ergänzen.
-- [x] Suchprofile und Feldgewichte konfigurierbar machen: Administration bietet versionierte Startprofile sowie Anlegen, Bearbeiten, Aktivieren und geschütztes Löschen; das aktive Profil steuert Übungssuche und Autocomplete und Profiländerungen werden auditiert.
-- [x] Favoriten und „zuletzt verwendet“ ergänzen: Favoriten werden trainerbezogen persistiert; die Übungsbibliothek kann nach Favoriten und den real zuletzt in eigenen Trainings verwendeten Übungen filtern und zeigt beide Zustände direkt auf den Karten.
-- [x] Authentifizierte DE/EN-FTS-Rebuild-Aktionen bereitstellen.
-- [x] Partner-Workout als echte 2er-Team-Programmierung ausbauen: Hauptteile unterstützen You-go-I-go, synchrones Arbeiten, zeitgesteuertes Alternieren und gemeinsame Zielmengen; Partnerregeln werden serverseitig validiert, persistiert, in Vorschau/Builder angezeigt und bleiben bei Neuplanung bzw. Übungsersatz erhalten.
-- [x] Intervall-/Runden-/Ladder-/Pyramid-/Chipper-/Partner-Regeln vollständig ausbauen: Arbeits-/Pausenzyklen, Rundenpausen und Zeit pro Runde, Ladder-/Pyramid-Wiederholungsfolgen, Chipper-Zielmengen sowie Partner-Arbeitsweisen werden deterministisch berechnet, validiert und in Entwurf/Trainer-/Druckansicht transparent angezeigt.
-- [x] Laufregeln „alle X Meter/Minuten/Checkpoint“ und Arbeits-/Pausenarithmetik vervollständigen: Every-X speichert Trigger, Arbeit und Reset; Minuten-Trigger werden gegen die Blockzeit gerechnet, Meter/Checkpoint bleiben streckenabhängig gekennzeichnet und Run+Exercise erhält bei fehlender Detailprogrammierung einen sicheren 500-m-Standard.
-
-### Training Editor und Gruppen
-
-- [x] Version History/Restore für Trainings.
-- [x] Trainingsvorlagen erstellen, speichern und wiederverwenden: bestehende Trainings können als persistierte Vereins-Snapshots mit konkreter Übungsauswahl, Hauptteilprogrammierung und Teamorganisation gespeichert, im Vorlagenkatalog erneut instanziiert und archiviert werden; vor Wiederverwendung werden alle Übungsreferenzen gegen den aktiven Katalog validiert.
-- [x] Gruppen-Splits, Stationskapazität und Vereinsdefaults weiter ausbauen: Vereinsgruppen speichern Standard-Organisation, Teamgröße, Rotationsgruppenzahl und Zielgröße je Stationsgruppe; Quick Create übernimmt diese Defaults bzw. leitet daraus die Gruppenteilung ab, während die bestehende Übungs-`stationCapacity`-Validierung weiterhin reale Engpässe meldet.
-- [x] Kids/Youth/Beginner/Advanced/Competition/Running/Open-Presets ergänzen; die sieben editierbaren Startprofile setzen Zielgruppe, Alter, Dauer, Ort, Risiko-/Regelprofil, Skill-Mix, bevorzugte Formate und Organisationsdefaults.
-- [x] Club-Regelprofile, Standort-/Equipmentdefaults und Skill-Verteilung ergänzen; Regelprofil, Ort und Equipment werden von Quick Create als Planungsdefaults übernommen, der Skill-Mix wird als Trainer-/Gruppenmetadatum persistiert und sichtbar gehalten.
-
-### UI/UX und Zugänglichkeit
-
-- [ ] Tailgrids-kompatible UI-Schicht schrittweise als lokale OCRCraft-Komponenten einführen: zuerst Overlay/Popover, Form-Felder, Pagination, Tabs, Sidebar und Toast; bestehende semantische Tokens, deutsche Übersetzungen, Fokus-/Z-Index-Regeln und Serveraktionen bleiben erhalten. Die Komponenten werden manuell bzw. als kopierte Bausteine übernommen, ohne CLI-Überschreiben von `globals.css` oder eine Abhängigkeit auf Tailgrids-Laufzeitcode; Lizenz- und Quellenhinweis bleiben in der Projektdokumentation nachvollziehbar.
-- [x] Globales Formularfeedback vereinheitlichen: native Pflichtfeld-, Format-, Bereichs- und Längenprüfungen zeigen direkt am Feld eine deutsche Fehlermeldung, markieren das Feld mit `aria-invalid`, setzen den Fokuspfad über `aria-describedby` und kennzeichnen Pflichtfelder konsistent mit `*`.
-- [x] Kontrast und Lesbarkeit in Hell-/Dunkelmodus über die globalen semantischen Tokens nachgeschärft: Muted-/Status-/Sidebar-Kontraste und Feldgrenzen wurden erhöht, Placeholder verlieren keine zusätzliche Opazität mehr und Fokuszustände bleiben in beiden Themes klar sichtbar.
-- [x] Gemeinsames erweitertes Form-Kit für Labels, Pflichtkennzeichnung, Hilfetexte, Fehlermeldungen, Controls, Statusmeldungen und Action-Zeilen eingeführt und in Übungseditor sowie Training-Item-Editor integriert.
-- [x] Globales Toast-/Feedbacksystem mit zugänglichem `aria-live`, Loading-, Erfolgs-, Info- und Fehlerzuständen, Auto-Dismiss und manuellem Schließen eingeführt; Quick Create und Training Builder verwenden es für Planung, Neuplanung, Übungsersatz und Speichern, während ausführliche Inline-Fehler erhalten bleiben.
-- [x] Undo/Redo für geeignete Editoraktionen: Der Training Builder hält bis zu 20 Entwurfsstände für komplette Neuplanung, Phasen-Neuplanung und Übungsersatz; neue Randbedingungen starten bewusst eine frische Historie.
-- [x] Fullscreen-Traineransicht und Druckansicht: Der Readonly-Trainermodus unterstützt die Browser-Fullscreen-API mit sauberem Exit-Zustand; die separate Druckansicht besitzt druckspezifische Tokens, Seitenränder und ausgeklappte Detailbereiche.
-- [x] Accessibility-Audit als CI-Gate ergänzt: zentrale Seiten werden im Chromium-Browser auf Main-/H1-Landmarks, doppelte IDs, Bild-Alternativtexte, benannte Controls und positive `tabindex` geprüft; Skip-Link, Quick-Create-Zielgruppenwahl und Themewechsel besitzen echte Playwright-Tastaturpfade.
-- [x] Medienauswahl und KI-Bildgenerierung direkt im Übungs-/Spiel-/Hindernis-Editor anbieten; ausgewählte Medien werden als primäres Bild persistiert.
-
-## P2 – Katalogquellen, Medien und KI
-
-### Quellen und Vorlagen
-
-- [x] VIBSS-inspirierte Quellen-/Provenienzstruktur für Trainingsvorlagen ergänzen: Zielgruppe/Alter, Intention/Schwerpunkt, Materialhinweise, Ort und Phasenstruktur werden versioniert geführt; die externe Referenz ist ausdrücklich nur Taxonomie-Inspiration.
-- [x] Versionierte OCRCraft-Trainingsvorlagen mit Quellen-/Provenienzreferenz bereitstellen; gespeicherte Trainings behalten Template-Key und Provenienz. (Umgesetzt; Feature in README dokumentiert.)
-- [x] Erwachsenen-, Kids- und Youth-Vorlagen für Ausdauer, Koordination, Kraft, Mobility, Teamwork und Parcours ergänzen; jede der sechs Kategorien ist in allen drei Zielgruppen vertreten.
-- [x] Spiele als vollwertigen Katalogtyp `game` ausbauen: eigener Spielebereich, Anlage über denselben vollständigen Übungseditor, 12 zweisprachige OCRCraft-Eigenspiele für Kids/Youth/Erwachsene sowie direkte Berücksichtigung durch lokale/AI-Trainingsplanung über die bestehende Kandidaten- und Sicherheitslogik.
-- [x] Teamwettkämpfe als reguläres Trainingsformat integrieren: 3er-Spezialisten mit Kraft/Schnelligkeit/Technik und gemeinsamem Finisher sowie 3er-Rotation, 4er Relay Gauntlet, 2er Switch-Duell und 3er Checkpoint-Endurance; Presets setzen Teamgröße, Komplexe und Runden, bleiben im Builder editierbar und laufen durch dieselben Alters-/Risiko-/Equipment-/Sicherheitsregeln.
-- [x] Externe Inhalte lizenzgeschützt importieren: Ohne expliziten **und als geprüft bestätigten** Lizenz-/Rechtenachweis werden nur Quellen-/Metadaten referenziert; fremde Instruktionstexte und Medienreferenzen werden unterdrückt. Medien bleiben selbst mit Lizenz bis zur separaten Rechteprüfung auf `pending`.
-
-### Medien
-
-- [x] Galerie, Videos und externe Thumbnails im Medienkatalog verwalten; externe Medien können einer Übung per Autocomplete zugeordnet, bearbeitet/entfernt und Videos im Player-Popover abgespielt werden.
-- [x] Lizenz-, Quellen-, Attribution- und Einwilligungsprüfung für externe Medien ergänzen; Importmedien starten ungeprüft und können explizit freigegeben oder eingeschränkt werden.
-- [x] Verwaiste Medien in Dateisystem/S3 gegen DuckDB-Referenzen erkennen; nicht referenzierte Storage-Objekte werden nur nach Admin-Bestätigung gelöscht, fehlende referenzierte Objekte bleiben als Prüfhinweis sichtbar.
-- [x] S3-kompatible Speicherung produktionsfest machen: validierte Production-URLs, Bucket-Healthcheck, paginierte Inventarisierung, Cache-Control, Objektmetadaten sowie optionale SSE-S3/KMS-Verschlüsselung sind dokumentiert und getestet.
-- [x] Legacy-Triptychon kontrolliert in Sequenzbilder migrieren: neue Sequenz wird zuerst erzeugt und reviewed; Legacy-Assets werden erst nach freigegebener Sequenz als ersetzt/abgelehnt markiert und bleiben nachvollziehbar erhalten.
-- [x] Generierte Sequenzen besitzen einen verpflichtenden fachlichen Review für biomechanische Plausibilität und Übereinstimmung mit den strukturierten Ausführungsschritten; Freigabe ist erst nach zwei bestandenen Prüfungen möglich.
-- [x] Medienreview mit `reviewed_by`, `reviewed_at`, Review-Notiz sowie bestehender Quellen-/Übungsreferenz persistieren; Off-Machine-Backup für DuckDB und Medien-Storage ist im Betriebshandbuch dokumentiert.
-
-### KI
-
-- [x] KI-Übungsentwürfe mit separatem Trainer-Approval-Workflow abschließen; harte Namensdubletten blockieren die Freigabe und gruppenspezifische Alters-/Risikokonflikte werden im Review ausgewiesen.
-- [x] KI-Ausgaben schema-validieren und deterministisch gegen vorhandene Club-/Alters-/Sicherheitsregeln prüfen; Trainingsentwürfe werden nach AI-Ausgabe weiterhin serverseitig revalidiert.
-- [x] Provider-Settings als AI-Instanzliste mit Live-Modellabruf, freier Modell-ID, separatem Text-/Bildmodell, Funktionszuweisung für Training/Übungsentwurf/Bild, Prioritäts-Fallback, Environment-/verschlüsselter Key-Ablage sowie eindeutigem Request-/Text-Token-Verbrauch.
-- [x] Provider-Login/OAuth für Google Gemini und GitHub Copilot ergänzt; OAuth-Tokens werden verschlüsselt gespeichert/erneuert, Copilot nutzt den offiziellen SDK inklusive `listModels()`, Gemini den nativen REST-Adapter. OpenAI/Anthropic bleiben bei den unterstützten API-Key-Verfahren.
-
-## P3 – Ausbau und Qualität
-
-### Schutzkonzept
-
-- [x] Gespeicherte Kids/Youth-Schutzprofile ergänzen: wiederverwendbare Profile mit Zielgruppe, Altersbereich, maximalem Risiko/Impact, Aufsicht und expliziten Hindernissperren können Gruppen zugeordnet und versioniert in DuckDB verwaltet werden.
-- [x] Eingeschränkte Hindernisregeln, Aufsicht und Maximalrisiken nach Alter als harte Planungsgrenzen anwenden: lokale und AI-Planung filtern gesperrte Übungen sowie Risiko/Impact vorab; die finale Trainingsvalidierung prüft dieselben Regeln erneut und zeigt den Aufsichtsbedarf verständlich an.
-- [x] Trainerqualifikation, Medienfreigaben und verständliche Blockierungsgründe: Benutzer besitzen einen strukturierten Qualifikationslevel (keine/Assistenz/Trainer C/B/A), Kids/Youth-Schutzprofile definieren eine Mindestqualifikation, Trainingserzeugung wird bei Unterschreitung mit konkretem Grund blockiert und fachliche Medien-/Sequenzfreigaben verlangen mindestens Trainer C.
-- [x] Kinder-/Jugendformulierungen und Vereinsregeln als harte Priorität: aufgelöste Schutzprofilgrenzen werden vor lokaler/AI-Planung deterministisch angewendet, nach der Planung erneut validiert und zusätzlich als nicht verhandelbare `hardSafetyConstraints` an AI-Provider übergeben; Performance-, Vorlagen- und Wunschübungskontext darf sie nicht abschwächen.
-
-### Internationalisierung
-
-- [ ] UI-Dictionaries und Sprachumschaltung.
-- [ ] Admin-Ansicht für Übersetzungs-Vollständigkeit.
-- [ ] Strukturierte Ausführungs-/Coaching-Felder DE/EN vollständig prüfen.
-
-### Qualität und Analysen
-
-- [x] Playwright-Quality-Gates für gemeinsame Katalog-Shell, Main/H1-Landmarks, horizontale Überläufe, echte View-Umschaltung, Hindernis-Panel-Nesting und Quick-Create-Vorlagenauswahl ergänzen. (Feature in README dokumentiert.)
-- [ ] Quick-Create-, Training-Editor-, Kids/Youth- und Theme-E2E-Tests weiter ausbauen: Quick-Create-Tastaturwahl und Theme-Persistenz sind abgedeckt; Training-Editor und Kids/Youth-Schutzpfade fehlen noch.
-- [ ] Übungsnutzung, Körperregionen, Hindernisabdeckung, Laufvolumen, Wiederholungswarnungen und Nulltreffer analysieren.
-- [ ] Vollständigkeits- und KI-Ersetzungsanalysen ergänzen.
-
-## Bereits umgesetzt – kompakte Baseline
-
-- Next.js App Router, React, TypeScript, Tailwind und modulare Domain-/Service-/Repository-Architektur.
-- DuckDB-Migrationen, WAL-Recovery/Schreibserialisierung, FTS-Zustände und In-Memory-Migrationstests.
-- Dynamisch validierter Seed- und Importkatalog mit zweisprachiger Identität, Aliases, Mapping, Sicherheits- und Detailfeldern.
-- Exercise Library mit Suche, Filtern, Muskelkarte, Create/Edit, Archivieren/Wiederherstellen und Vollständigkeitsbericht.
-- Granulare 89-Muskel-/Körperregionen-Taxonomie, primär/sekundär/Gegenmuskel-Beziehungen und zugängliche Listenalternative.
-- Quick Create und Training Builder mit lokalem deterministischem Composer, optionalem AI-Pfad, Zielgruppen-/Alters-/Risiko-/Equipment-/Hindernisregeln und Trainerprüfung.
-- Training CRUD, Phasen, Items, Level 1–3, Alternativen, Reorder, Duplicate/Combine und gespeicherte Builderbedingungen.
-- Versionierte Trainings-Snapshots mit rollenprüfter Wiederherstellung von Training, Phasen und Items.
-- Gruppen-Grundmodell, Lauf-/OCR-Formate, Team-/Stationskapazität, Übergangszeiten und strukturierte Hauptteilprogrammierung.
-- OpenAI-`gpt-image-2`-Bildpipeline mit Dry Run, stabilen Seed-Dateinamen, Quellen-/Reviewmetadaten und S3-Abstraktion.
-- Wiederverwendbare Dialog-/Disclosure-Komponenten mit Fokusmanagement, Escape, Fokusfalle, Scroll-Lock, sichtbarem Fokus und konsistenten Panels; große Katalogfilter öffnen als zentrierte Dialoge statt im Sidepanel zu wachsen.
-- Einklappbare Hauptnavigation mit persistiertem Icon-Modus, semantischen SVG-Menüicons und wiederverwendbarem Filter-Sidepanel; Übungs-, Medien- und Hinderniskatalog nutzen beide Muster mit responsiv begrenzten Eingaben und Popovern.
-- Gemeinsamer Administrationsbereich mit Tabs für Übersicht, Datenbank, Datenqualität und Einstellungen; doppelte Settings-/Admin-Navigation entfernt.
-- Dynamischer Vollständigkeitsbericht für Seed-Bestand und gesamten Übungskatalog sowie Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes.
-- Light/Dark/System-Theme, semantische UI-Tokens, responsive Layouts und laufende CI-Gates.
-- AppShell zeigt im dauerhaft sichtbaren Seitenkopf nur kontextbezogene Aktionen. Administration, Darstellung und Diagnose sind über die Hauptnavigation und den Einstellungen-Tab erreichbar.
-- Darstellung und optionale Diagnose sind im Administrations-Tab Einstellungen gebündelt; der globale Seitenkopf bleibt frei von doppelten Systemaktionen.
-- Adminbereich mit eigenem Tab „Benutzer & Profile“, filterbarer Mitgliederliste, Bearbeiten-Dialog, Benutzer-/Rollenverwaltung und lokalem Login-Dialog; Trainings-Readonly-Ansicht bleibt ohne Login teilbar.
-- Klassische E-Mail-/Passwort-Anmeldung mit gesalzenem scrypt-Hash und optionalem Zugangscode-Fallback.
-- Bearbeitbare Trainerprofile mit Vorname, Nachname, Username, E-Mail, Ausbildung, Schwerpunkten, Kurzbiografie und Bildreferenz; neue Trainings übernehmen das Profil in Readonly-/Traineransichten.
-- Profilbild-Upload (JPEG/PNG/WebP bis 2 MB) mit Speicherung in DuckDB; ohne Bild werden Initialen aus Vor- und Nachnamen angezeigt.
-
-## CI und Definition of Done
-
-Vor jedem Abschluss sequenziell ausführen:
+## Abschlussroutine
 
 ```bash
+npm run check:ui
 npm run typecheck
 npm test -- --run
 npm run lint
 npm run build
+npm run test:e2e
 ```
-
-Eine Änderung ist erst fertig, wenn Verantwortung, Typen, UI-Zustände, Sicherheits-/Domänenregeln und aussagekräftige Tests vorhanden sind.

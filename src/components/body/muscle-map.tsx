@@ -586,7 +586,7 @@ export function MuscleMap({
           <div className="mt-2 flex flex-wrap gap-2">
             <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-bold" onClick={() => setDebugPoints((points) => points.slice(0, -1))} type="button">Undo Point</button>
             <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-bold" onClick={() => setDebugPoints([])} type="button">Clear</button>
-            <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-bold" onClick={() => void navigator.clipboard.writeText(`[${debugCoordinates}]`)} type="button">Copy Coordinates</button>
+            <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-bold" onClick={() => void navigator.clipboard.writeText(`[${debugCoordinates}]`)} type="button">Koordinaten kopieren</button>
           </div>
         </details>
       ) : null}

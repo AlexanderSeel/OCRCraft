@@ -8,7 +8,16 @@ Die Kernstruktur bleibt sichtbar: **Aufwärmen → Hauptteil → Cooldown & Stre
 
 Die produktive Grundlage steht auf `main`. Der Katalog wird dynamisch aus versionierten Seeds und importierten Datensätzen aufgebaut. Übungen besitzen deutsche und englische Identität, Aliase, Körperregionen, Muskel- und Gegenmuskelbeziehungen, Equipment, Bewegungsmuster, Zielgruppen-, Risiko- und Coachingdaten.
 
-Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Er trennt Betriebs- und Datensicherheit, Trainer-Workflow, Katalog/Medien und Ausbau klar voneinander. Die produktive Betriebsroutine ist in [`docs/operations.md`](./docs/operations.md) dokumentiert.
+Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Abgeschlossene Meilensteine sind unten zusammengefasst; die produktive Betriebsroutine ist in [`docs/operations.md`](./docs/operations.md) dokumentiert.
+
+## Umgesetzte Meilensteine
+
+- Betriebssicherheit: Authentifizierung, RBAC und erweiterbare Rollen/Rechte, Audit-Events, Backup/Restore, portable Exporte/Importe und persistente Hintergrundaufgaben.
+- Trainingsplanung: Quick Create und Training Builder mit Warm-up/Hauptteil/Cooldown, Alters-/Risiko-/Equipment-/Kapazitätsregeln, AI-Revalidierung, Versionen, Alternativen, Undo/Redo, Team- und Partnerformaten.
+- Katalogqualität: zweisprachige Seeds, Aliase, Coaching-/Sicherheitsfelder, Facetten, Progressionen/Regressionen, Games, Hindernisse, Outdoor-Varianten, Dublettenprüfung und Medienreview.
+- Gruppen und Schutz: editierbare Kids-/Youth-Profile, Trainerqualifikation, Aufsicht, Hindernissperren, Maximalrisiken und nicht abschwächbare `hardSafetyConstraints`.
+- Katalog-UX: gemeinsame Liste/Klein/Groß/Detail-Ansichten, URL-Filter, Ergebniszähler, Seitengrößen, Pagination und Filter-Sidepanels für alle zentralen Kataloge; Dashboard-Kennzahlen stammen aus Repository-Aggregaten.
+- Qualitätssicherung: Accessibility- und Playwright-Gates, Kids-/Builder-/Quick-Create-Pfade, UI-Review-Gate gegen feste Katalogzähler und bekannte Legacy-Texte sowie vollständige TypeScript-/Vitest-/Build-Prüfungen.
 
 ## Funktionen
 
@@ -72,7 +81,7 @@ Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit e
 
 - Light-, Dark- und System-Theme mit semantischen Tokens
 - responsive Traineroberflächen für Desktop, Tablet und mobile Nutzung
-- gemeinsames Bedienkonzept für Kataloge: Filter-Sidepanel, Suche, Größenwahl und Pagination werden für Übungen, Training, Spiele, Hindernisse, Medien, AI-Entwürfe, Gruppen und Outdoor schrittweise vereinheitlicht; der verbleibende Umfang ist in `plan.md` dokumentiert
+- gemeinsames Bedienkonzept für Kataloge: Filter-Sidepanel, Suche, Größenwahl, Ergebniszähler und Pagination sind für Übungen, Training, Spiele, Hindernisse, Medien, AI-Entwürfe, Gruppen, Vorlagen und Outdoor vereinheitlicht
 - einklappbare Hauptnavigation mit persistiertem Icon-Modus sowie wiederverwendbare Sidepanel-Filter in Übungs-, Medien- und Hinderniskatalog
 - zentrale Dialog-Komponente mit ARIA-Rolle, Fokusfalle, Escape, Backdrop-Schließen, Scroll-Lock und Fokus-Rückgabe
 - AppShell hält den Seitenkopf auf kontextbezogene Seitenaktionen begrenzt; Darstellung und Diagnose liegen im gemeinsamen Einstellungen-Tab der Administration
@@ -82,7 +91,7 @@ Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit e
 - gemeinsames Ansichts-Pattern für Training und Vorlagen mit Liste/Klein/Groß/Detail und persistierter Auswahl
 - gemeinsame Ansichtsumschaltung und responsive Ergebnisdichte für Spiele, Hindernisse, Medien, Gruppen, AI-Entwürfe und Outdoor-Varianten
 - gemeinsame Ansichtsumschaltung mit echter Liste/Klein/Groß/Detail-Geometrie, persistierter Auswahl und begrenzten Kartenbreiten über alle Katalogseiten
-- Playwright-Quality-Gates für Seiten-Shell, genau eine Hauptüberschrift/Main-Landmark, horizontale Überläufe auf Desktop/Mobil, gemeinsame Listenansicht, Hindernis-Filter-Nesting und Quick-Create-Vorlagenauswahl
+- Playwright-Quality-Gates für Seiten-Shell, genau eine Hauptüberschrift/Main-Landmark, horizontale Überläufe auf Desktop/Mobil, gemeinsame Listenansicht, Hindernis-Filter-Nesting, Quick-Create-Vorlagenauswahl, Kids-Review und Builder-Sicherheitsgrenzen
 - gemeinsame serverseitige Ergebniszähler- und Pagination-Komponenten für Übungen und Spiele mit responsiver Seitennavigation
 - Spielekatalog mit gemeinsamem Filter-Sidepanel, URL-basiertem Such-/Status-/Seitengrößenfilter und Reset-Zustand
 - Gruppenkatalog mit gemeinsamem Filter-Sidepanel, URL-basierter Namenssuche, Zielgruppenfilter und getrenntem Erstellungsdialog
@@ -113,10 +122,12 @@ Die Anwendung läuft danach unter <http://localhost:3000>.
 Die CI wird sequenziell ausgeführt:
 
 ```bash
+npm run check:ui
 npm run typecheck
 npm test -- --run
 npm run lint
 npm run build
+npm run test:e2e
 ```
 
 ## Übungsbilder

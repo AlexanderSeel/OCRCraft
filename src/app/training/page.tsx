@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
 import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { TRAINING_TEMPLATES } from "@/domain/training/training-template-catalog";
 import { listTrainingSessionsPage, type TrainingSessionStatus } from "@/server/training/training-session-repository";
 
 export const dynamic = "force-dynamic";
@@ -80,7 +81,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
               <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Wiederverwendbare Planung</div>
               <h2 className="mt-1 text-lg font-black">Trainingsvorlagen</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                24 kuratierte OCRCraft-Startvorlagen für Erwachsene, Kids und Youth mit Ausdauer, Koordination, Kraft, Mobility, Teamwork und Parcours.
+                {TRAINING_TEMPLATES.length} kuratierte OCRCraft-Startvorlagen für Erwachsene, Kids und Youth mit Ausdauer, Koordination, Kraft, Mobility, Teamwork und Parcours.
               </p>
             </Link>
             <Link
