@@ -20,7 +20,7 @@
 
 - [ ] UI-Dictionaries und Sprachumschaltung für alle user-facing Bereiche vervollständigen; die typisierte DE/EN-Grundlage, persistierte Auswahl sowie globale Navigation und Theme-Beschriftungen sind umgesetzt, Fachseiten bleiben noch auf vollständige Schlüsselabdeckung umzustellen.
 - [x] Admin-Ansicht für Übersetzungs-Vollständigkeit ergänzt: strukturelle Dictionary-Lücken und verwaiste Schlüssel werden im Tab „Datenqualität“ geprüft und sichtbar gemacht.
-- [ ] Strukturierte Ausführungs-/Coaching-Felder DE/EN vollständig prüfen und fehlende Übersetzungen als Datenqualitätsbefund ausweisen.
+- [x] Strukturierte Ausführungs-/Coaching-Felder DE/EN vollständig prüfen: der Admin-Vollständigkeitsbericht weist pro Sprachdatensatz Details, Ausführungsschritte, Coaching-Cues und Fehlerkorrekturen getrennt aus.
 
 ## P3 – Qualität und Analysen
 

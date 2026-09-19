@@ -34,6 +34,19 @@ export function SeedCompletenessReportView({ report }: SeedCompletenessReportPro
         </p>
       ) : null}
 
+      <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div><h3 className="font-black">Strukturierte DE/EN-Felder</h3><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Pro Seed werden beide Sprachdatensätze für Details, drei Ausführungsschritte, Coaching-Cues sowie Fehlerkorrekturen geprüft.</p></div>
+          <span className="text-xs font-black text-[var(--muted)]">{report.structuredTranslations.expectedLocalizedRecords} Sprachdatensätze</span>
+        </div>
+        <div className="mt-3 grid gap-2 text-xs sm:grid-cols-4">
+          <StructuredMetric label="Details" value={report.structuredTranslations.completeDetailRecords} total={report.structuredTranslations.expectedLocalizedRecords} />
+          <StructuredMetric label="Ausführung" value={report.structuredTranslations.completeExecutionRecords} total={report.structuredTranslations.expectedLocalizedRecords} />
+          <StructuredMetric label="Coaching" value={report.structuredTranslations.completeCoachingRecords} total={report.structuredTranslations.expectedLocalizedRecords} />
+          <StructuredMetric label="Korrekturen" value={report.structuredTranslations.completeCorrectionRecords} total={report.structuredTranslations.expectedLocalizedRecords} />
+        </div>
+      </div>
+
       {report.totalExercises === 0 ? (
         <p className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">
           Es sind noch keine versionierten Seeds in der Datenbank vorhanden.
@@ -63,4 +76,9 @@ export function SeedCompletenessReportView({ report }: SeedCompletenessReportPro
       )}
     </section>
   );
+}
+
+function StructuredMetric({ label, value, total }: { readonly label: string; readonly value: number; readonly total: number }) {
+  const complete = value === total;
+  return <div className={`rounded-lg border p-2 ${complete ? "border-[var(--success-border)] bg-[var(--success-bg)]" : "border-[var(--warning)] bg-[var(--warning-bg)]"}`}><div className="font-black">{label}</div><div className="mt-1 font-semibold">{value} / {total}</div></div>;
 }
