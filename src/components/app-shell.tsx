@@ -1,8 +1,12 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { PrimaryNavigation } from "@/components/navigation/primary-navigation";
 import { CollapsibleSidebar } from "@/components/layout/collapsible-sidebar";
 import { QueueStatusIndicator } from "@/components/queue-status-indicator";
 import { FormValidation } from "@/components/forms/form-validation";
+import { LocaleSwitcher } from "@/components/i18n/locale-switcher";
+import { useLocale } from "@/components/i18n/locale-provider";
 
 interface AppShellProps {
   readonly title: string;
@@ -12,13 +16,14 @@ interface AppShellProps {
 }
 
 export function AppShell({ title, subtitle, actions, children }: AppShellProps) {
+  const { dictionary } = useLocale();
   return (
     <div className="min-h-screen lg:flex lg:h-dvh lg:min-h-0 lg:overflow-hidden">
       <a
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[2147482000] focus:rounded-lg focus:bg-[var(--control-strong)] focus:px-4 focus:py-3 focus:text-sm focus:font-black focus:text-[var(--control-strong-foreground)]"
         href="#main-content"
       >
-        Zum Hauptinhalt springen
+        {dictionary.skipToContent}
       </a>
       <CollapsibleSidebar />
       <div className="min-w-0 flex-1 lg:h-dvh lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
@@ -29,9 +34,9 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
               <h1 className="truncate text-xl font-black tracking-tight sm:text-2xl">{title}</h1>
               {subtitle ? <p className="mt-1 hidden truncate text-sm text-[var(--muted)] sm:block">{subtitle}</p> : null}
               </div>
-              <QueueStatusIndicator />
+              <div className="flex items-center gap-2"><LocaleSwitcher /><QueueStatusIndicator /></div>
             </div>
-            {actions ? <div aria-label="Seitenaktionen" className="mt-3 flex flex-wrap gap-2">{actions}</div> : null}
+            {actions ? <div aria-label={dictionary.pageActions} className="mt-3 flex flex-wrap gap-2">{actions}</div> : null}
           </div>
           <PrimaryNavigation variant="mobile" />
         </header>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ToastProvider } from "@/components/ui/toast";
+import { LocaleProvider } from "@/components/i18n/locale-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -35,7 +36,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
       </head>
-      <body><ToastProvider>{children}</ToastProvider></body>
+      <body><LocaleProvider><ToastProvider>{children}</ToastProvider></LocaleProvider></body>
     </html>
   );
 }

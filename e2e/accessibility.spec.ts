@@ -100,3 +100,16 @@ test("theme can be changed by keyboard and persists after reload", async ({ page
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
+
+test("language switcher changes global navigation and persists after reload", async ({ page }) => {
+  await page.goto("/training", { waitUntil: "domcontentloaded" });
+  const language = page.getByRole("combobox", { name: "Sprache" });
+  await language.selectOption("en");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByRole("link", { name: "Overview" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Exercises" }).first()).toBeVisible();
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByRole("combobox", { name: "Language" })).toHaveValue("en");
+});

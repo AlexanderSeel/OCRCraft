@@ -14,12 +14,12 @@
 
 ## P1 – Trainer-Workflow und UI
 
-- [ ] Tailgrids-kompatible lokale UI-Schicht abschließen: Overlay/Popover, Form-Felder, Pagination, Tabs, Sidebar und Toast als dokumentierte OCRCraft-Komponenten mit semantischen Tokens, Fokus-/Z-Index-Regeln, deutscher UI und Serveraktionen konsolidieren; keine Tailgrids-Laufzeitabhängigkeit und kein CLI-Überschreiben von `globals.css`.
+- [x] Tailgrids-kompatible lokale UI-Schicht abgeschlossen: Overlay/Popover, Form-Felder, Pagination, Tabs, Sidebar und Toast sind als lokale OCRCraft-Komponenten konsolidiert und in [`docs/ui-components.md`](./docs/ui-components.md) dokumentiert; es gibt keine Tailgrids-Laufzeitabhängigkeit.
 
 ## P3 – Internationalisierung
 
-- [ ] UI-Dictionaries und Sprachumschaltung für die user-facing Bereiche einführen; Deutsch bleibt Standard, Englisch wird vollständig über Schlüssel statt Inline-Texte steuerbar.
-- [ ] Admin-Ansicht für Übersetzungs-Vollständigkeit ergänzen: fehlende Schlüssel, Fallbacks und verwaiste Dictionary-Einträge sichtbar machen.
+- [ ] UI-Dictionaries und Sprachumschaltung für alle user-facing Bereiche vervollständigen; die typisierte DE/EN-Grundlage, persistierte Auswahl sowie globale Navigation und Theme-Beschriftungen sind umgesetzt, Fachseiten bleiben noch auf vollständige Schlüsselabdeckung umzustellen.
+- [x] Admin-Ansicht für Übersetzungs-Vollständigkeit ergänzt: strukturelle Dictionary-Lücken und verwaiste Schlüssel werden im Tab „Datenqualität“ geprüft und sichtbar gemacht.
 - [ ] Strukturierte Ausführungs-/Coaching-Felder DE/EN vollständig prüfen und fehlende Übersetzungen als Datenqualitätsbefund ausweisen.
 
 ## P3 – Qualität und Analysen

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useLocale } from "@/components/i18n/locale-provider";
 
 export type ThemePreference = "light" | "dark" | "system";
 
@@ -28,6 +29,7 @@ function applyTheme(preference: ThemePreference, media: MediaQueryList) {
 }
 
 export function ThemeSwitcher() {
+  const { dictionary } = useLocale();
   const selectRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
@@ -67,7 +69,7 @@ export function ThemeSwitcher() {
 
   return (
     <label className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs font-bold text-[var(--muted)]">
-      <span className="hidden xl:inline">Darstellung</span>
+      <span className="hidden xl:inline">{dictionary.appearance}</span>
       <select
         data-theme-switcher="true"
         ref={selectRef}
@@ -78,7 +80,7 @@ export function ThemeSwitcher() {
       >
         {THEME_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
-            {option.label}
+            {option.value === "system" ? dictionary.themeSystem : option.value === "light" ? dictionary.themeLight : dictionary.themeDark}
           </option>
         ))}
       </select>

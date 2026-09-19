@@ -23,6 +23,8 @@ import { listAppTasks, listQueueIssues } from "@/server/queue/app-task-repositor
 import { listAccessRoles, listUserRoleAssignments } from "@/server/auth/permission-service";
 import { RolePermissionsPanel } from "@/components/admin/role-permissions-panel";
 import { assignRoleAction, createRoleAction, deleteRoleAction, updateRoleAction } from "./role-actions";
+import { getDictionaryCompletenessReport } from "@/i18n/dictionary-completeness";
+import { TranslationCompletenessReport } from "@/components/admin/translation-completeness-report";
 export const dynamic = "force-dynamic";
 
 interface AdminPageProps {
@@ -87,6 +89,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <form action={scanDuplicateExercisesAction}><ActionProgressButton className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" pendingLabel="Vergleiche Namen, Aliase und Zuordnungen …">Jetzt prüfen</ActionProgressButton></form>
           </div>
           {duplicateTasks.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Keine offenen Doppelungsaufgaben.</p> : <DuplicateReviewPanel bulkAction={resolveDuplicateExercisesBulkAction} comparisonRecords={Object.fromEntries(comparisonRecords)} resolveAction={resolveDuplicateExerciseAction} tasks={duplicateTasks} />}
+          <TranslationCompletenessReport report={getDictionaryCompletenessReport()} />
         </section> : null}
         {activeTab === "queue" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Betrieb</div><h2 className="mt-1 text-xl font-black">Hintergrundaufgaben</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Laufende Prüfungen und Wartungsaktionen blockieren die Oberfläche nicht. Fehlgeschlagene Aufgaben können erneut gestartet oder abgeschlossene Einträge gelöscht werden.</p></div>
