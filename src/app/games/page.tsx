@@ -3,7 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { ExerciseImagePreview } from "@/components/exercises/exercise-image-preview";
 import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
-import { FilterSidePanel } from "@/components/layout/filter-side-panel";
+import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
 import { exerciseCategoryLabels, type ExerciseCategory } from "@/domain/exercise/model";
 import { countExercises, listExercises } from "@/server/exercises/exercise-repository";
 
@@ -46,8 +46,7 @@ export default async function GamesPage({ searchParams }: PageProps) {
     >
       <OverviewLayout storageKey="ocrcraft-games-view"><div className="space-y-6">
         <div className="grid min-w-0 gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
-        <FilterSidePanel title="Spielfilter">
-          <form className="grid min-w-0 gap-3" method="get">
+        <CatalogFilterPanel hasFilters={Boolean(query || archived || page !== 1 || pageSize !== 40)} resetHref="/games" title="Spielfilter">
             <label className="grid gap-1 text-sm font-bold">
               Suchen
               <input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={query} name="q" placeholder="z. B. Team, Reaktion, OCR …" />
@@ -59,16 +58,8 @@ export default async function GamesPage({ searchParams }: PageProps) {
                 <option value="archived">Archiviert</option>
               </select>
             </label>
-            <label className="grid gap-1 text-sm font-bold">
-              Pro Seite
-              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={String(pageSize)} name="size">
-                {[20, 40, 80].map((size) => <option key={size} value={size}>{size}</option>)}
-              </select>
-            </label>
-            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 py-3 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Filtern</button>
-            {(query || archived || page !== 1 || pageSize !== 40) ? <Link className="text-center text-xs font-black underline underline-offset-4" href="/games">Filter zurücksetzen</Link> : null}
-          </form>
-        </FilterSidePanel>
+            <CatalogPageSize value={pageSize} />
+        </CatalogFilterPanel>
 
         <div className="min-w-0 space-y-6">
         <section className="flex flex-wrap items-center justify-between gap-3">

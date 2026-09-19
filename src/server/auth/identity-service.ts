@@ -237,7 +237,10 @@ export async function deleteAppUser(userId: string): Promise<void> {
   const actor = await requireSuperAdmin();
   const id = z.string().uuid().parse(userId);
   if (id === actor.id) throw new Error("Cannot delete the current super-admin.");
-  await withDuckDbConnection((connection) => connection.run("DELETE FROM app_users WHERE id=$id::UUID", { id }));
+  await withDuckDbConnection(async (connection) => {
+    await connection.run("DELETE FROM app_user_roles WHERE user_id=$id::UUID", { id });
+    await connection.run("DELETE FROM app_users WHERE id=$id::UUID", { id });
+  });
 }
 
 function toUser(row: readonly unknown[], source: CurrentActor["source"] = "configured"): CurrentActor {

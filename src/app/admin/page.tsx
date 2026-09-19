@@ -20,6 +20,9 @@ import { ThemeSwitcher } from "@/components/theme/theme-switcher";
 import { createUserAction, deleteUserAction, loginAction, logoutAction, setUserPasswordAction, updateUserAction } from "./identity-actions";
 import { IdentityManagementPanel } from "@/components/admin/identity-management-panel";
 import { listAppTasks, listQueueIssues } from "@/server/queue/app-task-repository";
+import { listAccessRoles, listUserRoleAssignments } from "@/server/auth/permission-service";
+import { RolePermissionsPanel } from "@/components/admin/role-permissions-panel";
+import { assignRoleAction, createRoleAction, deleteRoleAction, updateRoleAction } from "./role-actions";
 export const dynamic = "force-dynamic";
 
 interface AdminPageProps {
@@ -43,26 +46,30 @@ interface AdminPageProps {
     readonly searchSaved?: string;
     readonly searchError?: string;
     readonly queueDeleted?: string;
+    readonly roleSaved?: string;
+    readonly roleError?: string;
   }>;
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const params = await searchParams;
   const activeTab = normalizeAdminTab(params.tab);
-  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers, aiProviders, appTasks, searchProfiles, queueIssues] = await Promise.all([
+  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers, aiProviders, appTasks, searchProfiles, queueIssues, accessRoles, roleAssignments] = await Promise.all([
     activeTab === "database" ? getSearchIndexStates() : Promise.resolve([]),
     activeTab === "overview" ? getSeedCompletenessReport() : Promise.resolve(null),
     activeTab === "quality" ? listDuplicateReviewTasks() : Promise.resolve([]),
     activeTab === "overview" ? listRecentAuditEvents() : Promise.resolve([]),
     activeTab === "database" ? listDatabaseBackups() : Promise.resolve([]),
-    activeTab === "users" || activeTab === "overview" ? listAppUsers() : Promise.resolve([]),
+    activeTab === "users" || activeTab === "roles" || activeTab === "overview" ? listAppUsers() : Promise.resolve([]),
     activeTab === "settings" ? listAiProviderSettings() : Promise.resolve([]),
     activeTab === "queue" ? listAppTasks() : Promise.resolve([]),
     activeTab === "settings" || activeTab === "overview" ? listSearchProfiles() : Promise.resolve([]),
     activeTab === "queue" ? listQueueIssues() : Promise.resolve([]),
+    activeTab === "roles" ? listAccessRoles() : Promise.resolve([]),
+    activeTab === "roles" ? listUserRoleAssignments() : Promise.resolve({}),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
-  const { reseeded, reseedError, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved, searchSaved, searchError, queueDeleted } = params;
+  const { reseeded, reseedError, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved, searchSaved, searchError, queueDeleted, roleSaved, roleError } = params;
 
   return (
     <AppShell
@@ -179,6 +186,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               updateAction={updateUserAction}
               users={appUsers}
             />
+          </>
+        ) : null}
+
+        {activeTab === "roles" ? (
+          <>
+            {roleError ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Rollenänderung nicht möglich. Prüfe Berechtigung und Eingaben.</p> : null}
+            {roleSaved ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">{roleSaved === "deleted" ? "Rolle wurde gelöscht." : roleSaved === "assigned" ? "Rollenzuweisung gespeichert." : "Rolle wurde gespeichert."}</p> : null}
+            <RolePermissionsPanel assignAction={assignRoleAction} assignments={roleAssignments} createAction={createRoleAction} deleteAction={deleteRoleAction} roles={accessRoles} updateAction={updateRoleAction} users={appUsers} />
           </>
         ) : null}
 

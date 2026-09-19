@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
-import { FilterSidePanel } from "@/components/layout/filter-side-panel";
+import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
 import { CatalogResultCount } from "@/components/catalog/catalog-controls";
 import { CLUB_RULE_PROFILES } from "@/domain/training/club-rules";
 import {
@@ -42,7 +42,7 @@ const GROUP_FORMAT_OPTIONS: readonly (readonly [TrainingFormat, string])[] = [
 ];
 
 interface PageProps {
-  readonly searchParams: Promise<{ archived?: string; saved?: string; error?: string; preset?: string; q?: string; audience?: string }>;
+  readonly searchParams: Promise<{ archived?: string; saved?: string; error?: string; preset?: string; q?: string; audience?: string; size?: string }>;
 }
 
 export default async function GroupsPage({ searchParams }: PageProps) {
@@ -51,6 +51,8 @@ export default async function GroupsPage({ searchParams }: PageProps) {
   const selectedPreset = archivedView ? undefined : getGroupPreset(query.preset);
   const searchQuery = query.q?.trim().toLocaleLowerCase("de-DE") ?? "";
   const audienceFilter = ["adults", "kids", "youth", "mixed"].includes(query.audience ?? "") ? query.audience : "";
+  const requestedSize = Number(query.size ?? 40);
+  const pageSize = [20, 40, 80].includes(requestedSize) ? requestedSize : 40;
   const [allGroups, equipmentOptions, safetyProfiles] = await Promise.all([
     listClubGroups(archivedView),
     listTrainingEquipmentOptions("de"),
@@ -146,8 +148,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         ) : null}
 
         <div className="grid min-w-0 gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
-        <FilterSidePanel title="Gruppenfilter">
-          <form className="grid min-w-0 gap-3" method="get">
+        <CatalogFilterPanel hasFilters={Boolean(searchQuery || audienceFilter || query.size)} resetHref={archivedView ? "/groups?archived=1" : "/groups"} title="Gruppenfilter">
             <input name="archived" type="hidden" value={archivedView ? "1" : "0"} />
             <label className="grid gap-1 text-sm font-bold">
               Suchen
@@ -163,10 +164,8 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                 <option value="mixed">Gemischt</option>
               </select>
             </label>
-            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 py-3 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Filtern</button>
-            {(searchQuery || audienceFilter) ? <Link className="text-center text-xs font-black underline underline-offset-4" href={archivedView ? "/groups?archived=1" : "/groups"}>Filter zurücksetzen</Link> : null}
-          </form>
-        </FilterSidePanel>
+            <CatalogPageSize value={pageSize} />
+        </CatalogFilterPanel>
         <div className="min-w-0 space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
           <CatalogResultCount from={groups.length ? 1 : 0} label={groups.length === 1 ? "Gruppe" : "Gruppen"} to={groups.length} total={groups.length} />

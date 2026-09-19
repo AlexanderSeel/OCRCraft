@@ -6,6 +6,7 @@ export const ADMIN_TABS = [
   ["quality", "Datenqualität"],
   ["queue", "Aufgabenqueue"],
   ["users", "Benutzer & Profile"],
+  ["roles", "Rollen & Rechte"],
   ["settings", "Einstellungen"],
   ["outdoor", "Outdoor-Varianten"],
 ] as const;

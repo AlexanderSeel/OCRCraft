@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
-import { FilterSidePanel } from "@/components/layout/filter-side-panel";
+import { CatalogFilterPanel } from "@/components/catalog/catalog-filter-panel";
 import { CatalogResultCount } from "@/components/catalog/catalog-controls";
 import {
   TRAINING_TEMPLATES,
@@ -111,28 +111,22 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
           )}
         </section>
 
-        <FilterSidePanel title="Vorlagenfilter">
-          <div className="grid min-w-0 gap-4">
+        <CatalogFilterPanel hasFilters={Boolean(audience || focus)} resetHref="/training/templates" title="Vorlagenfilter">
             <label className="grid gap-2 text-sm font-bold">
               Zielgruppe
-              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={audience} form="template-filter" name="audience">
+              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={audience} name="audience">
                 <option value="">Alle</option>
                 {audiences.map((value) => <option key={value} value={value}>{trainingTemplateAudienceLabel(value)}</option>)}
               </select>
             </label>
             <label className="grid gap-2 text-sm font-bold">
               Schwerpunkt
-              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={focus} form="template-filter" name="focus">
+              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={focus} name="focus">
                 <option value="">Alle</option>
                 {TRAINING_TEMPLATE_FOCUS_KEYS.map((value) => <option key={value} value={value}>{trainingTemplateFocusLabel(value)}</option>)}
               </select>
             </label>
-          </div>
-          <form className="mt-4 flex justify-end gap-2" id="template-filter">
-            <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-black" href="/training/templates">Zurücksetzen</Link>
-            <button className="rounded-lg bg-[var(--control-strong)] px-4 py-2 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Filtern</button>
-          </form>
-        </FilterSidePanel>
+        </CatalogFilterPanel>
 
         <section className="flex flex-wrap items-center justify-between gap-3">
           <div>
