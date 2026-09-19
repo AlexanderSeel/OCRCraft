@@ -7,6 +7,7 @@ import { MediaJobRefresh } from "@/components/media/media-job-refresh";
 import { OrphanedMediaCleanupForm } from "@/components/media/orphaned-media-cleanup-form";
 import { ExternalMediaManager } from "@/components/media/external-media-manager";
 import { VideoPopoverButton } from "@/components/media/video-popover-button";
+import { ImageLightbox } from "@/components/ui/image-lightbox";
 import {
   getMediaCatalogSummary,
   listMediaCatalog,
@@ -448,11 +449,9 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
     <article className="catalog-card min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
       <div className="aspect-[16/10] bg-[var(--surface-subtle)]">
         {asset.mediaType === "video" && asset.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img alt={`${asset.exerciseName} · Video-Thumbnail`} className="h-full w-full object-contain" loading="lazy" src={asset.thumbnailUrl} />
+          <ImageLightbox alt={`${asset.exerciseName} · Video-Thumbnail`} className="h-full w-full object-contain" containerClassName="relative h-full" src={asset.thumbnailUrl} />
         ) : asset.imageUrl && asset.mediaType !== "video" ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img alt={`${asset.exerciseName} · Medienvorschau`} className="h-full w-full object-contain" loading="lazy" src={asset.imageUrl} />
+          <ImageLightbox alt={`${asset.exerciseName} · Medienvorschau`} className="h-full w-full object-contain" containerClassName="relative h-full" src={asset.imageUrl} />
         ) : (
           <div className="grid h-full place-items-center p-6 text-center text-sm font-bold text-[var(--muted)]">
             {asset.mediaType === "video" ? "Video vorhanden · ohne Thumbnail" : "Keine aufrufbare Vorschau gespeichert"}

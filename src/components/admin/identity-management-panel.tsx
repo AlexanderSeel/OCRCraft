@@ -10,6 +10,7 @@ import {
 import { Dialog } from "@/components/ui/dialog";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import { IdentityLoginDialog } from "./identity-login-dialog";
+import { ImageLightbox } from "../ui/image-lightbox";
 
 type Action = (formData: FormData) => Promise<void>;
 
@@ -51,7 +52,7 @@ export function IdentityManagementPanel({ users, createAction, updateAction, log
         <ActionProgressButton className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)] md:col-span-4 md:justify-self-end" pendingLabel="Benutzer wird gespeichert …">Benutzer anlegen</ActionProgressButton>
       </form>
       <div className="mt-5 grid gap-2">{filtered.map((user) => <article className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" key={user.id}>
-        {user.profileImageDataUrl || user.profileImageUri ? <img alt="" className="size-12 shrink-0 rounded-full object-cover" src={user.profileImageDataUrl ?? user.profileImageUri ?? ""} /> : <div aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--surface-elevated)] text-sm font-black">{initials(user.displayName)}</div>}
+        {user.profileImageDataUrl || user.profileImageUri ? <ImageLightbox alt={`Profilbild: ${user.displayName}`} className="size-12 shrink-0 rounded-full object-cover" containerClassName="relative size-12 shrink-0 overflow-hidden rounded-full" src={user.profileImageDataUrl ?? user.profileImageUri ?? ""} /> : <div aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--surface-elevated)] text-sm font-black">{initials(user.displayName)}</div>}
         <div className="min-w-0 flex-1"><div className="font-black">{user.firstName} {user.lastName}</div><div className="truncate text-xs text-[var(--muted)]">@{user.username} · {user.email}{user.education ? ` · ${user.education}` : ""}{user.specialties ? ` · ${user.specialties}` : ""}</div></div>
         <span className="rounded-full border border-[var(--border)] px-2 py-1 text-[11px] font-black">{roleLabel(user.role)} · {TRAINER_QUALIFICATION_LABELS[user.trainerQualificationLevel]} · {user.active ? "Aktiv" : "Inaktiv"}</span>
         <Link className="min-h-9 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/admin/users/${user.id}/edit`}>Bearbeiten</Link>

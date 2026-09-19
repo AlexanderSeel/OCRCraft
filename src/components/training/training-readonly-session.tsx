@@ -4,6 +4,7 @@ import { mainPartProgrammingLabel } from "@/server/training/main-part-programmin
 import { analyzeMainPartProgramming } from "@/domain/training/programming-math";
 import type { TrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 import type { TrainingSessionDetail } from "@/server/training/training-session-repository";
+import { ImageLightbox } from "@/components/ui/image-lightbox";
 
 interface TrainingReadonlySessionProps {
   readonly session: TrainingSessionDetail;
@@ -51,7 +52,7 @@ export function TrainingReadonlySession({
         ) : null}
         {session.trainerProfile ? (
           <div className={printMode ? "mt-4 flex items-center gap-3 text-sm text-slate-600" : "mt-4 flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]"}>
-            {session.trainerProfile.imageDataUrl || session.trainerProfile.imageUri ? <img alt="" className="size-10 rounded-full object-cover" src={session.trainerProfile.imageDataUrl ?? session.trainerProfile.imageUri ?? ""} /> : <div aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-[var(--surface-elevated)] font-black">{initials(session.trainerProfile.name)}</div>}
+            {session.trainerProfile.imageDataUrl || session.trainerProfile.imageUri ? <ImageLightbox alt={`Profilbild: ${session.trainerProfile.name}`} className="size-10 rounded-full object-cover" containerClassName="relative size-10 overflow-hidden rounded-full" src={session.trainerProfile.imageDataUrl ?? session.trainerProfile.imageUri ?? ""} /> : <div aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-[var(--surface-elevated)] font-black">{initials(session.trainerProfile.name)}</div>}
             <div><div className={printMode ? "font-black text-slate-900" : "font-black text-[var(--foreground)]"}>{session.trainerProfile.name}</div><div>{[session.trainerProfile.education, session.trainerProfile.specialties].filter(Boolean).join(" · ") || "Trainerprofil"}</div></div>
           </div>
         ) : null}

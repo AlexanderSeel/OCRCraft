@@ -505,9 +505,7 @@ function AiProviderEditor({
             <button
               className="min-h-11 rounded-xl border border-[var(--danger)] px-4 text-sm font-black text-[var(--danger)]"
               formAction={deleteAction}
-              name="id"
               type="submit"
-              value={provider.id}
             >
               AI entfernen
             </button>

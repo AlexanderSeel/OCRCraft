@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
+import { ImageLightbox } from "@/components/ui/image-lightbox";
 
 const FALLBACK_IMAGE = "/assets/exercise-image-placeholder.svg";
 
@@ -9,19 +9,5 @@ export function ExerciseImagePreview({ src, alt, priority = false }: { readonly 
   const [currentSrc, setCurrentSrc] = useState(src);
   const [fallback, setFallback] = useState(false);
 
-  return <Image
-    alt={alt}
-    className="object-contain"
-    fill
-    loading={priority ? "eager" : "lazy"}
-    onError={() => {
-      if (!fallback) {
-        setFallback(true);
-        setCurrentSrc(FALLBACK_IMAGE);
-      }
-    }}
-    sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
-    src={currentSrc}
-    unoptimized
-  />;
+  return <ImageLightbox alt={alt} className="h-full w-full object-contain" containerClassName="absolute inset-0" loading={priority ? "eager" : "lazy"} onError={() => { if (!fallback) { setFallback(true); setCurrentSrc(FALLBACK_IMAGE); } }} src={currentSrc} />;
 }

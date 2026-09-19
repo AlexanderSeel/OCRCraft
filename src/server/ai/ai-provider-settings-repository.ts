@@ -320,6 +320,10 @@ export async function saveAiProviderInstance(input: SaveAiProviderInstanceInput)
       let id = input.id?.trim() || null;
       if (id) {
         aiProviderInstanceIdSchema.parse(id);
+        // DuckDB may reject updates on a parent row while assignment rows
+        // still reference it. Remove the children first; the surrounding
+        // transaction restores them if the provider update fails.
+        await connection.run("DELETE FROM ai_provider_assignments WHERE provider_instance_id=$id::UUID", { id });
         const updated = await connection.runAndReadAll(`
           UPDATE ai_provider_instances
           SET provider_kind=$providerKind,
@@ -388,7 +392,6 @@ export async function saveAiProviderInstance(input: SaveAiProviderInstanceInput)
         id = String(inserted.getRows()[0]?.[0]);
       }
 
-      await connection.run("DELETE FROM ai_provider_assignments WHERE provider_instance_id=$id::UUID", { id });
       for (const assignment of normalizedAssignments) {
         await connection.run(`
           INSERT INTO ai_provider_assignments (

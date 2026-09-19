@@ -7,6 +7,7 @@ OCRCraft verwendet eine lokale, Tailwind-kompatible UI-Schicht. Sie ist bewusst 
 | Verantwortung | Komponente | Verwendung |
 | --- | --- | --- |
 | Overlay / Popover | `Dialog`, `ExerciseFilterPopover` | Fokusfalle, Escape, Backdrop-Schließen, Scroll-Lock und Fokus-Rückgabe |
+| Bildvorschau | `ImageLightbox` | Lupen-Overlay, zugängliche Großansicht, Escape-/Backdrop-Schließen und Fokus-Rückgabe |
 | Form-Felder | `FormField`, `FormMessage`, `FormActions`, `PrimaryFormButton`, `formControlClass` | Labels, Pflichtmarkierung, Hinweise, Fehlerzustände und konsistente Controls |
 | Pagination | `CatalogResultCount`, `CatalogPagination` | URL-basierte Ergebniszähler und zugängliche Seitennavigation |
 | Tabs | `AdminTabs` | semantisches `tablist` mit URL-Navigation und responsivem Overflow |

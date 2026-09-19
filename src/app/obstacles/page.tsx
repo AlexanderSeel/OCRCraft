@@ -11,6 +11,7 @@ import {
 } from "@/server/obstacles/obstacle-catalog-repository";
 import { listObstacleCandidates, type ObstacleCandidate } from "@/server/obstacles/obstacle-assignment-repository";
 import { assignExerciseAsObstacleAction } from "./actions";
+import { ImageLightbox } from "@/components/ui/image-lightbox";
 
 export const dynamic = "force-dynamic";
 
@@ -174,8 +175,7 @@ function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) 
       <div className="grid md:grid-cols-[180px_minmax(0,1fr)]">
         <div className="min-h-44 bg-[var(--surface-subtle)]">
           {obstacle.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img alt={`${obstacle.name} · Hindernisvorschau`} className="h-full w-full object-contain" loading="lazy" src={obstacle.imageUrl} />
+            <ImageLightbox alt={`${obstacle.name} · Hindernisvorschau`} className="h-full w-full object-contain" containerClassName="relative h-full min-h-44" src={obstacle.imageUrl} />
           ) : (
             <div className="grid h-full min-h-44 place-items-center p-4 text-center text-xs font-bold text-[var(--muted)]">
               Kein generiertes Medium vorhanden
@@ -248,8 +248,7 @@ function ObstacleCandidateRow({ candidate }: { readonly candidate: ObstacleCandi
     <article className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 sm:grid-cols-[72px_minmax(0,1fr)_auto] sm:items-center">
       <div className="h-16 overflow-hidden rounded-lg bg-[var(--surface)]">
         {candidate.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img alt="" className="h-full w-full object-contain" loading="lazy" src={candidate.imageUrl} />
+          <ImageLightbox alt={`${candidate.name} · Hindernisvorschau`} className="h-full w-full object-contain" containerClassName="relative h-full" src={candidate.imageUrl} />
         ) : (
           <div className="grid h-full place-items-center text-[10px] font-bold text-[var(--muted)]">Kein Bild</div>
         )}
