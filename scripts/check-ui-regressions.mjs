@@ -40,6 +40,36 @@ const requiredPatterns = [
     name: "Cards müssen semantische Elementtypen unterstützen",
     pattern: /as\?: "article" \| "div" \| "section"/,
   },
+  {
+    file: join(sourceRoot, "components", "ui", "form.tsx"),
+    name: "Interaktive Buttons benötigen Touch-Ziel und sichtbaren Fokus",
+    pattern: /buttonBaseClass\s*=\s*[\s\S]*min-h-11[\s\S]*focus-visible:outline-none/,
+  },
+  {
+    file: join(sourceRoot, "components", "ui", "form.tsx"),
+    name: "Formularfelder müssen Fehler semantisch ankündigen",
+    pattern: /(?=[\s\S]*role=\"alert\")(?=[\s\S]*aria-invalid:)/,
+  },
+  {
+    file: join(sourceRoot, "components", "ui", "dialog.tsx"),
+    name: "Dialoge müssen Escape schließen und Fokus zurückgeben",
+    pattern: /event\.key === "Escape"[\s\S]*previousActive\?\.focus\(\)/,
+  },
+  {
+    file: join(sourceRoot, "components", "ui", "dialog.tsx"),
+    name: "Dialoge müssen den Fokus innerhalb des Panels halten",
+    pattern: /event\.key !== "Tab"[\s\S]*event\.preventDefault\(\)[\s\S]*last\.focus\(\)/,
+  },
+  {
+    file: join(sourceRoot, "components", "navigation", "primary-navigation.tsx"),
+    name: "Mobile Navigation benötigt Landmarke und ausreichend große Links",
+    pattern: /aria-label=\{dictionary\.mobileNavigation\}[\s\S]*lg:hidden[\s\S]*min-h-10/,
+  },
+  {
+    file: join(sourceRoot, "app", "globals.css"),
+    name: "Reduzierte Bewegung muss global berücksichtigt werden",
+    pattern: /@media \(prefers-reduced-motion: reduce\)/,
+  },
 ];
 
 const files = await collectSourceFiles(sourceRoot);
