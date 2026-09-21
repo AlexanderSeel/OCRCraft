@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { DashboardActivityBucket, DashboardBucket, DashboardRecentTraining, DashboardSnapshot } from "@/server/dashboard/dashboard-repository";
+import type { DashboardActivityBucket, DashboardBucket, DashboardExerciseUsage, DashboardRecentTraining, DashboardSnapshot } from "@/server/dashboard/dashboard-repository";
 import { Card } from "@/components/ui/card";
 import { buttonClass } from "@/components/ui/form";
 import { StatCard } from "@/components/ui/stat-card";
@@ -84,8 +84,66 @@ export function DashboardOverview({ snapshot }: { readonly snapshot: DashboardSn
           </div>
         </Card>
       </div>
+
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(19rem,.65fr)]">
+        <TrainingMixCard snapshot={snapshot} />
+        <ExerciseUsageCard exercises={snapshot.analytics.topExercises} />
+      </div>
     </div>
   );
+}
+
+function TrainingMixCard({ snapshot }: { readonly snapshot: DashboardSnapshot }) {
+  const maxRegion = Math.max(1, ...snapshot.analytics.bodyRegions.map((region) => region.count));
+  const coverage = percentage(snapshot.analytics.distinctExercisesUsed, snapshot.exercises.active);
+  return (
+    <Card className="min-w-0 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div><div className="ui-kicker">8 Wochen · Trainingsmix</div><h2 className="mt-1 text-base font-black">Übungs- & Körperregionsnutzung</h2></div>
+        <Link className="text-xs font-black text-[var(--brand)] hover:underline" href="/exercises">Übungspool →</Link>
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        <CompactMetric label="Pool genutzt" value={`${snapshot.analytics.distinctExercisesUsed} / ${snapshot.exercises.active}`} detail={`${coverage}% des aktiven Pools`} />
+        <CompactMetric label="Laufvolumen" value={formatMinutes(snapshot.analytics.runningMinutes)} detail={`${snapshot.analytics.runningItems} Laufbausteine`} />
+        <CompactMetric label="Primärregionen" value={String(snapshot.analytics.bodyRegions.length)} detail="In gespeicherten Trainings" />
+      </div>
+      <div className="mt-4">
+        <div className="mb-2 flex items-center justify-between gap-2"><h3 className="text-xs font-black">Häufige primäre Körperregionen</h3><span className="text-[10px] text-[var(--muted)]">nach Übungseinsatz</span></div>
+        {snapshot.analytics.bodyRegions.length ? <div className="grid gap-2 sm:grid-cols-2">
+          {snapshot.analytics.bodyRegions.map((region) => (
+            <div key={region.key}>
+              <div className="mb-1 flex items-center justify-between gap-2 text-[11px]"><span className="truncate font-bold">{region.key}</span><strong>{region.count}</strong></div>
+              <div className="h-1.5 overflow-hidden rounded-sm bg-[var(--surface-subtle)]"><div className="h-full bg-[var(--accent-strong)]" style={{ width: `${Math.max(7, Math.round((region.count / maxRegion) * 100))}%` }} /></div>
+            </div>
+          ))}
+        </div> : <p className="text-sm text-[var(--muted)]">Noch keine Körperregionsnutzung aus Trainings ableitbar.</p>}
+      </div>
+    </Card>
+  );
+}
+
+function ExerciseUsageCard({ exercises }: { readonly exercises: readonly DashboardExerciseUsage[] }) {
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <div className="flex items-start justify-between gap-2 border-b border-[var(--border)] px-4 py-3">
+        <div><div className="ui-kicker">Nutzungsfrequenz</div><h2 className="mt-1 text-base font-black">Häufig verwendete Übungen</h2></div>
+        <span className="text-[10px] text-[var(--muted)]">8 Wochen</span>
+      </div>
+      {exercises.length ? <div className="divide-y divide-[var(--border)]">
+        {exercises.map((exercise, index) => (
+          <Link className="grid grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-2 px-4 py-2.5 hover:bg-[var(--surface-subtle)]" href={`/exercises/${exercise.id}`} key={exercise.id}>
+            <span className="text-[10px] font-black text-[var(--muted)]">{String(index + 1).padStart(2, "0")}</span>
+            <span className="min-w-0"><strong className="block truncate text-xs">{exercise.name}</strong><span className="text-[10px] text-[var(--muted)]">{exercise.minutes} Min. geplant</span></span>
+            <span className="rounded-sm bg-[var(--surface-subtle)] px-1.5 py-0.5 text-[10px] font-black">{exercise.uses}×</span>
+          </Link>
+        ))}
+      </div> : <p className="p-4 text-sm text-[var(--muted)]">Noch keine Übungsnutzung vorhanden.</p>}
+    </Card>
+  );
+}
+
+function CompactMetric({ label, value, detail }: { readonly label: string; readonly value: string; readonly detail: string }) {
+  return <div className="rounded-md border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2"><div className="text-[10px] font-black uppercase tracking-[0.07em] text-[var(--muted)]">{label}</div><div className="mt-0.5 text-lg font-black tracking-[-0.03em]">{value}</div><div className="truncate text-[10px] text-[var(--muted)]">{detail}</div></div>;
 }
 
 function ActivityCard({ activity, draft, ready, completed, sources }: {

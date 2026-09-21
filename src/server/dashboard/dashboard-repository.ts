@@ -24,6 +24,13 @@ export interface DashboardActivityBucket {
   readonly minutes: number;
 }
 
+export interface DashboardExerciseUsage {
+  readonly id: string;
+  readonly name: string;
+  readonly uses: number;
+  readonly minutes: number;
+}
+
 export interface DashboardSnapshot {
   readonly training: {
     readonly total: number;
@@ -61,6 +68,13 @@ export interface DashboardSnapshot {
   readonly ai: {
     readonly pendingDrafts: number;
     readonly approvingDrafts: number;
+  };
+  readonly analytics: {
+    readonly distinctExercisesUsed: number;
+    readonly runningMinutes: number;
+    readonly runningItems: number;
+    readonly bodyRegions: readonly DashboardBucket[];
+    readonly topExercises: readonly DashboardExerciseUsage[];
   };
   readonly obstacles: {
     readonly active: number;
@@ -195,7 +209,55 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       ORDER BY count(*) DESC, audience
     `);
 
+    const analyticsReader = await connection.runAndReadAll(`
+      SELECT
+        count(DISTINCT i.exercise_id),
+        COALESCE(sum(i.duration_minutes) FILTER (WHERE e.category = 'running'), 0),
+        count(*) FILTER (WHERE e.category = 'running')
+      FROM training_items i
+      JOIN training_phases p ON p.id = i.training_phase_id
+      JOIN training_sessions s ON s.id = p.training_session_id
+      JOIN exercises e ON e.id = i.exercise_id
+      WHERE s.status <> 'archived'
+        AND s.created_at >= current_timestamp - INTERVAL '56 days'
+    `);
+
+    const bodyRegionReader = await connection.runAndReadAll(`
+      SELECT br.label_de, count(*)
+      FROM training_items i
+      JOIN training_phases p ON p.id = i.training_phase_id
+      JOIN training_sessions s ON s.id = p.training_session_id
+      JOIN exercise_body_regions ebr ON ebr.exercise_id = i.exercise_id
+      JOIN body_regions br ON br.id = ebr.body_region_id
+      WHERE s.status <> 'archived'
+        AND s.created_at >= current_timestamp - INTERVAL '56 days'
+        AND ebr.emphasis = 'primary'
+        AND ebr.body_region_id NOT LIKE 'detail:%'
+      GROUP BY br.label_de
+      ORDER BY count(*) DESC, br.label_de
+      LIMIT 7
+    `);
+
+    const usageReader = await connection.runAndReadAll(`
+      SELECT
+        e.id::VARCHAR,
+        COALESCE(t.name, e.canonical_name),
+        count(*),
+        COALESCE(sum(i.duration_minutes), 0)
+      FROM training_items i
+      JOIN training_phases p ON p.id = i.training_phase_id
+      JOIN training_sessions s ON s.id = p.training_session_id
+      JOIN exercises e ON e.id = i.exercise_id
+      LEFT JOIN exercise_translations t ON t.exercise_id = e.id AND t.locale = 'de'
+      WHERE s.status <> 'archived'
+        AND s.created_at >= current_timestamp - INTERVAL '56 days'
+      GROUP BY e.id, COALESCE(t.name, e.canonical_name)
+      ORDER BY count(*) DESC, COALESCE(sum(i.duration_minutes), 0) DESC, COALESCE(t.name, e.canonical_name)
+      LIMIT 6
+    `);
+
     const summary = summaryReader.getRows()[0] ?? [];
+    const analytics = analyticsReader.getRows()[0] ?? [];
 
     return {
       training: {
@@ -249,6 +311,21 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       ai: {
         pendingDrafts: Number(summary[17] ?? 0),
         approvingDrafts: Number(summary[18] ?? 0),
+      },
+      analytics: {
+        distinctExercisesUsed: Number(analytics[0] ?? 0),
+        runningMinutes: Number(analytics[1] ?? 0),
+        runningItems: Number(analytics[2] ?? 0),
+        bodyRegions: bodyRegionReader.getRows().map((row) => ({
+          key: String(row[0]),
+          count: Number(row[1] ?? 0),
+        })),
+        topExercises: usageReader.getRows().map((row) => ({
+          id: String(row[0]),
+          name: String(row[1]),
+          uses: Number(row[2] ?? 0),
+          minutes: Number(row[3] ?? 0),
+        })),
       },
       obstacles: {
         active: Number(summary[13] ?? 0),

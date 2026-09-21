@@ -67,6 +67,7 @@
 - [ ] Quick-Create-, Training-Editor-, Kids/Youth- und Theme-E2E weiter ausbauen: neben den bestehenden Tastatur-, Review-, Builder-, Schutz- und Theme-Gates noch echte Editoränderung, Speichern und geschützte Kids/Youth-Blockierung abdecken.
 - [ ] Übungsnutzung, Körperregionen, Hindernisabdeckung, Laufvolumen, Wiederholungswarnungen und Nulltreffer analysieren; Auswertungen müssen aus Repository-/Service-Daten stammen und Filterzustände erklären.
 - [x] Dashboard-Analysegrundlage erweitert: echte 8-Wochen-Trainingsaktivität, Trainingsquellen, Statusmix, Spieleumfang, AI-Entwurfsqueue sowie Bildgenerierungs-Queue und 24h-Ergebnisse werden über den dedizierten Dashboard-Read-Model-Layer dargestellt; tiefere Nutzungs-/Körperregions-/Nulltrefferanalysen bleiben offen.
+- [x] Dashboard-Nutzungsanalyse ergänzt: 8-Wochen-Poolabdeckung, Laufminuten/-bausteine, primäre Körperregionsnutzung und häufig verwendete Übungen werden direkt aus Training-Sessions/-Items und Katalogzuordnungen aggregiert; Nulltreffer und echte Wiederholungswarnungen bleiben als separate Analyse offen.
 - [ ] Vollständigkeits- und KI-Ersetzungsanalysen ergänzen: fehlende DE/EN-/Coaching-/Sicherheitsfelder, Ersatzquote, Blockierungsgründe und Trainerfreigaben nachvollziehbar darstellen.
 
 ## Abschlussroutine
