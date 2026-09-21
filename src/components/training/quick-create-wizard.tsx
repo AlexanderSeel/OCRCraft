@@ -21,7 +21,10 @@ import {
   type QuickCreateDraftClientInput,
 } from "./quick-create-draft-client";
 import { TrainingDraftPreview } from "./training-draft-preview";
+import { Alert } from "@/components/ui/feedback";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Disclosure } from "@/components/ui/disclosure";
+import { buttonClass, formControlClass, FormField } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
 
 const groupOptions = [
@@ -406,13 +409,9 @@ export function QuickCreateWizard({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]" data-quick-create-ready="false" data-quick-create-root>
-      <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
+      <Card className="min-w-0 overflow-hidden">
         <header className="border-b border-[var(--border)] p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Quick Create</div>
-              <h2 className="mt-1 text-xl font-black">Schritt {step} von 5</h2>
-            </div>
+          <CardHeader eyebrow="Quick Create" title={`Schritt ${step} von 5`}>
             <div className="flex gap-1.5" aria-label={`Schritt ${step} von 5`}>
               {[1, 2, 3, 4, 5].map((number) => (
                 <span
@@ -422,7 +421,7 @@ export function QuickCreateWizard({
                 />
               ))}
             </div>
-          </div>
+          </CardHeader>
         </header>
 
         <div className="min-h-[500px] p-5 sm:p-6">
@@ -442,22 +441,19 @@ export function QuickCreateWizard({
               <p className="mt-1 text-sm text-[var(--muted)]">Diese Angaben steuern Skalierung, Umfang und spätere Vereinsregeln.</p>
 
               {templatePresets.length > 0 ? (
-                <label className="mt-5 grid min-w-0 gap-2 rounded-xl border border-[var(--accent-strong)] bg-[var(--accent-soft)] p-4 text-sm font-black">
-                  Trainingsvorlage auswählen
-                  <select className="h-11 min-w-0 max-w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" value={selectedTemplateKey} onChange={(event) => applyTemplate(event.target.value)}>
+                <FormField className="mt-5 rounded-md border border-[var(--accent-strong)] bg-[var(--accent-soft)] p-4" label="Trainingsvorlage auswählen" hint="Die Vorlage setzt sichere Startwerte. Alle Angaben bleiben anpassbar.">
+                  <select className={`${formControlClass} min-w-0`} value={selectedTemplateKey} onChange={(event) => applyTemplate(event.target.value)}>
                     <option value="">Ohne Vorlage starten</option>
                     {templatePresets.map((template) => <option key={template.key} value={template.key}>{template.title} · {ageRangeForTemplate(template)} · {template.durationMinutes} Min.</option>)}
                   </select>
-                  <span className="text-xs font-normal text-[var(--muted)]">Die Vorlage setzt sichere Startwerte. Alle Angaben bleiben anpassbar.</span>
-                </label>
+                </FormField>
               ) : null}
 
               {groupPresets.length > 0 ? (
                 <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-                  <label className="grid gap-2 text-sm font-black">
-                    Vereinsgruppe als Vorlage
+                  <FormField label="Vereinsgruppe als Vorlage">
                     <select
-                      className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+                      className={formControlClass}
                       onChange={(event) => applyGroupPreset(event.target.value)}
                       value={selectedGroupId}
                     >
@@ -466,7 +462,7 @@ export function QuickCreateWizard({
                         <option key={preset.id} value={preset.id}>{preset.name}</option>
                       ))}
                     </select>
-                  </label>
+                  </FormField>
                   <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
                     Übernimmt Zielgruppe, Alter, Teilnehmerzahl, Standarddauer, Trainingsort und gruppenspezifische Equipment-Overrides. Die Werte bleiben danach frei anpassbar; beim Speichern bleibt das Training mit der Gruppe verknüpft.
                   </p>
@@ -498,21 +494,19 @@ export function QuickCreateWizard({
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                <label className="grid gap-2 text-sm font-bold">
-                  Alter / Bereich
+                <FormField label="Alter / Bereich">
                   <input
-                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+                    className={formControlClass}
                     onChange={(event) => {
                       setAgeRange(event.target.value);
                       invalidateDraft();
                     }}
                     value={ageRange}
                   />
-                </label>
-                <label className="grid gap-2 text-sm font-bold">
-                  Teilnehmer
+                </FormField>
+                <FormField label="Teilnehmer">
                   <input
-                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+                    className={formControlClass}
                     min={1}
                     onChange={(event) => {
                       setParticipantCount(Number(event.target.value));
@@ -521,11 +515,10 @@ export function QuickCreateWizard({
                     type="number"
                     value={participantCount}
                   />
-                </label>
-                <label className="grid gap-2 text-sm font-bold">
-                  Dauer
+                </FormField>
+                <FormField label="Dauer">
                   <select
-                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+                    className={formControlClass}
                     onChange={(event) => {
                       setDuration(Number(event.target.value));
                       invalidateDraft();
@@ -536,7 +529,7 @@ export function QuickCreateWizard({
                       <option key={minutes} value={minutes}>{minutes} Minuten</option>
                     ))}
                   </select>
-                </label>
+                </FormField>
               </div>
             </div>
           ) : null}
@@ -679,7 +672,7 @@ export function QuickCreateWizard({
                 <label className="grid gap-2 text-sm font-black sm:max-w-xl">
                   Teamwettkampfstil
                   <select
-                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                    className={formControlClass}
                     disabled={!formats.includes("team-competition")}
                     onChange={(event) => applyCompetitionStyle(event.target.value)}
                     value={competitionStyleKey}
@@ -706,7 +699,7 @@ export function QuickCreateWizard({
                 <label className="grid gap-2 text-sm font-black sm:max-w-xs">
                   Rotationsgruppen (optional)
                   <input
-                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                    className={formControlClass}
                     max={Math.min(20, Math.max(1, participantCount))}
                     min={1}
                     onChange={(event) => {
@@ -850,7 +843,7 @@ export function QuickCreateWizard({
                 <label className="mt-5 grid gap-2 text-sm font-bold">
                   Trainingstitel
                   <input
-                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+                    className={formControlClass}
                     maxLength={120}
                     onChange={(event) => setSessionTitle(event.target.value)}
                     placeholder="z. B. OCR Technik & Ausdauer Dienstag"
@@ -861,29 +854,21 @@ export function QuickCreateWizard({
               ) : null}
 
               {generationError ? (
-                <div className="mt-5 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm">
-                  <div className="font-black text-[var(--danger)]">Entwurf konnte nicht erstellt werden</div>
-                  <p className="mt-1 leading-6">{generationError}</p>
-                </div>
+                <div className="mt-5"><Alert tone="danger"><strong>Entwurf konnte nicht erstellt werden</strong><p className="mt-1 font-normal leading-6">{generationError}</p></Alert></div>
               ) : null}
 
               {persistenceError ? (
-                <div className="mt-5 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm">
-                  <div className="font-black text-[var(--danger)]">Entwurf konnte nicht gespeichert werden</div>
-                  <p className="mt-1 leading-6">{persistenceError}</p>
-                </div>
+                <div className="mt-5"><Alert tone="danger"><strong>Entwurf konnte nicht gespeichert werden</strong><p className="mt-1 font-normal leading-6">{persistenceError}</p></Alert></div>
               ) : null}
 
               {persistedId ? (
-                <div className="mt-5 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm">
-                  <div className="font-black text-[var(--success-foreground)]">Training gespeichert</div>
-                  <p className="mt-1 leading-6 text-[var(--success-foreground)]">
+                <div className="mt-5"><Alert tone="success"><strong>Training gespeichert</strong><p className="mt-1 font-normal leading-6">
                     Der Server hat den Entwurf erneut aus der aktuellen Übungsdatenbank erzeugt, validiert und transaktional gespeichert.
                   </p>
                   <Link className="mt-3 inline-flex font-black text-[var(--foreground)] underline underline-offset-4" href="/training">
                     Gespeicherte Trainings öffnen
                   </Link>
-                </div>
+                </Alert></div>
               ) : null}
 
               {draft ? <TrainingDraftPreview draft={draft} /> : null}
@@ -893,7 +878,7 @@ export function QuickCreateWizard({
 
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] p-5 sm:p-6">
           <button
-            className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-bold hover:bg-[var(--surface-subtle)] disabled:cursor-not-allowed disabled:opacity-40"
+            className={buttonClass("secondary", "px-4")}
             disabled={step === 1 || generating || persisting}
             onClick={goBack}
             type="button"
@@ -902,7 +887,7 @@ export function QuickCreateWizard({
           </button>
           {step < 5 ? (
             <button
-              className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+              className={buttonClass("primary", "px-5")}
               disabled={!canContinue}
               onClick={() => setStep((current) => Math.min(5, current + 1))}
               type="button"
@@ -912,7 +897,7 @@ export function QuickCreateWizard({
           ) : (
             <div className="flex flex-wrap justify-end gap-2">
               <button
-                className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 text-sm font-black hover:bg-[var(--surface-subtle)] disabled:cursor-not-allowed disabled:opacity-50"
+                className={buttonClass("secondary", "px-5")}
                 disabled={generating || persisting}
                 onClick={() => void generateDraft()}
                 type="button"
@@ -920,7 +905,7 @@ export function QuickCreateWizard({
                 {generating ? "Entwurf wird erstellt …" : draft ? "Entwurf neu erstellen" : "Trainingsentwurf erstellen"}
               </button>
               <button
-                className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+                className={buttonClass("accent", "px-5")}
                 disabled={!draft || generating || persisting}
                 onClick={() => void saveDraft()}
                 type="button"
@@ -930,10 +915,10 @@ export function QuickCreateWizard({
             </div>
           )}
         </footer>
-      </section>
+      </Card>
 
       <aside className="space-y-4">
-        <section className="rounded-2xl bg-[var(--sidebar)] p-5 text-[var(--sidebar-foreground)]">
+        <Card className="border-transparent bg-[var(--sidebar)] p-5 text-[var(--sidebar-foreground)]">
           <div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--sidebar-muted)]">Live-Zusammenfassung</div>
           <div className="mt-4 space-y-4">
             <div>
@@ -984,14 +969,14 @@ export function QuickCreateWizard({
               </div>
             ) : null}
           </div>
-        </section>
+        </Card>
 
-        <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+        <Card className="min-w-0 p-5">
           <div className="font-black">Planungsprinzip</div>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
             Der Wizard verwendet echte Bibliotheksübungen. Beim Speichern erzeugt und validiert der Server denselben Entwurf erneut, bevor er als bearbeitbarer Trainingsentwurf in DuckDB landet.
           </p>
-        </section>
+        </Card>
       </aside>
     </div>
   );

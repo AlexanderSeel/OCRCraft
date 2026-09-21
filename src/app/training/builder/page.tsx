@@ -14,11 +14,11 @@ import { getTrainingSessionById, listTrainingSessions } from "@/server/training/
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  readonly searchParams: Promise<{ source?: string }>;
+  readonly searchParams: Promise<{ source?: string; mode?: string }>;
 }
 
 export default async function TrainingBuilderPage({ searchParams }: PageProps) {
-  const { source } = await searchParams;
+  const { source, mode } = await searchParams;
   const [equipmentOptions, obstacleOptions, recentSessions] = await Promise.all([
     listTrainingEquipmentOptions(),
     listTrainingObstacleOptions(),
@@ -65,7 +65,7 @@ export default async function TrainingBuilderPage({ searchParams }: PageProps) {
 
         <details className="group" open>
           <summary className="mb-4 cursor-pointer text-sm font-black text-[var(--muted)]">Detaillierten Builder anzeigen</summary>
-          <TrainingBuilderPanel equipmentOptions={equipmentOptions} obstacleOptions={obstacleOptions} initialState={initialState} sourceTrainingOptions={sourceTrainingOptions} />
+          <TrainingBuilderPanel equipmentOptions={equipmentOptions} obstacleOptions={obstacleOptions} initialBuilderMode={mode === "ai" ? "ai" : "local"} initialState={initialState} sourceTrainingOptions={sourceTrainingOptions} />
         </details>
       </div>
     </AppShell>

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
-import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { CatalogPagination } from "@/components/catalog/catalog-controls";
+import { CatalogSummaryStrip } from "@/components/catalog/catalog-workspace";
 import { RemoveObstacleAssignmentForm } from "@/components/obstacles/remove-obstacle-assignment-form";
 import {
   getObstacleCatalogSummary,
@@ -83,33 +84,15 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
             Die Hindernis-Zuordnung konnte nicht geändert werden.
           </Alert>
         ) : null}
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Metric label="Aktiv" value={summary.active} />
-          <Metric label="Archiviert" value={summary.archived} />
-          <Metric label="Hohes Risiko" value={summary.highRisk} />
-          <Metric label="Mit Club-Maßen" value={summary.withClubDimensions} />
-        </section>
+        <CatalogSummaryStrip items={[
+          { label: "Gefiltert", value: obstaclePage.total },
+          { label: "Aktiv", value: summary.active },
+          { label: "Archiviert", value: summary.archived },
+          { label: "Hohes Risiko", value: summary.highRisk },
+          { label: "Mit Club-Maßen", value: summary.withClubDimensions },
+        ]} />
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0">
-              <h2 className="text-lg font-black">Bestehende Übung als Hindernis übernehmen</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-                Suche im aktiven Übungskatalog. Die Übung wird nicht dupliziert, sondern erhält strukturierte Hindernis-Guidance.
-              </p>
-            </div>
-            <Link className="shrink-0 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-black" href="/exercises">
-              Übungskatalog öffnen
-            </Link>
-          </div>
-          <form className="mt-4 flex min-w-0 flex-col gap-2 sm:flex-row" method="get">
-            <label className="min-w-0 flex-1"><span className="sr-only">Bestehende Übung suchen</span><input className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" defaultValue={candidateQuery} name="candidateQ" placeholder="Übung suchen, z. B. Box, Hang, Carry ..." /></label>
-            <button className="min-h-11 shrink-0 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Übungen suchen</button>
-          </form>
-          {candidateQuery ? candidates.length ? <div className="mt-4 grid gap-2">{candidates.map((candidate) => <ObstacleCandidateRow candidate={candidate} key={candidate.exerciseId} />)}</div> : <p className="mt-4 rounded-xl bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">Keine noch nicht zugeordneten aktiven Übungen für „{candidateQuery}“ gefunden.</p> : null}
-        </section>
-
-        <div className="grid gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
+        <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
         <CatalogFilterPanel hasFilters={Boolean(query || riskLevel || archived || page !== 1 || pageSize !== 24)} resetHref="/obstacles" title="Hindernisfilter">
           <label className="grid gap-1 text-sm font-bold">
             Suchen
@@ -140,9 +123,24 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
         </CatalogFilterPanel>
         <div className="min-w-0 space-y-6">
 
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
-          <CatalogResultCount from={obstaclePage.total ? (page - 1) * pageSize + 1 : 0} to={Math.min(page * pageSize, obstaclePage.total)} total={obstaclePage.total} label={obstaclePage.total === 1 ? "Hindernis" : "Hindernisse"} />
-        </div>
+        <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-base font-black">Bestehende Übung als Hindernis übernehmen</h2>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+                Suche im aktiven Übungskatalog. Die Übung wird nicht dupliziert, sondern erhält strukturierte Hindernis-Guidance.
+              </p>
+            </div>
+            <Link className="shrink-0 rounded-md border border-[var(--border)] px-3 py-2 text-sm font-black" href="/exercises">
+              Übungskatalog öffnen
+            </Link>
+          </div>
+          <form className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row" method="get">
+            <label className="min-w-0 flex-1"><span className="sr-only">Bestehende Übung suchen</span><input className="h-11 w-full min-w-0 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3" defaultValue={candidateQuery} name="candidateQ" placeholder="Übung suchen, z. B. Box, Hang, Carry ..." /></label>
+            <button className="min-h-11 shrink-0 rounded-md bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Übungen suchen</button>
+          </form>
+          {candidateQuery ? candidates.length ? <div className="mt-4 grid gap-2">{candidates.map((candidate) => <ObstacleCandidateRow candidate={candidate} key={candidate.exerciseId} />)}</div> : <p className="mt-4 rounded-md bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">Keine noch nicht zugeordneten aktiven Übungen für „{candidateQuery}“ gefunden.</p> : null}
+        </section>
 
         {obstacles.length ? (
           <section className="catalog-results grid gap-4 xl:grid-cols-2">
@@ -272,15 +270,6 @@ function ObstacleCandidateRow({ candidate }: { readonly candidate: ObstacleCandi
         </button>
       </form>
     </article>
-  );
-}
-
-function Metric({ label, value }: { readonly label: string; readonly value: number }) {
-  return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
-      <div className="text-xs font-bold text-[var(--muted)]">{label}</div>
-      <div className="mt-1 text-2xl font-black">{value}</div>
-    </div>
   );
 }
 

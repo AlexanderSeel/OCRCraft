@@ -2,7 +2,8 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
-import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { CatalogPagination } from "@/components/catalog/catalog-controls";
+import { CatalogSummaryStrip } from "@/components/catalog/catalog-workspace";
 import { Disclosure } from "@/components/ui/disclosure";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
@@ -113,7 +114,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
             <h2 className="mt-1 text-xl font-black">{showHistory ? "Alle AI-Entwürfe" : "Offene AI-Entwürfe"}</h2>
           </div>
 
-          <div className="grid min-w-0 gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
+          <div className="catalog-workspace grid min-w-0 gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
           <CatalogFilterPanel hasFilters={Boolean(searchQuery || showHistory || page !== 1 || pageSize !== 12)} resetHref={showHistory ? "/exercises/ai-drafts?history=1" : "/exercises/ai-drafts"} title="Entwurfsfilter">
               {showHistory ? <input name="history" type="hidden" value="1" /> : null}
               <label className="grid gap-1 text-sm font-bold">
@@ -123,7 +124,10 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
               <CatalogPageSize options={[6, 12, 24]} value={pageSize} />
           </CatalogFilterPanel>
           <div className="min-w-0 space-y-4">
-          <div className="text-sm text-[var(--muted)]"><CatalogResultCount from={draftTotal ? (page - 1) * pageSize + 1 : 0} label={draftTotal === 1 ? "Entwurf" : "Entwürfe"} to={Math.min(page * pageSize, draftTotal)} total={draftTotal} /></div>
+          <CatalogSummaryStrip items={[{
+            label: draftTotal === 1 ? "Entwurf" : "Entwürfe",
+            value: draftTotal === 0 ? "0" : `${Math.min((page - 1) * pageSize + 1, draftTotal)}–${Math.min(page * pageSize, draftTotal)} von ${draftTotal}`,
+          }]} />
           {drafts.length === 0 ? (
             <EmptyState title={showHistory ? "Noch keine AI-Übungsentwürfe" : "Keine offenen AI-Übungsentwürfe"}>
               {showHistory ? "Es wurden bisher keine AI-Übungsentwürfe gespeichert." : "Alle AI-Übungsentwürfe wurden bearbeitet oder es gibt aktuell keine neuen Vorschläge."}

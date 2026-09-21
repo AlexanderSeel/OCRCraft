@@ -102,6 +102,7 @@ interface TrainingBuilderPanelProps {
   readonly obstacleOptions?: readonly TrainingObstacleOption[];
   readonly sourceTrainingOptions?: readonly TrainingBuilderSourceOption[];
   readonly initialState?: TrainingBuilderInitialState;
+  readonly initialBuilderMode?: QuickCreateBuilderMode;
 }
 
 function toggle(values: readonly string[], value: string): string[] {
@@ -140,9 +141,10 @@ export function TrainingBuilderPanel({
   obstacleOptions = [],
   sourceTrainingOptions = [],
   initialState,
+  initialBuilderMode = "local",
 }: TrainingBuilderPanelProps) {
   const { pushToast, updateToast } = useToast();
-  const [builderMode, setBuilderMode] = useState<QuickCreateBuilderMode>(initialState?.builderMode ?? "local");
+  const [builderMode, setBuilderMode] = useState<QuickCreateBuilderMode>(initialState?.builderMode ?? initialBuilderMode);
   const [audience, setAudience] = useState(initialState?.audience ?? "mixed");
   const [ageRange, setAgeRange] = useState(
     initialState ? formatAgeRange(initialState.minAge, initialState.maxAge) : "16+",

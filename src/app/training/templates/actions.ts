@@ -7,10 +7,17 @@ import {
   archiveClubTrainingTemplate,
   createClubTrainingTemplateFromSession,
   instantiateClubTrainingTemplate,
+  updateClubTrainingTemplateMetadata,
 } from "@/server/training/saved-training-template-service";
 
 const createSchema = z.object({
   sessionId: z.string().uuid(),
+  name: z.string().trim().min(2).max(120),
+  description: z.string().trim().max(1000),
+});
+
+const updateSchema = z.object({
+  templateId: z.string().uuid(),
   name: z.string().trim().min(2).max(120),
   description: z.string().trim().max(1000),
 });
@@ -47,6 +54,24 @@ export async function instantiateClubTrainingTemplateAction(formData: FormData):
 
   revalidatePath("/training");
   redirect(`/training/${sessionId}?saved=from-template`);
+}
+
+export async function updateClubTrainingTemplateAction(formData: FormData): Promise<void> {
+  const parsed = updateSchema.safeParse({
+    templateId: formData.get("templateId"),
+    name: formData.get("name"),
+    description: String(formData.get("description") ?? ""),
+  });
+  if (!parsed.success) redirect("/training/templates?error=edit");
+
+  try {
+    const updated = await updateClubTrainingTemplateMetadata(parsed.data);
+    if (!updated) redirect("/training/templates?error=edit");
+  } catch {
+    redirect("/training/templates?error=edit");
+  }
+  revalidatePath("/training/templates");
+  redirect("/training/templates?saved=edited");
 }
 
 export async function archiveClubTrainingTemplateAction(formData: FormData): Promise<void> {

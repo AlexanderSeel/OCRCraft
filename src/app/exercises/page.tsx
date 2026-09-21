@@ -1,5 +1,6 @@
 import { OverviewLayout } from "@/components/overview-layout";
-import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { CatalogSummaryStrip } from "@/components/catalog/catalog-workspace";
+import { CatalogPagination } from "@/components/catalog/catalog-controls";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { MuscleMap } from "@/components/body/muscle-map";
@@ -8,6 +9,7 @@ import { ExerciseFilterPopover } from "@/components/exercises/exercise-filter-po
 import { ExerciseImagePreview } from "@/components/exercises/exercise-image-preview";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/feedback";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import { expandBodyRegionIds } from "@/domain/body-regions";
 import {
   exerciseCategoryLabels,
@@ -97,17 +99,17 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       subtitle="Breitensport, OCR und Laufen – vorbefüllt, suchbar und direkt administrierbar."
       actions={
         <div className="flex flex-wrap gap-2">
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/obstacles">
+          <Link className={buttonClass("secondary", "px-4")} href="/obstacles">
             Hindernisse
           </Link>
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/media">
+          <Link className={buttonClass("secondary", "px-4")} href="/media">
             Medien
           </Link>
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/exercises/ai-drafts">
+          <Link className={buttonClass("secondary", "px-4")} href="/exercises/ai-drafts">
             AI-Entwürfe
           </Link>
           <Link
-            className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
+            className={buttonClass("accent", "px-4")}
             href="/exercises/new"
           >
             + Neue Übung
@@ -115,17 +117,17 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         </div>
       }
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
+      <OverviewLayout storageKey="ocrcraft-exercise-view"><div className="space-y-6">
+        <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
         <FilterSidePanel title="Übungsfilter">
         <form
-          className="grid min-w-0 gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1"
+          className="grid min-w-0 gap-3"
           method="get"
         >
           <label className="grid min-w-0 gap-1 text-sm font-bold">
             Suchen
             <input
-              className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+              className={`${formControlClass} min-w-0`}
               defaultValue={query}
               name="q"
               placeholder="z. B. Monkey Bars, Kniebeugen, Lauf ABC ..."
@@ -134,7 +136,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           <label className="grid gap-1 text-sm font-bold">
             Bereich
             <select
-              className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+              className={`${formControlClass} min-w-0`}
               defaultValue={category ?? ""}
               name="category"
             >
@@ -149,7 +151,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           <label className="grid gap-1 text-sm font-bold">
             Status
             <select
-              className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+              className={`${formControlClass} min-w-0`}
               defaultValue={archived ? "archived" : "active"}
               name="status"
             >
@@ -159,7 +161,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           </label>
           <label className="grid gap-1 text-sm font-bold">
             Sammlung
-            <select className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={collection} name="collection">
+            <select className={`${formControlClass} min-w-0`} defaultValue={collection} name="collection">
               <option value="">Alle Übungen</option>
               <option value="favorites">Meine Favoriten ({favoriteIds.size})</option>
               <option value="recent">Zuletzt verwendet ({recentById.size})</option>
@@ -167,12 +169,12 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           </label>
           <label className="grid gap-1 text-sm font-bold">
             Pro Seite
-            <select className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={String(pageSize)} name="size">
+            <select className={`${formControlClass} min-w-0`} defaultValue={String(pageSize)} name="size">
               {[20, 40, 80, 120].map((size) => <option key={size} value={size}>{size}</option>)}
             </select>
           </label>
           <button
-            className="self-end rounded-xl bg-[var(--control-strong)] px-5 py-3 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
+            className={buttonClass("primary", "self-end px-5")}
             type="submit"
           >
             Filtern
@@ -206,13 +208,13 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         <div className="min-w-0 space-y-6">
 
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
-          <div className="flex flex-wrap items-center gap-2">
-            <CatalogResultCount from={Math.min((page - 1) * pageSize + 1, filteredTotal)} label="Übungen" to={Math.min(page * pageSize, filteredTotal)} total={filteredTotal} />
-            <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">Laufen {runningCount}</span>
-            <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">{categoryCounts.length} Kategorien</span>
-            <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">★ {favoriteIds.size} Favoriten</span>
-            <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[11px] font-semibold">{recentById.size} zuletzt verwendet</span>
-          </div>
+          <CatalogSummaryStrip items={[
+            { label: "Übungen", value: filteredTotal === 0 ? "0" : `${Math.min((page - 1) * pageSize + 1, filteredTotal)}–${Math.min(page * pageSize, filteredTotal)} von ${filteredTotal}` },
+            { label: "Laufen", value: runningCount },
+            { label: "Kategorien", value: categoryCounts.length },
+            { label: "Favoriten", value: `★ ${favoriteIds.size}` },
+            { label: "Zuletzt verwendet", value: recentById.size },
+          ]} />
           {archived ? (
             <Link className="font-bold text-[var(--foreground)]" href="/exercises">
               Aktive Übungen anzeigen
@@ -224,7 +226,6 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           )}
         </div>
 
-        <OverviewLayout storageKey="ocrcraft-exercise-view">
         <section className="exercise-results grid gap-3">
           {exercises.map((exercise, index) => {
             const affectedMuscles = bodyRegionMap[exercise.id] ?? [];
@@ -326,20 +327,20 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                     <input name="favorite" type="hidden" value={favoriteIds.has(exercise.id) ? "0" : "1"} />
                     <button
                       aria-label={favoriteIds.has(exercise.id) ? `${exercise.name} aus Favoriten entfernen` : `${exercise.name} zu Favoriten hinzufügen`}
-                      className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-black hover:bg-[var(--surface-subtle)]"
+                      className={buttonClass("secondary", "px-3")}
                       type="submit"
                     >
                       {favoriteIds.has(exercise.id) ? "★ Favorit" : "☆ Favorit"}
                     </button>
                   </form>
                   <Link
-                    className="inline-flex min-h-10 items-center rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
+                    className={buttonClass("primary", "px-4")}
                     href={`/exercises/${exercise.id}`}
                   >
                     Details
                   </Link>
                   <Link
-                    className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-black hover:bg-[var(--surface-subtle)]"
+                    className={buttonClass("secondary", "px-4")}
                     href={`/exercises/${exercise.id}/edit`}
                   >
                     {archived ? "Ansehen / Wiederherstellen" : "Bearbeiten"}
@@ -350,8 +351,6 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             );
           })}
         </section>
-        </OverviewLayout>
-
         <CatalogPagination href={(nextPage) => pageHref(nextPage, params)} label="Übungen" page={page} totalPages={Math.max(1, Math.ceil(filteredTotal / pageSize))} />
 
         {exercises.length === 0 ? (
@@ -359,7 +358,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         ) : null}
         </div>
         </div>
-      </div>
+      </div></OverviewLayout>
     </AppShell>
   );
 }

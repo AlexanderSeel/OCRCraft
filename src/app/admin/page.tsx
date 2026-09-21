@@ -6,6 +6,7 @@ import { ActionProgressButton } from "@/components/admin/action-progress-button"
 import { Disclosure } from "@/components/ui/disclosure";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Card, CardHeader } from "@/components/ui/card";
+import { buttonClass } from "@/components/ui/form";
 import { AdminTabs, normalizeAdminTab } from "@/components/admin/admin-tabs";
 import { AiProviderSettingsPanel } from "@/components/admin/ai-provider-settings-panel";
 import { SearchProfileSettingsPanel } from "@/components/admin/search-profile-settings-panel";
@@ -81,24 +82,24 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       title="Administration"
       subtitle="Systemstatus und schrittweise Administration von OCRCraft."
     >
-      <div className="space-y-6">
+      <div className="admin-workspace space-y-4">
         <AdminTabs active={activeTab} />
         {queueDeleted === "1" ? <Alert tone="success">Der fehlgeschlagene Medienjob wurde gelöscht.</Alert> : null}
         {queueDeleted === "0" ? <Alert tone="danger">Der Fehler konnte nicht gelöscht werden. Der Eintrag ist möglicherweise bereits entfernt oder noch nicht fehlgeschlagen.</Alert> : null}
         {activeTab === "overview" && seedCompleteness ? <SeedCompletenessReportView report={seedCompleteness} /> : null}
-        {activeTab === "quality" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+        {activeTab === "quality" ? <section className="admin-panel">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität</div><h2 className="mt-1 text-xl font-black">Doppelungen prüfen</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Die Engine vergleicht normalisierte Namen, Aliase, Equipment, Körperregionen und externe IDs. Zusammenführen archiviert den überzähligen Datensatz und erhält die Trainingshistorie.</p></div>
-            <form action={scanDuplicateExercisesAction}><ActionProgressButton className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" pendingLabel="Vergleiche Namen, Aliase und Zuordnungen …">Jetzt prüfen</ActionProgressButton></form>
+            <form action={scanDuplicateExercisesAction}><ActionProgressButton className={buttonClass("primary", "px-4")} pendingLabel="Vergleiche Namen, Aliase und Zuordnungen …">Jetzt prüfen</ActionProgressButton></form>
           </div>
           {duplicateTasks.length === 0 ? <EmptyState title="Keine offenen Doppelungsaufgaben">Die Qualitätsprüfung ist aktuell ohne offene Treffer.</EmptyState> : <DuplicateReviewPanel bulkAction={resolveDuplicateExercisesBulkAction} comparisonRecords={Object.fromEntries(comparisonRecords)} resolveAction={resolveDuplicateExerciseAction} tasks={duplicateTasks} />}
           <TranslationCompletenessReport report={getDictionaryCompletenessReport()} />
         </section> : null}
-        {activeTab === "queue" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+        {activeTab === "queue" ? <section className="admin-panel">
           <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Betrieb</div><h2 className="mt-1 text-xl font-black">Hintergrundaufgaben</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Laufende Prüfungen und Wartungsaktionen blockieren die Oberfläche nicht. Fehlgeschlagene Aufgaben können erneut gestartet oder abgeschlossene Einträge gelöscht werden.</p></div>
           <div className="mt-5 grid gap-3">{appTasks.length === 0 && queueIssues.length === 0 ? <EmptyState title="Noch keine Aufgaben vorhanden">Laufende und abgeschlossene Hintergrundaufgaben werden hier angezeigt.</EmptyState> : <>{appTasks.map((task) => <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={task.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-black">{task.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">{task.status} · {task.createdAt}</p></div><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{task.progress}%</span></div>{task.progressMessage ? <p className="mt-2 text-sm text-[var(--muted)]">{task.progressMessage}</p> : null}{task.errorMessage ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{task.errorMessage}</p> : null}<div className="mt-3 flex flex-wrap gap-2">{task.status === "running" || task.status === "queued" ? <form action={cancelAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--danger)] px-3 py-1.5 text-xs font-black text-[var(--danger)]">Abbrechen</button></form> : null}{task.status === "failed" || task.status === "cancelled" ? <form action={retryAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Erneut starten</button></form> : null}{task.status === "succeeded" || task.status === "failed" || task.status === "cancelled" ? <form action={deleteAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Löschen</button></form> : null}</div></article>)}{queueIssues.filter((issue) => issue.source === "media").map((issue) => <article className="rounded-xl border border-[var(--danger)] bg-[var(--surface-subtle)] p-4" key={`media-${issue.id}`}><div className="flex items-start justify-between gap-3"><div><h3 className="font-black">{issue.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">KI-Bildjob · {issue.status} · {issue.createdAt}</p></div><span className="text-xs font-black">{issue.progress}%</span></div>{issue.message ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{issue.message}</p> : null}{issue.status === "media:failed" ? <form action={deleteFailedMediaJobAction} className="mt-3"><input name="id" type="hidden" value={issue.id} /><button className="rounded-lg border border-[var(--danger)] px-3 py-1.5 text-xs font-black text-[var(--danger)]">Fehler löschen</button></form> : null}</article>)}</>}</div>
         </section> : null}
-        {activeTab === "database" ? <section id="database-settings" className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+        {activeTab === "database" ? <section id="database-settings" className="admin-panel scroll-mt-24">
           <div className="max-w-3xl">
             <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenbank</div>
             <h2 className="mt-1 text-xl font-black">Initialdaten neu einspielen</h2>
@@ -224,7 +225,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               saveAction={saveSearchProfileAction}
               saved={searchSaved}
             />
-            <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+            <section className="admin-panel">
               <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Einstellungen</div>
               <h2 className="mt-1 text-xl font-black">Darstellung und Diagnose</h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Seitenspezifische Einstellungen bleiben hier gebündelt. Änderungen werden lokal für dieses Gerät gespeichert.</p>
@@ -244,7 +245,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </>
         ) : null}
 
-        {activeTab === "database" ? <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+        {activeTab === "database" ? <section className="admin-panel">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
             <div>
               <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">DuckDB Search</div>
@@ -274,7 +275,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           {rebuild ? <p aria-live="polite" className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-3 text-sm font-bold text-[var(--success-foreground)]">Die deutschen und englischen Suchindizes wurden neu aufgebaut.</p> : null}
           {rebuildError ? <p aria-live="assertive" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">Der Suchindex konnte nicht vollständig neu aufgebaut werden. Der betroffene Index bleibt als fehlerhaft markiert.</p> : null}
           <form action={rebuildSearchIndexesAction} className="mt-5">
-            <ActionProgressButton className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" pendingLabel="Deutscher und englischer Suchindex werden aufgebaut …">Beide Suchindizes aufbauen</ActionProgressButton>
+            <ActionProgressButton className={buttonClass("primary", "px-4")} pendingLabel="Deutscher und englischer Suchindex werden aufgebaut …">Beide Suchindizes aufbauen</ActionProgressButton>
           </form>
           <div className="mt-6 border-t border-[var(--border)] pt-5">
             <h3 className="text-sm font-black">Letzte Betriebsaktionen</h3>

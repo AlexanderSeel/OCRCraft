@@ -361,6 +361,16 @@ html[data-theme="dark"] [class~="hover:bg-[#e5e9ed]"]:hover {
 .overview-layout[data-view="large"] .catalog-results { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)) !important; }
 .catalog-card { min-width: 0; }
 .catalog-card > * { min-width: 0; }
+.admin-panel {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  padding: 1rem;
+  box-shadow: var(--shadow-card);
+}
+@media (min-width: 640px) {
+  .admin-panel { padding: 1.25rem; }
+}
 .view-secondary,
 .view-detail,
 .view-summary { min-width: 0; }

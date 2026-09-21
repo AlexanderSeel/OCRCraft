@@ -2,7 +2,8 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
-import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { CatalogPagination } from "@/components/catalog/catalog-controls";
+import { CatalogSummaryStrip } from "@/components/catalog/catalog-workspace";
 import { CLUB_RULE_PROFILES } from "@/domain/training/club-rules";
 import {
   GROUP_PRESETS,
@@ -13,6 +14,7 @@ import type { TrainingFormat } from "@/domain/training/model";
 import { Disclosure } from "@/components/ui/disclosure";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import type { ClubGroup } from "@/server/groups/group-repository";
 import { listClubGroupsPage } from "@/server/groups/group-repository";
 import {
@@ -70,13 +72,13 @@ export default async function GroupsPage({ searchParams }: PageProps) {
       actions={
         <div className="flex flex-wrap gap-2">
           <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            className={buttonClass("secondary", "px-4")}
             href="/groups/safety-profiles"
           >
             Kids/Youth-Schutzprofile
           </Link>
           <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            className={buttonClass("secondary", "px-4")}
             href={archivedView ? "/groups" : "/groups?archived=1"}
           >
             {archivedView ? "Aktive Gruppen" : "Archiv"}
@@ -135,7 +137,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
               <GroupFields equipmentOptions={equipmentOptions} preset={selectedPreset} safetyProfiles={safetyProfiles} />
               <div className="mt-4 flex justify-end">
                 <button
-                  className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
+                  className={buttonClass("primary", "px-5")}
                   type="submit"
                 >
                   Gruppe anlegen
@@ -145,16 +147,18 @@ export default async function GroupsPage({ searchParams }: PageProps) {
           </Disclosure>
         ) : null}
 
-        <div className="grid min-w-0 gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
+        <CatalogSummaryStrip items={[{ label: archivedView ? "Archivierte Gruppen" : "Gruppen", value: groupPage.total }]} />
+
+        <div className="catalog-workspace grid min-w-0 gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
         <CatalogFilterPanel hasFilters={Boolean(searchQuery || audienceFilter || query.size)} resetHref={archivedView ? "/groups?archived=1" : "/groups"} title="Gruppenfilter">
             <input name="archived" type="hidden" value={archivedView ? "1" : "0"} />
             <label className="grid gap-1 text-sm font-bold">
               Suchen
-              <input className="h-11 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={query.q ?? ""} name="q" placeholder="z. B. Kids Mittwoch" />
+              <input className={`${formControlClass} min-w-0`} defaultValue={query.q ?? ""} name="q" placeholder="z. B. Kids Mittwoch" />
             </label>
             <label className="grid gap-1 text-sm font-bold">
               Zielgruppe
-              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={audienceFilter} name="audience">
+              <select className={formControlClass} defaultValue={audienceFilter} name="audience">
                 <option value="">Alle</option>
                 <option value="kids">Kids</option>
                 <option value="youth">Youth</option>
@@ -165,9 +169,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
             <CatalogPageSize value={pageSize} />
         </CatalogFilterPanel>
         <div className="min-w-0 space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
-          <CatalogResultCount from={groupPage.total ? (page - 1) * pageSize + 1 : 0} label={groupPage.total === 1 ? "Gruppe" : "Gruppen"} to={Math.min(page * pageSize, groupPage.total)} total={groupPage.total} />
-        </div>
+        <CatalogSummaryStrip items={[{ label: "Aktueller Bereich", value: groupPage.total === 0 ? "0" : `${Math.min((page - 1) * pageSize + 1, groupPage.total)}–${Math.min(page * pageSize, groupPage.total)} von ${groupPage.total}` }]} />
         <section className="catalog-results grid gap-4 xl:grid-cols-2">
           {groups.map((group) => (
             <Card
@@ -215,7 +217,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                       <GroupFields equipmentOptions={equipmentOptions} group={group} safetyProfiles={safetyProfiles} />
                       <div className="mt-4 flex justify-end">
                         <button
-                          className="rounded-lg bg-[var(--control-strong)] px-4 py-2 text-xs font-black text-[var(--control-strong-foreground)]"
+                          className={buttonClass("primary", "px-4")}
                           type="submit"
                         >
                           Änderungen speichern

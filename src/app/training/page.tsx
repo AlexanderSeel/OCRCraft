@@ -2,10 +2,11 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
-import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { CatalogPagination } from "@/components/catalog/catalog-controls";
+import { CatalogSummaryStrip } from "@/components/catalog/catalog-workspace";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/feedback";
-import { TRAINING_TEMPLATES } from "@/domain/training/training-template-catalog";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import { listTrainingSessionsPage, type TrainingSessionStatus } from "@/server/training/training-session-repository";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,6 @@ const STATUS_LABELS = {
 interface PageProps {
   readonly searchParams: Promise<{ status?: string; q?: string; page?: string; size?: string }>;
 }
-
 export default async function TrainingPage({ searchParams }: PageProps) {
   const { status, q, page: pageParam, size: sizeParam } = await searchParams;
   const archived = status === "archived";
@@ -64,62 +64,26 @@ export default async function TrainingPage({ searchParams }: PageProps) {
       )}
     >
       <OverviewLayout storageKey="ocrcraft-training-view"><div className="space-y-4">
-        {!archived ? (
-          <section className="grid gap-3 lg:grid-cols-3">
-            <Link
-              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] transition hover:border-[var(--brand)] hover:bg-[var(--surface-elevated)]"
-              href="/training/builder"
-            >
-              <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Gezielte Planung</div>
-              <h2 className="mt-1 text-lg font-black">Training Builder</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Wähle Ziele, Übungstypen, Muskeln, Gegenmuskeln, Formate, Ort, Intensität und Equipment. Plane lokal deterministisch oder lasse aus demselben freigegebenen Pool einen AI-Vorschlag erstellen.
-              </p>
-            </Link>
-            <Link
-              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] transition hover:border-[var(--brand)] hover:bg-[var(--surface-elevated)]"
-              href="/training/templates"
-            >
-              <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Wiederverwendbare Planung</div>
-              <h2 className="mt-1 text-lg font-black">Trainingsvorlagen</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                {TRAINING_TEMPLATES.length} kuratierte OCRCraft-Startvorlagen für Erwachsene, Kids und Youth mit Ausdauer, Koordination, Kraft, Mobility, Teamwork und Parcours.
-              </p>
-            </Link>
-            <Link
-              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] transition hover:border-[var(--brand)] hover:bg-[var(--surface-elevated)]"
-              href="/quick-create"
-            >
-              <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Schneller Einstieg</div>
-              <h2 className="mt-1 text-lg font-black">Quick Create</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                In wenigen Schritten aus Gruppe, Schwerpunkt, Körperregionen und Format einen sicheren, bearbeitbaren Trainingsentwurf erzeugen.
-              </p>
-            </Link>
-          </section>
-        ) : null}
+        <CatalogSummaryStrip items={[
+          { label: archived ? "Archivierte Trainings" : "Trainings", value: sessionPage.total },
+          { label: "Offene Entwürfe", value: draftCount },
+          { label: "Geplante Minuten", value: totalMinutes },
+        ]} />
 
-        <section className="grid gap-3 sm:grid-cols-3">
-          <Metric label={archived ? "Archivierte Trainings" : "Gespeicherte Trainings"} value={sessions.length} />
-          <Metric label="Offene Entwürfe" value={draftCount} />
-          <Metric label="Geplante Minuten" value={totalMinutes} />
-        </section>
-
+        <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
         <CatalogFilterPanel hasFilters={Boolean(query || selectedStatus || page !== 1 || pageSize !== 24)} resetHref={archived ? "/training?status=archived" : "/training"} title="Trainingsfilter">
-          <label className="grid gap-1 text-sm font-bold">Suchen<input className="h-11 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={query} name="q" placeholder="Trainingstitel …" /></label>
-          {!archived ? <label className="grid gap-1 text-sm font-bold">Status<select className="h-11 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={selectedStatus} name="status"><option value="">Alle aktiven</option><option value="draft">Entwurf</option><option value="ready">Bereit</option><option value="completed">Abgeschlossen</option></select></label> : null}
+          <label className="grid gap-1 text-sm font-bold">Suchen<input className={formControlClass} defaultValue={query} name="q" placeholder="Trainingstitel …" /></label>
+          {!archived ? <label className="grid gap-1 text-sm font-bold">Status<select className={formControlClass} defaultValue={selectedStatus} name="status"><option value="">Alle aktiven</option><option value="draft">Entwurf</option><option value="ready">Bereit</option><option value="completed">Abgeschlossen</option></select></label> : null}
           <CatalogPageSize options={[12, 24, 48]} value={pageSize} />
         </CatalogFilterPanel>
-
-        <section className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]"><CatalogResultCount from={sessionPage.total ? (page - 1) * pageSize + 1 : 0} to={Math.min(page * pageSize, sessionPage.total)} total={sessionPage.total} label={sessionPage.total === 1 ? "Training" : "Trainings"} /></section>
-
+        <main className="min-w-0 space-y-4">
         <div className="flex justify-end text-sm font-bold">
           {archived ? (
-            <Link className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-subtle)]" href="/training">
+            <Link className={buttonClass("secondary", "px-3")} href="/training">
               Aktive Trainings anzeigen
             </Link>
           ) : (
-            <Link className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-subtle)]" href="/training?status=archived">
+            <Link className={buttonClass("secondary", "px-3")} href="/training?status=archived">
               Archiv anzeigen
             </Link>
           )}
@@ -200,13 +164,13 @@ export default async function TrainingPage({ searchParams }: PageProps) {
             {!archived ? (
               <div className="mt-5 flex flex-wrap justify-center gap-2">
                 <Link
-                  className="inline-flex min-h-11 items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-black hover:bg-[var(--surface-subtle)]"
+                  className={buttonClass("secondary", "px-4")}
                   href="/training/builder"
                 >
                   Training Builder öffnen
                 </Link>
                 <Link
-                  className="inline-flex min-h-11 items-center rounded-md bg-[var(--brand)] px-4 text-sm font-black text-[var(--brand-foreground)] hover:bg-[var(--brand-strong)]"
+                  className={buttonClass("primary", "px-4")}
                   href="/quick-create"
                 >
                   Quick Create öffnen
@@ -216,6 +180,8 @@ export default async function TrainingPage({ searchParams }: PageProps) {
           </EmptyState>
         )}
         <CatalogPagination href={(nextPage) => pageHref(nextPage, archived, query, selectedStatus, pageSize)} label="Trainings" page={page} totalPages={Math.max(1, Math.ceil(sessionPage.total / pageSize))} />
+        </main>
+        </div>
       </div></OverviewLayout>
     </AppShell>
   );
@@ -248,13 +214,4 @@ function formatCreatedAt(value: string): string {
     timeStyle: "short",
     timeZone: "Europe/Berlin",
   }).format(date);
-}
-
-function Metric({ label, value }: { readonly label: string; readonly value: number }) {
-  return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[var(--shadow-card)]">
-      <div className="text-2xl font-black">{value}</div>
-      <div className="mt-1 text-sm font-semibold text-[var(--muted)]">{label}</div>
-    </div>
-  );
 }

@@ -15,7 +15,7 @@ import {
 } from "@/domain/training/training-template-catalog";
 import type { Audience } from "@/domain/training/model";
 import { listClubTrainingTemplates } from "@/server/training/saved-training-template-service";
-import { archiveClubTrainingTemplateAction, instantiateClubTrainingTemplateAction } from "./actions";
+import { archiveClubTrainingTemplateAction, instantiateClubTrainingTemplateAction, updateClubTrainingTemplateAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +52,9 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
           <Link className="rounded-xl bg-[var(--control-strong)] px-4 py-2.5 text-sm font-black text-[var(--control-strong-foreground)]" href="/quick-create">
             Ohne Vorlage starten
           </Link>
+          <Link className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent-foreground)]" href="/training/builder?mode=ai">
+            Neue Vorlage mit AI planen
+          </Link>
         </div>
       )}
     >
@@ -61,6 +64,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
             Vereinsvorlage wurde archiviert.
           </Alert>
         ) : null}
+        {params.saved === "edited" ? <Alert tone="success">Vereinsvorlage wurde aktualisiert.</Alert> : null}
         {params.error ? (
           <Alert tone="danger">
             {params.error === "use"
@@ -68,6 +72,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
               : "Vereinsvorlage konnte nicht archiviert werden."}
           </Alert>
         ) : null}
+        {params.error === "edit" ? <Alert tone="danger">Vereinsvorlage konnte nicht aktualisiert werden. Prüfe Name und Beschreibung.</Alert> : null}
 
         <Card className="p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -98,7 +103,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
                     <form action={instantiateClubTrainingTemplateAction} className="flex-1">
                       <input name="templateId" type="hidden" value={item.id} />
                       <button className="min-h-10 w-full rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
-                        Als neues Training verwenden
+                        Als Training bearbeiten
                       </button>
                     </form>
                     <form action={archiveClubTrainingTemplateAction}>
@@ -107,13 +112,23 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
                         Archivieren
                       </button>
                     </form>
+                    <details className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+                      <summary className="cursor-pointer text-xs font-black">Vorlagenname / Beschreibung bearbeiten</summary>
+                      <p className="mt-2 text-xs leading-5 text-[var(--muted)]">Für Änderungen an Phasen oder Übungen öffnest du die Vorlage als Training und speicherst danach eine neue, geprüfte Vorlage.</p>
+                      <form action={updateClubTrainingTemplateAction} className="mt-3 grid gap-2">
+                        <input name="templateId" type="hidden" value={item.id} />
+                        <label className="grid gap-1 text-xs font-bold">Name<input className="min-h-10 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 text-sm font-normal" defaultValue={item.name} maxLength={120} minLength={2} name="name" required /></label>
+                        <label className="grid gap-1 text-xs font-bold">Beschreibung<textarea className="min-h-20 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-2 text-sm font-normal" defaultValue={item.description ?? ""} maxLength={1000} name="description" /></label>
+                        <button className="min-h-10 rounded-md bg-[var(--brand)] px-3 text-xs font-black text-[var(--brand-foreground)]" type="submit">Metadaten speichern</button>
+                      </form>
+                    </details>
                   </div>
                 </Card>
               ))}
             </div>
           ) : (
-            <EmptyState title="Noch keine Vereinsvorlagen">
-              Noch keine Vereinsvorlage gespeichert. Öffne ein bestehendes Training und nutze „Als Vereinsvorlage speichern“.
+              <EmptyState title="Noch keine Vereinsvorlagen">
+              Noch keine Vereinsvorlage gespeichert. Erzeuge zuerst ein Training im Builder oder per AI und speichere es anschließend auf der Trainingsdetailseite als Vorlage.
             </EmptyState>
           )}
         </Card>

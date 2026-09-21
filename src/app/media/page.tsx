@@ -2,7 +2,8 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
-import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { CatalogPagination } from "@/components/catalog/catalog-controls";
+import { CatalogSummaryStrip } from "@/components/catalog/catalog-workspace";
 import { MediaJobRefresh } from "@/components/media/media-job-refresh";
 import { OrphanedMediaCleanupForm } from "@/components/media/orphaned-media-cleanup-form";
 import { ExternalMediaManager } from "@/components/media/external-media-manager";
@@ -189,16 +190,17 @@ export default async function MediaPage({ searchParams }: PageProps) {
               : "Die fachliche Sequenzprüfung konnte nicht gespeichert werden."}
           </Alert>
         ) : null}
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-          <Metric label="Gesamt" value={summary.total} />
-          <Metric label="Generiert" value={summary.generated} />
-          <Metric label="Review offen" value={summary.pendingReview} />
-          <Metric label="Freigegeben" value={summary.approved} />
-          <Metric label="Abgelehnt" value={summary.rejected} />
-          <Metric label="Fehlgeschlagen" value={summary.failed} />
-        </section>
+        <CatalogSummaryStrip items={[
+          { label: "Gefiltert", value: assetTotal },
+          { label: "Gesamt", value: summary.total },
+          { label: "Generiert", value: summary.generated },
+          { label: "Review offen", value: summary.pendingReview },
+          { label: "Freigegeben", value: summary.approved },
+          { label: "Abgelehnt", value: summary.rejected },
+          { label: "Fehlgeschlagen", value: summary.failed },
+        ]} />
 
-        <div className="grid gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
+        <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
         <CatalogFilterPanel hasFilters={Boolean(query || reviewStatus || generationStatus || sourceType || mediaType || page !== 1 || pageSize !== 24)} resetHref="/media" title="Medienfilter">
           <label className="grid gap-1 text-sm font-bold">
             Suchen
@@ -236,10 +238,6 @@ export default async function MediaPage({ searchParams }: PageProps) {
           <CatalogPageSize options={[12, 24, 48]} value={pageSize} />
         </CatalogFilterPanel>
         <div className="min-w-0 space-y-6">
-
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
-          <CatalogResultCount from={assetTotal ? (page - 1) * pageSize + 1 : 0} label="Medien im aktuellen Filter" to={Math.min(page * pageSize, assetTotal)} total={assetTotal} />
-        </div>
 
         <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
           <summary className="cursor-pointer text-base font-black">Batch-Operationen <span className="ml-2 text-xs font-normal text-[var(--muted)]">Auswahl starten und KI-Jobstatus</span></summary>
@@ -704,15 +702,6 @@ function RecentMediaJobRow({ job }: { readonly job: RecentMediaGenerationJob }) 
         </p>
       ) : null}
     </article>
-  );
-}
-
-function Metric({ label, value }: { readonly label: string; readonly value: number }) {
-  return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
-      <div className="text-xs font-bold text-[var(--muted)]">{label}</div>
-      <div className="mt-1 text-2xl font-black">{value}</div>
-    </div>
   );
 }
 

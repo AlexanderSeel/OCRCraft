@@ -20,6 +20,12 @@ const createTemplateInputSchema = z.object({
   description: z.string().trim().max(1000).default(""),
 });
 
+const updateTemplateMetadataSchema = z.object({
+  templateId: z.string().uuid(),
+  name: z.string().trim().min(2).max(120),
+  description: z.string().trim().max(1000).default(""),
+});
+
 export interface ClubTrainingTemplateSummary {
   readonly id: string;
   readonly name: string;
@@ -202,6 +208,30 @@ export async function archiveClubTrainingTemplate(templateId: string): Promise<b
        WHERE id=$id::UUID AND archived=false
        RETURNING id::VARCHAR`,
       { id: templateId },
+    );
+    return reader.getRows().length === 1;
+  });
+}
+
+export async function updateClubTrainingTemplateMetadata(input: {
+  readonly templateId: string;
+  readonly name: string;
+  readonly description: string;
+}): Promise<boolean> {
+  await requireTrainer();
+  const parsed = updateTemplateMetadataSchema.parse(input);
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(
+      `UPDATE training_saved_templates
+       SET name=$name,description=$description,updated_at=current_timestamp
+       WHERE id=$id::UUID AND archived=false
+       RETURNING id::VARCHAR`,
+      {
+        id: parsed.templateId,
+        name: parsed.name,
+        description: parsed.description || null,
+      },
     );
     return reader.getRows().length === 1;
   });
