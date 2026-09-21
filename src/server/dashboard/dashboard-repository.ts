@@ -18,6 +18,12 @@ export interface DashboardBucket {
   readonly count: number;
 }
 
+export interface DashboardActivityBucket {
+  readonly weekStart: string;
+  readonly count: number;
+  readonly minutes: number;
+}
+
 export interface DashboardSnapshot {
   readonly training: {
     readonly total: number;
@@ -26,9 +32,12 @@ export interface DashboardSnapshot {
     readonly completed: number;
     readonly totalMinutes: number;
     readonly recent: readonly DashboardRecentTraining[];
+    readonly activity: readonly DashboardActivityBucket[];
+    readonly sources: readonly DashboardBucket[];
   };
   readonly exercises: {
     readonly active: number;
+    readonly games: number;
     readonly categories: readonly DashboardBucket[];
   };
   readonly groups: {
@@ -42,6 +51,16 @@ export interface DashboardSnapshot {
     readonly pendingReview: number;
     readonly approved: number;
     readonly failed: number;
+    readonly queue: {
+      readonly queued: number;
+      readonly running: number;
+      readonly succeededRecent: number;
+      readonly failedRecent: number;
+    };
+  };
+  readonly ai: {
+    readonly pendingDrafts: number;
+    readonly approvingDrafts: number;
   };
   readonly obstacles: {
     readonly active: number;
@@ -101,6 +120,21 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
               OR e.club_obstacle_reach_cm IS NOT NULL
             )
             AND EXISTS (SELECT 1 FROM exercise_obstacle_guidance g WHERE g.exercise_id = e.id)
+        ),
+        (SELECT count(*) FROM exercises WHERE archived = false AND COALESCE(exercise_type, 'drill') = 'game'),
+        (SELECT count(*) FROM ai_exercise_drafts WHERE status = 'pending'),
+        (SELECT count(*) FROM ai_exercise_drafts WHERE status = 'approving'),
+        (SELECT count(*) FROM exercise_image_generation_jobs WHERE status = 'queued'),
+        (SELECT count(*) FROM exercise_image_generation_jobs WHERE status = 'running'),
+        (
+          SELECT count(*)
+          FROM exercise_image_generation_jobs
+          WHERE status = 'succeeded' AND created_at >= current_timestamp - INTERVAL '24 hours'
+        ),
+        (
+          SELECT count(*)
+          FROM exercise_image_generation_jobs
+          WHERE status = 'failed' AND created_at >= current_timestamp - INTERVAL '24 hours'
         )
     `);
 
@@ -122,6 +156,26 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       WHERE s.status <> 'archived'
       ORDER BY s.created_at DESC, s.id DESC
       LIMIT 7
+    `);
+
+    const activityReader = await connection.runAndReadAll(`
+      SELECT
+        date_trunc('week', created_at)::VARCHAR,
+        count(*),
+        COALESCE(sum(total_duration_minutes), 0)
+      FROM training_sessions
+      WHERE status <> 'archived'
+        AND created_at >= current_timestamp - INTERVAL '56 days'
+      GROUP BY date_trunc('week', created_at)
+      ORDER BY date_trunc('week', created_at)
+    `);
+
+    const sourceReader = await connection.runAndReadAll(`
+      SELECT source, count(*)
+      FROM training_sessions
+      WHERE status <> 'archived'
+      GROUP BY source
+      ORDER BY count(*) DESC, source
     `);
 
     const categoryReader = await connection.runAndReadAll(`
@@ -159,9 +213,19 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
           itemCount: Number(row[5] ?? 0),
           createdAt: String(row[6]),
         })),
+        activity: activityReader.getRows().map((row) => ({
+          weekStart: String(row[0]),
+          count: Number(row[1] ?? 0),
+          minutes: Number(row[2] ?? 0),
+        })),
+        sources: sourceReader.getRows().map((row) => ({
+          key: String(row[0]),
+          count: Number(row[1] ?? 0),
+        })),
       },
       exercises: {
         active: Number(summary[5] ?? 0),
+        games: Number(summary[16] ?? 0),
         categories: categoryReader.getRows().map((row) => ({ key: String(row[0]), count: Number(row[1] ?? 0) })),
       },
       groups: {
@@ -175,6 +239,16 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
         pendingReview: Number(summary[10] ?? 0),
         approved: Number(summary[11] ?? 0),
         failed: Number(summary[12] ?? 0),
+        queue: {
+          queued: Number(summary[19] ?? 0),
+          running: Number(summary[20] ?? 0),
+          succeededRecent: Number(summary[21] ?? 0),
+          failedRecent: Number(summary[22] ?? 0),
+        },
+      },
+      ai: {
+        pendingDrafts: Number(summary[17] ?? 0),
+        approvingDrafts: Number(summary[18] ?? 0),
       },
       obstacles: {
         active: Number(summary[13] ?? 0),
