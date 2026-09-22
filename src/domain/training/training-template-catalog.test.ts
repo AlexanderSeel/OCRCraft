@@ -3,9 +3,9 @@ import { BODY_REGIONS, TRAINING_FORMATS } from "./model";
 import { TRAINING_TEMPLATE_FOCUS_KEYS, TRAINING_TEMPLATES } from "./training-template-catalog";
 
 describe("training template catalog", () => {
-  it("contains 24 unique original OCRCraft templates", () => {
-    expect(TRAINING_TEMPLATES).toHaveLength(24);
-    expect(new Set(TRAINING_TEMPLATES.map((item) => item.key)).size).toBe(24);
+  it("contains 26 unique original OCRCraft templates", () => {
+    expect(TRAINING_TEMPLATES).toHaveLength(26);
+    expect(new Set(TRAINING_TEMPLATES.map((item) => item.key)).size).toBe(26);
     expect(TRAINING_TEMPLATES.every((item) => item.provenance.authoring === "ocrcraft_original")).toBe(true);
   });
 

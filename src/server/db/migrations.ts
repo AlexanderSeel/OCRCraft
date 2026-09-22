@@ -91,6 +91,7 @@ const migrations: readonly Migration[] = [
   { version: 79, fileName: "079_ocrfra_club_obstacle_pack.sql" },
   { version: 80, fileName: "080_external_import_sources.sql" },
   { version: 81, fileName: "081_ocrfra_additional_obstacles.sql" },
+  { version: 82, fileName: "082_ocrfra_template_game_pack.sql" },
 ];
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {

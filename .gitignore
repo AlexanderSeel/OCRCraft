@@ -21,3 +21,4 @@ Thumbs.db
 /playwright-report/
 /blob-report/
 .playwright/
+/e2e/.auth/

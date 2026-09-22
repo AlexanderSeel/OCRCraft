@@ -71,9 +71,9 @@ test("skip link is the first keyboard stop and moves focus to main", async ({ pa
 
 test("quick create audience selection works with keyboard only", async ({ page }) => {
   await page.goto("/quick-create", { waitUntil: "domcontentloaded" });
-  await page.locator("[data-quick-create-ready='true']").waitFor();
   const kids = page.getByRole("button", { name: /^Kids/ });
   const youth = page.getByRole("button", { name: /^Jugend/ });
+  await kids.waitFor();
 
   await kids.focus();
   await page.keyboard.press("Enter");
@@ -106,7 +106,7 @@ test("language switcher changes global navigation and persists after reload", as
   const language = page.getByRole("combobox", { name: "Sprache" });
   await language.selectOption("en");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  await expect(page.getByRole("link", { name: "Overview" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Dashboard" }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Exercises" }).first()).toBeVisible();
 
   await page.reload();

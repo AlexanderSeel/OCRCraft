@@ -76,7 +76,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
           {!archived ? <label className="grid gap-1 text-sm font-bold">Status<select className={formControlClass} defaultValue={selectedStatus} name="status"><option value="">Alle aktiven</option><option value="draft">Entwurf</option><option value="ready">Bereit</option><option value="completed">Abgeschlossen</option></select></label> : null}
           <CatalogPageSize options={[12, 24, 48]} value={pageSize} />
         </CatalogFilterPanel>
-        <main className="min-w-0 space-y-4">
+        <div className="min-w-0 space-y-4">
         <div className="flex justify-end text-sm font-bold">
           {archived ? (
             <Link className={buttonClass("secondary", "px-3")} href="/training">
@@ -180,7 +180,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
           </EmptyState>
         )}
         <CatalogPagination href={(nextPage) => pageHref(nextPage, archived, query, selectedStatus, pageSize)} label="Trainings" page={page} totalPages={Math.max(1, Math.ceil(sessionPage.total / pageSize))} />
-        </main>
+        </div>
         </div>
       </div></OverviewLayout>
     </AppShell>

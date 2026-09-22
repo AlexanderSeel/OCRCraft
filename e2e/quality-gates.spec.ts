@@ -46,15 +46,14 @@ test("catalog pages expose the shared view switcher", async ({ page }) => {
     await page.goto(route, { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("overview-layout")).toBeVisible();
     await expect(page.getByRole("group", { name: "Übersichtsdarstellung" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Liste" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Detail" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Liste", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Detail", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Mittel", exact: true })).toHaveCount(0);
   }
 });
 
 test("quick create exposes template selection without relying on a URL parameter", async ({ page }) => {
   await page.goto("/quick-create", { waitUntil: "domcontentloaded" });
-  await page.locator("[data-quick-create-ready='true']").waitFor();
   const selector = page.getByRole("combobox", { name: "Trainingsvorlage auswählen" });
   await expect(selector).toBeVisible();
   expect(await selector.locator("option").count()).toBeGreaterThan(1);
@@ -64,8 +63,6 @@ test("quick create exposes template selection without relying on a URL parameter
 
 test("quick create carries Kids age and safety choices into the review", async ({ page }) => {
   await page.goto("/quick-create", { waitUntil: "domcontentloaded" });
-  await page.locator("[data-quick-create-ready='true']").waitFor();
-
   await page.getByRole("button", { name: /^Kids/ }).click();
   await page.getByRole("textbox", { name: "Alter / Bereich" }).fill("8–12");
   await page.getByRole("button", { name: "Weiter" }).click();

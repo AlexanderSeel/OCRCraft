@@ -47,14 +47,14 @@ describe("database migrations", () => {
         FROM exercises
         WHERE seed_key LIKE 'game-%'
       `);
-      expect(gameCatalog.getRows()[0]?.map(Number)).toEqual([12, 12]);
+    expect(gameCatalog.getRows()[0]?.map(Number)).toEqual([13, 13]);
 
       const gameDetails = await connection.runAndReadAll(`
         SELECT count(*) FROM exercise_details d
         JOIN exercises e ON e.id=d.exercise_id
         WHERE e.seed_key LIKE 'game-%'
       `);
-      expect(Number(gameDetails.getRows()[0]?.[0])).toBe(24);
+    expect(Number(gameDetails.getRows()[0]?.[0])).toBe(26);
     } finally {
       connection.closeSync();
     }

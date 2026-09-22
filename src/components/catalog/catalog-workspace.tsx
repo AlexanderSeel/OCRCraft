@@ -19,7 +19,7 @@ export function CatalogWorkspace({
     <OverviewLayout storageKey={storageKey}>
       <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
         <div className="min-w-0">{filters}</div>
-        <main className="min-w-0 space-y-5">{children}</main>
+        <div className="min-w-0 space-y-5">{children}</div>
       </div>
     </OverviewLayout>
   );
