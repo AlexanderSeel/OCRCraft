@@ -35,6 +35,8 @@ const migrationFiles = [
   "063_curated_catalog_gap_cohort.sql",
   "064_seed_trainer_search_terms.sql",
   "073_seed_individual_quality_review.sql",
+  "078_ocr_hanging_battle_rope_cohort.sql",
+  "079_ocrfra_club_obstacle_pack.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -78,6 +80,19 @@ describe("initial exercise catalog", () => {
           'ankle-rocker-mobility','thoracic-open-book','lateral-shuffle-stick','crawl-to-stand-transition'
         )
       `);
+      const ocrHangingCohort = await scalar(connection, `
+        SELECT count(*) FROM exercises WHERE seed_key IN (
+          'hanging-knee-raise','hanging-straight-leg-raise','hanging-pike','hanging-oblique-knee-raise','battle-rope-waves'
+        )
+      `);
+      expect(ocrHangingCohort).toBe(5);
+      const ocrfraClubObstaclePack = await scalar(connection, `
+        SELECT count(*) FROM exercises WHERE seed_key IN (
+          'club-irish-table','club-weaver','club-rotating-rig-elements',
+          'club-multirig-ring-traverse','club-incline-wall-traverse','club-tire-obstacle-transit'
+        )
+      `);
+      expect(ocrfraClubObstaclePack).toBe(6);
       const incompleteCuratedGapCohort = await scalar(connection, `
         SELECT count(*) FROM exercises e
         WHERE e.seed_key IN (
@@ -522,5 +537,5 @@ describe("initial exercise catalog", () => {
     } finally {
       connection.closeSync();
     }
-  });
+  }, 30_000);
 });

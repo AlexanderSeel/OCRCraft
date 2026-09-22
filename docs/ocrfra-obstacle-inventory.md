@@ -32,7 +32,19 @@ Irish Table, Weaver, Monkeybars, rotierende Elemente, Ringe, Seile, Wände, Reif
 | Atlassteine | OCRFRA-Seitentext | seitentextlich bestätigt | Gewichte, Ablagehöhe, Hebezone, Fallback |
 | Wände allgemein | Clubangabe | Clubangabe ausstehend | Typen, Höhen, Landung, Aufsicht |
 
+## Umgesetzte Club-Übungsvarianten
+
+Die folgende lokale Seed-Gruppe bildet die Clubangaben als trainierbare Varianten ab. Sie behauptet keine exakten Bau- oder Freigabedaten: Maße, Kapazität, Fallschutz, Aufsicht, Altersfreigabe und konkrete Regressionen bleiben bis zur Vereinsbestätigung offen.
+
+| Seed-Schlüssel | Variante | Bezug zum Inventar | Status |
+| --- | --- | --- | --- |
+| `club-irish-table` | Irish Table | Irish Table | Clubangabe, Trainingsvariante angelegt |
+| `club-weaver` | Weaver | Weaver | Clubangabe, Trainingsvariante angelegt |
+| `club-rotating-rig-elements` | Rotierende Rig-Elemente | Multirig / rotierende Elemente | Clubangabe, Trainingsvariante angelegt |
+| `club-multirig-ring-traverse` | Multirig-Ring-Traverse | Multirig / Ringe | Foto-/Clubbezug, Trainingsvariante angelegt |
+| `club-incline-wall-traverse` | Schrägwand-Traverse | Schrägwand / Wände | Seiten-/Clubbezug, Trainingsvariante angelegt |
+| `club-tire-obstacle-transit` | Reifen-Parcours | Reifen | Seiten-/Clubbezug, Trainingsvariante angelegt |
+
 ## Sicherheitsgrenze
 
 Dieses Inventar beschreibt Verfügbarkeit und Recherchestatus, keine Nutzungsfreigabe. Für jede Station müssen vor produktiver Trainingsplanung mindestens Zustand, Aufbau, Fall-/Sicherheitszone, Kapazität, Aufsicht, Altersfreigabe, Regression und Fallback durch den Verein bestätigt werden. Das entspricht der Trennung zwischen lokalem Clubwissen und offiziellen Sicherheits-/Veranstaltungsstandards von World Obstacle.
-

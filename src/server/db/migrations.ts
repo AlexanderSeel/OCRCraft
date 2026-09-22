@@ -87,6 +87,8 @@ const migrations: readonly Migration[] = [
   { version: 75, fileName: "075_seed_quality_review_compat.sql" },
   { version: 76, fileName: "076_custom_roles_permissions.sql" },
   { version: 77, fileName: "077_auth_bootstrap_settings.sql" },
+  { version: 78, fileName: "078_ocr_hanging_battle_rope_cohort.sql" },
+  { version: 79, fileName: "079_ocrfra_club_obstacle_pack.sql" },
 ];
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {
