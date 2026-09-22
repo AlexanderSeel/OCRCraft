@@ -13,12 +13,16 @@ const navigation = [
   ["/media", "media"],
 ] as const;
 
-export function Breadcrumbs({ current }: { readonly current: string }) {
+export type BreadcrumbSection = "training" | "exercises" | "games" | "obstacles" | "groups" | "media";
+
+export function Breadcrumbs({ current, section }: { readonly current: string; readonly section?: BreadcrumbSection }) {
   const pathname = usePathname();
   const { dictionary } = useLocale();
   if (pathname === "/") return null;
 
-  const parent = navigation.find(([href]) => pathname === href || pathname.startsWith(`${href}/`));
+  const parent = section
+    ? navigation.find(([, key]) => key === section)
+    : navigation.find(([href]) => pathname === href || pathname.startsWith(`${href}/`));
   const parentLabel = parent ? dictionary.navigation[parent[1]] : dictionary.navigation.overview;
   return (
     <nav aria-label={dictionary.breadcrumbLabel} className="min-w-0">

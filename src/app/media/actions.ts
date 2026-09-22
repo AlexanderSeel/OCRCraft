@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
-import { deleteExternalMediaAsset, retireLegacyTriptychsAfterApprovedSequence, saveExternalMediaAsset, saveMediaSequenceAssessment, setMediaReviewStatus } from "@/server/media/media-catalog-repository";
+import { approveMediaBatch, deleteExternalMediaAsset, retireLegacyTriptychsAfterApprovedSequence, saveExternalMediaAsset, saveMediaSequenceAssessment, setMediaReviewStatus } from "@/server/media/media-catalog-repository";
 import { requireAdmin, requireTrainer } from "@/server/auth/identity-service";
 import { recordAuditEvent } from "@/server/db/audit-service";
 import { hasConfiguredExerciseImageProvider } from "@/server/images/configured-image-generator";
@@ -59,15 +59,41 @@ export async function updateMediaReviewStatusAction(formData: FormData): Promise
 }
 
 
-const mediaBatchActionSchema = z.enum(["generate_ai_image"]);
+const mediaBatchActionSchema = z.enum(["generate_ai_image", "approve_media"]);
 
 export async function queueMediaBatchAction(formData: FormData): Promise<void> {
+  const actor = await requireTrainer();
   const batchAction = mediaBatchActionSchema.safeParse(formData.get("batchAction"));
   if (!batchAction.success) redirect("/media?batchError=action");
 
   const exerciseIds = normalizeMediaBatchExerciseIds(
     formData.getAll("exerciseId").map((value) => String(value)),
   );
+  if (batchAction.data === "approve_media") {
+    const assetIds = formData.getAll("assetId").map((value) => String(value));
+    const approveAll = formData.get("approveAll") === "1";
+    if (!approveAll && assetIds.length === 0) redirect("/media?batchError=selection");
+    let approved = 0;
+    try {
+      const result = await approveMediaBatch({
+        assetIds: approveAll ? undefined : assetIds,
+        filters: approveAll ? {
+          query: String(formData.get("filterQuery") ?? ""),
+          reviewStatus: String(formData.get("filterReviewStatus") ?? ""),
+          generationStatus: String(formData.get("filterGenerationStatus") ?? ""),
+          sourceType: String(formData.get("filterSourceType") ?? ""),
+          mediaType: String(formData.get("filterMediaType") ?? ""),
+        } : undefined,
+        reviewerId: actor.id,
+      });
+      approved = result.approved;
+    } catch {
+      redirect("/media?batchError=save");
+    }
+    revalidatePath("/media");
+    revalidatePath("/exercises");
+    redirect(`/media?batchApproved=${approved}`);
+  }
   if (exerciseIds.length === 0) redirect("/media?batchError=selection");
   if (!(await hasConfiguredExerciseImageProvider())) redirect("/media?batchError=config");
 

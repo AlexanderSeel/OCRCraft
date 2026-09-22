@@ -45,6 +45,7 @@ interface PageProps {
     batchQueued?: string;
     batchSkipped?: string;
     batchError?: string;
+    batchApproved?: string;
     missingQ?: string;
     jobRetried?: string;
     cleanupRemoved?: string;
@@ -86,7 +87,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
       offset: (page - 1) * pageSize,
     }),
     getMediaGenerationQueueSummary(),
-    listMediaGenerationCandidates(missingQuery, 24),
+    listMediaGenerationCandidates(missingQuery, 100),
     listRecentMediaGenerationJobs(12),
     getMediaMaintenanceSummary(),
     listLegacyTriptychMigrationCandidates(40),
@@ -133,6 +134,9 @@ export default async function MediaPage({ searchParams }: PageProps) {
           <Alert tone="danger">
             {batchErrorLabel(params.batchError)}
           </Alert>
+        ) : null}
+        {params.batchApproved ? (
+          <Alert tone="success">{params.batchApproved} Medium(en) wurden freigegeben. Nicht freigabefähige oder bereits freigegebene Medien blieben unverändert.</Alert>
         ) : null}
         {params.jobRetried ? (
           <Alert tone="success">
@@ -257,6 +261,22 @@ export default async function MediaPage({ searchParams }: PageProps) {
               <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 py-2 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
                 Für Auswahl starten
               </button>
+              <button className="min-h-11 rounded-xl border border-[var(--accent)] px-4 py-2 text-sm font-black text-[var(--accent)]" name="batchAction" type="submit" value="approve_media">
+                Ausgewählte freigeben
+              </button>
+            </form>
+            <form action={queueMediaBatchAction} className="mt-2 flex flex-wrap items-center gap-2">
+              <input name="batchAction" type="hidden" value="approve_media" />
+              <input name="approveAll" type="hidden" value="1" />
+              <input name="filterQuery" type="hidden" value={query} />
+              <input name="filterReviewStatus" type="hidden" value={reviewStatus} />
+              <input name="filterGenerationStatus" type="hidden" value={generationStatus} />
+              <input name="filterSourceType" type="hidden" value={sourceType} />
+              <input name="filterMediaType" type="hidden" value={mediaType} />
+              <button className="min-h-10 rounded-xl border border-[var(--border-strong)] px-3 py-2 text-xs font-black" type="submit">
+                Alle passenden Medien freigeben
+              </button>
+              <span className="text-xs text-[var(--muted)]">Aktuelle Filter werden verwendet.</span>
             </form>
           </div>
           <div className="rounded-xl bg-[var(--surface-subtle)] p-3">
@@ -273,7 +293,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
         </details>
 
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,1fr)]">
-          <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+          <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]" id="missing-image-batch" open>
             <summary className="cursor-pointer text-base font-black">Übungen ohne verwendbares Bild <span className="ml-2 text-xs font-normal text-[var(--muted)]">{missingImageExercises.length} angezeigt</span></summary>
             <div className="mt-4">
             <div className="flex flex-wrap items-start justify-between gap-3">

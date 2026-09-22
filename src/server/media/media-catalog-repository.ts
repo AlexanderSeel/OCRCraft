@@ -350,6 +350,60 @@ export async function setMediaReviewStatus(
   });
 }
 
+export async function approveMediaBatch(input: {
+  readonly assetIds?: readonly string[];
+  readonly filters?: MediaCatalogFilters;
+  readonly reviewerId: string;
+}): Promise<{ readonly approved: number }> {
+  if (!UUID_PATTERN.test(input.reviewerId)) return { approved: 0 };
+  const assetIds = [...new Set((input.assetIds ?? []).filter((id) => UUID_PATTERN.test(id)))];
+  const filters = input.filters ?? {};
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const parameters: Record<string, unknown> = {
+      reviewerId: input.reviewerId,
+      query: filters.query?.trim() ?? "",
+      reviewStatus: filters.reviewStatus ?? "",
+      generationStatus: filters.generationStatus ?? "",
+      sourceType: filters.sourceType ?? "",
+      mediaType: filters.mediaType ?? "",
+    };
+    const idClause = assetIds.length
+      ? `AND m.id IN (${assetIds.map((id, index) => {
+        const key = `assetId${index}`;
+        parameters[key] = id;
+        return `$${key}::UUID`;
+      }).join(",")})`
+      : "";
+    const reader = await connection.runAndReadAll(`
+      UPDATE exercise_media_assets m
+      SET review_status='approved', reviewed_by=$reviewerId::UUID,
+          reviewed_at=current_timestamp, updated_at=current_timestamp
+      FROM exercises e
+      LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
+      WHERE m.exercise_id=e.id
+        ${idClause}
+        AND e.archived=false
+        AND ($query='' OR COALESCE(t.name,e.canonical_name) ILIKE '%' || $query || '%' OR COALESCE(e.seed_key,'') ILIKE '%' || $query || '%')
+        AND ($reviewStatus='' OR m.review_status=$reviewStatus)
+        AND ($generationStatus='' OR m.generation_status=$generationStatus)
+        AND ($sourceType='' OR m.source_type=$sourceType)
+        AND ($mediaType='' OR m.media_type=$mediaType)
+        AND m.generation_status='generated'
+        AND (
+          m.source_type<>'external_reference'
+          OR (COALESCE(m.rights_status,'unreviewed')='approved' AND COALESCE(trim(m.license_label),'')<>'' AND COALESCE(trim(m.source_reference),'')<>'' AND (COALESCE(m.consent_required,false)=false OR COALESCE(m.consent_confirmed,false)=true))
+        )
+        AND (
+          NOT (m.source_type='ai_generated' AND m.illustration_format='exercise_sequence')
+          OR (COALESCE(m.biomechanics_review,'unreviewed')='pass' AND COALESCE(m.text_match_review,'unreviewed')='pass')
+        )
+      RETURNING m.id
+    `, parameters);
+    return { approved: reader.getRows().length };
+  });
+}
+
 export async function saveMediaSequenceAssessment(input: {
   readonly assetId: string;
   readonly biomechanicsReview: "unreviewed" | "pass" | "needs_changes";

@@ -59,6 +59,7 @@ interface PageProps {
     hardDeleteError?: string;
     mediaSaved?: string;
     mediaQueued?: string;
+    from?: string;
   }>;
 }
 
@@ -117,6 +118,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
 
   return (
     <AppShell
+      breadcrumbSection={status.from === "obstacles" || status.obstacleSaved || status.obstacleError || (exercise.category === "ocr-skill" && obstacleGuidance?.hasGuidance) ? "obstacles" : undefined}
       title={exercise.nameDe}
       subtitle={exercise.seedKey ? `Initialkatalog · ${exercise.seedKey}` : "Vereinsübung · vollständiger Editor"}
       actions={(

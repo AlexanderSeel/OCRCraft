@@ -8,6 +8,7 @@ import { FormValidation } from "@/components/forms/form-validation";
 import { LocaleSwitcher } from "@/components/i18n/locale-switcher";
 import { useLocale } from "@/components/i18n/locale-provider";
 import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
+import type { BreadcrumbSection } from "@/components/navigation/breadcrumbs";
 
 interface AppShellClientProps {
   readonly title: string;
@@ -15,9 +16,10 @@ interface AppShellClientProps {
   readonly actions?: ReactNode;
   readonly children: ReactNode;
   readonly currentUser: { readonly displayName: string; readonly role: string };
+  readonly breadcrumbSection?: BreadcrumbSection;
 }
 
-export function AppShellClient({ title, subtitle, actions, children, currentUser }: AppShellClientProps) {
+export function AppShellClient({ title, subtitle, actions, children, currentUser, breadcrumbSection }: AppShellClientProps) {
   const { dictionary } = useLocale();
   const roleLabel = currentUser.role === "super_admin" ? "Super-Admin" : currentUser.role === "admin" ? "Admin" : "Trainer";
   const initials = currentUser.displayName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
@@ -29,7 +31,7 @@ export function AppShellClient({ title, subtitle, actions, children, currentUser
       <header className="app-header sticky top-0 z-20 border-b border-[var(--border)] backdrop-blur">
         <div className="mx-auto max-w-[1680px] px-3 py-2 sm:px-4 lg:px-5">
           <div className="flex min-h-7 min-w-0 items-center justify-between gap-3">
-            <Breadcrumbs current={title} />
+            <Breadcrumbs current={title} section={breadcrumbSection} />
             <div className="ml-auto flex shrink-0 items-center gap-1.5">
               <span className="grid size-9 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] text-xs font-black sm:hidden" title={`${currentUser.displayName} · ${roleLabel}`} aria-label={`Angemeldet: ${currentUser.displayName} · ${roleLabel}`}>{initials}</span>
               <span className="hidden max-w-64 truncate rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs font-bold text-[var(--muted)] sm:inline-flex" title={currentUser.displayName}>{currentUser.displayName} · {roleLabel}</span>

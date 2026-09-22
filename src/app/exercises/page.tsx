@@ -105,6 +105,9 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           <Link className={buttonClass("secondary", "px-4")} href="/media">
             Medien
           </Link>
+          <Link className={buttonClass("secondary", "px-4")} href="/media#missing-image-batch">
+            Bilder ohne Übungsvorschau
+          </Link>
           <Link className={buttonClass("secondary", "px-4")} href="/exercises/ai-drafts">
             AI-Entwürfe
           </Link>
