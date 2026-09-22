@@ -12,6 +12,25 @@
 - Alters-, Risiko-, Vereins-, Equipment- und Kapazitätsregeln bleiben harte Grenzen.
 - Eine Änderung braucht typed boundaries, zugängliche Zustände, Domänenvalidierung und aussagekräftige Tests.
 
+## P1 – Datenfundament und fachliche Quellen
+
+- [x] Dateninventur und Quellenregister anlegen: beide gecachten Übungsquellen, Seed-Migrationen, 24 eigene Trainingsvorlagen und 12 eigene Spiele erfasst; Provenienz-, Lizenz- und Review-Grenzen in [`docs/data-curation-plan.md`](./docs/data-curation-plan.md) dokumentiert.
+- [x] Ersten Quellenkatalog-Audit reproduzierbar machen: `npm run data:audit` prüft Rohdatensätze, Kategorien, fehlende Mindestfelder, Lizenzstatus, interne Namensduplikate und Quellenüberlappung; Ergebnis in [`docs/data-audit-report.md`](./docs/data-audit-report.md).
+- [x] Quellen-Matching mit 70%-Kandidatenschwelle ergänzen: `npm run data:match` priorisiert den fachlich vollständigeren Datensatz, ohne Rohquellen zu überschreiben; die Regel ist in [`docs/source-match-audit.md`](./docs/source-match-audit.md) dokumentiert.
+- [x] Kanonische Feldanreicherung auf Basis der Matchentscheidung beginnen: bestehende Matches übernehmen jetzt strukturierte Kategorie-, Körperregions- und Equipment-Metadaten sowie die Quellenverknüpfung, ohne kuratierte Namen, Coachingtexte oder Sicherheitsfelder zu überschreiben; unsichere Rohtexte bleiben Referenzen.
+- [ ] Kanonische Feldanreicherung abschließen: alle zusätzlichen ExerciseDB-Kandidaten fachlich auf OCR-Relevanz prüfen und für freigegebene Datensätze eigene DE/EN-Coaching-, Sicherheits- und Progressionsfelder ergänzen.
+- [x] ExerciseDB-Restbestand vorsortieren: 177 nicht überlappende Kandidaten werden mit `npm run data:ocr-relevance` in High-Signal-, Conditioning- und manuelle Review-Prioritäten geteilt; Ergebnis in [`docs/ocr-relevance-audit.md`](./docs/ocr-relevance-audit.md).
+- [x] High-Signal-Review durchführen: die 18 Kandidaten sind gegen den vorhandenen OCRCraft-Seed geprüft, auf bestehende Übungen abgebildet, als echte Lücken markiert oder aus dem OCR-Kern ausgeschlossen; Entscheidungen stehen in [`docs/ocr-candidate-review.md`](./docs/ocr-candidate-review.md).
+- [ ] Übungskatalog vollständig auditieren: stabile Identität, kanonischer Name, DE/EN-Felder, Alias, Phase, Ziel, Bewegungsmuster, Körperregion, Equipment, Risiko, Altersgrenze, Aufsicht, Kapazität, Progression/Regression und Quellenstatus pro Datensatz prüfen.
+- [ ] Duplikat- und Variantenbereinigung als Review-Workflow durchführen: normalisierte Namen und fachliche Merkmale vergleichen, echte Varianten erhalten, jede Zusammenlegung mit Entscheidung und Quellenbezug protokollieren.
+- [ ] Externe Quellen rechtssicher trennen: ExerciseDB- und hasaneyldrm-Texte/Medien nur bei verifizierter Lizenz übernehmen; ungeklärte Datensätze auf Referenzmodus setzen und eigene DE/EN-Coachingtexte erstellen.
+- [ ] Offizielle OCR-Fähigkeitsmatrix aus World-Obstacle-/FISO-Regeln und Sicherheitsunterlagen ableiten; Regeln, Sicherheitsleitlinien und Trainingsinhalte in getrennten Quellen-/Domänenobjekten halten.
+- [ ] OCRFRA-Club-Obstacle-Pack aufbauen: Olympus, Eskaladierwand, Schrägwand, Inverse Wand, Balancebalken, Multirig, Reifen, Slackline, Ankerketten und Atlassteine als lokale Verfügbarkeit vormerken; Maße, Kapazität, Sicherheitszonen und Freigaben erst nach Vereinsbestätigung ergänzen.
+- [x] OCRFRA-Bild-/Seitenaudit dokumentieren: Multirig-Aufbau, Ringe und Seile wurden im Trainingsgelände-Foto geprüft; Irish Table, Weaver, Monkeybars, rotierende Elemente, Wände, Reifen und Schrägwand sind als Clubangaben mit getrenntem Verifikationsstatus im [`docs/ocrfra-obstacle-inventory.md`](./docs/ocrfra-obstacle-inventory.md) erfasst.
+- [ ] Template- und Spielekatalog fachlich erweitern: Altersstufen, OCR-Fähigkeiten, Zeitstruktur, Equipment, Vereins-Hindernisse, Progressionen und sichere Alternativen abdecken; jede Einheit bleibt OCRCraft-Eigeninhalt mit Provenienz.
+- [ ] Katalog-Coverage-Report bauen: Lücken/Nulltreffer nach Phase, Alter, Risiko, Sprache, Ziel, Equipment, Körperregion, OCR-Fähigkeit und Club-Hindernis im Admin sichtbar machen.
+- [ ] Kuratierte Seed-Batches einzeln liefern: pro Batch Datenmigration, Reviewstatus, Quellenregister, Domain-Tests, Vollständigkeitsbericht, `typecheck`, `lint`, `check:ui`, Unit-, Build- und E2E-Prüfung.
+
 ## P1 – Trainer-Workflow und UI
 
 - [x] Tailgrids-kompatible lokale UI-Schicht abgeschlossen: Overlay/Popover, Form-Felder, Pagination, Tabs, Sidebar und Toast sind als lokale OCRCraft-Komponenten konsolidiert und in [`docs/ui-components.md`](./docs/ui-components.md) dokumentiert; es gibt keine Tailgrids-Laufzeitabhängigkeit.

@@ -8,6 +8,7 @@ import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { adaptHasaneyldrmExercises, type ExerciseImportDraft, type HasaneyldrmExercise } from "./hasaneyldrm-exercises-adapter";
 import { evaluateExternalContentLicense } from "./external-content-license-policy";
+import { findBestSourceCatalogMatch } from "./source-catalog-merge";
 
 export interface HasaneyldrmImportResult {
   readonly imported: number;
@@ -100,6 +101,21 @@ async function ensureExternalMedia(connection: DuckDBConnection, exerciseId: str
   }
 }
 
+async function enrichExistingStructuredMetadata(connection: DuckDBConnection, exerciseId: string, record: HasaneyldrmExercise, draft: ExerciseImportDraft): Promise<void> {
+  const category = categoryMap[record.category.toLowerCase()] ?? "strength";
+  await connection.run(`UPDATE exercises SET category=CASE WHEN category='strength' AND $category<>'strength' THEN $category ELSE category END, updated_at=current_timestamp WHERE id=$id::UUID`, { id: exerciseId, category });
+  for (const region of mappedRegions(record, draft)) {
+    const exists = await connection.runAndReadAll("SELECT 1 FROM body_regions WHERE id=$region", { region });
+    if (exists.getRows().length) await connection.run("INSERT OR IGNORE INTO exercise_body_regions VALUES ($id::UUID,$region,'primary')", { id: exerciseId, region });
+  }
+  for (const equipmentName of draft.equipmentSeedKeys) {
+    const key = `external-${slug(equipmentName)}`;
+    await connection.run("INSERT OR IGNORE INTO equipment (seed_key,name_de,name_en) VALUES ($key,$de,$en)", { key, de: equipmentName, en: equipmentName });
+    const equipment = await connection.runAndReadAll("SELECT id::VARCHAR FROM equipment WHERE seed_key=$key", { key });
+    if (equipment.getRows()[0]?.[0]) await connection.run("INSERT OR IGNORE INTO exercise_equipment VALUES ($id::UUID,$equipment,1)", { id: exerciseId, equipment: String(equipment.getRows()[0][0]) });
+  }
+}
+
 function mappedRegions(record: HasaneyldrmExercise, draft: ExerciseImportDraft): string[] {
   const values = [record.body_part, record.muscle_group, record.target, ...textList(record.secondary_muscles)];
   const mapped = values.filter((value): value is string => typeof value === "string" && value.length > 0).map((value) => bodyRegionAliases[value] ?? (value.includes("glute") ? "glutes" : value.includes("quad") ? "quadriceps" : value.includes("hamstring") ? "hamstrings" : undefined)).filter((value): value is string => Boolean(value));
@@ -140,9 +156,14 @@ async function persistDraft(connection: DuckDBConnection, record: HasaneyldrmExe
     await ensureExternalMedia(connection, String(existing.getRows()[0][0]), draft);
     return "skipped";
   }
-  const sameName = await connection.runAndReadAll(`SELECT e.id::VARCHAR FROM exercises e JOIN exercise_translations t ON t.exercise_id=e.id WHERE t.locale='en' AND lower(t.name)=lower($name) LIMIT 1`, { name: draft.nameEn });
-  if (sameName.getRows()[0]?.[0]) {
-    const existingId = String(sameName.getRows()[0][0]);
+  const existingNames = await connection.runAndReadAll("SELECT e.id::VARCHAR, t.name FROM exercises e JOIN exercise_translations t ON t.exercise_id=e.id WHERE e.archived=false AND t.locale='en'", {});
+  const existingMatch = findBestSourceCatalogMatch(
+    { name: draft.nameEn, category: record.category, bodyPart: record.body_part, equipment: record.equipment, target: record.target, instructions: record.instructions.en, media: record.image ?? record.gif_url },
+    existingNames.getRows().map((row) => ({ id: String(row[0]), name: String(row[1]) })),
+  );
+  if (existingMatch) {
+    const existingId = existingMatch.candidate.id;
+    await enrichExistingStructuredMetadata(connection, existingId, record, draft);
     await connection.run("INSERT OR IGNORE INTO exercise_source_references (exercise_id,provider,title,source_url,source_type,license_label,notes) VALUES ($id,$provider,$title,$sourceUrl,'dataset',$license,$notes)", { id: existingId, provider: draft.sourceMetadata.provider, title: draft.sourceMetadata.title, sourceUrl, license: draft.mediaReference.licenseLabel, notes: `duplicate_of_existing_name; source_record_id=${draft.sourceRecordId}; content_mode=${draft.mediaReference.licenseVerified ? "licensed_copy" : "reference_only"}` });
     await ensureExternalMedia(connection, existingId, draft);
     return "skipped";
