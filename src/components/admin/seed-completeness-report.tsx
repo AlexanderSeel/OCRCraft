@@ -14,7 +14,7 @@ export function SeedCompletenessReportView({ report }: SeedCompletenessReportPro
           <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Übungsdatenbank</div>
           <h2 className="mt-1 text-xl font-black" id="seed-completeness-heading">Vollständigkeit der Übungsdatenbank</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-            Der Seed-Bestand und der gesamte Katalog werden getrennt geprüft. Der Wert bewertet strukturierte Grundfelder in beiden Sprachen, nicht die fachliche Qualität der Formulierungen.
+            Der Seed-Bestand und der gesamte Katalog werden getrennt geprüft. Der Wert bewertet Identität, zweisprachige Coachingfelder, Progression, Sicherheit, Zielgruppe, Aufsicht, Kapazität, Trainingsziel und Quellenstatus; die fachliche Qualität der Formulierungen bleibt Trainerreview.
           </p>
         </div>
         <div aria-label={`${report.completenessPercent} Prozent der versionierten Seeds erfüllen die Grundfelder`} className="min-w-40 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" role="group">

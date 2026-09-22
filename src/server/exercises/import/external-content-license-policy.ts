@@ -12,6 +12,7 @@ const PLACEHOLDER_LICENSES = new Set([
 export interface ExternalContentLicensePolicy {
   readonly normalizedLicenseLabel: string | null;
   readonly licensedCopyAllowed: boolean;
+  readonly mediaCopyAllowed: boolean;
   readonly reason: string;
 }
 
@@ -25,6 +26,7 @@ export function evaluateExternalContentLicense(
     return {
       normalizedLicenseLabel: null,
       licensedCopyAllowed: false,
+      mediaCopyAllowed: false,
       reason: verified
         ? "Kein expliziter verwertbarer Lizenz-/Rechtenachweis vorhanden."
         : "Lizenz-/Rechtenachweis wurde nicht ausdrücklich als geprüft bestätigt.",
@@ -33,6 +35,7 @@ export function evaluateExternalContentLicense(
   return {
     normalizedLicenseLabel: normalized,
     licensedCopyAllowed: true,
+    mediaCopyAllowed: !/(media|visual|image|video|attribution)/i.test(normalized),
     reason: "Expliziter Lizenz-/Rechtenachweis wurde mit dem Quelldatensatz geliefert.",
   };
 }

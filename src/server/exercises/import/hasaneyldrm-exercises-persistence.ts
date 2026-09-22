@@ -176,15 +176,15 @@ async function persistDraft(connection: DuckDBConnection, record: HasaneyldrmExe
     RETURNING id::VARCHAR
   `, { name: draft.nameEn, category });
   const exerciseId = String(exercise.getRows()[0][0]);
-  const deName = draft.nameEn;
+  const deName = draft.nameDe;
   const enSummary = draft.summaryEn;
-  const deSummary = `Deutsche Übersetzung ausstehend. ${draft.summaryEn}`;
+  const deSummary = draft.summaryDe;
   await connection.run("INSERT INTO exercise_translations (exercise_id,locale,name,summary,instructions) VALUES ($id,'en',$name,$summary,$summary),($id,'de',$deName,$deSummary,$deSummary)", { id: exerciseId, name: draft.nameEn, summary: enSummary, deName, deSummary });
   await connection.run("INSERT INTO exercise_aliases VALUES ($id,'en',$name),($id,'de',$name)", { id: exerciseId, name: draft.nameEn });
 
   const details = [
     ["en", detailText("en", draft, draft.executionStepsEn.join(" "))],
-    ["de", detailText("de", draft, draft.executionStepsEn.map((step) => `[Übersetzung erforderlich] ${step}`).join(" "))],
+    ["de", detailText("de", draft, draft.executionStepsDe.join(" "))],
   ] as const;
   for (const [locale, item] of details) {
     const parameters = {
@@ -201,7 +201,7 @@ async function persistDraft(connection: DuckDBConnection, record: HasaneyldrmExe
     await connection.run(`INSERT INTO exercise_details (exercise_id,locale,purpose,setup,start_position,finish_reset,breathing_cue,tempo_cue,safety_notes,quality_criteria,beginner_prescription,standard_prescription,advanced_prescription,work_rest_guidance,level_1,level_2,level_3,child_youth_variant,prerequisites,fallback_exercise,difficulty,supervision,space_requirement,setup_seconds,transition_seconds,station_capacity) VALUES ($id,$locale,$purpose,$setup,$startPosition,$finishReset,$breathingCue,$tempoCue,$safetyNotes,$qualityCriteria,$beginnerPrescription,$standardPrescription,$advancedPrescription,$workRestGuidance,$level1,$level2,$level3,$childYouthVariant,$prerequisites,$fallbackExercise,$difficulty,$supervision,$spaceRequirement,$setupSeconds,$transitionSeconds,$stationCapacity)`, parameters);
   }
   for (const locale of ["en", "de"] as const) {
-    const steps = locale === "en" ? draft.executionStepsEn : draft.executionStepsEn.map((step) => `[Übersetzung erforderlich] ${step}`);
+    const steps = locale === "en" ? draft.executionStepsEn : draft.executionStepsDe;
     for (const [index, instruction] of steps.entries()) await connection.run("INSERT INTO exercise_execution_steps VALUES ($id,$locale,$order,$instruction)", { id: exerciseId, locale, order: index + 1, instruction });
     const cues = [
       locale === "de" ? "Übersetzung ausstehend: ruhig und kontrolliert bewegen." : "Move calmly and under control.",

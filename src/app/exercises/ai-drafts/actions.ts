@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   approveAiExerciseDraft,
+  listAiExerciseDrafts,
   rejectAiExerciseDraft,
 } from "@/server/exercises/ai-exercise-draft-repository";
 import { aiExerciseDraftRequestSchema } from "@/server/exercises/ai-exercise-draft-schema";
@@ -47,6 +48,24 @@ export async function approveAiExerciseDraftAction(formData: FormData): Promise<
   revalidatePath("/exercises");
   revalidatePath("/exercises/ai-drafts");
   redirect(`/exercises/${exerciseId}/edit?created=ai-draft`);
+}
+
+export async function approveAllAiExerciseDraftsAction(): Promise<void> {
+  await requireTrainer();
+  const drafts = await listAiExerciseDrafts("pending", 1000);
+  let approved = 0;
+  let skipped = 0;
+  for (const draft of drafts) {
+    try {
+      if (await approveAiExerciseDraft(draft.id)) approved += 1;
+      else skipped += 1;
+    } catch {
+      skipped += 1;
+    }
+  }
+  revalidatePath("/exercises");
+  revalidatePath("/exercises/ai-drafts");
+  redirect(`/exercises/ai-drafts?batchApproved=${approved}&batchSkipped=${skipped}`);
 }
 
 export async function rejectAiExerciseDraftAction(formData: FormData): Promise<void> {

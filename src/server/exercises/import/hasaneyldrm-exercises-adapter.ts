@@ -8,6 +8,8 @@ const optionalUrl = z.preprocess((value) => value === "" ? undefined : value, z.
 export const hasaneyldrmExerciseSchema = z.object({
   id: z.union([z.string(), z.number()]),
   name: z.string().min(1),
+  name_de: z.string().optional(),
+  summary_de: z.string().optional(),
   category: z.string().optional().default(""),
   body_part: z.string().optional().default(""),
   equipment: z.string().optional().default(""),
@@ -36,8 +38,11 @@ export interface ExerciseImportDraft {
   readonly sourceRecordId: string;
   readonly seedKey: string;
   readonly nameEn: string;
+  readonly nameDe: string;
   readonly summaryEn: string;
+  readonly summaryDe: string;
   readonly executionStepsEn: readonly string[];
+  readonly executionStepsDe: readonly string[];
   readonly bodyRegionIds: readonly string[];
   readonly equipmentSeedKeys: readonly string[];
   readonly category: string;
@@ -88,7 +93,9 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
   const equipmentSeedKeys = [...new Set(values(record.equipment).map((value) => EQUIPMENT_MAP[value] ?? value))];
   const license = evaluateExternalContentLicense(record.license_label, record.license_verified);
   const sourceSteps = record.instruction_steps.en?.filter((step) => step.trim()) ?? [];
+  const translatedSteps = record.instruction_steps.de?.filter((step) => step.trim()) ?? [];
   const sourceSummary = record.instructions.en?.trim();
+  const translatedSummary = record.instructions.de?.trim();
   const summary = license.licensedCopyAllowed && sourceSummary
     ? sourceSummary
     : `External catalogue reference for ${record.name}. Original source instructions were not copied because OCRCraft has no verified content license for this record.`;
@@ -105,10 +112,10 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
     ...(!license.licensedCopyAllowed && (sourceSummary || sourceSteps.length > 0)
       ? ["External instruction text was not copied because no explicitly verified usable license/right label was supplied"]
       : []),
-    ...(!license.licensedCopyAllowed && (record.image || record.gif_url || record.video || record.video_url || record.videoUrl)
+    ...(!license.mediaCopyAllowed && (record.image || record.gif_url || record.video || record.video_url || record.videoUrl)
       ? ["External media reference was suppressed because no explicitly verified usable license/right label was supplied"]
       : []),
-    ...(license.licensedCopyAllowed && (record.image || record.gif_url || record.video || record.video_url || record.videoUrl)
+    ...(license.mediaCopyAllowed && (record.image || record.gif_url || record.video || record.video_url || record.videoUrl)
       ? ["External media remains pending until source/license review is approved"]
       : []),
     "German translation and trainer review are required before publishing",
@@ -120,8 +127,11 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
     sourceRecordId: String(record.id),
     seedKey: `imported-${slug(record.name)}-${String(record.id)}`,
     nameEn: record.name,
+    nameDe: record.name_de?.trim() || record.name,
     summaryEn: summary,
+    summaryDe: record.summary_de?.trim() || translatedSummary || `Deutsche Übersetzung ausstehend. ${summary}`,
     executionStepsEn: steps.length >= 3 ? steps : [summary, "Follow the controlled range of motion.", "Return to the start position and repeat."],
+    executionStepsDe: translatedSteps.length >= 3 ? translatedSteps : ["Deutsche Übersetzung ausstehend.", "Bewege dich kontrolliert durch den schmerzfreien Bewegungsbereich.", "Kehre kontrolliert in die Ausgangsposition zurück."],
     bodyRegionIds,
     equipmentSeedKeys,
     category: record.category.trim(),
@@ -135,9 +145,9 @@ export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {
       retrievedAt: new Date().toISOString(),
     },
     mediaReference: {
-      image: license.licensedCopyAllowed ? record.image : undefined,
-      gif: license.licensedCopyAllowed ? record.gif_url : undefined,
-      video: license.licensedCopyAllowed ? record.video ?? record.video_url ?? record.videoUrl : undefined,
+      image: license.mediaCopyAllowed ? record.image : undefined,
+      gif: license.mediaCopyAllowed ? record.gif_url : undefined,
+      video: license.mediaCopyAllowed ? record.video ?? record.video_url ?? record.videoUrl : undefined,
       attribution: record.attribution,
       licenseLabel,
       licenseVerified: license.licensedCopyAllowed,

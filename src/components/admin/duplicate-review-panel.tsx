@@ -141,7 +141,17 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
             </div>
             <form action={resolveAction} className="mt-3">
               <input name="taskId" type="hidden" value={comparison.id} /><input name="keepExerciseId" type="hidden" value={comparison.leftExerciseId} /><input name="status" type="hidden" value="ignored" />
-              <button className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-bold text-[var(--muted)]" type="submit">Keine Dublette – ignorieren</button>
+              <div className="flex flex-wrap gap-2">
+                <input name="resolutionDecision" type="hidden" value="not_duplicate" />
+                <button className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-bold text-[var(--muted)]" type="submit">Keine Dublette – ignorieren</button>
+              </div>
+            </form>
+            <form action={resolveAction} className="mt-2">
+              <input name="taskId" type="hidden" value={comparison.id} />
+              <input name="keepExerciseId" type="hidden" value={comparison.leftExerciseId} />
+              <input name="status" type="hidden" value="ignored" />
+              <input name="resolutionDecision" type="hidden" value="keep_both" />
+              <button className="rounded-lg border border-[var(--control-strong)] px-3 py-2 text-xs font-bold text-[var(--control-strong)]" type="submit">Beide behalten – echte Variante</button>
             </form>
         </Dialog>
       ) : null}

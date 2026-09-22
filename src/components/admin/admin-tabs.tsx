@@ -8,6 +8,7 @@ export const ADMIN_TABS = [
   ["users", "Benutzer & Profile"],
   ["roles", "Rollen & Rechte"],
   ["settings", "Einstellungen"],
+  ["imports", "Importe"],
   ["outdoor", "Outdoor-Varianten"],
 ] as const;
 

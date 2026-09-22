@@ -17,6 +17,7 @@ export async function runSeedCompletenessQuery(
     SELECT e.id::VARCHAR, e.seed_key,
       COALESCE(t_de.name, ''), COALESCE(t_en.name, ''), COALESCE(e.category, ''),
       concat_ws(' · ',
+        CASE WHEN COALESCE(trim(e.seed_key), '') = '' OR COALESCE(trim(e.canonical_name), '') = '' THEN 'Stabile kanonische Identität' END,
         CASE WHEN COALESCE(trim(t_de.name), '') = '' THEN 'Name Deutsch' END,
         CASE WHEN COALESCE(trim(t_en.name), '') = '' THEN 'Name Englisch' END,
         CASE WHEN NOT EXISTS (SELECT 1 FROM exercise_aliases a WHERE a.exercise_id=e.id AND a.locale='de') THEN 'Alias Deutsch' END,
@@ -37,9 +38,13 @@ export async function runSeedCompletenessQuery(
         CASE WHEN (SELECT count(*) FROM exercise_common_mistakes m WHERE m.exercise_id=e.id AND m.locale='en' AND trim(m.mistake)<>'' AND trim(m.correction)<>'') < 1 THEN 'Fehlerkorrektur Englisch' END,
         CASE WHEN COALESCE(trim(e.category), '') = '' THEN 'Hauptkategorie' END,
         CASE WHEN COALESCE(trim(e.default_phase), '') = '' THEN 'Trainingsphase' END,
-        CASE WHEN COALESCE(trim(e.exercise_type), '') = '' OR COALESCE(trim(e.difficulty), '') = '' OR COALESCE(trim(e.risk_level), '') = '' OR e.suitable_for_kids IS NULL OR e.suitable_for_youth IS NULL OR e.suitable_for_adults IS NULL THEN 'Typ, Schwierigkeit, Risiko oder Zielgruppe' END,
+        CASE WHEN COALESCE(trim(e.exercise_type), '') = '' OR COALESCE(trim(e.difficulty), '') = '' OR COALESCE(trim(e.risk_level), '') = '' OR e.min_age IS NULL OR e.suitable_for_kids IS NULL OR e.suitable_for_youth IS NULL OR e.suitable_for_adults IS NULL THEN 'Typ, Schwierigkeit, Risiko, Alter oder Zielgruppe' END,
+        CASE WHEN COALESCE(trim(e.supervision), '') = '' THEN 'Aufsicht' END,
+        CASE WHEN COALESCE(e.station_capacity, 0) <= 0 THEN 'Stationskapazität' END,
+        CASE WHEN NOT EXISTS (SELECT 1 FROM exercise_training_goals g WHERE g.exercise_id=e.id) THEN 'Trainingsziel' END,
         CASE WHEN NOT EXISTS (SELECT 1 FROM exercise_body_regions b WHERE b.exercise_id=e.id AND b.emphasis='primary') THEN 'Primäre Körperregion' END,
         CASE WHEN NOT EXISTS (SELECT 1 FROM exercise_movement_patterns p WHERE p.exercise_id=e.id) THEN 'Bewegungsmuster' END,
+        CASE WHEN NOT EXISTS (SELECT 1 FROM exercise_source_references r WHERE r.exercise_id=e.id) THEN 'Quellenstatus' END,
         CASE WHEN NOT (e.supports_reps OR e.supports_seconds OR e.supports_minutes OR e.supports_metres OR e.supports_rounds OR e.supports_attempts) THEN 'Dosierungsmethode' END,
         CASE WHEN e.progression_required AND (
           COALESCE(trim(d_de.level_1), '')='' OR COALESCE(trim(d_de.level_2), '')='' OR COALESCE(trim(d_de.level_3), '')=''

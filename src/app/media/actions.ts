@@ -63,20 +63,23 @@ const mediaBatchActionSchema = z.enum(["generate_ai_image", "approve_media"]);
 
 export async function queueMediaBatchAction(formData: FormData): Promise<void> {
   const actor = await requireTrainer();
-  const batchAction = mediaBatchActionSchema.safeParse(formData.get("batchAction"));
+  const requestedAction = formData.get("approveSelection") === "1" ? "approve_media" : formData.get("batchAction");
+  const batchAction = mediaBatchActionSchema.safeParse(requestedAction);
   if (!batchAction.success) redirect("/media?batchError=action");
 
   const exerciseIds = normalizeMediaBatchExerciseIds(
     formData.getAll("exerciseId").map((value) => String(value)),
   );
   if (batchAction.data === "approve_media") {
-    const assetIds = formData.getAll("assetId").map((value) => String(value));
+    if (trainerQualificationBlockReason(actor.trainerQualificationLevel, "trainer_c", "Medienfreigabe")) {
+      redirect("/media?reviewError=qualification");
+    }
     const approveAll = formData.get("approveAll") === "1";
-    if (!approveAll && assetIds.length === 0) redirect("/media?batchError=selection");
+    if (!approveAll && exerciseIds.length === 0) redirect("/media?batchError=selection");
     let approved = 0;
     try {
       const result = await approveMediaBatch({
-        assetIds: approveAll ? undefined : assetIds,
+        exerciseIds: approveAll ? undefined : exerciseIds,
         filters: approveAll ? {
           query: String(formData.get("filterQuery") ?? ""),
           reviewStatus: String(formData.get("filterReviewStatus") ?? ""),

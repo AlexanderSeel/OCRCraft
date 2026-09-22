@@ -19,8 +19,76 @@ import { aiProviderInstanceIdSchema, aiProviderKindSchema, deleteAiProviderInsta
 import { cancelAppTask, deleteAppTask, enqueueAppTask, retryAppTask } from "@/server/queue/app-task-repository";
 import { runAppTaskQueue } from "@/server/queue/app-task-worker";
 import { deleteFailedMediaGenerationJob } from "@/server/media/media-generation-job-repository";
+import { saveExternalImportSource } from "@/server/exercises/import/external-import-source-repository";
+import { importExternalExercises, previewExternalImportSource, testExternalImportSource } from "@/server/exercises/import/external-import-service";
 
 const reseedConfirmationSchema = z.literal("OCRCRAFT ZURÜCKSETZEN");
+
+export async function saveExternalImportSourceAction(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const provider = z.enum(["exercisedb", "hasaneyldrm"]).safeParse(formData.get("provider"));
+  if (!provider.success) redirect("/admin?tab=imports&importError=provider#external-imports");
+  const baseUrl = String(formData.get("baseUrl") ?? "").trim();
+  if (!/^https:\/\//i.test(baseUrl)) redirect("/admin?tab=imports&importError=url#external-imports");
+  try {
+    await saveExternalImportSource({
+      provider: provider.data,
+      baseUrl,
+      apiKey: String(formData.get("apiKey") ?? "").trim() || undefined,
+      clearApiKey: formData.get("clearApiKey") === "1",
+      enabled: formData.get("enabled") === "1",
+    });
+    await recordAuditEvent({ action: "external_import.source.update", entityType: "external_import_source", entityId: provider.data, actorType: "user", actorId: actor.id, metadata: { provider: provider.data } });
+  } catch {
+    redirect("/admin?tab=imports&importError=save#external-imports");
+  }
+  redirect("/admin?tab=imports&importSaved=1#external-imports");
+}
+
+export async function importExternalExercisesAction(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  const provider = z.enum(["exercisedb", "hasaneyldrm"]).safeParse(formData.get("provider"));
+  const limit = z.coerce.number().int().min(1).max(200).safeParse(formData.get("limit"));
+  if (!provider.success || !limit.success) redirect("/admin?tab=imports&importError=input#external-imports");
+  let result: Awaited<ReturnType<typeof importExternalExercises>>;
+  try {
+    result = await importExternalExercises({ provider: provider.data, limit: limit.data, autoTranslate: formData.get("autoTranslate") === "1" });
+    await recordAuditEvent({ action: "external_import.run", entityType: "exercise_catalog", entityId: provider.data, actorType: "user", actorId: actor.id, metadata: { imported: result.imported, skipped: result.skipped, limit: limit.data } });
+  } catch {
+    redirect("/admin?tab=imports&importError=run#external-imports");
+  }
+  revalidatePath("/exercises");
+  revalidatePath("/admin");
+  redirect(`/admin?tab=imports&imported=${result.imported}&skipped=${result.skipped}#external-imports`);
+}
+
+export async function testExternalImportSourceAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const provider = z.enum(["exercisedb", "hasaneyldrm"]).safeParse(formData.get("provider"));
+  if (!provider.success) redirect("/admin?tab=imports&importError=provider#external-imports");
+  let result: Awaited<ReturnType<typeof testExternalImportSource>>;
+  try {
+    result = await testExternalImportSource(provider.data);
+  } catch {
+    redirect(`/admin?tab=imports&importTest=error&provider=${provider.data}#external-imports`);
+  }
+  redirect(`/admin?tab=imports&importTest=ok&provider=${provider.data}&sample=${encodeURIComponent(result.sampleName)}&available=${result.recordsAvailable}#external-imports`);
+}
+
+export async function previewExternalImportSourceAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const provider = z.enum(["exercisedb", "hasaneyldrm"]).safeParse(formData.get("provider"));
+  const limit = z.coerce.number().int().min(1).max(200).safeParse(formData.get("limit"));
+  if (!provider.success || !limit.success) redirect("/admin?tab=imports&importError=input#external-imports");
+  let result: Awaited<ReturnType<typeof previewExternalImportSource>>;
+  try {
+    result = await previewExternalImportSource(provider.data, limit.data);
+  } catch {
+    redirect(`/admin?tab=imports&importTest=error&provider=${provider.data}#external-imports`);
+  }
+  const query = new URLSearchParams({ provider: provider.data, preview: "1", available: String(result.recordsAvailable), languages: result.instructionLanguages.join(", "), media: String(result.hasMediaReferences), samples: result.sampleNames.join(" · ") });
+  redirect(`/admin?tab=imports&${query.toString()}#external-imports`);
+}
 
 export async function reseedDatabaseAction(formData: FormData): Promise<void> {
   const confirmation = reseedConfirmationSchema.safeParse(
@@ -167,8 +235,12 @@ export async function resolveDuplicateExerciseAction(formData: FormData): Promis
   const taskId = String(formData.get("taskId") ?? "");
   const keepExerciseId = String(formData.get("keepExerciseId") ?? "");
   const status = String(formData.get("status") ?? "merged") === "ignored" ? "ignored" : "merged";
+  const requestedDecision = String(formData.get("resolutionDecision") ?? "");
+  const resolutionDecision = requestedDecision === "keep_both"
+    ? "keep_both"
+    : status === "ignored" ? "not_duplicate" : "keep_one";
   if (!taskId || !keepExerciseId) return;
-  await resolveDuplicateTask(taskId, keepExerciseId, status);
+  await resolveDuplicateTask(taskId, keepExerciseId, status, resolutionDecision);
   revalidatePath("/admin");
   revalidatePath("/exercises");
 }

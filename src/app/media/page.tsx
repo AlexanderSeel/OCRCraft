@@ -261,7 +261,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
               <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 py-2 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
                 Für Auswahl starten
               </button>
-              <button className="min-h-11 rounded-xl border border-[var(--accent)] px-4 py-2 text-sm font-black text-[var(--accent)]" name="batchAction" type="submit" value="approve_media">
+              <button className="min-h-11 rounded-xl border border-[var(--accent)] px-4 py-2 text-sm font-black text-[var(--accent)]" name="approveSelection" type="submit" value="1">
                 Ausgewählte freigeben
               </button>
             </form>

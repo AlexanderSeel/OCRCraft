@@ -12,6 +12,7 @@ import { getConfiguredAiExerciseDraftProvider } from "@/server/exercises/ai-exer
 import { countAiExerciseDrafts, listAiExerciseDrafts } from "@/server/exercises/ai-exercise-draft-repository";
 import {
   approveAiExerciseDraftAction,
+  approveAllAiExerciseDraftsAction,
   generateAiExerciseDraftAction,
   rejectAiExerciseDraftAction,
 } from "./actions";
@@ -22,6 +23,8 @@ interface PageProps {
   readonly searchParams: Promise<{
     saved?: string;
     error?: string;
+    batchApproved?: string;
+    batchSkipped?: string;
     history?: string;
     q?: string;
     page?: string;
@@ -55,6 +58,13 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
           >
             {showHistory ? "Offene Entwürfe" : "Verlauf"}
           </Link>
+          {!showHistory ? (
+            <form action={approveAllAiExerciseDraftsAction}>
+              <button className="rounded-xl border border-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent)]" type="submit">
+                Alle freigeben
+              </button>
+            </form>
+          ) : null}
           <Link
             className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black"
             href="/exercises"
@@ -69,6 +79,11 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
           <Alert tone="success">{query.saved === "rejected" ? "AI-Entwurf wurde verworfen." : "AI-Entwurf wurde erzeugt und wartet auf Trainerprüfung."}</Alert>
         ) : null}
         {query.error ? <ErrorNotice code={query.error} /> : null}
+        {query.batchApproved ? (
+          <Alert tone="success">
+            {query.batchApproved} AI-Entwurf/Entwürfe wurden freigegeben. {query.batchSkipped ?? "0"} Entwurf/Entwürfe blieben wegen Review-Blockern oder eines parallelen Vorgangs offen.
+          </Alert>
+        ) : null}
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">

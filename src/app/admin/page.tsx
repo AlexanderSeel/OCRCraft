@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { SeedCompletenessReportView } from "@/components/admin/seed-completeness-report";
+import { CatalogCoverageReportView } from "@/components/admin/catalog-coverage-report";
 import { MuscleMapDebugSetting } from "@/components/admin/muscle-map-debug-setting";
 import { DuplicateReviewPanel } from "@/components/admin/duplicate-review-panel";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
@@ -11,6 +12,7 @@ import { AdminTabs, normalizeAdminTab } from "@/components/admin/admin-tabs";
 import { AiProviderSettingsPanel } from "@/components/admin/ai-provider-settings-panel";
 import { SearchProfileSettingsPanel } from "@/components/admin/search-profile-settings-panel";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
+import { getCatalogCoverageReport } from "@/server/exercises/catalog-coverage-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { listSearchProfiles } from "@/server/search/search-profile-repository";
 import { listRecentAuditEvents } from "@/server/db/audit-service";
@@ -28,6 +30,8 @@ import { RolePermissionsPanel } from "@/components/admin/role-permissions-panel"
 import { assignRoleAction, createRoleAction, deleteRoleAction, updateRoleAction } from "./role-actions";
 import { getDictionaryCompletenessReport } from "@/i18n/dictionary-completeness";
 import { TranslationCompletenessReport } from "@/components/admin/translation-completeness-report";
+import { listExternalImportSources } from "@/server/exercises/import/external-import-source-repository";
+import { saveExternalImportSourceAction, importExternalExercisesAction, previewExternalImportSourceAction, testExternalImportSourceAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 interface AdminPageProps {
@@ -53,15 +57,28 @@ interface AdminPageProps {
     readonly queueDeleted?: string;
     readonly roleSaved?: string;
     readonly roleError?: string;
+    readonly importSaved?: string;
+    readonly importError?: string;
+    readonly imported?: string;
+    readonly skipped?: string;
+    readonly importTest?: string;
+    readonly provider?: string;
+    readonly sample?: string;
+    readonly available?: string;
+    readonly preview?: string;
+    readonly languages?: string;
+    readonly media?: string;
+    readonly samples?: string;
   }>;
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const params = await searchParams;
   const activeTab = normalizeAdminTab(params.tab);
-  const [searchStates, seedCompleteness, duplicateTasks, auditEvents, backups, appUsers, aiProviders, appTasks, searchProfiles, queueIssues, accessRoles, roleAssignments, clubAccessCode] = await Promise.all([
+  const [searchStates, seedCompleteness, catalogCoverage, duplicateTasks, auditEvents, backups, appUsers, aiProviders, appTasks, searchProfiles, queueIssues, accessRoles, roleAssignments, clubAccessCode, importSources, importCompleteness] = await Promise.all([
     activeTab === "database" ? getSearchIndexStates() : Promise.resolve([]),
     activeTab === "overview" ? getSeedCompletenessReport() : Promise.resolve(null),
+    activeTab === "overview" ? getCatalogCoverageReport() : Promise.resolve(null),
     activeTab === "quality" ? listDuplicateReviewTasks() : Promise.resolve([]),
     activeTab === "overview" ? listRecentAuditEvents() : Promise.resolve([]),
     activeTab === "database" ? listDatabaseBackups() : Promise.resolve([]),
@@ -73,6 +90,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     activeTab === "roles" ? listAccessRoles() : Promise.resolve([]),
     activeTab === "roles" ? listUserRoleAssignments() : Promise.resolve({}),
     activeTab === "users" ? getClubAccessCode() : Promise.resolve(null),
+    activeTab === "imports" ? listExternalImportSources() : Promise.resolve([]),
+    activeTab === "imports" ? getSeedCompletenessReport() : Promise.resolve(null),
   ]);
   const comparisonRecords = await getDuplicateComparisonRecords(duplicateTasks.flatMap((task) => [task.leftExerciseId, task.rightExerciseId]));
   const { reseeded, reseedError, backup, backupError, rebuild, rebuildError, restored, restoreError, aiSaved, aiError, loginError, loggedIn, loggedOut, userError, userSaved, searchSaved, searchError, queueDeleted, roleSaved, roleError } = params;
@@ -86,7 +105,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <AdminTabs active={activeTab} />
         {queueDeleted === "1" ? <Alert tone="success">Der fehlgeschlagene Medienjob wurde gelöscht.</Alert> : null}
         {queueDeleted === "0" ? <Alert tone="danger">Der Fehler konnte nicht gelöscht werden. Der Eintrag ist möglicherweise bereits entfernt oder noch nicht fehlgeschlagen.</Alert> : null}
+        {params.importSaved ? <Alert tone="success">Importquelle gespeichert.</Alert> : null}
+        {params.imported ? <Alert tone="success">{params.imported} Übung(en) importiert, {params.skipped ?? "0"} bereits vorhanden oder übersprungen.</Alert> : null}
+        {params.importTest === "ok" ? <Alert tone="success">Verbindung zu {params.provider === "exercisedb" ? "ExerciseDB" : "hasaneyldrm"} erfolgreich. Beispiel: {params.sample} · Datensätze verfügbar in der Testantwort: {params.available}.</Alert> : null}
+        {params.importTest === "error" ? <Alert tone="danger">Die Verbindung zu {params.provider === "exercisedb" ? "ExerciseDB" : "hasaneyldrm"} konnte nicht geprüft werden.</Alert> : null}
+        {params.preview ? <Alert tone="success">Vorschau: {params.available} Datensatz/Datensätze, Sprachen: {params.languages || "keine erkannt"}, Medienreferenzen: {params.media ?? "0"}. Beispiele: {params.samples || "keine"}</Alert> : null}
+        {params.importError ? <Alert tone="danger">{params.importError === "url" ? "Die Quelladresse muss eine HTTPS-Adresse sein." : params.importError === "run" ? "Der Import konnte nicht ausgeführt werden. Prüfe Quelle, Zugriffsschlüssel und Serverprotokoll." : "Die Importquelle konnte nicht gespeichert werden."}</Alert> : null}
         {activeTab === "overview" && seedCompleteness ? <SeedCompletenessReportView report={seedCompleteness} /> : null}
+        {activeTab === "overview" && catalogCoverage ? <CatalogCoverageReportView report={catalogCoverage} /> : null}
         {activeTab === "quality" ? <section className="admin-panel">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität</div><h2 className="mt-1 text-xl font-black">Doppelungen prüfen</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Die Engine vergleicht normalisierte Namen, Aliase, Equipment, Körperregionen und externe IDs. Zusammenführen archiviert den überzähligen Datensatz und erhält die Trainingshistorie.</p></div>
@@ -99,6 +125,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Betrieb</div><h2 className="mt-1 text-xl font-black">Hintergrundaufgaben</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Laufende Prüfungen und Wartungsaktionen blockieren die Oberfläche nicht. Fehlgeschlagene Aufgaben können erneut gestartet oder abgeschlossene Einträge gelöscht werden.</p></div>
           <div className="mt-5 grid gap-3">{appTasks.length === 0 && queueIssues.length === 0 ? <EmptyState title="Noch keine Aufgaben vorhanden">Laufende und abgeschlossene Hintergrundaufgaben werden hier angezeigt.</EmptyState> : <>{appTasks.map((task) => <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={task.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-black">{task.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">{task.status} · {task.createdAt}</p></div><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{task.progress}%</span></div>{task.progressMessage ? <p className="mt-2 text-sm text-[var(--muted)]">{task.progressMessage}</p> : null}{task.errorMessage ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{task.errorMessage}</p> : null}<div className="mt-3 flex flex-wrap gap-2">{task.status === "running" || task.status === "queued" ? <form action={cancelAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--danger)] px-3 py-1.5 text-xs font-black text-[var(--danger)]">Abbrechen</button></form> : null}{task.status === "failed" || task.status === "cancelled" ? <form action={retryAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Erneut starten</button></form> : null}{task.status === "succeeded" || task.status === "failed" || task.status === "cancelled" ? <form action={deleteAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Löschen</button></form> : null}</div></article>)}{queueIssues.filter((issue) => issue.source === "media").map((issue) => <article className="rounded-xl border border-[var(--danger)] bg-[var(--surface-subtle)] p-4" key={`media-${issue.id}`}><div className="flex items-start justify-between gap-3"><div><h3 className="font-black">{issue.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">KI-Bildjob · {issue.status} · {issue.createdAt}</p></div><span className="text-xs font-black">{issue.progress}%</span></div>{issue.message ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{issue.message}</p> : null}{issue.status === "media:failed" ? <form action={deleteFailedMediaJobAction} className="mt-3"><input name="id" type="hidden" value={issue.id} /><button className="rounded-lg border border-[var(--danger)] px-3 py-1.5 text-xs font-black text-[var(--danger)]">Fehler löschen</button></form> : null}</article>)}</>}</div>
         </section> : null}
+        {activeTab === "imports" ? <ExternalImportPanel completeness={importCompleteness} sources={importSources} /> : null}
         {activeTab === "database" ? <section id="database-settings" className="admin-panel scroll-mt-24">
           <div className="max-w-3xl">
             <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenbank</div>
@@ -296,6 +323,57 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 function StatusBadge({ status }: { readonly status: string }) {
   const label = status === "healthy" ? "Aktuell" : status === "dirty" ? "Rebuild nötig" : status;
   return <span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{label}</span>;
+}
+
+function ExternalImportPanel({ sources, completeness }: { readonly sources: readonly { provider: "exercisedb" | "hasaneyldrm"; baseUrl: string; enabled: boolean; hasApiKey: boolean; lastImportAt: string | null; lastImportResult: string | null; keyStorageAvailable: boolean }[]; readonly completeness: Awaited<ReturnType<typeof getSeedCompletenessReport>> | null }) {
+  const source = (provider: "exercisedb" | "hasaneyldrm") => sources.find((item) => item.provider === provider);
+  return <section className="admin-panel" id="external-imports">
+    <div className="max-w-4xl">
+      <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenimport</div>
+      <h2 className="mt-1 text-xl font-black">ExerciseDB und hasaneyldrm</h2>
+      <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+        Importiert strukturierte Übungsdaten serverseitig. ExerciseDB wird über AscendAPI/RapidAPI mit Zugriffsschlüssel angesprochen; hasaneyldrm wird als versionierter GitHub-JSON-Datensatz geladen. Importierte Datensätze bleiben zunächst prüfpflichtige externe Katalogeinträge.
+      </p>
+      <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+        Fehlende deutsche Texte werden im Import als Übersetzung erforderlich markiert und dürfen erst nach Trainerprüfung veröffentlicht werden. Für die dauerhafte Schlüsselablage muss <code>OCRCRAFT_AI_SECRET_KEY</code> gesetzt sein.
+      </p>
+    </div>
+    <div className="mt-5 grid gap-4 xl:grid-cols-2">
+      {(["exercisedb", "hasaneyldrm"] as const).map((provider) => {
+        const item = source(provider);
+        return <Card className="p-4" key={provider}>
+          <CardHeader title={provider === "exercisedb" ? "ExerciseDB / AscendAPI" : "hasaneyldrm GitHub-Dataset"}>
+            <span className="text-xs font-bold text-[var(--muted)]">{item?.hasApiKey ? "Schlüssel gespeichert" : provider === "exercisedb" ? "Schlüssel fehlt" : "kein Schlüssel erforderlich"}</span>
+          </CardHeader>
+          <form action={saveExternalImportSourceAction} className="mt-4 grid gap-3">
+            <input name="provider" type="hidden" value={provider} />
+            <label className="grid gap-1 text-sm font-bold">Quelladresse<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={item?.baseUrl} name="baseUrl" required /></label>
+            <label className="grid gap-1 text-sm font-bold">{provider === "exercisedb" ? "RapidAPI-Schlüssel" : "Optionaler Zugriffsschlüssel"}<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" name="apiKey" placeholder={item?.hasApiKey ? "leer lassen, um den Schlüssel zu behalten" : "Zugriffsschlüssel"} type="password" /></label>
+            <div className="flex flex-wrap items-center gap-3 text-xs font-bold"><label className="inline-flex items-center gap-2"><input defaultChecked={item?.enabled ?? true} name="enabled" type="checkbox" value="1" />Quelle aktiv</label>{item?.hasApiKey ? <label className="inline-flex items-center gap-2"><input name="clearApiKey" type="checkbox" value="1" />Schlüssel löschen</label> : null}</div>
+            <button className="min-h-10 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" type="submit">Quelle speichern</button>
+          </form>
+          <form action={testExternalImportSourceAction} className="mt-2">
+            <input name="provider" type="hidden" value={provider} />
+            <button className="min-h-10 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" type="submit">Verbindung testen</button>
+          </form>
+          <form action={importExternalExercisesAction} className="mt-4 grid gap-2 border-t border-[var(--border)] pt-4 sm:grid-cols-[1fr_auto] sm:items-end">
+            <input name="provider" type="hidden" value={provider} />
+            <label className="grid gap-1 text-xs font-bold">Maximale Datensätze<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm" defaultValue="25" max="200" min="1" name="limit" type="number" /></label>
+            <label className="inline-flex items-center gap-2 text-xs font-bold sm:col-span-2"><input name="autoTranslate" type="checkbox" value="1" />Fehlende deutsche Texte automatisch übersetzen</label>
+            <div className="flex flex-wrap gap-2 sm:col-span-2"><button className="min-h-10 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" formAction={previewExternalImportSourceAction} type="submit">Vorschau laden</button><button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">Import starten</button></div>
+          </form>
+          <p className="mt-3 text-xs text-[var(--muted)]">{item?.lastImportAt ? `Letzter Import: ${item.lastImportAt} · ${item.lastImportResult ?? "ohne Ergebnis"}` : "Noch kein Import ausgeführt."}</p>
+        </Card>;
+      })}
+    </div>
+    {completeness ? <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div><h3 className="font-black">Import-Coverage und Reviewstatus</h3><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Der Katalog-Audit prüft auch importierte Übungen auf zweisprachige Pflichtfelder, Ausführung, Coaching, Körperregionen, Equipment und strukturierte Basisdaten.</p></div>
+        <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs font-black">{completeness.completeCatalogExercises} / {completeness.totalCatalogExercises} vollständig</span>
+      </div>
+      {completeness.incompleteCatalogExercises.length ? <div className="mt-3 grid gap-2 text-xs">{completeness.incompleteCatalogExercises.slice(0, 12).map((row) => <div className="flex flex-wrap justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2" key={row.exerciseId}><span className="font-black">{row.nameDe || row.nameEn}</span><span className="text-[var(--muted)]">{row.missingFields.join(", ")}</span></div>)}</div> : <p className="mt-3 text-xs font-bold text-[var(--success-foreground)]">Keine offenen Pflichtfeldlücken im vollständigen Katalog.</p>}
+    </div> : null}
+  </section>;
 }
 
 function AdminArea({ title, text, status }: { readonly title: string; readonly text: string; readonly status: string }) {

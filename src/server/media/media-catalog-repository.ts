@@ -351,16 +351,16 @@ export async function setMediaReviewStatus(
 }
 
 export async function approveMediaBatch(input: {
-  readonly assetIds?: readonly string[];
+  readonly exerciseIds?: readonly string[];
   readonly filters?: MediaCatalogFilters;
   readonly reviewerId: string;
 }): Promise<{ readonly approved: number }> {
   if (!UUID_PATTERN.test(input.reviewerId)) return { approved: 0 };
-  const assetIds = [...new Set((input.assetIds ?? []).filter((id) => UUID_PATTERN.test(id)))];
+  const exerciseIds = [...new Set((input.exerciseIds ?? []).filter((id) => UUID_PATTERN.test(id)))];
   const filters = input.filters ?? {};
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
-    const parameters: Record<string, unknown> = {
+    const parameters: Record<string, string | null> = {
       reviewerId: input.reviewerId,
       query: filters.query?.trim() ?? "",
       reviewStatus: filters.reviewStatus ?? "",
@@ -368,9 +368,9 @@ export async function approveMediaBatch(input: {
       sourceType: filters.sourceType ?? "",
       mediaType: filters.mediaType ?? "",
     };
-    const idClause = assetIds.length
-      ? `AND m.id IN (${assetIds.map((id, index) => {
-        const key = `assetId${index}`;
+    const idClause = exerciseIds.length
+      ? `AND m.exercise_id IN (${exerciseIds.map((id, index) => {
+        const key = `exerciseId${index}`;
         parameters[key] = id;
         return `$${key}::UUID`;
       }).join(",")})`

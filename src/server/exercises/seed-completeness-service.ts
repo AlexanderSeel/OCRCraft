@@ -10,6 +10,7 @@ export interface SeedCompletenessReport {
   readonly totalExercises: number;
   readonly completeExercises: number;
   readonly incompleteExercises: readonly SeedCompletenessRow[];
+  readonly incompleteCatalogExercises: readonly SeedCompletenessRow[];
   readonly completenessPercent: number;
   readonly reviewedExercises: number;
   readonly qualityReviewOpen: number;
@@ -30,6 +31,7 @@ export async function getSeedCompletenessReport(): Promise<SeedCompletenessRepor
     const rows = await runSeedCompletenessQuery(connection);
     const catalogRows = await runSeedCompletenessQuery(connection, { includeImported: true });
     const incompleteExercises = rows.filter((row) => row.missingFields.length > 0);
+    const incompleteCatalogExercises = catalogRows.filter((row) => row.missingFields.length > 0);
     const completeExercises = rows.length - incompleteExercises.length;
     const qualityReader = await connection.runAndReadAll(`
       SELECT
@@ -59,6 +61,7 @@ export async function getSeedCompletenessReport(): Promise<SeedCompletenessRepor
       completeCatalogExercises: catalogRows.filter((row) => row.missingFields.length === 0).length,
       completeExercises,
       incompleteExercises,
+      incompleteCatalogExercises,
       completenessPercent: rows.length === 0 ? 0 : Math.round((completeExercises / rows.length) * 100),
       reviewedExercises: Number(qualityRow[0] ?? 0),
       qualityReviewOpen: Number(qualityRow[1] ?? 0),

@@ -9,8 +9,9 @@ describe("seed completeness query", () => {
     try {
       await connection.run(`
         CREATE TABLE exercises (
-          id VARCHAR, seed_key VARCHAR, category VARCHAR, default_phase VARCHAR,
+          id VARCHAR, seed_key VARCHAR, canonical_name VARCHAR, category VARCHAR, default_phase VARCHAR,
           exercise_type VARCHAR, difficulty VARCHAR, risk_level VARCHAR,
+          min_age INTEGER, supervision VARCHAR, station_capacity INTEGER, max_simultaneous_participants INTEGER,
           suitable_for_kids BOOLEAN, suitable_for_youth BOOLEAN, suitable_for_adults BOOLEAN,
           supports_reps BOOLEAN, supports_seconds BOOLEAN, supports_minutes BOOLEAN,
           supports_metres BOOLEAN, supports_rounds BOOLEAN, supports_attempts BOOLEAN,
@@ -27,10 +28,12 @@ describe("seed completeness query", () => {
         CREATE TABLE exercise_common_mistakes (exercise_id VARCHAR, locale VARCHAR, mistake VARCHAR, correction VARCHAR);
         CREATE TABLE exercise_body_regions (exercise_id VARCHAR, emphasis VARCHAR);
         CREATE TABLE exercise_movement_patterns (exercise_id VARCHAR);
+        CREATE TABLE exercise_training_goals (exercise_id VARCHAR, goal VARCHAR);
+        CREATE TABLE exercise_source_references (exercise_id VARCHAR, source_url VARCHAR);
 
         INSERT INTO exercises VALUES
-          ('complete','complete-seed','strength','main','strength','beginner','low',true,true,true,true,false,false,false,true,false,false),
-          ('incomplete','incomplete-seed','strength','main','strength','beginner','low',true,true,true,true,false,false,false,true,false,false);
+          ('complete','complete-seed','Complete Seed','strength','main','strength','beginner','low',8,'increased',1,1,true,true,true,true,false,false,false,true,false,false),
+          ('incomplete','incomplete-seed','Incomplete Seed','strength','main','strength','beginner','low',8,'increased',1,1,true,true,true,true,false,false,false,true,false,false);
         INSERT INTO exercise_translations VALUES
           ('complete','de','Kniebeuge','Kräftigt die Beine.'),('complete','en','Squat','Builds leg strength.'),
           ('incomplete','de','Liegestütz','Trainiert den Oberkörper.'),('incomplete','en','Push-up','Trains the upper body.');
@@ -47,6 +50,8 @@ describe("seed completeness query", () => {
         INSERT INTO exercise_common_mistakes VALUES ('complete','de','Fehler','Korrektur'),('complete','en','Mistake','Correction');
         INSERT INTO exercise_body_regions VALUES ('complete','primary');
         INSERT INTO exercise_movement_patterns VALUES ('complete');
+        INSERT INTO exercise_training_goals VALUES ('complete','strength');
+        INSERT INTO exercise_source_references VALUES ('complete','https://example.test/complete');
       `);
 
       const rows = await runSeedCompletenessQuery(connection);
