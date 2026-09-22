@@ -101,6 +101,20 @@ test("theme can be changed by keyboard and persists after reload", async ({ page
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 
+test("exercise filter dialog closes with Escape and returns focus to its trigger", async ({ page }) => {
+  await page.goto("/exercises", { waitUntil: "domcontentloaded" });
+  const trigger = page.getByRole("button", { name: /^Muskelgruppen/ });
+  await trigger.click();
+
+  const dialog = page.getByRole("dialog", { name: "Muskelgruppen" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Schließen" })).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
 test("language switcher changes global navigation and persists after reload", async ({ page }) => {
   await page.goto("/training", { waitUntil: "domcontentloaded" });
   const language = page.getByRole("combobox", { name: "Sprache" });

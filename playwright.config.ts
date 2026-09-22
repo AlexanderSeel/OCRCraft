@@ -1,7 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
+import path from "node:path";
 
 const playwrightPort = process.env.PLAYWRIGHT_PORT ?? "3000";
 const playwrightBaseUrl = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${playwrightPort}`;
+const playwrightDatabasePath = process.env.OCRCRAFT_E2E_DB_PATH ?? path.join(process.cwd(), "e2e", ".auth", "ocrcraft-e2e.duckdb");
 
 export default defineConfig({
   testDir: "./e2e",
@@ -24,6 +26,11 @@ export default defineConfig({
   webServer: {
     command: `npm run start -- --hostname 127.0.0.1 --port ${playwrightPort}`,
     url: playwrightBaseUrl,
+    env: {
+      OCRCRAFT_DB_PATH: playwrightDatabasePath,
+      OCRCRAFT_LOGIN_CODE: process.env.OCRCRAFT_LOGIN_CODE ?? "",
+      OCRCRAFT_AUTO_IMPORT_EXTERNAL_EXERCISES: "false",
+    },
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

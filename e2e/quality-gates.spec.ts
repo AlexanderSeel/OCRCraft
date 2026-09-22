@@ -57,8 +57,10 @@ test("quick create exposes template selection without relying on a URL parameter
   const selector = page.getByRole("combobox", { name: "Trainingsvorlage auswählen" });
   await expect(selector).toBeVisible();
   expect(await selector.locator("option").count()).toBeGreaterThan(1);
+  const firstTemplateValue = await selector.locator("option").nth(1).getAttribute("value");
   await selector.selectOption({ index: 1 });
-  await expect(page.getByText("Vorlage geladen")).toBeVisible();
+  await expect(selector).toHaveValue(firstTemplateValue ?? "");
+  await expect(page.getByRole("textbox", { name: "Alter / Bereich" })).toHaveValue("16+");
 });
 
 test("quick create carries Kids age and safety choices into the review", async ({ page }) => {
@@ -101,7 +103,7 @@ test("obstacles keep assignment search outside the filter panel", async ({ page 
 test("games use the shared filter panel with URL-reset semantics", async ({ page }) => {
   await page.goto("/games?q=team&status=archived&size=20", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("filter-side-panel")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Filter zurücksetzen" })).toHaveAttribute("href", "/games");
+  await expect(page.getByRole("link", { name: "Zurücksetzen" })).toHaveAttribute("href", "/games");
   await expect(page.getByRole("textbox", { name: "Suchen" })).toHaveValue("team");
 });
 
@@ -110,14 +112,14 @@ test("groups use URL-based search and audience filters", async ({ page }) => {
   await expect(page.getByTestId("filter-side-panel")).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Suchen" })).toHaveValue("kids");
   await expect(page.getByRole("combobox", { name: "Zielgruppe" })).toHaveValue("kids");
-  await expect(page.getByRole("link", { name: "Filter zurücksetzen" })).toHaveAttribute("href", "/groups");
+  await expect(page.getByRole("link", { name: "Zurücksetzen" })).toHaveAttribute("href", "/groups");
 });
 
 test("AI drafts use a compact URL-based search filter", async ({ page }) => {
   await page.goto("/exercises/ai-drafts?q=carry", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("filter-side-panel")).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Suchen" })).toHaveValue("carry");
-  await expect(page.getByRole("link", { name: "Filter zurücksetzen" })).toHaveAttribute("href", "/exercises/ai-drafts");
+  await expect(page.getByRole("link", { name: "Zurücksetzen" })).toHaveAttribute("href", "/exercises/ai-drafts");
 });
 
 test("outdoor review uses shared status and search filters", async ({ page }) => {
@@ -125,16 +127,16 @@ test("outdoor review uses shared status and search filters", async ({ page }) =>
   await expect(page.getByTestId("filter-side-panel")).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Suchen" })).toHaveValue("bench");
   await expect(page.getByRole("combobox", { name: "Status" })).toHaveValue("review");
-  await expect(page.getByRole("link", { name: "Filter zurücksetzen" })).toHaveAttribute("href", "/admin/outdoor-variants");
+  await expect(page.getByRole("link", { name: "Zurücksetzen" })).toHaveAttribute("href", "/admin/outdoor-variants");
 });
 
 test("media keeps filter state in the URL and exposes a compact result count", async ({ page }) => {
   await page.goto("/media?q=cargo&type=video&review=pending", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("filter-side-panel")).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Suchen" })).toHaveValue("cargo");
+  await expect(page.getByTestId("filter-side-panel").getByRole("textbox", { name: "Suchen" })).toHaveValue("cargo");
   await expect(page.getByRole("combobox", { name: "Medientyp" })).toHaveValue("video");
-  await expect(page.getByRole("link", { name: "Filter zurücksetzen" })).toHaveAttribute("href", "/media");
-  await expect(page.locator("[aria-live='polite']").first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Zurücksetzen" })).toHaveAttribute("href", "/media");
+  await expect(page.getByText("Gefiltert", { exact: true })).toBeVisible();
 });
 
 test("training templates keep their audience and focus filters compact", async ({ page }) => {
@@ -153,12 +155,11 @@ test("catalog view controls change the rendered result layout", async ({ page })
 
   await page.getByRole("button", { name: "Liste" }).click();
   await expect(overview).toHaveAttribute("data-view", "list");
-  const listColumns = await results.evaluate((element) => getComputedStyle(element).gridTemplateColumns);
+  await expect(results.locator(".view-secondary").first()).toBeHidden();
 
   await page.getByRole("button", { name: "Groß" }).click();
   await expect(overview).toHaveAttribute("data-view", "large");
-  const largeColumns = await results.evaluate((element) => getComputedStyle(element).gridTemplateColumns);
-  expect(largeColumns).not.toBe(listColumns);
+  await expect(results.locator(".view-secondary").first()).toBeVisible();
 });
 
 test("catalog templates keep detail content out of compact views", async ({ page }) => {
