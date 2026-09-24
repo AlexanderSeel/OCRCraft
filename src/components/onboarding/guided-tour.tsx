@@ -11,43 +11,66 @@ export function GuidedTour() {
   const pathname = usePathname();
   const { locale, dictionary } = useLocale();
   const guide = useMemo(() => guideForPath(pathname), [pathname]);
-  const [open, setOpen] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [targetAvailable, setTargetAvailable] = useState(true);
+  const [tourState, setTourState] = useState({
+    guideId: guide.id,
+    open: false,
+    stepIndex: 0,
+    targetAvailable: true,
+  });
+  const open = tourState.guideId === guide.id && tourState.open;
+  const stepIndex = tourState.guideId === guide.id ? tourState.stepIndex : 0;
+  const targetAvailable = tourState.guideId === guide.id ? tourState.targetAvailable : true;
   const step = guide.steps[stepIndex] ?? guide.steps[0];
   const progressKey = `ocrcraft-tour-progress:${guide.id}`;
 
   const focusStep = useCallback(() => {
     document.querySelectorAll("[data-tour-active='true']").forEach((element) => element.removeAttribute("data-tour-active"));
     const target = document.querySelector<HTMLElement>(step.selector);
-    setTargetAvailable(Boolean(target));
     target?.setAttribute("data-tour-active", "true");
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [step]);
 
   useEffect(() => { if (open) focusStep(); return () => { document.querySelectorAll("[data-tour-active='true']").forEach((element) => element.removeAttribute("data-tour-active")); }; }, [focusStep, open]);
-  useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); }; document.addEventListener("keydown", onKeyDown); return () => document.removeEventListener("keydown", onKeyDown); }, []);
   useEffect(() => {
-    setOpen(false);
-    setStepIndex(0);
-    setTargetAvailable(true);
-  }, [guide.id]);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setTourState((current) => ({ ...current, open: false }));
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   function persist(nextStepIndex: number, completed: boolean) {
     window.localStorage.setItem(progressKey, serializeTourProgress({ stepIndex: nextStepIndex, completed }));
   }
 
-  function start() {
-    const progress = parseTourProgress(window.localStorage.getItem(progressKey), guide.steps.length);
-    setStepIndex(progress.completed ? 0 : progress.stepIndex);
-    setOpen(true);
+  function targetExists(index: number): boolean {
+    const candidate = guide.steps[index] ?? guide.steps[0];
+    return Boolean(document.querySelector(candidate.selector));
   }
 
-  function close() { setOpen(false); }
+  function start() {
+    const progress = parseTourProgress(window.localStorage.getItem(progressKey), guide.steps.length);
+    const nextStepIndex = progress.completed ? 0 : progress.stepIndex;
+    setTourState({
+      guideId: guide.id,
+      open: true,
+      stepIndex: nextStepIndex,
+      targetAvailable: targetExists(nextStepIndex),
+    });
+  }
+
+  function close() {
+    setTourState((current) => ({ ...current, open: false }));
+  }
 
   function goTo(nextStepIndex: number) {
     const bounded = Math.min(guide.steps.length - 1, Math.max(0, nextStepIndex));
-    setStepIndex(bounded);
+    setTourState({
+      guideId: guide.id,
+      open: true,
+      stepIndex: bounded,
+      targetAvailable: targetExists(bounded),
+    });
     persist(bounded, false);
   }
 
