@@ -131,7 +131,10 @@ test("language switcher changes global navigation and persists after reload", as
 test("guided tutorial advances, focuses its target and closes with Escape", async ({ page }) => {
   await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
   await page.goto("/exercises/new", { waitUntil: "domcontentloaded" });
-  await page.getByRole("button", { name: "Tutorial öffnen" }).click();
+  await expect(page).toHaveURL(/\/exercises\/new$/);
+  const tutorialTrigger = page.locator("[data-tour-trigger='guided-help']");
+  await expect(tutorialTrigger).toBeVisible();
+  await tutorialTrigger.click();
 
   const dialog = page.getByRole("dialog", { name: "Übung erstellen" });
   await expect(dialog).toBeVisible();
