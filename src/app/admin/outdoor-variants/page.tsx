@@ -98,7 +98,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
           </section>
         ) : null}
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6" data-tour="outdoor-audit">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Qualitätsworkflow</div>
@@ -131,7 +131,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
           </div>
         </section>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6" data-tour="outdoor-enrichment">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="max-w-4xl">
               <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität · Import</div>
@@ -164,7 +164,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
           </form>
         </section>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6" data-tour="outdoor-candidates">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Review</div>

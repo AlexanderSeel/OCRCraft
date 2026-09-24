@@ -223,3 +223,14 @@ test("media tutorial covers filters, batch actions and review cards", async ({ p
   await dialog.getByRole("button", { name: "Weiter" }).click();
   await expect(page.locator("[data-tour='media-review'][data-tour-active='true']")).toBeVisible();
 });
+
+test("outdoor tutorial covers audit, enrichment and candidate review", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
+  const { dialog } = await openTutorial(page, "/admin/outdoor-variants", "Outdoor-Varianten");
+
+  await expect(page.locator("[data-tour='outdoor-audit'][data-tour-active='true']")).toBeVisible();
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='outdoor-enrichment'][data-tour-active='true']")).toBeVisible();
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='outdoor-candidates'][data-tour-active='true']")).toBeVisible();
+});

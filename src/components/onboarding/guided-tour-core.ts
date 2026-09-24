@@ -191,7 +191,28 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
     ],
   },
   { id: "ai-drafts", de: "AI-Entwürfe", en: "AI drafts", steps: areaSteps("aiDrafts", "AI-Entwürfe", "AI drafts") },
-  { id: "outdoor", de: "Outdoor-Varianten", en: "Outdoor variants", steps: areaSteps("outdoor", "Outdoor-Varianten", "outdoor variants") },
+  {
+    id: "outdoor",
+    de: "Outdoor-Varianten",
+    en: "Outdoor variants",
+    steps: [
+      {
+        selector: "[data-tour='outdoor-audit']",
+        de: { title: "Portabilitäts-Audit", text: "Prüfe Herkunft, Begründung, Ersatz-Equipment und den aktuellen Reviewstatus jeder Portabilitätsentscheidung." },
+        en: { title: "Portability audit", text: "Review the source, rationale, replacement equipment, and current review status for each portability decision." },
+      },
+      {
+        selector: "[data-tour='outdoor-enrichment']",
+        de: { title: "Outdoor-Varianten anreichern", text: "Übernimm nur eindeutig sichere Mappings. Generische Maschinen und unklare Ersatzgeräte bleiben blockiert und werden nicht geraten." },
+        en: { title: "Enrich outdoor variants", text: "Apply only clearly safe mappings. Generic machines and unclear replacements stay blocked instead of being guessed." },
+      },
+      {
+        selector: "[data-tour='outdoor-candidates']",
+        de: { title: "Kandidaten fachlich prüfen", text: "Filtere nach Status, öffne die Übung und entscheide pro Kandidat über Equipment, Bewegungsmuster und Trainerfreigabe." },
+        en: { title: "Review candidates", text: "Filter by status, open the exercise, and decide per candidate on equipment, movement pattern, and trainer approval." },
+      },
+    ],
+  },
   { id: "admin", de: "Administration", en: "Administration", steps: areaSteps("admin", "Administration", "administration") },
 ] as const;
 
