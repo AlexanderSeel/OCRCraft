@@ -876,7 +876,7 @@ export function QuickCreateWizard({
           ) : null}
         </div>
 
-        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] p-5 sm:p-6">
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] p-5 sm:p-6" data-tour="training-save">
           <button
             className={buttonClass("secondary", "px-4")}
             disabled={step === 1 || generating || persisting}
