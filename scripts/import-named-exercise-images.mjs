@@ -12,6 +12,16 @@ function argumentValue(name) {
   return argument ? argument.slice(prefix.length) : undefined;
 }
 
+function manifestFields(item) {
+  const filePath = String(item.filename ?? item.file ?? "");
+  return {
+    fileName: path.basename(filePath),
+    displayName: String(item.display_name ?? item.exercise_name ?? ""),
+    sourceBatch: String(item.source_batch ?? item.visual_batch ?? "named-image-package"),
+    notes: String(item.notes ?? item.import_note ?? ""),
+  };
+}
+
 function pngMetadata(bytes) {
   if (bytes.length < 24 || bytes.readUInt32BE(0) !== 0x89504e47 || bytes.toString("ascii", 12, 16) !== "IHDR") {
     throw new Error("Die Datei ist kein gültiges PNG.");
@@ -52,11 +62,12 @@ async function loadExerciseLabels(connection) {
 }
 
 async function resolveExercise(manifestItem, exercises, licensedExerciseIds) {
+  const displayName = manifestItem.display_name ?? manifestItem.exercise_name ?? "";
   if (manifestItem.suggested_seed_key) {
     const exact = exercises.filter((exercise) => exercise.seedKey === manifestItem.suggested_seed_key);
     return exact.length === 1 ? exact[0] : null;
   }
-  const matches = exercises.filter((exercise) => exercise.labels.some((label) => tokenMatch(label, manifestItem.display_name)));
+  const matches = exercises.filter((exercise) => exercise.labels.some((label) => tokenMatch(label, displayName)));
   if (matches.length === 1) return matches[0];
   const licensedMatches = matches.filter((exercise) => licensedExerciseIds.has(exercise.id));
   return licensedMatches.length === 1 ? licensedMatches[0] : null;
@@ -64,6 +75,7 @@ async function resolveExercise(manifestItem, exercises, licensedExerciseIds) {
 
 async function main() {
   const sourceRoot = path.resolve(argumentValue("--source") ?? process.env.OCRCRAFT_NAMED_IMAGE_SOURCE ?? path.join(process.cwd(), "named-exercise-images"));
+  const sourceReference = argumentValue("--source-reference") ?? process.env.OCRCRAFT_NAMED_IMAGE_SOURCE_REFERENCE ?? "ocrcraft_exercise_images_codex_import.zip";
   const sourceStat = await stat(sourceRoot);
   const hasImagesDirectory = await stat(path.join(sourceRoot, "images")).then(() => true).catch(() => false);
   const packageRoot = sourceStat.isDirectory() ? sourceRoot : path.dirname(sourceRoot);
@@ -91,24 +103,25 @@ async function main() {
 
     await connection.run("BEGIN TRANSACTION");
     for (const manifestItem of manifest) {
+      const fields = manifestFields(manifestItem);
       const exercise = await resolveExercise(manifestItem, exercises, licensedExerciseIds);
       if (!exercise) {
-        skipped.push({ fileName: manifestItem.filename, reason: "ambiguous-or-unmatched", displayName: manifestItem.display_name });
+        skipped.push({ fileName: fields.fileName, reason: "ambiguous-or-unmatched", displayName: fields.displayName });
         continue;
       }
-      const storageKey = `named/${exercise.seedKey ?? exercise.id}/${manifestItem.filename}`;
+      const storageKey = `named/${exercise.seedKey ?? exercise.id}/${fields.fileName}`;
       if (existingKeys.has(storageKey)) {
-        skipped.push({ fileName: manifestItem.filename, reason: "already-imported", exercise: exercise.seedKey ?? exercise.id });
+        skipped.push({ fileName: fields.fileName, reason: "already-imported", exercise: exercise.seedKey ?? exercise.id });
         continue;
       }
       if (approvedExercises.has(exercise.id)) {
-        skipped.push({ fileName: manifestItem.filename, reason: "approved-media-preserved", exercise: exercise.seedKey ?? exercise.id });
+        skipped.push({ fileName: fields.fileName, reason: "approved-media-preserved", exercise: exercise.seedKey ?? exercise.id });
         continue;
       }
 
-      const bytes = await readFile(path.join(packageRoot, "images", manifestItem.filename));
+      const bytes = await readFile(path.join(packageRoot, "images", fields.fileName));
       const metadata = pngMetadata(bytes);
-      const destination = path.join(imageRoot, "named", exercise.seedKey ?? exercise.id, manifestItem.filename);
+      const destination = path.join(imageRoot, "named", exercise.seedKey ?? exercise.id, fields.fileName);
       await mkdir(path.dirname(destination), { recursive: true });
       await writeFile(destination, bytes);
       const sha256 = createHash("sha256").update(bytes).digest("hex");
@@ -127,11 +140,11 @@ async function main() {
       `, {
         assetId: randomUUID(), exerciseId: exercise.id, provider: IMAGE_PACKAGE_PROVIDER,
         storageKey, storageUri: `/generated/exercises/${storageKey}`, width: metadata.width, height: metadata.height, sha256,
-        licenseLabel: IMAGE_PACKAGE_LICENSE, sourceReference: "ocrcraft_exercise_images_codex_import.zip",
-        usageNote: `${manifestItem.source_batch}: ${manifestItem.notes}`,
+        licenseLabel: IMAGE_PACKAGE_LICENSE, sourceReference,
+        usageNote: `${fields.sourceBatch}: ${fields.notes}`,
       });
       existingKeys.add(storageKey);
-      imported.push({ fileName: manifestItem.filename, exercise: exercise.seedKey ?? exercise.canonicalName });
+      imported.push({ fileName: fields.fileName, exercise: exercise.seedKey ?? exercise.canonicalName });
     }
     await connection.run("COMMIT");
     console.log(JSON.stringify({ sourceRoot, imported: imported.length, skipped: skipped.length, mappings: imported, skippedItems: skipped }, null, 2));
