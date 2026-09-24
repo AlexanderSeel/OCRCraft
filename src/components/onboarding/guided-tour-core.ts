@@ -36,6 +36,11 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
         de: { title: "Vollständiger Editor", text: "Ergänze anschließend Equipment, Körperregionen, Dosierung, Progression und DE/EN-Coaching." },
         en: { title: "Full editor", text: "Then add equipment, body regions, dosage, progression and DE/EN coaching." },
       },
+      {
+        selector: "[data-tour='exercise-save']",
+        de: { title: "Speichern und prüfen", text: "Speichere erst, wenn Sicherheits-, Equipment- und Coachingangaben geprüft sind. Die Übung bleibt danach weiter bearbeitbar." },
+        en: { title: "Save and review", text: "Save only after checking safety, equipment and coaching details. The exercise remains editable afterwards." },
+      },
     ],
   },
   {

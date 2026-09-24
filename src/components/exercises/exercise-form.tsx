@@ -99,11 +99,13 @@ export function ExerciseForm({ action, exercise, initialExerciseType, submitLabe
         </div>
       </section>
 
-      <FormActions>
-        <PrimaryFormButton disabled={pending}>
-          {pending ? "Speichert …" : submitLabel}
-        </PrimaryFormButton>
-      </FormActions>
+      <div data-tour="exercise-save">
+        <FormActions>
+          <PrimaryFormButton disabled={pending}>
+            {pending ? "Speichert …" : submitLabel}
+          </PrimaryFormButton>
+        </FormActions>
+      </div>
     </form>
   );
 }

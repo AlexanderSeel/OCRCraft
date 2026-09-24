@@ -148,6 +148,10 @@ test("exercise-create tutorial advances, focuses targets and restores focus afte
   await expect(dialog.getByText("Vollständiger Editor")).toBeVisible();
   await expect(page.locator("main[data-tour-active='true']")).toBeVisible();
 
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(dialog.getByText("Speichern und prüfen")).toBeVisible();
+  await expect(page.locator("[data-tour='exercise-save'][data-tour-active='true']")).toBeVisible();
+
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(page.locator("[data-tour-active='true']")).toHaveCount(0);
