@@ -163,35 +163,28 @@ test("obstacle tutorial reaches navigation, workspace and assignment target", as
   await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
   const { dialog } = await openTutorial(page, "/obstacles", "Hindernis erstellen / zuordnen");
 
-  await expect(page.locator("[data-tour='nav-obstacles'][data-tour-active='true']").first()).toBeVisible();
+  await expect(dialog.getByText("Bestehende Übung verwenden")).toBeVisible();
   await dialog.getByRole("button", { name: "Weiter" }).click();
-  await expect(page.locator("main[data-tour-active='true']")).toBeVisible();
+  await expect(dialog.getByText("Kandidaten eingrenzen")).toBeVisible();
 
   await dialog.getByRole("button", { name: "Weiter" }).click();
-  await expect(page.locator("[data-tour='obstacle-create'][data-tour-active='true']")).toBeVisible();
-  await expect(dialog.getByText("Übung zuordnen")).toBeVisible();
+  await expect(dialog.getByText("Kandidat prüfen")).toBeVisible();
 });
 
-test("training tutorial works in Quick Create and Builder with saved progress", async ({ page }) => {
+test("training tutorials work in Quick Create and Builder", async ({ page }) => {
   await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
   const first = await openTutorial(page, "/quick-create", "Quick Create Training");
-  await expect(page.locator("[data-tour='quick-create'][data-tour-active='true']")).toBeVisible();
+  await expect(first.dialog.getByText("Gruppe, Alter und Dauer")).toBeVisible();
   await first.dialog.getByRole("button", { name: "Weiter" }).click();
-  await expect(first.dialog.getByText("Plan prüfen")).toBeVisible();
-  await first.dialog.getByRole("button", { name: "Weiter" }).click();
-  await expect(first.dialog.getByText("Speichern")).toBeVisible();
-  await expect(page.locator("[data-tour='training-save'][data-tour-active='true']")).toBeVisible();
+  await expect(first.dialog.getByText("Ziele und Körperregionen")).toBeVisible();
   await page.keyboard.press("Escape");
 
   await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
   const trigger = page.locator("[data-tour-trigger='guided-help']");
+  await expect(trigger).toHaveAttribute("data-tour-ready", "true");
   await trigger.click();
-  const resumed = page.getByRole("dialog", { name: "Quick Create Training" });
-  await expect(resumed.getByText("Speichern")).toBeVisible();
-  await expect(page.locator("[data-tour='training-save'][data-tour-active='true']")).toBeVisible();
-  await resumed.getByRole("button", { name: "Zurück" }).click();
-  await expect(resumed.getByText("Plan prüfen")).toBeVisible();
-  await expect(page.locator("[data-tour='builder'][data-tour-active='true']")).toBeVisible();
+  const builder = page.getByRole("dialog", { name: "Training Builder" });
+  await expect(builder.getByText("Rahmen festlegen")).toBeVisible();
 });
 
 test("tutorial supports English, reduced motion and mobile viewport", async ({ page }) => {

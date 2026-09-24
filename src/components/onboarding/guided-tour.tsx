@@ -41,11 +41,13 @@ export function GuidedTour() {
   useEffect(() => {
     if (!open) return undefined;
     const frame = window.requestAnimationFrame(focusStep);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      document.querySelectorAll("[data-tour-active='true']").forEach((element) => element.removeAttribute("data-tour-active"));
-    };
+    return () => window.cancelAnimationFrame(frame);
   }, [focusStep, open]);
+  useEffect(() => {
+    if (open) return undefined;
+    document.querySelectorAll("[data-tour-active='true']").forEach((element) => element.removeAttribute("data-tour-active"));
+    return undefined;
+  }, [open, guide.id]);
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setTourState((current) => ({ ...current, open: false }));
