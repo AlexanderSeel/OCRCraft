@@ -21,6 +21,7 @@ interface PageProps {
     existing?: string;
     unmappable?: string;
     missingDetails?: string;
+    manualReview?: string;
     candidate?: string;
     error?: string;
     q?: string;
@@ -37,10 +38,10 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
   ]);
   const hasResult = result.scanned != null;
   const searchQuery = result.q?.trim().toLocaleLowerCase("de-DE") ?? "";
-  const statusFilter = ["ready", "existing", "review"].includes(result.status ?? "") ? result.status : "";
+  const statusFilter = ["ready", "existing", "review-required", "review"].includes(result.status ?? "") ? result.status : "";
   const filteredCandidates = candidates.filter((candidate) => {
     if (searchQuery && !candidate.name.toLocaleLowerCase("de-DE").includes(searchQuery)) return false;
-    if (statusFilter === "review") return candidate.status === "unmappable" || candidate.status === "missing-details";
+    if (statusFilter === "review") return candidate.status === "review-required" || candidate.status === "unmappable" || candidate.status === "missing-details";
     return !statusFilter || candidate.status === statusFilter;
   });
   const requestedSize = Number(result.size ?? "12");
@@ -49,7 +50,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
   const visibleCandidates = filteredCandidates.slice((page - 1) * pageSize, page * pageSize);
   const ready = candidates.filter((candidate) => candidate.status === "ready");
   const existing = candidates.filter((candidate) => candidate.status === "existing");
-  const needsReview = candidates.filter((candidate) => candidate.status === "unmappable" || candidate.status === "missing-details");
+  const needsReview = candidates.filter((candidate) => candidate.status === "review-required" || candidate.status === "unmappable" || candidate.status === "missing-details");
   const candidateFeedback = outdoorCandidateFeedback(result.candidate);
 
   return (
@@ -89,6 +90,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
               <MetaTag label="Schon vorhanden" value={result.existing ?? "0"} />
               <MetaTag label="Nicht abbildbar" value={result.unmappable ?? "0"} />
               <MetaTag label="Details fehlen" value={result.missingDetails ?? "0"} />
+              <MetaTag label="Fachreview offen" value={result.manualReview ?? "0"} />
             </div>
           </section>
         ) : null}
@@ -99,7 +101,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
               <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität · Import</div>
               <h2 className="mt-1 text-xl font-black">Gym-Übungen für Outdoor-Training anreichern</h2>
               <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                Der Task betrachtet nur importierte bzw. aus Datensätzen stammende aktive Übungen. Portable Geräte bleiben erhalten. Studio-gebundene Geräte wie Cable, Machine, Dumbbell, Barbell oder Bench werden nur dann ersetzt, wenn OCRCraft eine bekannte portable Alternative im Equipment-Katalog besitzt.
+                Der Task betrachtet nur importierte bzw. aus Datensätzen stammende aktive Übungen. Portable Geräte bleiben erhalten. Automatische Ersetzungen verwenden ausschließlich explizit freigegebene Mappings; generische Maschinen oder fachlich mehrdeutige Geräte werden nicht geraten und bleiben im manuellen Review.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -111,12 +113,12 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
 
           <div className="mt-5 grid gap-4 lg:grid-cols-3">
             <Info title="1. Prüfen" text="Ermittelt Studio-Abhängigkeiten anhand der strukturierten Equipment-Zuordnung – nicht anhand des Übungsnamens." />
-            <Info title="2. Ersetzen" text="Verwendet konservative Zuordnungen wie Cable → Resistance Band, Bench → Box und Barbell/Dumbbell → Sandbag/Kettlebell/Band, sofern vorhanden." />
+            <Info title="2. Ersetzen" text="Verwendet nur freigegebene Zuordnungen wie Cable → Resistance Band, Bench → Box oder Dumbbell → Kettlebell. Generische Machine-/Instabilitätsgeräte bleiben reviewpflichtig." />
             <Info title="3. Planbar machen" text="Speichert eigene Outdoor-Equipment-Anforderungen und eine DE/EN-Variantenbeschreibung. Der Outdoor-Training-Builder verwendet danach diese Ersatzgeräte." />
           </div>
 
           <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[var(--muted)]">
-            Eine Übung wird nur als outdoor-geeignet markiert, wenn alle erkannten Studio-Abhängigkeiten vollständig ersetzt werden können. Nicht abbildbare Übungen bleiben unverändert und müssen später manuell geprüft werden. Du kannst Varianten einzeln prüfen und übernehmen oder alle aktuell sicheren Vorschläge gesammelt anwenden.
+            Eine Übung wird nur als outdoor-geeignet markiert, wenn alle erkannten Studio-Abhängigkeiten vollständig ersetzt werden können. Bereits migrierte Konvertierungen mit Systemtext bleiben einzeln reviewpflichtig und erhalten eine bewegungsspezifische Vorschau. Trainertexte werden nicht überschrieben. Nur neue, eindeutig sichere Vorschläge können gesammelt angewendet werden.
           </div>
 
           <form action={runOutdoorVariantEnrichmentAction} className="mt-5 flex justify-end">
@@ -147,6 +149,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
                   <option value="">Alle</option>
                   <option value="ready">Bereit</option>
                   <option value="existing">Bereits vorhanden</option>
+                  <option value="review-required">Fachreview offen</option>
                   <option value="review">Manuell prüfen</option>
                 </select>
               </label>
@@ -189,17 +192,21 @@ function CandidateCard({ candidate }: { readonly candidate: OutdoorVariantCandid
             <Link className="inline-flex min-h-9 items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black hover:bg-[var(--surface-elevated)]" href={`/exercises/${candidate.exerciseId}/edit`}>
               Übung öffnen
             </Link>
-            {candidate.status === "ready" ? (
+            {candidate.status === "ready" || candidate.status === "review-required" ? (
               <form action={approveOutdoorVariantCandidateAction}>
                 <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
                 <button className="min-h-9 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
-                  Diese Variante übernehmen
+                  {candidate.status === "review-required" ? "Variante fachlich freigeben" : "Diese Variante übernehmen"}
                 </button>
               </form>
             ) : null}
           </div>
         </div>
         <StatusBadge status={candidate.status} />
+      </div>
+
+      <div className="view-secondary mt-3 flex flex-wrap gap-2">
+        <MetaTag label="Bewegungsmuster" value={movementFamilyLabel(candidate.movementFamily)} />
       </div>
 
       <div className="view-secondary mt-4 grid gap-4 lg:grid-cols-3">
@@ -233,7 +240,7 @@ function CandidateCard({ candidate }: { readonly candidate: OutdoorVariantCandid
 function outdoorCandidateFeedback(status?: string): { readonly success: boolean; readonly message: string } | null {
   if (!status) return null;
   if (status === "enriched") return { success: true, message: "Outdoor-Variante wurde strukturiert übernommen und steht dem Outdoor-Training-Builder zur Verfügung." };
-  if (status === "existing") return { success: true, message: "Eine bestehende Outdoor-Variante wurde beibehalten und nicht überschrieben." };
+  if (status === "existing") return { success: true, message: "Eine bestehende Trainer-Variante wurde beibehalten; Equipment und Fachreview wurden bestätigt." };
   if (status === "unmappable") return { success: false, message: "Diese Übung lässt sich mit den bekannten Ersatzgeräten nicht vollständig automatisch abbilden. Bitte manuell prüfen." };
   if (status === "missing-details") return { success: false, message: "Für diese Übung fehlen strukturierte Übungsdetails. Ergänze diese zuerst im Übungseditor." };
   if (status === "not-found") return { success: false, message: "Die ausgewählte Übung ist nicht mehr als übernahmebereiter Import-Kandidat verfügbar." };
@@ -257,10 +264,27 @@ function StatusBadge({ status }: { readonly status: OutdoorVariantCandidatePrevi
   const labels: Record<OutdoorVariantCandidatePreview["status"], string> = {
     ready: "Bereit",
     existing: "Bereits vorhanden",
+    "review-required": "Fachreview offen",
     unmappable: "Manuell prüfen",
     "missing-details": "Übungsdetails fehlen",
   };
   return <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-black">{labels[status]}</span>;
+}
+
+function movementFamilyLabel(family: OutdoorVariantCandidatePreview["movementFamily"]): string {
+  const labels: Record<OutdoorVariantCandidatePreview["movementFamily"], string> = {
+    pull: "Zug",
+    push: "Druck",
+    squat: "Kniebeuge",
+    hinge: "Hüftbeuge",
+    lunge: "Ausfallschritt",
+    carry: "Tragen / Ziehen",
+    rotation: "Rotation",
+    core: "Rumpf",
+    locomotion: "Fortbewegung",
+    generic: "Allgemein",
+  };
+  return labels[family];
 }
 
 function MetaTag({ label, value }: { readonly label: string; readonly value: string }) {

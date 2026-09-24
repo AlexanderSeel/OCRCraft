@@ -24,7 +24,7 @@ describe("database migrations", () => {
       const exercises = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL");
       const gameCatalog = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key LIKE 'game-%'");
 
-      expect(Number(migrations.getRows()[0]?.[0])).toBe(85);
+      expect(Number(migrations.getRows()[0]?.[0])).toBe(86);
       expect(Number(exercises.getRows()[0]?.[0])).toBeGreaterThanOrEqual(140);
       expect(Number(gameCatalog.getRows()[0]?.[0])).toBe(13);
     } finally {
@@ -82,6 +82,15 @@ describe("database migrations", () => {
         "SELECT label_de,label_en FROM tags WHERE id='fitnessstudio'",
       );
       expect(fitnessStudioTag.getRows()).toEqual([["Fitnessstudio", "Gym"]]);
+
+      const reviewColumns = await connection.runAndReadAll(`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name='exercise_environment_reviews'
+          AND column_name IN ('review_status','reviewed_by')
+        ORDER BY column_name
+      `);
+      expect(reviewColumns.getRows()).toEqual([["review_status"], ["reviewed_by"]]);
 
       const gameCatalog = await connection.runAndReadAll(`
         SELECT count(*), count(*) FILTER (WHERE exercise_type='game')
@@ -169,6 +178,119 @@ describe("database migrations", () => {
         "portable",
         "Eigengewichts-, Lauf- oder Mobilitätsübung ohne verpflichtendes Equipment.",
       ]]);
+    } finally {
+      connection.closeSync();
+    }
+  });
+
+
+  it("normalizes portable import aliases and blocks ambiguous generic machines", async () => {
+    const instance = await DuckDBInstance.create(":memory:");
+    const connection = await instance.connect();
+
+    try {
+      await connection.run(`
+        CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, name VARCHAR);
+        CREATE TABLE exercises (
+          id VARCHAR PRIMARY KEY,
+          archived BOOLEAN,
+          outdoor_suitable BOOLEAN,
+          updated_at TIMESTAMP
+        );
+        CREATE TABLE equipment (
+          id VARCHAR PRIMARY KEY,
+          seed_key VARCHAR,
+          name_de VARCHAR,
+          name_en VARCHAR
+        );
+        CREATE TABLE exercise_equipment (
+          exercise_id VARCHAR,
+          equipment_id VARCHAR,
+          quantity_required INTEGER,
+          PRIMARY KEY (exercise_id,equipment_id)
+        );
+        CREATE TABLE exercise_outdoor_variant_equipment (
+          exercise_id VARCHAR,
+          equipment_id VARCHAR,
+          quantity_required INTEGER,
+          PRIMARY KEY (exercise_id,equipment_id)
+        );
+        CREATE TABLE tags (id VARCHAR PRIMARY KEY, label_de VARCHAR, label_en VARCHAR);
+        CREATE TABLE exercise_tags (
+          exercise_id VARCHAR,
+          tag_id VARCHAR,
+          PRIMARY KEY (exercise_id,tag_id)
+        );
+        CREATE TABLE exercise_environment_reviews (
+          exercise_id VARCHAR PRIMARY KEY,
+          disposition VARCHAR,
+          reason VARCHAR,
+          replacement_equipment VARCHAR,
+          reviewed_at TIMESTAMP DEFAULT current_timestamp
+        );
+
+        INSERT INTO tags VALUES ('fitnessstudio','Fitnessstudio','Gym');
+        INSERT INTO equipment VALUES
+          ('box','box','Box','Box'),
+          ('mat','mat','Matte','Mat'),
+          ('ext-box','external-box','box','box'),
+          ('ext-body','external-bodyweight','bodyweight','bodyweight'),
+          ('ext-machine','external-machine','machine','machine'),
+          ('sandbag','sandbag','Sandbag','Sandbag');
+        INSERT INTO exercises VALUES
+          ('portable',false,true,current_timestamp),
+          ('bodyweight',false,true,current_timestamp),
+          ('machine',false,true,current_timestamp),
+          ('converted',false,true,current_timestamp);
+        INSERT INTO exercise_equipment VALUES
+          ('portable','ext-box',1),
+          ('bodyweight','ext-body',1),
+          ('machine','ext-machine',1),
+          ('converted','sandbag',1);
+        INSERT INTO exercise_environment_reviews
+          (exercise_id,disposition,reason,replacement_equipment)
+        VALUES
+          ('portable','portable','fixture','external-box'),
+          ('bodyweight','portable','fixture','external-bodyweight'),
+          ('machine','portable','fixture','external-machine'),
+          ('converted','converted','fixture','sandbag');
+      `);
+
+      const migration = await readFile(
+        path.join(process.cwd(), "src", "server", "db", "migrations", "087_reviewed_outdoor_conversion_policy.sql"),
+        "utf8",
+      );
+      await runScript(connection, migration);
+
+      const portable = await connection.runAndReadAll(`
+        SELECT eq.seed_key
+        FROM exercise_equipment ee
+        JOIN equipment eq ON eq.id=ee.equipment_id
+        WHERE ee.exercise_id='portable'
+      `);
+      expect(portable.getRows()).toEqual([["box"]]);
+
+      const bodyweight = await connection.runAndReadAll(
+        "SELECT count(*) FROM exercise_equipment WHERE exercise_id='bodyweight'",
+      );
+      expect(Number(bodyweight.getRows()[0]?.[0])).toBe(0);
+
+      const machine = await connection.runAndReadAll(`
+        SELECT e.archived,e.outdoor_suitable,r.disposition,r.review_status,
+          EXISTS (
+            SELECT 1 FROM exercise_tags et
+            WHERE et.exercise_id=e.id AND et.tag_id='fitnessstudio'
+          )
+        FROM exercises e
+        JOIN exercise_environment_reviews r ON r.exercise_id=e.id
+        WHERE e.id='machine'
+      `);
+      expect(machine.getRows()).toEqual([[true, false, "blocked", "pending", true]]);
+
+      const converted = await connection.runAndReadAll(
+        "SELECT review_status,reviewed_by FROM exercise_environment_reviews WHERE exercise_id='converted'",
+      );
+      expect(converted.getRows()).toEqual([["pending", null]]);
     } finally {
       connection.closeSync();
     }

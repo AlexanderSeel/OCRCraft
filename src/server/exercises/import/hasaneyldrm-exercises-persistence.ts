@@ -6,7 +6,7 @@ import path from "node:path";
 import type { DuckDBConnection } from "@duckdb/node-api";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
-import { adaptHasaneyldrmExercises, type ExerciseImportDraft, type HasaneyldrmExercise } from "./hasaneyldrm-exercises-adapter";
+import { adaptHasaneyldrmExercises, importedEquipmentCatalogSeedKey, type ExerciseImportDraft, type HasaneyldrmExercise } from "./hasaneyldrm-exercises-adapter";
 import { evaluateExternalContentLicense } from "./external-content-license-policy";
 import { findBestSourceCatalogMatch } from "./source-catalog-merge";
 
@@ -109,7 +109,8 @@ async function enrichExistingStructuredMetadata(connection: DuckDBConnection, ex
     if (exists.getRows().length) await connection.run("INSERT OR IGNORE INTO exercise_body_regions VALUES ($id::UUID,$region,'primary')", { id: exerciseId, region });
   }
   for (const equipmentName of draft.equipmentSeedKeys) {
-    const key = `external-${slug(equipmentName)}`;
+    const key = importedEquipmentCatalogSeedKey(equipmentName);
+    if (!key) continue;
     await connection.run("INSERT OR IGNORE INTO equipment (seed_key,name_de,name_en) VALUES ($key,$de,$en)", { key, de: equipmentName, en: equipmentName });
     const equipment = await connection.runAndReadAll("SELECT id::VARCHAR FROM equipment WHERE seed_key=$key", { key });
     if (equipment.getRows()[0]?.[0]) await connection.run("INSERT OR IGNORE INTO exercise_equipment VALUES ($id::UUID,$equipment,1)", { id: exerciseId, equipment: String(equipment.getRows()[0][0]) });
@@ -216,7 +217,8 @@ async function persistDraft(connection: DuckDBConnection, record: HasaneyldrmExe
     if (exists.getRows().length) await connection.run("INSERT OR IGNORE INTO exercise_body_regions VALUES ($id,$region,'primary')", { id: exerciseId, region });
   }
   for (const equipmentName of draft.equipmentSeedKeys) {
-    const key = `external-${slug(equipmentName)}`;
+    const key = importedEquipmentCatalogSeedKey(equipmentName);
+    if (!key) continue;
     await connection.run("INSERT OR IGNORE INTO equipment (seed_key,name_de,name_en) VALUES ($key,$de,$en)", { key, de: equipmentName, en: equipmentName });
     const equipment = await connection.runAndReadAll("SELECT id::VARCHAR FROM equipment WHERE seed_key=$key", { key });
     if (equipment.getRows()[0]?.[0]) await connection.run("INSERT OR IGNORE INTO exercise_equipment VALUES ($id,$equipment,1)", { id: exerciseId, equipment: String(equipment.getRows()[0][0]) });

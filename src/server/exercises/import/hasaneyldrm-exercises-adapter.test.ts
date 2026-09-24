@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adaptHasaneyldrmExercise, adaptHasaneyldrmExercises } from "./hasaneyldrm-exercises-adapter";
+import { adaptHasaneyldrmExercise, adaptHasaneyldrmExercises, importedEquipmentCatalogSeedKey } from "./hasaneyldrm-exercises-adapter";
 
 describe("hasaneyldrm exercise adapter", () => {
   it("maps a dataset record to a reviewable bilingual import draft without copying media", () => {
@@ -42,6 +42,14 @@ describe("hasaneyldrm exercise adapter", () => {
     expect(draft.mediaReference.licenseLabel).toBeNull();
     expect(draft.mediaReference.licenseVerified).toBe(false);
     expect(draft.warnings.join(" ")).toContain("not copied");
+  });
+
+  it("normalizes portable import equipment and keeps gym dependencies explicit", () => {
+    expect(importedEquipmentCatalogSeedKey("bodyweight")).toBeNull();
+    expect(importedEquipmentCatalogSeedKey("kettlebell")).toBe("kettlebell");
+    expect(importedEquipmentCatalogSeedKey("mat")).toBe("mat");
+    expect(importedEquipmentCatalogSeedKey("dumbbell")).toBe("external-dumbbell");
+    expect(importedEquipmentCatalogSeedKey("machine")).toBe("external-machine");
   });
 
   it("rejects non-array batch input and supplies safe fallback steps", () => {

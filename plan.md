@@ -15,7 +15,7 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 
 ## P1 – Daten und Fachlichkeit
 
-- [ ] Konvertierungsreview für importierte Übungen durchführen: generische Outdoor-Texte durch bewegungsspezifische Varianten ersetzen und unklare Ersatzgeräte fachlich freigeben.
+- [ ] Offene Outdoor-Konvertierungsreviews fachlich abarbeiten: alle durch Migration 87 als `pending` markierten Importvarianten einzeln prüfen/freigeben; generische Maschinen und mehrdeutige Ersatzgeräte bleiben bis zur Entscheidung blockiert.
 - [ ] Kanonische ExerciseDB-Feldanreicherung abschließen: die 159 noch blockierten Kandidaten fachlich entscheiden; nur freigegebene Lücken erhalten eigene DE/EN-Coaching-, Sicherheits- und Progressionsfelder.
 - [ ] Kuratierte Seed-Batches als vollständige Lieferpakete abschließen: Migration, Quellenregister, Reviewstatus, Vollständigkeitsbericht, Domain-Tests, `typecheck`, `lint`, `check:ui`, Unit-, Build- und E2E-Prüfung.
 - [ ] OCR-Fähigkeitsmatrix und lokale OCRFRA-Maße in Coverage- und Freigabeworkflows durchgängig verbinden; unbestätigte Vereinsmaße bleiben sichtbar offen.

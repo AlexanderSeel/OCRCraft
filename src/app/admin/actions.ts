@@ -154,8 +154,8 @@ export async function restoreDatabaseBackupAction(formData: FormData): Promise<v
 
 export async function runOutdoorVariantEnrichmentAction(): Promise<void> {
   try {
-    await requireAdmin();
-    const report = await enrichImportedGymExercisesForOutdoor();
+    const actor = await requireAdmin();
+    const report = await enrichImportedGymExercisesForOutdoor(actor.id);
     revalidateOutdoorVariantPaths();
     const params = new URLSearchParams({
       scanned: String(report.scanned),
@@ -163,6 +163,7 @@ export async function runOutdoorVariantEnrichmentAction(): Promise<void> {
       existing: String(report.alreadyEnriched),
       unmappable: String(report.unmappable),
       missingDetails: String(report.missingDetails),
+      manualReview: String(report.manualReviewRequired),
     });
     redirect(`/admin/outdoor-variants?${params.toString()}`);
   } catch {
@@ -175,8 +176,8 @@ export async function approveOutdoorVariantCandidateAction(formData: FormData): 
   if (!exerciseId) redirect("/admin/outdoor-variants?candidate=not-found");
 
   try {
-    await requireAdmin();
-    const status = await enrichImportedGymExerciseForOutdoor(exerciseId);
+    const actor = await requireAdmin();
+    const status = await enrichImportedGymExerciseForOutdoor(exerciseId, actor.id);
     revalidateOutdoorVariantPaths();
     revalidatePath(`/exercises/${exerciseId}`);
     revalidatePath(`/exercises/${exerciseId}/edit`);

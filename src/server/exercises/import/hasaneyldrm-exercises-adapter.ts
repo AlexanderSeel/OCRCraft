@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { classifyEquipmentPortability } from "@/domain/equipment-portability";
 import { evaluateExternalContentLicense } from "./external-content-license-policy";
 
 /** The public dataset is treated as untrusted input and media is metadata only. */
@@ -84,6 +85,13 @@ function values(value: string | string[]): string[] {
 
 function slug(value: string): string {
   return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+export function importedEquipmentCatalogSeedKey(value: string): string | null {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized || normalized === "bodyweight") return null;
+  if (classifyEquipmentPortability(normalized) !== "unclassified") return normalized;
+  return `external-${slug(normalized)}`;
 }
 
 export function adaptHasaneyldrmExercise(input: unknown): ExerciseImportDraft {

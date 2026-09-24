@@ -5,7 +5,10 @@ import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import {
   buildOutdoorVariantPlan,
+  buildPreconvertedOutdoorVariantPlan,
+  inferOutdoorMovementFamily,
   isGymBoundEquipment,
+  isSystemGeneratedOutdoorVariant,
   outdoorVariantText,
   type ExerciseEquipmentSnapshot,
   type OutdoorVariantPlan,
@@ -20,12 +23,14 @@ export interface OutdoorVariantEnrichmentReport {
   readonly noGymDependency: number;
   readonly unmappable: number;
   readonly missingDetails: number;
+  readonly manualReviewRequired: number;
   readonly unmappableExercises: readonly string[];
 }
 
 export type OutdoorVariantCandidateStatus =
   | "ready"
   | "existing"
+  | "review-required"
   | "unmappable"
   | "missing-details";
 
@@ -38,6 +43,7 @@ export interface OutdoorVariantCandidatePreview {
   readonly substitutions: readonly string[];
   readonly missingReplacements: readonly string[];
   readonly variantText: string;
+  readonly movementFamily: ReturnType<typeof inferOutdoorMovementFamily>;
 }
 
 interface ImportedExerciseRow {
@@ -45,6 +51,9 @@ interface ImportedExerciseRow {
   readonly name: string;
   readonly outdoorVariant: string;
   readonly hasDetails: boolean;
+  readonly environmentDisposition: string;
+  readonly environmentReviewStatus: string;
+  readonly movementPatterns: readonly string[];
 }
 
 interface OutdoorVariantScanContext {
@@ -68,10 +77,22 @@ async function loadScanContext(connection: DuckDBConnection): Promise<OutdoorVar
   }));
 
   const exerciseReader = await connection.runAndReadAll(`
-    SELECT e.id::VARCHAR,COALESCE(t.name,e.canonical_name),COALESCE(d.outdoor_variant,''),d.exercise_id IS NOT NULL
+    SELECT
+      e.id::VARCHAR,
+      COALESCE(t.name,e.canonical_name),
+      COALESCE(d.outdoor_variant,''),
+      d.exercise_id IS NOT NULL,
+      COALESCE(r.disposition,''),
+      COALESCE(r.review_status,'catalog'),
+      COALESCE((
+        SELECT string_agg(mp.movement_pattern_id, ',' ORDER BY mp.movement_pattern_id)
+        FROM exercise_movement_patterns mp
+        WHERE mp.exercise_id=e.id
+      ), '')
     FROM exercises e
     LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
     LEFT JOIN exercise_details d ON d.exercise_id=e.id AND d.locale='de'
+    LEFT JOIN exercise_environment_reviews r ON r.exercise_id=e.id
     WHERE e.archived=false AND (
       COALESCE(e.seed_key,'') LIKE 'imported-%'
       OR EXISTS (
@@ -86,6 +107,9 @@ async function loadScanContext(connection: DuckDBConnection): Promise<OutdoorVar
     name: String(row[1]),
     outdoorVariant: String(row[2] ?? ""),
     hasDetails: Boolean(row[3]),
+    environmentDisposition: String(row[4] ?? ""),
+    environmentReviewStatus: String(row[5] ?? "catalog"),
+    movementPatterns: String(row[6] ?? "").split(",").map((item) => item.trim()).filter(Boolean),
   }));
 
   return { catalogue, exercises };
@@ -122,11 +146,17 @@ function previewFromPlan(
   plan: OutdoorVariantPlan,
 ): OutdoorVariantCandidatePreview {
   const existing = exercise.outdoorVariant.trim().length > 0;
-  const status: OutdoorVariantCandidateStatus = existing
-    ? "existing"
-    : plan.canApply
-      ? "ready"
-      : "unmappable";
+  const systemGenerated = isSystemGeneratedOutdoorVariant(exercise.outdoorVariant);
+  const pendingReview = exercise.environmentDisposition === "converted"
+    && exercise.environmentReviewStatus === "pending";
+  const status: OutdoorVariantCandidateStatus = !plan.canApply
+    ? "unmappable"
+    : pendingReview
+      ? "review-required"
+      : existing && !systemGenerated
+        ? "existing"
+        : "ready";
+  const movementContext = { name: exercise.name, movementPatterns: exercise.movementPatterns };
 
   return {
     exerciseId: exercise.id,
@@ -140,7 +170,10 @@ function previewFromPlan(
     missingReplacements: plan.substitutions.flatMap(({ original, replacement }) =>
       replacement ? [] : [original.nameDe || original.seedKey]
     ),
-    variantText: existing ? exercise.outdoorVariant : outdoorVariantText(plan, "de"),
+    variantText: existing && !systemGenerated
+      ? exercise.outdoorVariant
+      : outdoorVariantText(plan, "de", movementContext),
+    movementFamily: inferOutdoorMovementFamily(movementContext),
   };
 }
 
@@ -157,7 +190,10 @@ export async function listOutdoorVariantCandidates(): Promise<readonly OutdoorVa
 
     for (const exercise of exercises) {
       const equipment = await loadExerciseEquipment(connection, exercise.id);
-      if (!equipment.some((item) => isGymBoundEquipment(item.seedKey))) continue;
+      const hasGymDependency = equipment.some((item) => isGymBoundEquipment(item.seedKey));
+      const pendingConvertedReview = exercise.environmentDisposition === "converted"
+        && exercise.environmentReviewStatus === "pending";
+      if (!hasGymDependency && !pendingConvertedReview) continue;
 
       if (!exercise.hasDetails) {
         previews.push({
@@ -169,11 +205,15 @@ export async function listOutdoorVariantCandidates(): Promise<readonly OutdoorVa
           substitutions: [],
           missingReplacements: [],
           variantText: "",
+          movementFamily: inferOutdoorMovementFamily({ name: exercise.name, movementPatterns: exercise.movementPatterns }),
         });
         continue;
       }
 
-      previews.push(previewFromPlan(exercise, equipment, buildOutdoorVariantPlan(equipment, catalogue)));
+      const plan = pendingConvertedReview && !hasGymDependency
+        ? buildPreconvertedOutdoorVariantPlan(equipment)
+        : buildOutdoorVariantPlan(equipment, catalogue);
+      previews.push(previewFromPlan(exercise, equipment, plan));
     }
 
     return previews;
@@ -220,6 +260,7 @@ async function applyOutdoorPlan(
   connection: DuckDBConnection,
   exercise: ImportedExerciseRow,
   plan: OutdoorVariantPlan,
+  reviewedBy: string | null,
 ): Promise<void> {
   await connection.run("BEGIN TRANSACTION");
   try {
@@ -233,10 +274,11 @@ async function applyOutdoorPlan(
       WHERE exercise_id=$exerciseId::UUID AND locale IN ('de','en')
     `, {
       exerciseId: exercise.id,
-      de: outdoorVariantText(plan, "de"),
-      en: outdoorVariantText(plan, "en"),
+      de: outdoorVariantText(plan, "de", { name: exercise.name, movementPatterns: exercise.movementPatterns }),
+      en: outdoorVariantText(plan, "en", { name: exercise.name, movementPatterns: exercise.movementPatterns }),
     });
     await setOutdoorSuitability(connection, exercise.id, true);
+    await recordEnvironmentReview(connection, exercise, plan, reviewedBy);
     await connection.run("COMMIT");
   } catch (error) {
     await connection.run("ROLLBACK");
@@ -250,18 +292,45 @@ async function applyOutdoorPlan(
  */
 async function hydrateExistingOutdoorVariantEquipment(
   connection: DuckDBConnection,
-  exerciseId: string,
+  exercise: ImportedExerciseRow,
   plan: OutdoorVariantPlan,
+  reviewedBy: string | null,
 ): Promise<void> {
   await connection.run("BEGIN TRANSACTION");
   try {
-    await writeOutdoorEquipment(connection, exerciseId, plan);
-    await setOutdoorSuitability(connection, exerciseId, true);
+    await writeOutdoorEquipment(connection, exercise.id, plan);
+    await setOutdoorSuitability(connection, exercise.id, true);
+    await recordEnvironmentReview(connection, exercise, plan, reviewedBy);
     await connection.run("COMMIT");
   } catch (error) {
     await connection.run("ROLLBACK");
     throw error;
   }
+}
+
+async function recordEnvironmentReview(
+  connection: DuckDBConnection,
+  exercise: ImportedExerciseRow,
+  plan: OutdoorVariantPlan,
+  reviewedBy: string | null,
+): Promise<void> {
+  const movementFamily = inferOutdoorMovementFamily({
+    name: exercise.name,
+    movementPatterns: exercise.movementPatterns,
+  });
+  const replacementEquipment = plan.equipment.map((item) => item.seedKey).filter(Boolean).sort().join(", ");
+  await connection.run(`
+    INSERT OR REPLACE INTO exercise_environment_reviews (
+      exercise_id,disposition,reason,replacement_equipment,reviewed_at,review_status,reviewed_by
+    ) VALUES (
+      $exerciseId::UUID,'converted',$reason,$replacementEquipment,current_timestamp,'approved',$reviewedBy::UUID
+    )
+  `, {
+    exerciseId: exercise.id,
+    reason: `Bewegungsspezifische Outdoor-Variante fachlich geprüft (${movementFamily}); nur explizit freigegebenes Ersatz-Equipment wird verwendet.`,
+    replacementEquipment,
+    reviewedBy,
+  });
 }
 
 async function markOutdoorPlanUnmappable(connection: DuckDBConnection, exerciseId: string): Promise<void> {
@@ -277,7 +346,10 @@ async function markOutdoorPlanUnmappable(connection: DuckDBConnection, exerciseI
 }
 
 /** Applies one reviewed candidate only. Existing manual variant text is never overwritten. */
-export async function enrichImportedGymExerciseForOutdoor(exerciseId: string): Promise<"enriched" | "existing" | "unmappable" | "missing-details" | "not-found"> {
+export async function enrichImportedGymExerciseForOutdoor(
+  exerciseId: string,
+  reviewedBy: string | null = null,
+): Promise<"enriched" | "existing" | "unmappable" | "missing-details" | "not-found"> {
   if (!UUID_PATTERN.test(exerciseId)) return "not-found";
   await ensureDatabaseReady();
 
@@ -287,19 +359,26 @@ export async function enrichImportedGymExerciseForOutdoor(exerciseId: string): P
     if (!exercise) return "not-found";
 
     const equipment = await loadExerciseEquipment(connection, exercise.id);
-    if (!equipment.some((item) => isGymBoundEquipment(item.seedKey))) return "not-found";
+    const hasGymDependency = equipment.some((item) => isGymBoundEquipment(item.seedKey));
+    const pendingConvertedReview = exercise.environmentDisposition === "converted"
+      && exercise.environmentReviewStatus === "pending";
+    if (!hasGymDependency && !pendingConvertedReview) return "not-found";
     if (!exercise.hasDetails) {
       await setOutdoorSuitability(connection, exercise.id, false);
       return "missing-details";
     }
 
-    const plan = buildOutdoorVariantPlan(equipment, catalogue);
-    if (exercise.outdoorVariant.trim()) {
+    const plan = pendingConvertedReview && !hasGymDependency
+      ? buildPreconvertedOutdoorVariantPlan(equipment)
+      : buildOutdoorVariantPlan(equipment, catalogue);
+    const hasTrainerText = exercise.outdoorVariant.trim().length > 0
+      && !isSystemGeneratedOutdoorVariant(exercise.outdoorVariant);
+    if (hasTrainerText) {
       if (!plan.canApply) {
         await markOutdoorPlanUnmappable(connection, exercise.id);
         return "unmappable";
       }
-      await hydrateExistingOutdoorVariantEquipment(connection, exercise.id, plan);
+      await hydrateExistingOutdoorVariantEquipment(connection, exercise, plan, reviewedBy);
       return "existing";
     }
     if (!plan.canApply) {
@@ -307,12 +386,13 @@ export async function enrichImportedGymExerciseForOutdoor(exerciseId: string): P
       return "unmappable";
     }
 
-    await applyOutdoorPlan(connection, exercise, plan);
+    await applyOutdoorPlan(connection, exercise, plan, reviewedBy);
     return "enriched";
   });
 }
 
 export async function enrichImportedGymExercisesForOutdoor(
+  reviewedBy: string | null = null,
   force = false,
 ): Promise<OutdoorVariantEnrichmentReport> {
   await ensureDatabaseReady();
@@ -324,11 +404,19 @@ export async function enrichImportedGymExercisesForOutdoor(
     let noGymDependency = 0;
     let unmappable = 0;
     let missingDetails = 0;
+    let manualReviewRequired = 0;
     const unmappableExercises: string[] = [];
 
     for (const exercise of exercises) {
       const equipment = await loadExerciseEquipment(connection, exercise.id);
       const hasGymDependency = equipment.some((item) => isGymBoundEquipment(item.seedKey));
+      const pendingConvertedReview = exercise.environmentDisposition === "converted"
+        && exercise.environmentReviewStatus === "pending";
+
+      if (pendingConvertedReview) {
+        manualReviewRequired += 1;
+        continue;
+      }
 
       if (!hasGymDependency) {
         noGymDependency += 1;
@@ -347,7 +435,7 @@ export async function enrichImportedGymExercisesForOutdoor(
       // structured replacement equipment is refreshed so outdoor planning does
       // not silently fall back to the original studio equipment.
       if (!force && exercise.outdoorVariant.trim() && plan.canApply) {
-        await hydrateExistingOutdoorVariantEquipment(connection, exercise.id, plan);
+        await hydrateExistingOutdoorVariantEquipment(connection, exercise, plan, reviewedBy);
         alreadyEnriched += 1;
         continue;
       }
@@ -359,7 +447,7 @@ export async function enrichImportedGymExercisesForOutdoor(
         continue;
       }
 
-      await applyOutdoorPlan(connection, exercise, plan);
+      await applyOutdoorPlan(connection, exercise, plan, reviewedBy);
       enriched += 1;
     }
 
@@ -370,6 +458,7 @@ export async function enrichImportedGymExercisesForOutdoor(
       noGymDependency,
       unmappable,
       missingDetails,
+      manualReviewRequired,
       unmappableExercises,
     };
   });
