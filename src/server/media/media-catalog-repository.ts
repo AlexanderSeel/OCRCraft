@@ -62,6 +62,7 @@ export interface MediaCatalogSummary {
   readonly approved: number;
   readonly rejected: number;
   readonly failed: number;
+  readonly rightsBlocked: number;
 }
 
 export interface MediaGenerationCandidate {
@@ -71,6 +72,7 @@ export interface MediaGenerationCandidate {
   readonly category: string;
   readonly imageAssetCount: number;
   readonly failedImageCount: number;
+  readonly rightsBlockedImageCount: number;
   readonly activeJobCount: number;
 }
 
@@ -84,7 +86,19 @@ export async function getMediaCatalogSummary(): Promise<MediaCatalogSummary> {
         count(*) FILTER (WHERE review_status='pending'),
         count(*) FILTER (WHERE review_status='approved'),
         count(*) FILTER (WHERE review_status='rejected'),
-        count(*) FILTER (WHERE generation_status='failed')
+        count(*) FILTER (WHERE generation_status='failed'),
+        count(*) FILTER (
+          WHERE source_type='external_reference'
+            AND media_type IN ('image','illustration')
+            AND generation_status='generated'
+            AND review_status<>'rejected'
+            AND NOT (
+              COALESCE(rights_status,'unreviewed')='approved'
+              AND COALESCE(trim(license_label),'')<>''
+              AND COALESCE(trim(source_reference),'')<>''
+              AND (COALESCE(consent_required,false)=false OR COALESCE(consent_confirmed,false)=true)
+            )
+        )
       FROM exercise_media_assets
     `);
     const row = reader.getRows()[0] ?? [];
@@ -95,6 +109,7 @@ export async function getMediaCatalogSummary(): Promise<MediaCatalogSummary> {
       approved: Number(row[3] ?? 0),
       rejected: Number(row[4] ?? 0),
       failed: Number(row[5] ?? 0),
+      rightsBlocked: Number(row[6] ?? 0),
     };
   });
 }
@@ -259,6 +274,21 @@ export async function listMediaGenerationCandidates(
         ),
         (
           SELECT count(*)
+          FROM exercise_media_assets m
+          WHERE m.exercise_id=e.id
+            AND m.media_type IN ('image','illustration')
+            AND m.source_type='external_reference'
+            AND m.generation_status='generated'
+            AND m.review_status<>'rejected'
+            AND NOT (
+              COALESCE(m.rights_status,'unreviewed')='approved'
+              AND COALESCE(trim(m.license_label),'')<>''
+              AND COALESCE(trim(m.source_reference),'')<>''
+              AND (COALESCE(m.consent_required,false)=false OR COALESCE(m.consent_confirmed,false)=true)
+            )
+        ),
+        (
+          SELECT count(*)
           FROM exercise_image_generation_jobs j
           WHERE j.exercise_id=e.id
             AND j.status IN ('queued','running')
@@ -273,6 +303,15 @@ export async function listMediaGenerationCandidates(
             AND m.media_type IN ('image','illustration')
             AND m.generation_status='generated'
             AND m.review_status<>'rejected'
+            AND (
+              m.source_type<>'external_reference'
+              OR (
+                COALESCE(m.rights_status,'unreviewed')='approved'
+                AND COALESCE(trim(m.license_label),'')<>''
+                AND COALESCE(trim(m.source_reference),'')<>''
+                AND (COALESCE(m.consent_required,false)=false OR COALESCE(m.consent_confirmed,false)=true)
+              )
+            )
         )
         AND (
           $query=''
@@ -302,7 +341,8 @@ export async function listMediaGenerationCandidates(
       category: String(row[3]),
       imageAssetCount: Number(row[4] ?? 0),
       failedImageCount: Number(row[5] ?? 0),
-      activeJobCount: Number(row[6] ?? 0),
+      rightsBlockedImageCount: Number(row[6] ?? 0),
+      activeJobCount: Number(row[7] ?? 0),
     }));
   });
 }

@@ -202,6 +202,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
           { label: "Freigegeben", value: summary.approved },
           { label: "Abgelehnt", value: summary.rejected },
           { label: "Fehlgeschlagen", value: summary.failed },
+          { label: "Rechte blockiert", value: summary.rightsBlocked },
         ]} />
 
         <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
@@ -300,7 +301,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
               <div>
                 <h2 className="text-base font-black">Übungen ohne verwendbares Bild</h2>
                 <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-                  Hier kannst du auch Übungen auswählen, die noch gar keinen Medieneintrag besitzen oder nur fehlgeschlagene bzw. abgelehnte Bilder haben.
+                  Hier kannst du auch Übungen auswählen, die noch gar keinen Medieneintrag besitzen, nur fehlgeschlagene/abgelehnte Bilder haben oder deren externe Bilder wegen fehlender Lizenz-, Quellen- oder Einwilligungsfreigabe nicht verwendbar sind.
                 </p>
               </div>
               <span className="rounded-full bg-[var(--surface-subtle)] px-3 py-1 text-xs font-black">
@@ -624,11 +625,13 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
 function MediaGenerationCandidateRow({ candidate }: { readonly candidate: MediaGenerationCandidate }) {
   const state = candidate.activeJobCount > 0
     ? "Job läuft bereits"
-    : candidate.failedImageCount > 0
-      ? `${candidate.failedImageCount} fehlgeschlagen`
-      : candidate.imageAssetCount > 0
-        ? "Nur nicht verwendbare Bilder"
-        : "Noch kein Bild";
+    : candidate.rightsBlockedImageCount > 0
+      ? `${candidate.rightsBlockedImageCount} externes Bild ohne Nutzungsfreigabe`
+      : candidate.failedImageCount > 0
+        ? `${candidate.failedImageCount} fehlgeschlagen`
+        : candidate.imageAssetCount > 0
+          ? "Nur nicht verwendbare Bilder"
+          : "Noch kein Bild";
 
   return (
     <article className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">

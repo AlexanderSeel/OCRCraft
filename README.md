@@ -66,6 +66,7 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Abgeschlossen
 - Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes mit Fortschritts- und Fehlerstatus
 - Audit-Events für Reset-, Backup- und Dublettenaktionen
 - externe Quellen-, Lizenz- und Generierungsmetadaten
+- Medien mit fehlender/restringierter externer Nutzungsfreigabe zählen nicht als verwendbares Übungsbild und erscheinen automatisch in der KI-Ersatzliste; der Medienkatalog weist die Anzahl rechteblockierter Assets separat aus
 - OpenAI-Images-Pipeline mit `gpt-image-2`, Dry Run, stabilen Seed-Dateinamen, Reviewstatus und Dateisystem/S3-Abstraktion
 - Medienwarteschlange mit dedupliziertem Worker und periodischer Statusaktualisierung ohne wiederholte Request-Callbacks
 - generierte Bilder bleiben an stabile Übungs-/Seed-IDs gebunden und werden bei Reseeds nicht automatisch gelöscht

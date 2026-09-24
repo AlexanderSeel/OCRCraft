@@ -43,7 +43,7 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 - [ ] Portabilitäts-Audit als regelmäßigen Qualitätsworkflow ergänzen: `portable`, `converted` und `blocked` mit Quelle, Begründung und Reviewdatum auswerten.
 - [ ] Quick-Create-, Training-Editor-, Kids/Youth- und Theme-E2E ausbauen: echte Editoränderung, Speichern, Reviewblocker und geschützte Kids/Youth-Sperren abdecken.
 - [ ] Übungsnutzung, Körperregionen, Hindernisabdeckung, Laufvolumen, Wiederholungswarnungen und Nulltreffer aus Repository-/Service-Daten analysieren; Filterzustände müssen erklärbar bleiben.
-- [ ] Vollständigkeits- und KI-Ersetzungsanalysen ergänzen: fehlende DE/EN-/Coaching-/Sicherheitsfelder, Ersatzquote, Blockierungsgründe und Trainerfreigaben nachvollziehbar darstellen.
+- [ ] Vollständigkeits- und KI-Ersetzungsanalysen weiter ausbauen: fehlende DE/EN-/Coaching-/Sicherheitsfelder, Ersatzquote, Blockierungsgründe und Trainerfreigaben nachvollziehbar darstellen; Medien ohne Nutzungsfreigabe werden bereits als eigene KI-Ersatzkandidaten ausgewiesen.
 
 ## P2 – Clean-Code- und Wartbarkeitsrunde
 
