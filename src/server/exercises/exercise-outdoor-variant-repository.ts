@@ -1,5 +1,6 @@
 import "server-only";
 
+import { classifyEquipmentPortability, type EquipmentPortability } from "@/domain/equipment-portability";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { refreshExerciseSearchDocuments } from "@/server/search/exercise-search-documents";
@@ -10,6 +11,7 @@ export interface OutdoorVariantEquipmentOption {
   readonly labelDe: string;
   readonly labelEn: string;
   readonly quantityAvailable: number | null;
+  readonly portability: EquipmentPortability;
 }
 
 export interface OutdoorVariantEquipmentSelection {
@@ -67,13 +69,17 @@ export async function getExerciseOutdoorVariantEditorData(
       enabled: Boolean(exerciseReader.getRows()[0]?.[0]),
       textDe: textByLocale.get("de") ?? "",
       textEn: textByLocale.get("en") ?? "",
-      equipment: equipmentReader.getRows().map((row) => ({
-        id: String(row[0]),
-        seedKey: row[1] == null ? null : String(row[1]),
-        labelDe: String(row[2]),
-        labelEn: String(row[3]),
-        quantityAvailable: row[4] == null ? null : Number(row[4]),
-      })),
+      equipment: equipmentReader.getRows().map((row) => {
+        const seedKey = row[1] == null ? null : String(row[1]);
+        return {
+          id: String(row[0]),
+          seedKey,
+          labelDe: String(row[2]),
+          labelEn: String(row[3]),
+          quantityAvailable: row[4] == null ? null : Number(row[4]),
+          portability: classifyEquipmentPortability(seedKey),
+        };
+      }),
       selectedEquipment: selectedReader.getRows().map((row) => ({
         id: String(row[0]),
         quantityRequired: Math.max(1, Number(row[1] ?? 1)),

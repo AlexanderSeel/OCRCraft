@@ -1,9 +1,12 @@
 import type { DuckDBConnection } from "@duckdb/node-api";
+import { classifyEquipmentPortability, type EquipmentPortability } from "@/domain/equipment-portability";
 
 export interface TrainingEquipmentOption {
   readonly id: string;
+  readonly seedKey: string | null;
   readonly name: string;
   readonly quantityAvailable: number | null;
+  readonly portability: EquipmentPortability;
 }
 
 export interface TrainingObstacleOption {
@@ -22,6 +25,7 @@ export async function runTrainingEquipmentOptionsQuery(
   const reader = await connection.runAndReadAll(
     `
     SELECT id::VARCHAR,
+      seed_key,
       CASE WHEN $locale='de' THEN name_de ELSE COALESCE(name_en,name_de) END,
       quantity_available
     FROM equipment
@@ -31,11 +35,16 @@ export async function runTrainingEquipmentOptionsQuery(
     { locale },
   );
 
-  return reader.getRows().map((row) => ({
-    id: String(row[0]),
-    name: String(row[1]),
-    quantityAvailable: row[2] == null ? null : Number(row[2]),
-  }));
+  return reader.getRows().map((row) => {
+    const seedKey = row[1] == null ? null : String(row[1]);
+    return {
+      id: String(row[0]),
+      seedKey,
+      name: String(row[2]),
+      quantityAvailable: row[3] == null ? null : Number(row[3]),
+      portability: classifyEquipmentPortability(seedKey),
+    };
+  });
 }
 
 export async function runTrainingObstacleOptionsQuery(

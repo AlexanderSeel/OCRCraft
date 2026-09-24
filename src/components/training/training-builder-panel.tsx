@@ -671,7 +671,7 @@ export function TrainingBuilderPanel({
           ) : null}
           <div className="mt-5 grid gap-3 sm:grid-cols-3">{([ ["technique", "Technik"], ["balanced", "Ausgewogen"], ["conditioning", "Conditioning"] ] as const).map(([id, label]) => <Toggle key={id} active={intensity === id} onClick={() => { setIntensity(id); invalidate(); }}>{label}</Toggle>)}</div>
           <Disclosure className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" summaryClassName="font-black" summary="Equipment-Bestand">
-            <div className="mt-4"><EquipmentAvailabilityPicker onChange={(id, value) => { setAvailableEquipment((current) => ({ ...current, [id]: value })); invalidate(); }} options={equipmentOptions} value={availableEquipment} /></div>
+            <div className="mt-4"><EquipmentAvailabilityPicker defaultPortableOnly={location === "outdoor"} key={location === "outdoor" ? "outdoor-equipment" : "all-equipment"} onChange={(id, value) => { setAvailableEquipment((current) => ({ ...current, [id]: value })); invalidate(); }} options={equipmentOptions} value={availableEquipment} /></div>
           </Disclosure>
           <Disclosure className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={obstacleInventoryDeclared} summaryClassName="font-black" summary="OCR-Hindernisbestand">
             <p className="mt-2 text-xs leading-5 text-[var(--muted)]">Wenn der Vereinsbestand aktiviert ist, werden nicht markierte Hindernisstationen hart aus lokaler und AI-Planung sowie aus späteren Übungsalternativen ausgeschlossen.</p>

@@ -1,3 +1,4 @@
+import { OutdoorEquipmentPicker } from "@/components/exercises/outdoor-equipment-picker";
 import type { ExerciseOutdoorVariantEditorData } from "@/server/exercises/exercise-outdoor-variant-repository";
 
 interface ExerciseOutdoorVariantEditorProps {
@@ -11,8 +12,6 @@ export function ExerciseOutdoorVariantEditor({
   data,
   disabled = false,
 }: ExerciseOutdoorVariantEditorProps) {
-  const selected = new Map(data.selectedEquipment.map((item) => [item.id, item.quantityRequired]));
-
   return (
     <form action={action} className="mt-4 space-y-5">
       <label className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
@@ -59,41 +58,13 @@ export function ExerciseOutdoorVariantEditor({
       <div>
         <div className="font-black">Equipment der Outdoor-Variante</div>
         <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-          Nur das Material auswählen, das für die alternative Outdoor-Ausführung benötigt wird. Bei Outdoor-Planung ersetzt diese Liste die Studio-Equipmentliste der Übung.
+          Nur das Material auswählen, das für die alternative Outdoor-Ausführung benötigt wird. Bei Outdoor-Planung ersetzt diese Liste die Studio-Equipmentliste der Übung und wird gegen den im Training Builder angegebenen Bestand geprüft.
         </p>
-        <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-          {data.equipment.map((option) => {
-            const quantity = selected.get(option.id);
-            return (
-              <div className="grid grid-cols-[auto_minmax(0,1fr)_76px] items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" key={option.id}>
-                <input
-                  aria-label={`${option.labelDe} verwenden`}
-                  defaultChecked={quantity != null}
-                  disabled={disabled}
-                  name="equipmentId"
-                  type="checkbox"
-                  value={option.id}
-                />
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-bold">{option.labelDe}</div>
-                  <div className="truncate text-xs text-[var(--muted)]">
-                    {option.labelEn}{option.seedKey ? ` · ${option.seedKey}` : ""}
-                  </div>
-                </div>
-                <input
-                  aria-label={`Menge ${option.labelDe}`}
-                  className="h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
-                  defaultValue={quantity ?? 1}
-                  disabled={disabled}
-                  max={99}
-                  min={1}
-                  name={`quantity:${option.id}`}
-                  type="number"
-                />
-              </div>
-            );
-          })}
-        </div>
+        <OutdoorEquipmentPicker
+          disabled={disabled}
+          options={data.equipment}
+          selectedEquipment={data.selectedEquipment}
+        />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
