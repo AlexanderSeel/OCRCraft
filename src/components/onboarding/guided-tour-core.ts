@@ -144,6 +144,28 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
       },
     ],
   },
+  {
+    id: "help",
+    de: "Hilfezentrum",
+    en: "Help center",
+    steps: [
+      {
+        selector: "[data-tour='help-reopen']",
+        de: { title: "Tutorials erneut öffnen", text: "Öffne die Führung im gewünschten Arbeitsbereich über die Hilfe-Schaltfläche. Nicht abgeschlossene Führungen setzen am gespeicherten Schritt fort." },
+        en: { title: "Reopen tutorials", text: "Open a guide in the desired workspace through the help button. Incomplete guides resume at the saved step." },
+      },
+      {
+        selector: "[data-tour='help-workspaces']",
+        de: { title: "Arbeitsbereiche", text: "Über die Direkteinstiege erreichst du Kataloge und Planungsbereiche ohne Umweg." },
+        en: { title: "Workspaces", text: "Use the direct links to reach catalogues and planning areas without detours." },
+      },
+      {
+        selector: "[data-tour='help-glossary']",
+        de: { title: "Begriffe und Fachhinweise", text: "Das Glossar erklärt zentrale Begriffe. Die Fachhinweise erinnern vor dem Speichern an Sicherheits- und Reviewgrenzen." },
+        en: { title: "Terms and guidance", text: "The glossary explains key terms. The guidance highlights safety and review boundaries before saving." },
+      },
+    ],
+  },
   { id: "games", de: "Spiele", en: "Games", steps: areaSteps("games", "Spiele", "games") },
   { id: "groups", de: "Gruppen", en: "Groups", steps: areaSteps("groups", "Gruppen", "groups") },
   { id: "media", de: "Medien", en: "Media", steps: areaSteps("media", "Medien", "media") },
@@ -153,6 +175,7 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
 ] as const;
 
 export function guideForPath(pathname: string): TourGuide {
+  if (pathname === "/help") return byId("help");
   if (pathname === "/exercises/new") return byId("exercise-create");
   if (pathname === "/quick-create") return byId("quick-create");
   if (pathname === "/training/builder") return byId("training-builder");

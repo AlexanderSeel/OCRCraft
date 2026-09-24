@@ -36,7 +36,7 @@ export default function HelpPage() {
       actions={<Link className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/">Dashboard</Link>}
     >
       <div className="space-y-6">
-        <section className="rounded-2xl border border-[var(--brand)] bg-[var(--brand-soft)] p-5">
+        <section className="rounded-2xl border border-[var(--brand)] bg-[var(--brand-soft)] p-5" data-tour="help-reopen">
           <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Interaktive Hilfe</div>
           <h2 className="mt-1 text-xl font-black">Tutorial erneut öffnen</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
@@ -48,7 +48,7 @@ export default function HelpPage() {
           </p>
         </section>
 
-        <section>
+        <section data-tour="help-workspaces">
           <div className="mb-3">
             <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Arbeitsbereiche</div>
             <h2 className="mt-1 text-xl font-black">Direkteinstieg</h2>
@@ -66,7 +66,7 @@ export default function HelpPage() {
           </div>
         </section>
 
-        <section>
+        <section data-tour="help-glossary">
           <div className="mb-3">
             <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Glossar</div>
             <h2 className="mt-1 text-xl font-black">Wichtige Begriffe</h2>

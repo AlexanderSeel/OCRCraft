@@ -37,6 +37,9 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 
 ## P1 – Interaktive Tutorials
 
+- [x] Führungen für Dashboard, Kataloge, Übungserstellung, Hinderniszuordnung, Quick Create, Training Builder, Medien, AI-Entwürfe, Outdoor und Administration sind routebewusst registriert und lokal fortsetzbar.
+- [x] Hilfezentrum-Führung ergänzt: Tutorial-Neustart, Direkteinstiege und Glossar/Fachhinweise sind als echte Zielbereiche markiert und per E2E abgesichert.
+- [ ] Fachliche Tiefenführungen für Medienrechte, Outdoor-Review, AI-Drafts, Gruppenregeln und Trainingsspeicherung mit echten Bearbeitungs-/Reviewaktionen ergänzen.
 
 ## P2 – Qualität, Analysen und Workflows
 
