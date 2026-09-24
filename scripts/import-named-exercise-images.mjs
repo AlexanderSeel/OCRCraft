@@ -65,7 +65,7 @@ async function resolveExercise(manifestItem, exercises, licensedExerciseIds) {
   const displayName = manifestItem.display_name ?? manifestItem.exercise_name ?? "";
   if (manifestItem.suggested_seed_key) {
     const exact = exercises.filter((exercise) => exercise.seedKey === manifestItem.suggested_seed_key);
-    return exact.length === 1 ? exact[0] : null;
+    if (exact.length === 1) return exact[0];
   }
   const matches = exercises.filter((exercise) => exercise.labels.some((label) => tokenMatch(label, displayName)));
   if (matches.length === 1) return matches[0];
