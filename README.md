@@ -267,7 +267,7 @@ Wichtige Eigenschaften:
 
 Ein routebewusstes Tutorial erklärt wichtige Arbeitsbereiche direkt in der Anwendung.
 
-Die Tutorial-Grundlage deckt alle zentralen Arbeitsbereiche ab; die konkrete fachliche Vertiefung einzelner Kernworkflows wird separat weiterentwickelt.
+Die Tutorial-Grundlage deckt alle zentralen Arbeitsbereiche ab; die konkrete fachliche Vertiefung einzelner Kernworkflows wird separat weiterentwickelt. Tutorial-Regression deckt Tastatur/Escape, Fokus-Rückgabe, reduzierte Bewegung, Mobile, Sprachwechsel und die Zielmarken der Kernworkflows per Playwright ab.
  Tutorial-Fortschritt wird pro Bereich lokal gespeichert; Führungen starten nur auf Benutzeraktion und weisen verständlich auf aktuell nicht sichtbare Zielmarken hin.
 
 ## Internationalisierung

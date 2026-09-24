@@ -128,16 +128,19 @@ test("language switcher changes global navigation and persists after reload", as
   await expect(page.getByRole("combobox", { name: "Language" })).toHaveValue("en");
 });
 
-test("guided tutorial advances, focuses its target and closes with Escape", async ({ page }) => {
-  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
-  await page.goto("/exercises/new", { waitUntil: "domcontentloaded" });
-  await expect(page).toHaveURL(/\/exercises\/new$/);
-  const tutorialTrigger = page.locator("[data-tour-trigger='guided-help']");
-  await expect(tutorialTrigger).toBeVisible();
-  await tutorialTrigger.click();
-
-  const dialog = page.getByRole("dialog", { name: "Übung erstellen" });
+async function openTutorial(page: Page, route: string, title: string) {
+  await page.goto(route, { waitUntil: "domcontentloaded" });
+  const trigger = page.locator("[data-tour-trigger='guided-help']");
+  await expect(trigger).toBeVisible();
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: title });
   await expect(dialog).toBeVisible();
+  return { dialog, trigger };
+}
+
+test("exercise-create tutorial advances, focuses targets and restores focus after Escape", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
+  const { dialog, trigger } = await openTutorial(page, "/exercises/new", "Übung erstellen");
   await expect(dialog.getByText("Grunddaten")).toBeVisible();
   await expect(page.locator("[data-tour='exercise-identity'][data-tour-active='true']")).toBeVisible();
 
@@ -148,4 +151,49 @@ test("guided tutorial advances, focuses its target and closes with Escape", asyn
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(page.locator("[data-tour-active='true']")).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});
+
+test("obstacle tutorial reaches navigation, workspace and assignment target", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
+  const { dialog } = await openTutorial(page, "/obstacles", "Hindernisse");
+
+  await expect(page.locator("[data-tour='nav-obstacles'][data-tour-active='true']").first()).toBeVisible();
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("main[data-tour-active='true']")).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='obstacle-create'][data-tour-active='true']")).toBeVisible();
+  await expect(dialog.getByText("Übung zuordnen")).toBeVisible();
+});
+
+test("training tutorial works in Quick Create and Builder with saved progress", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
+  const first = await openTutorial(page, "/quick-create", "Trainingsplan erstellen");
+  await expect(page.locator("[data-tour='quick-create'][data-tour-active='true']")).toBeVisible();
+  await first.dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(first.dialog.getByText("Plan prüfen")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  const trigger = page.locator("[data-tour-trigger='guided-help']");
+  await trigger.click();
+  const resumed = page.getByRole("dialog", { name: "Trainingsplan erstellen" });
+  await expect(resumed.getByText("Plan prüfen")).toBeVisible();
+  await expect(page.locator("[data-tour='builder'][data-tour-active='true']")).toBeVisible();
+});
+
+test("tutorial supports English, reduced motion and mobile viewport", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "en"));
+
+  const { dialog, trigger } = await openTutorial(page, "/exercises/new", "Create an exercise");
+  await expect(dialog.getByText("Core data")).toBeVisible();
+  await expect(page.locator("[data-tour='exercise-identity'][data-tour-active='true']")).toBeVisible();
+  await expect(dialog).toBeInViewport();
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
 });
