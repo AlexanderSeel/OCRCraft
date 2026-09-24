@@ -20,7 +20,6 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 - [ ] Kanonische ExerciseDB-Feldanreicherung abschließen: die 159 noch blockierten Kandidaten fachlich entscheiden; nur freigegebene Lücken erhalten eigene DE/EN-Coaching-, Sicherheits- und Progressionsfelder.
 - [ ] Kuratierte Seed-Batches als vollständige Lieferpakete abschließen: Migration, Quellenregister, Reviewstatus, Vollständigkeitsbericht, Domain-Tests, `typecheck`, `lint`, `check:ui`, Unit-, Build- und E2E-Prüfung.
 - [ ] OCR-Fähigkeitsmatrix und lokale OCRFRA-Maße in Coverage- und Freigabeworkflows durchgängig verbinden; unbestätigte Vereinsmaße bleiben sichtbar offen.
-- [ ] Die readme.md wird zur einer richtigen Übersicht und Features dieser App umgeschrieben, mit detailierten Infos. Nicht aber ein Migrations oder Update Dokumnet, dafür gibt es Release Notes
 
 ## P1 – UX/UI-Konzept und Einheitlichkeit
 

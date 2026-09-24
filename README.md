@@ -1,143 +1,312 @@
 # OCRCraft
 
-OCRCraft ist ein deutschsprachiger Trainingsplaner für OCR-Clubs, funktionelles Training und Breitensport. Trainer können sichere Einheiten aus einem strukturierten Übungskatalog zusammenstellen, bestehende Einheiten bearbeiten/kombinieren und Vorschläge lokal oder optional mit KI erzeugen.
+OCRCraft ist eine Trainings- und Kataloganwendung für OCR-Clubs, funktionelles Training und Breitensport. Die App unterstützt Trainer dabei, Übungen strukturiert zu pflegen, sichere Trainings zusammenzustellen, Gruppen und Zielgruppen zu berücksichtigen und Medien, Outdoor-Varianten sowie KI-gestützte Vorschläge kontrolliert zu verwalten.
 
-Die Kernstruktur bleibt sichtbar: **Aufwärmen → Hauptteil → Cooldown & Stretching**.
+Die fachliche Grundstruktur eines Trainings bleibt immer sichtbar:
 
-## Status
+**Aufwärmen → Hauptteil → Cooldown & Stretching**
 
-OCRCraft steht auf Release `1.0.0`. Die sichtbare App-Version steht in der Desktop-Sidebar und die Datenbank besitzt eine reproduzierbare v1.0-Fresh-Install-Baseline. Der Katalog wird dynamisch aus versionierten Seeds und importierten Datensätzen aufgebaut. Übungen besitzen deutsche und englische Identität, Aliase, Körperregionen, Muskel- und Gegenmuskelbeziehungen, Equipment, Bewegungsmuster, Zielgruppen-, Risiko- und Coachingdaten.
+OCRCraft ist als Trainerwerkzeug ausgelegt: Automatik und KI dürfen Vorschläge erzeugen, die endgültige Auswahl, Freigabe und Speicherung bleibt beim Trainer.
 
-Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Abgeschlossene Meilensteine sind unten zusammengefasst; die produktive Betriebsroutine ist in [`docs/operations.md`](./docs/operations.md) dokumentiert.
+## Hauptfunktionen
 
-## Umgesetzte Meilensteine
+### Übungskatalog
 
-- Betriebssicherheit: Authentifizierung, RBAC und erweiterbare Rollen/Rechte, Audit-Events, Backup/Restore, portable Exporte/Importe und persistente Hintergrundaufgaben.
-- Trainingsplanung: Quick Create und Training Builder mit Warm-up/Hauptteil/Cooldown, Alters-/Risiko-/Equipment-/Kapazitätsregeln, AI-Revalidierung, Versionen, Alternativen, Undo/Redo, Team- und Partnerformaten.
-- Katalogqualität: zweisprachige Seeds, Aliase, Coaching-/Sicherheitsfelder, Facetten, Progressionen/Regressionen, Games, Hindernisse, Outdoor-Varianten, Dublettenprüfung und Medienreview.
-- Gruppen und Schutz: editierbare Kids-/Youth-Profile, Trainerqualifikation, Aufsicht, Hindernissperren, Maximalrisiken und nicht abschwächbare `hardSafetyConstraints`.
-- Katalog-UX: gemeinsame Liste/Klein/Groß/Detail-Ansichten, URL-Filter, Ergebniszähler, Seitengrößen, Pagination und Filter-Sidepanels für alle zentralen Kataloge; Dashboard-Kennzahlen stammen aus Repository-Aggregaten.
-- Qualitätssicherung: Accessibility- und Playwright-Gates, Kids-/Builder-/Quick-Create-Pfade, UI-Review-Gate gegen feste Katalogzähler und bekannte Legacy-Texte sowie vollständige TypeScript-/Vitest-/Build-Prüfungen.
-- UI-Bausteinschicht: lokale Dialog-/Popover-, Form-, Pagination-, Tab-, Sidebar- und Toast-Komponenten mit Fokus-, Live-Region- und Token-Regeln; siehe [`docs/ui-components.md`](./docs/ui-components.md).
-- Internationalisierungsgrundlage: typisierte DE/EN-Dictionaries, persistierter Sprachumschalter und übersetzte globale Navigation/Theme-Beschriftungen; die vollständige Fachseiten-Abdeckung bleibt in `plan.md` offen.
-- Übersetzungsqualität: Der Admin-Tab „Datenqualität“ prüft Dictionary-Schlüssel auf fehlende und verwaiste Einträge; Fachseiten können schrittweise an dieselbe Schlüsselstruktur angebunden werden.
-- Strukturierte Übersetzungsqualität: Der Admin-Vollständigkeitsbericht prüft pro DE/EN-Datensatz Detailfelder, Ausführungsschritte, Coaching-Cues und Fehlerkorrekturen getrennt.
-- Datenbank-Release 1.0: 86 nummerierte Migrationen bis Version 87 werden über [`src/server/db/initial-v1.sql`](./src/server/db/initial-v1.sql) als atomare Fresh-Install-Baseline ausgeliefert; bestehende Datenbanken bleiben upgradefähig.
-- Hallen-/Outdoor-Katalog: Importierte Studio-Lasten werden auf Kettlebell, Sandbag, Widerstandsband, Matte oder Körpergewicht umgeschrieben; nicht sinnvoll konvertierbare Studio- und Cardiogeräte verlassen den aktiven Katalog, bleiben als Provenienz erhalten und tragen die Facette `Fitnessstudio`. Der aktive kuratierte Katalog besitzt einen nachvollziehbaren Portabilitäts-/Stationsreview in `exercise_environment_reviews`.
-- Medienbereinigung: 20 benannte, portable Nutzerbilder werden mit `npm run exercise:images:import-named -- --source=<entpackter-ordner>` als eigene Primärmedien importiert; externe Bildreferenzen werden dabei entfernt.
-- Equipment-Planung: Training Builder und Outdoor-Übungseditor zeigen Bestand sowie `Portabel`, `Fest / Rig` oder `Nicht klassifiziert`; Outdoor startet mit Portable-Filter und verwendet das hinterlegte Ersatz-Equipment automatisch für die Verfügbarkeitsprüfung.
-- Outdoor-Konvertierungsreview: automatische Import-Ersetzungen basieren auf einer expliziten Freigabeliste statt Geräte-String-Heuristiken. Bereits migrierte Konvertierungen werden einmalig als `pending` in den Fachreview gestellt; die Vorschau nutzt Bewegungsmuster bzw. konservative Namensableitung, Trainertexte bleiben erhalten und die Freigabe wird mit Reviewer/Zeitpunkt protokolliert.
-- Portabilitäts-Audit: die Outdoor-Administration wertet `portable`, `converted` und `blocked` dauerhaft aus und zeigt Quelle, Begründung, Ersatz-Equipment, Reviewstatus, Reviewer und Reviewdatum; offene Fachreviews werden priorisiert.
-- Datenkuratierung: Quellenregister, 70%-Matching, OCR-Relevanz-Audit für 177 Kandidaten, High-Signal-Review, OCR-/OCRFRA-Lückenbatches, Quellen-/Lizenztrennung und Katalog-Coverage sind dokumentiert und getestet.
-- OCRFRA-Fachpakete: lokale Hindernisse, OCR-Fähigkeitsmatrix, Templates, Spielkatalog, Sicherheitszonen, Fallbacks, Altersgrenzen und Trainerfreigaben sind strukturiert hinterlegt.
-- UI-Konsolidierung: lokale Form-, Card-, Feedback-, Dialog-, Popover-, Pagination-, Sidebar-, Toast- und Filterbausteine sowie das kompakte Coral/Lime/Graphit-Designsystem sind über die zentralen Katalog- und Trainingsseiten eingeführt.
-- Qualitäts- und Sicherheitsgates: statische UI-Prüfung, Playwright-Regressionen, Auth-/RBAC-Schutz, Kids-/Youth-Regeln, serverseitige Domänenvalidierung, AI-Review-Blocker und vollständige Seed-/Übersetzungsberichte sind vorhanden.
-- Interaktive Orientierung: Release 1.0 enthält eine routebewusste DE/EN-Tour für Dashboard, Kataloge, Administration, Übungserstellung, Hinderniszuordnung, Quick Create und Training Builder.
+Der Übungskatalog ist die fachliche Basis der Anwendung. Übungen können gesucht, gefiltert, erstellt, bearbeitet, archiviert und wiederhergestellt werden.
 
-## Funktionen
+Pro Übung können unter anderem gepflegt werden:
 
-### Übungen und Muskelkarte
+- deutscher und englischer Name sowie Aliase
+- Kategorie, Übungstyp und Bewegungsmuster
+- primäre, sekundäre und antagonistische Muskelregionen
+- benötigtes Equipment und Mengen
+- Indoor-/Outdoor-Eignung
+- Schwierigkeitsgrad, Zielgruppen und Altersgrenzen
+- Setup, Startposition und Ausführungsschritte
+- Coaching-Cues, typische Fehler und Korrekturen
+- Sicherheits- und Aufsichtshinweise
+- Level 1–3, Regressionen und Progressionen
+- Dosierung nach Wiederholungen, Zeit, Strecke oder Runden
+- Outdoor-Variante mit eigenem Ersatz-Equipment
+- Bild- und Videomedien mit Review- und Rechteinformationen
 
-- Übungsübersicht mit Suche, Facetten, Bereichs- und Muskel-Mehrfachfilter
-- Admin-Vollständigkeitsbericht mit getrennten Kennzahlen für versionierte Seeds und den gesamten (inklusive importierten) Katalog
-- entfernbare Filter-Tags und zugängliche Listenalternative zur visuellen Karte
-- wiederverwendbare Front-/Rückseiten-Muskelkarte mit 89 granularen Regionen
-- primäre, sekundäre und antagonistische Muskelbeziehungen
-- Übung anlegen, bearbeiten, archivieren, wiederherstellen und auf Vollständigkeit prüfen
-- strukturierte Ausführung: Setup, Startposition, Schritte, Coaching, Fehler, Sicherheit, Level 1–3 und Dosierung
+Der Katalog kombiniert kuratierte OCRCraft-Seeds mit importierten Datensätzen. Importierte Inhalte werden normalisiert und bleiben über Quellen- und Provenienzdaten nachvollziehbar.
 
-### Training erstellen
+### Trainingsplanung
 
-- Quick Create mit Zielgruppe, Alter, Teilnehmerzahl, Dauer, Zielen, Körperregionen und Formaten
-- lokaler deterministischer Composer mit Alters-, Risiko-, Club-, Equipment-, Hindernis- und Kapazitätsregeln
-- optionaler AI-Pfad mit denselben serverseitigen Validierungen
-- Training Builder für Warm-up, mehrere Hauptteile und Cooldown
-- Zirkel, Rig & Run, AMRAP, EMOM, Tabata, Technik, Relay und Run + Exercise
-- Teamgröße, Rotationsgruppen, Stationskapazität, Equipmentbestand und Hindernisbestand
-- Level-Auswahl, Übung ersetzen, Alternativen, Reihenfolge ändern, Duplicate und Combine
-- versionierte OCRCraft-Trainingsvorlagen mit Zielgruppen-/Schwerpunktfiltern und Provenienz
-- Vorlagenauswahl direkt im Quick-Create-Wizard; Vorlagen setzen editierbare Startwerte und bleiben beim Speichern nachvollziehbar
-- datengetriebene Trainingsübersicht mit aktuellen Einheiten, Empty State und realen Status-/Dauermetriken statt Demo-Training
+OCRCraft besitzt zwei zentrale Wege für die Trainingsplanung.
 
-### Daten und Medien
+**Quick Create** erzeugt aus wenigen Angaben einen Trainingsentwurf. Berücksichtigt werden unter anderem:
 
-- DuckDB über zentrale serverseitige Verbindungen und versionierte Migrationen
-- lock-gesicherte Datenbank-Backups unter `data/backups/` mit JSON-Manifest und konfigurierbarer Rotation über `OCRCRAFT_BACKUP_RETENTION`; bestätigter Restore erstellt vorher automatisch ein Sicherheitsbackup
-- FTS-Status (`healthy`, `dirty`, `rebuilding`, `failed`) und zweisprachige Suchdokumente
-- Admin-Aktion zum Neuaufbau der deutschen und englischen Suchindizes mit Fortschritts- und Fehlerstatus
-- Audit-Events für Reset-, Backup- und Dublettenaktionen
-- externe Quellen-, Lizenz- und Generierungsmetadaten
-- Medien mit fehlender/restringierter externer Nutzungsfreigabe zählen nicht als verwendbares Übungsbild und erscheinen automatisch in der KI-Ersatzliste; der Medienkatalog weist die Anzahl rechteblockierter Assets separat aus
-- OpenAI-Images-Pipeline mit `gpt-image-2`, Dry Run, stabilen Seed-Dateinamen, Reviewstatus und Dateisystem/S3-Abstraktion
-- Medienwarteschlange mit dedupliziertem Worker und periodischer Statusaktualisierung ohne wiederholte Request-Callbacks
-- generierte Bilder bleiben an stabile Übungs-/Seed-IDs gebunden und werden bei Reseeds nicht automatisch gelöscht
+- Zielgruppe und Alter
+- Teilnehmerzahl
+- Trainingsdauer
+- Trainingsziele
+- gewünschte Körperregionen
+- Trainingsformat
+- vorhandenes Equipment
+- verfügbare Hindernisse
+- Risiko- und Aufsichtsregeln
 
-Beim ersten Start ohne Benutzer führt OCRCraft über `/setup` durch die Anlage des ersten Super-Admins und Vereinscodes. Danach schützt `/login` die App; der aktuelle Benutzer wird in der Kopfzeile angezeigt. Der Vereinscode kann anschließend in der Administration geändert werden. Die Rollen `trainer`, `admin` und `super_admin` werden in DuckDB persistiert. Ein vorgeschalteter Vereins-Login kann alternativ einen fünf Minuten gültigen HMAC-Header übergeben: `OCRCRAFT_ACTOR_ASSERTION_SECRET=<secret>` und optional `OCRCRAFT_ACTOR_ASSERTION_HEADER=<header-name>` (Standard: `x-ocrcraft-actor`).
+**Training Builder** dient zur detaillierten Bearbeitung. Dort können Trainer:
 
-Trainings können über `/training/<id>/trainer` als schreibgeschützte Ansicht geteilt werden. Auch diese App-Route verlangt eine Anmeldung; sie enthält keine Bearbeitungsaktionen.
+- Warm-up, Hauptteile und Cooldown getrennt planen
+- mehrere Hauptteile kombinieren
+- Übungen hinzufügen, ersetzen und sortieren
+- Alternativen anzeigen
+- Level und Belastung anpassen
+- Team- und Partnerformate konfigurieren
+- Stationskapazitäten berücksichtigen
+- Equipment- und Hindernisbestände eintragen
+- Trainingsabschnitte duplizieren oder zusammenführen
+- Änderungen per Undo/Redo zurücknehmen
+- Trainingsversionen speichern und wiederherstellen
 
-Trainerprofile lassen sich im eigenen Tab „Benutzer & Profile“ mit Filter, Vorname, Nachname, Username, E-Mail, Ausbildung, Schwerpunkten, Kurzprofil und Bildreferenz pflegen; bestehende Profile werden auf einer eigenen Bearbeitungsseite aktualisiert. Bei neu erstellten Trainings wird das Profil kompakt in der Trainer- und Readonly-Ansicht angezeigt.
-Profilbilder können als JPEG, PNG oder WebP bis 2 MB hochgeladen und in DuckDB gespeichert werden. Fehlt ein Bild, erscheinen automatisch die Initialen aus Vor- und Nachnamen.
+Unterstützte Formate umfassen unter anderem Zirkel, Rig & Run, AMRAP, EMOM, Tabata, Technik, Relay sowie Run + Exercise.
 
-### Administration
+### Outdoor- und Hallenplanung
 
-Administration und Einstellungen liegen in einem gemeinsamen Bereich mit sieben Tabs: Übersicht, Datenbank, Datenqualität, Aufgabenqueue, Benutzer & Profile, Einstellungen und Outdoor-Varianten. Outdoor-Varianten sind zusätzlich direkt über den Hauptmenüpunkt „Outdoor“ erreichbar.
+OCRCraft unterscheidet portable, stationäre und nicht eindeutig klassifizierte Ausrüstung.
 
-Im Datenbank-Tab können Übungen, Details, Zuordnungen, Trainings, Gruppen, Medien und Provenienz selektiv als versioniertes JSON exportiert werden. `ocrcraft-portable`-Dateien werden vor dem transaktionalen Import auf Schema, erlaubte Tabellen und Spalten geprüft; der Import ist auf Super-Admins begrenzt.
+Für Outdoor-Training können Übungen eine eigene Variante besitzen. Dabei werden:
 
-Beim Medienexport können Binärdateien optional als Base64 eingebettet werden. Der Export ergänzt MIME-Typ, SHA-256-Prüfsumme sowie Speicher- und Quellenmetadaten; standardmäßig bleiben Binärdaten aus Platzgründen außen vor.
+- das ursprüngliche Bewegungsmuster erhalten
+- ausschließlich freigegebene Ersatz-Equipment-Mappings verwendet
+- tatsächlich verfügbare Mengen berücksichtigt
+- Studio-spezifische Abhängigkeiten nicht automatisch geraten
+- offene oder mehrdeutige Fälle einem Trainerreview zugeführt
 
-Übungskarten verwenden für nicht erreichbare externe Quellen (einschließlich veralteter `static.exercisedb.dev`-GIFs) automatisch eine lokale Platzhaltergrafik. Dadurch bleiben Listen, Detailansichten und Layouts stabil sichtbar, bis eine geprüfte lokale oder KI-generierte Medienquelle hinterlegt ist.
+Die Outdoor-Administration enthält zusätzlich einen Portabilitäts-Audit mit den Zuständen:
 
-Der Tab **Datenqualität** klassifiziert erkannte Übungspaare als gleich, wahrscheinliche Dublette, Konflikt oder neu. Side-by-Side-Feldvergleich und Bulk-Entscheidungen bleiben trainerbestätigt; Datensätze werden nicht automatisch gelöscht.
+- **portable**
+- **converted**
+- **blocked**
 
-Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit einer Admin-Rolle wiederhergestellt werden. Die Wiederherstellung ersetzt Training, Phasen und Items innerhalb einer Transaktion.
+Zu jeder Entscheidung bleiben Quelle, Begründung, Ersatz-Equipment, Reviewstatus, Reviewer und Reviewdatum nachvollziehbar.
 
-### UI/UX
+### OCR- und Vereinsfunktionen
 
-- Light-, Dark- und System-Theme mit semantischen Tokens
-- responsive Traineroberflächen für Desktop, Tablet und mobile Nutzung
-- gemeinsames Bedienkonzept für Kataloge: Filter-Sidepanel, Suche, Größenwahl, Ergebniszähler und Pagination sind für Übungen, Training, Spiele, Hindernisse, Medien, AI-Entwürfe, Gruppen, Vorlagen und Outdoor vereinheitlicht
-- einklappbare Hauptnavigation mit persistiertem Icon-Modus sowie wiederverwendbare Sidepanel-Filter in Übungs-, Medien- und Hinderniskatalog
-- zentrale Dialog-Komponente mit ARIA-Rolle, Fokusfalle, Escape, Backdrop-Schließen, Scroll-Lock und Fokus-Rückgabe
-- AppShell hält den Seitenkopf auf kontextbezogene Seitenaktionen begrenzt; Darstellung und Diagnose liegen im gemeinsamen Einstellungen-Tab der Administration
-- große Muskel- und Facettenfilter öffnen als zentrierte Dialoge und halten die Sidepanels kompakt
-- zentrale Disclosure-Komponente für Filter, Editoren, Builder und Adminflächen
-- sichtbare Fokuszustände und Tastaturbedienung für zentrale Auswahl- und Formularpfade
-- gemeinsames Ansichts-Pattern für Training und Vorlagen mit Liste/Klein/Groß/Detail und persistierter Auswahl
-- gemeinsame Ansichtsumschaltung und responsive Ergebnisdichte für Spiele, Hindernisse, Medien, Gruppen, AI-Entwürfe und Outdoor-Varianten
-- gemeinsame Ansichtsumschaltung mit echter Liste/Klein/Groß/Detail-Geometrie, persistierter Auswahl und begrenzten Kartenbreiten über alle Katalogseiten
-- Playwright-Quality-Gates für Seiten-Shell, genau eine Hauptüberschrift/Main-Landmark, horizontale Überläufe auf Desktop/Mobil, gemeinsame Listenansicht, Hindernis-Filter-Nesting, Quick-Create-Vorlagenauswahl, Kids-Review und Builder-Sicherheitsgrenzen
-- gemeinsame serverseitige Ergebniszähler- und Pagination-Komponenten für Übungen und Spiele mit responsiver Seitennavigation
-- Spielekatalog mit gemeinsamem Filter-Sidepanel, URL-basiertem Such-/Status-/Seitengrößenfilter und Reset-Zustand
-- Gruppenkatalog mit gemeinsamem Filter-Sidepanel, URL-basierter Namenssuche, Zielgruppenfilter und getrenntem Erstellungsdialog
-- AI-Entwürfe und Outdoor-Review mit gemeinsamen URL-basierten Such-/Statusfiltern und kompakten Reset-Zuständen
-- Medienkatalog mit gemeinsamem Ergebniszähler sowie URL-basierten Review-, Generierungs-, Quellen- und Medientypfiltern
-- Vorlagenkatalog mit kompaktem gemeinsamem Filterpanel für Zielgruppe und Schwerpunkt, getrennt vom Vereinsvorlagenbereich
-- zentrale Tutorial-Schaltfläche in der App-Shell mit Schrittfortschritt, Zurück/Weiter, Escape, Überspringen und Fokus auf den erklärten Arbeitsbereich
-- App-Version `1.0.0` sichtbar in der Desktop-Sidebar und im Tutorial-Kontext
+OCRCraft bildet typische OCR-Anforderungen strukturiert ab, darunter:
 
-## Voraussetzungen
+- Grip- und Hang-Aufgaben
+- Rig- und Traverse-Übungen
+- Carries und Loads
+- Walls und Step-over-Varianten
+- Rope- und Net-Climbs
+- Crawls
+- Balance
+- Running und Übergänge
+- Hindernisprogressionen
+- Sicherheits- und Fallzonen
+- Stationskapazitäten
+- Fallback-Übungen
+
+Für OCRFRA können zusätzliche lokale Hindernisse, Maße und Vereinsregeln hinterlegt werden. Nicht bestätigte Werte sollen sichtbar offen bleiben und nicht stillschweigend als geprüft gelten.
+
+### Gruppen, Zielgruppen und Schutzregeln
+
+Gruppen und Zielgruppen können mit eigenen Regeln gepflegt werden. Besonders Kinder- und Jugendtraining besitzt harte Schutzgrenzen.
+
+Berücksichtigt werden beispielsweise:
+
+- Mindest- und Höchstalter
+- zulässige Risikostufen
+- notwendige Aufsicht
+- gesperrte Hindernisse
+- maximale Stationsanforderungen
+- Trainerqualifikation
+- Gruppen- und Teamgrößen
+- Vereinsregeln
+
+Sicherheitsregeln werden serverseitig validiert und können durch KI-Ausgaben nicht abgeschwächt werden.
+
+### Spiele und Hindernisse
+
+OCRCraft besitzt eigene Kataloge für Spiele und Hindernisse.
+
+Hindernisse können mit Übungen verknüpft werden und besitzen unter anderem:
+
+- Maße
+- Aufbauhinweise
+- Sicherheitszonen
+- Voraussetzungen
+- Annäherung und Ausstieg
+- Fallbacks
+- Risiko- und Aufsichtsanforderungen
+
+Übungen können aus dem bestehenden Katalog als Hindernis übernommen und falsche Zuordnungen wieder entfernt werden.
+
+### Medien und Bilder
+
+Der Medienbereich verwaltet Bilder, Illustrationen und Videos getrennt von den Übungsdaten.
+
+Unterstützt werden:
+
+- lokale Uploads
+- externe Referenzen
+- KI-generierte Bilder
+- Reviewstatus
+- Primärmedien
+- Lizenz- und Quelleninformationen
+- Einwilligungsstatus
+- Generierungsstatus
+- Videoquellen
+
+Externe Bilder ohne bestätigte Nutzungsfreigabe gelten nicht als verwendbare Übungsbilder. Sie erscheinen automatisch als Kandidaten für einen eigenen Ersatz.
+
+Für KI-generierte Übungsbilder existiert eine eigene Pipeline mit stabilen Dateinamen, Reviewstatus und lokalem oder S3-kompatiblem Storage.
+
+### KI-Provider
+
+Mehrere KI-Provider können zentral verwaltet werden. Provider lassen sich Funktionen zuweisen und priorisieren.
+
+Je nach Integration können konfiguriert werden:
+
+- Provider-URL
+- API-Schlüssel oder OAuth-Verbindung
+- verfügbare Modelle
+- Funktionszuordnung
+- Priorität
+- Limits
+- Fallback auf den nächsten Provider
+
+KI-gestützte Funktionen umfassen unter anderem Trainingsvorschläge, Bildgenerierung und Datenanreicherung. KI-Ausgaben werden vor Persistenz validiert.
+
+### Hintergrundaufgaben
+
+Längere Vorgänge laufen über eine persistente Aufgabenqueue.
+
+Dazu zählen zum Beispiel:
+
+- Trainingsgenerierung
+- Bildgenerierung
+- Datenanreicherung
+- Medienverarbeitung
+
+Ein globaler Statusbereich zeigt aktive Aufgaben. Die Detailansicht enthält Status, Fortschritt und Fehlerzustände.
+
+### Suche und Filter
+
+Die zentralen Kataloge verwenden ein gemeinsames Bedienmuster:
+
+- URL-basierte Filter
+- Suche
+- Filter-Sidepanel
+- Ergebniszähler
+- Seitengröße
+- Pagination
+- Listen-, Klein-, Groß- und Detailansicht
+- persistierte Ansichtspräferenz
+
+Die Suchindizes unterstützen deutsche und englische Begriffe sowie Aliase.
+
+### Benutzer, Rollen und Audit
+
+OCRCraft besitzt eine eigene Benutzer- und Rollenverwaltung.
+
+Standardrollen sind:
+
+- Trainer
+- Admin
+- Super-Admin
+
+Zusätzliche Rollen und Berechtigungen können erweitert werden. Administrative Aktionen werden über Audit-Events nachvollziehbar gehalten.
+
+Trainerprofile können Name, Username, E-Mail, Ausbildung, Schwerpunkte, Kurzprofil und Profilbild enthalten.
+
+### Backups, Import und Export
+
+Die Datenhaltung basiert auf DuckDB.
+
+Die Administration unterstützt:
+
+- Datenbank-Backups
+- Restore mit Sicherheitsbackup
+- portable JSON-Exporte
+- selektiven Export von Übungen, Trainings, Gruppen und Medien
+- optional eingebettete Binärmedien
+- validierten Import
+- Quellen- und Prüfsummeninformationen
+
+## Benutzeroberfläche
+
+OCRCraft verwendet ein kompaktes eigenes UI-System auf Tailwind-Basis.
+
+Wichtige Eigenschaften:
+
+- Light-, Dark- und System-Theme
+- responsive Desktop-, Tablet- und Mobile-Ansichten
+- reduzierte Flächenverschwendung
+- kompakte Karten und Filter
+- zentrale Dialog-, Popover-, Sidebar- und Toast-Komponenten
+- sichtbare Fokuszustände
+- Tastaturbedienung
+- semantische Statusfarben
+- zugängliche Formulare und Dialoge
+
+Ein routebewusstes Tutorial erklärt wichtige Arbeitsbereiche direkt in der Anwendung.
+
+## Internationalisierung
+
+Deutsch ist die Primärsprache. Die Anwendung besitzt eine typisierte DE/EN-Dictionary-Struktur und einen persistenten Sprachumschalter.
+
+Neue UI-Texte sollen nicht lokal hart codiert, sondern über die gemeinsame Dictionary-Struktur geführt werden.
+
+## Architektur
+
+Die Anwendung folgt einer klaren Schichtenstruktur:
+
+```text
+src/
+├─ app/          Next.js-Routen und Seitenkomposition
+├─ components/   UI- und Feature-Komponenten
+├─ domain/       frameworkfreie Domänenmodelle und Regeln
+├─ server/       Services, Repositories, Suche, AI und DuckDB
+└─ data/         Mapping- und Katalogdaten
+```
+
+Die zentrale Richtung lautet:
+
+```text
+UI → Service/Application → Repository → DuckDB
+```
+
+React-Komponenten greifen nicht direkt auf DuckDB zu. Externe Eingaben und KI-Ausgaben werden vor Speicherung validiert.
+
+## Technologie
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- DuckDB
+- Vitest
+- Playwright
+- OpenAI Images / konfigurierbare KI-Provider
+
+## Entwicklung
+
+Voraussetzungen:
 
 - Node.js `>=20.19.0`
 - npm
-- DuckDB wird lokal als Datei unter `data/` erzeugt
-- Für Bildgenerierung: `OPENAI_API_KEY` in `.env` oder der Prozessumgebung
 
-API-Schlüssel niemals committen. Lokale Daten, WAL-Dateien und erzeugte Bilder gehören in Backups und bleiben außerhalb der Versionskontrolle.
-
-## Installation und Entwicklung
+Installation:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Die Anwendung läuft danach unter <http://localhost:3000>.
+Die lokale Anwendung läuft standardmäßig unter:
 
-### Qualitätsprüfungen
+```text
+http://localhost:3000
+```
 
-Die CI wird sequenziell ausgeführt:
+## Qualitätsprüfungen
+
+Die vollständige lokale Abschlussroutine lautet:
 
 ```bash
 npm run check:ui
@@ -150,13 +319,13 @@ npm run test:e2e
 
 ## Übungsbilder
 
-Prompt prüfen, ohne API-Aufruf oder Datei zu schreiben:
+Prompt ohne API-Aufruf prüfen:
 
 ```bash
 npm run exercise:image -- --exercise easy-jog --dry-run
 ```
 
-Einzelbild erzeugen:
+Ein Bild erzeugen:
 
 ```bash
 npm run exercise:image -- --exercise easy-jog
@@ -168,25 +337,11 @@ Seed-Bilder erzeugen:
 npm run exercise:images:seed -- --all-seeds
 ```
 
-Standardmäßig landen Bilder unter `public/generated/exercises/`. Für S3-kompatiblen Speicher:
+Generierte Bilder liegen standardmäßig unter `public/generated/exercises/`.
 
-```text
-OCRCRAFT_IMAGE_STORAGE=s3
-OCRCRAFT_IMAGE_BUCKET=...
-OCRCRAFT_S3_ENDPOINT=...
-OCRCRAFT_IMAGE_PUBLIC_BASE_URL=https://...
-OCRCRAFT_S3_REGION=...
-OCRCRAFT_IMAGE_PREFIX=exercise-images
-OCRCRAFT_S3_SSE=AES256
-```
+## Importquellen
 
-Im Produktionsbetrieb validiert OCRCraft S3-Endpunkt und öffentliche Auslieferungs-URL auf HTTPS. Optional sind `aws:kms` plus `OCRCRAFT_S3_KMS_KEY_ID`, ein eigener Cache-Control-Wert und Path-Style für MinIO/R2-kompatible Systeme möglich. Details stehen in `docs/operations.md`.
-
-Die Bilder bleiben zur Trainerprüfung auf `pending`. Für eine Wiederherstellung müssen DuckDB-Datei und Bildverzeichnis gemeinsam gesichert werden.
-
-## Import und Katalogquellen
-
-Verfügbare Import-/Übersetzungsskripte:
+Vorhandene Importpfade umfassen unter anderem:
 
 ```bash
 npm run exercise:import:hasaneyldrm
@@ -194,36 +349,34 @@ npm run exercise:translate:de
 npm run exercise:import:exercisedb
 ```
 
-Importierte Datensätze werden normalisiert, mit stabilen Quellen-/Seed-Informationen versehen und gegen vorhandene Übungsnamen geprüft. Unsichere Dubletten bleiben zur Prüfung sichtbar.
+Externe Instruktionstexte oder Medien werden nur übernommen, wenn die jeweilige Rechtefreigabe explizit bestätigt ist.
 
-Externe Instruktionstexte und Medien werden standardmäßig **nicht** übernommen, solange für den Datensatz kein expliziter und geprüft bestätigter Lizenz-/Rechtenachweis vorliegt. Beim ExerciseDB-Import kann ein Betreiber nach eigener Rechteprüfung beides bewusst freischalten:
+## Konfiguration
 
-```text
-OCRCRAFT_EXERCISEDB_LICENSE_LABEL=<geprüfter Lizenz-/Rechtenachweis>
-OCRCRAFT_EXERCISEDB_LICENSE_VERIFIED=1
-```
+Wichtige optionale Umgebungsvariablen betreffen insbesondere:
 
-Ohne diese Bestätigung speichert OCRCraft nur Quellen-/Katalogmetadaten und erzeugt eigene neutrale Review-Hinweise; externe Medien werden nicht angelegt.
+- KI-Provider/API-Schlüssel
+- S3-kompatiblen Bildspeicher
+- Authentifizierung
+- Backup-Retention
+- externe Importquellen
 
-## Architektur
+API-Schlüssel und andere Secrets dürfen nicht committed werden.
 
-```text
-src/
-├─ app/                 Next.js-Routen und Komposition
-├─ components/          wiederverwendbare UI- und Feature-Komponenten
-├─ domain/              frameworkfreie Trainingsmodelle und Regeln
-├─ server/              Services, Repositories, Suche, AI und DuckDB
-└─ data/                versionierte Katalog-/Mappingdaten
-```
+## Weitere Dokumentation
 
-React-Komponenten greifen nicht direkt auf DuckDB zu. Server-Services validieren externe Eingaben und persistieren nur strukturierte, geprüfte Daten. AI-Ausgaben gelten als untrusted, bis Schema- und Domänenregeln erfolgreich durchlaufen wurden.
+- [Offene Vorhaben](./plan.md)
+- [Betrieb und Backup](./docs/operations.md)
+- [Designsystem](./docs/design-system.md)
+- [UI-Komponenten](./docs/ui-components.md)
+- [OCR-Fähigkeitsmatrix](./docs/ocr-skill-matrix.md)
+- [OCRFRA-Hindernisinventar](./docs/ocrfra-obstacle-inventory.md)
+- [Katalog-Coverage](./docs/catalog-coverage-report.md)
+- [Daten-Audit](./docs/data-audit-report.md)
+- [Release Notes](./RELEASE_NOTES.md)
 
-Weitere Arbeitsregeln stehen in [`AGENTS.md`](./AGENTS.md). Die projektinternen Skills liegen unter:
+## Status und Version
 
-- [`skills/typescript-app-engineer/SKILL.md`](./skills/typescript-app-engineer/SKILL.md)
-- [`skills/ui-ux-designer/SKILL.md`](./skills/ui-ux-designer/SKILL.md)
-- [`skills/ocr-training-expert/SKILL.md`](./skills/ocr-training-expert/SKILL.md)
+Aktuelle Version: **1.0.0**
 
-## Fachliche Leitlinien
-
-OCRCraft orientiert sich an zielgruppenorientierter Breitensportplanung und ergänzt diese um konfigurierbare OCR-Regeln für Grip, Carry, Running, Rig, Walls, Balance und Hindernisprogression. Kinder- und Jugendregeln sowie Vereinsregeln werden als harte Einschränkungen behandelt. Die Anwendung ersetzt keine medizinische Diagnose.
+Änderungen zwischen Versionen, Datenbankentwicklungen und migrationsbezogene Hinweise gehören nicht in diese Übersicht, sondern in die [Release Notes](./RELEASE_NOTES.md).
