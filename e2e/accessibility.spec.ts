@@ -212,3 +212,14 @@ test("help center tutorial explains its workspace and glossary sections", async 
   await dialog.getByRole("button", { name: "Weiter" }).click();
   await expect(page.locator("[data-tour='help-glossary'][data-tour-active='true']")).toBeVisible();
 });
+
+test("media tutorial covers filters, batch actions and review cards", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
+  const { dialog } = await openTutorial(page, "/media", "Medienreview");
+
+  await expect(page.locator("[data-tour='media-filters'][data-tour-active='true']")).toBeVisible();
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='media-batch'][data-tour-active='true']")).toBeVisible();
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='media-review'][data-tour-active='true']")).toBeVisible();
+});

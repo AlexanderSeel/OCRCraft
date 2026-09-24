@@ -205,7 +205,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
           { label: "Rechte blockiert", value: summary.rightsBlocked },
         ]} />
 
-        <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
+        <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start" data-tour="media-filters">
         <CatalogFilterPanel hasFilters={Boolean(query || reviewStatus || generationStatus || sourceType || mediaType || page !== 1 || pageSize !== 24)} resetHref="/media" title="Medienfilter">
           <label className="grid gap-1 text-sm font-bold">
             Suchen
@@ -244,7 +244,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
         </CatalogFilterPanel>
         <div className="min-w-0 space-y-6">
 
-        <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+        <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]" data-tour="media-batch">
           <summary className="cursor-pointer text-base font-black">Batch-Operationen <span className="ml-2 text-xs font-normal text-[var(--muted)]">Auswahl starten und KI-Jobstatus</span></summary>
           <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
           <div>
@@ -429,7 +429,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
         </details>
 
         {assets.length ? (
-          <section className="catalog-results grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <section className="catalog-results grid gap-4 md:grid-cols-2 xl:grid-cols-3" data-tour="media-review">
             {assets.map((asset) => <MediaCard asset={asset} key={asset.id} />)}
           </section>
         ) : (

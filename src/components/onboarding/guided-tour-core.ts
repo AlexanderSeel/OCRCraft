@@ -168,7 +168,28 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
   },
   { id: "games", de: "Spiele", en: "Games", steps: areaSteps("games", "Spiele", "games") },
   { id: "groups", de: "Gruppen", en: "Groups", steps: areaSteps("groups", "Gruppen", "groups") },
-  { id: "media", de: "Medien", en: "Media", steps: areaSteps("media", "Medien", "media") },
+  {
+    id: "media",
+    de: "Medienreview",
+    en: "Media review",
+    steps: [
+      {
+        selector: "[data-tour='media-filters']",
+        de: { title: "Medien filtern", text: "Grenze Medien nach Übung, Reviewstatus, Quelle, Generierung und Medientyp ein. Der Filterzustand bleibt in der URL nachvollziehbar." },
+        en: { title: "Filter media", text: "Narrow media by exercise, review status, source, generation, and media type. Filter state remains traceable in the URL." },
+      },
+      {
+        selector: "[data-tour='media-batch']",
+        de: { title: "Batch- und KI-Aktionen", text: "Starte Bildjobs oder Freigaben nur für bewusst ausgewählte Medien. Laufende Jobs bleiben in der Warteschlange sichtbar." },
+        en: { title: "Batch and AI actions", text: "Start image jobs or approvals only for deliberately selected media. Running jobs remain visible in the queue." },
+      },
+      {
+        selector: "[data-tour='media-review']",
+        de: { title: "Rechte und fachliches Review", text: "Prüfe Rechte, Einwilligung, Biomechanik und Textübereinstimmung. Externe oder unvollständig geprüfte Medien dürfen nicht still freigegeben werden." },
+        en: { title: "Rights and expert review", text: "Check rights, consent, biomechanics, and text matching. External or incomplete media reviews must not be silently approved." },
+      },
+    ],
+  },
   { id: "ai-drafts", de: "AI-Entwürfe", en: "AI drafts", steps: areaSteps("aiDrafts", "AI-Entwürfe", "AI drafts") },
   { id: "outdoor", de: "Outdoor-Varianten", en: "Outdoor variants", steps: areaSteps("outdoor", "Outdoor-Varianten", "outdoor variants") },
   { id: "admin", de: "Administration", en: "Administration", steps: areaSteps("admin", "Administration", "administration") },
