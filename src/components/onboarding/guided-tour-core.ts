@@ -45,14 +45,33 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
   },
   {
     id: "obstacles",
-    de: "Hindernisse",
-    en: "Obstacles",
+    de: "Hindernis erstellen / zuordnen",
+    en: "Create / assign an obstacle",
     steps: [
-      ...areaSteps("obstacles", "Hindernisse", "obstacles"),
       {
         selector: "[data-tour='obstacle-create']",
-        de: { title: "Übung zuordnen", text: "Übernimm eine bestehende Übung als Hindernis, statt den Bewegungsdatensatz zu duplizieren." },
-        en: { title: "Assign an exercise", text: "Reuse an existing exercise as an obstacle instead of duplicating the movement record." },
+        de: { title: "Bestehende Übung verwenden", text: "Suche zuerst eine passende aktive Übung. OCRCraft ergänzt Hindernis-Guidance, statt den Bewegungsdatensatz zu duplizieren." },
+        en: { title: "Reuse an existing exercise", text: "Start by finding a suitable active exercise. OCRCraft adds obstacle guidance instead of duplicating the movement record." },
+      },
+      {
+        selector: "[data-tour='obstacle-candidate-search']",
+        de: { title: "Kandidaten eingrenzen", text: "Suche nach Name, Bewegung oder OCR-Bezug und wähle nur einen fachlich passenden Kandidaten." },
+        en: { title: "Narrow the candidates", text: "Search by name, movement, or OCR context and choose only a semantically appropriate candidate." },
+      },
+      {
+        selector: "[data-tour='obstacle-candidate-review']",
+        de: { title: "Kandidat prüfen", text: "Prüfe Kategorie und Risikostufe. Bei Unsicherheit nutze „Übernehmen & prüfen“, damit die Hindernis-Guidance vor Verwendung geöffnet wird." },
+        en: { title: "Review the candidate", text: "Check category and risk level. When uncertain, use “Assign & review” so obstacle guidance is opened before use." },
+      },
+      {
+        selector: "[data-tour='obstacle-safety-review']",
+        de: { title: "Sicherheit und Kapazität", text: "Kontrolliere Freizone, Aufsicht, Mindestalter, Stationskapazität, Aufbau und sicheren Fallback, bevor das Hindernis im Training eingesetzt wird." },
+        en: { title: "Safety and capacity", text: "Check clear zone, supervision, minimum age, station capacity, setup, and a safe fallback before using the obstacle in training." },
+      },
+      {
+        selector: "[data-tour='obstacle-edit']",
+        de: { title: "Trainerreview abschließen", text: "Öffne die Hindernis-Bearbeitung, wenn Maße, Ablauf oder Sicherheit noch angepasst werden müssen. Erst danach gilt die Zuordnung als fachlich geprüft." },
+        en: { title: "Complete trainer review", text: "Open obstacle editing when dimensions, flow, or safety still need changes. Treat the assignment as reviewed only afterwards." },
       },
     ],
   },

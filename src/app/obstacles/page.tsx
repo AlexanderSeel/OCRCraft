@@ -135,15 +135,15 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
               Übungskatalog öffnen
             </Link>
           </div>
-          <form className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row" method="get">
+          <form className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row" data-tour="obstacle-candidate-search" method="get">
             <label className="min-w-0 flex-1"><span className="sr-only">Bestehende Übung suchen</span><input className="h-11 w-full min-w-0 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3" defaultValue={candidateQuery} name="candidateQ" placeholder="Übung suchen, z. B. Box, Hang, Carry ..." /></label>
             <button className="min-h-11 shrink-0 rounded-md bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Übungen suchen</button>
           </form>
-          {candidateQuery ? candidates.length ? <div className="mt-4 grid gap-2">{candidates.map((candidate) => <ObstacleCandidateRow candidate={candidate} key={candidate.exerciseId} />)}</div> : <p className="mt-4 rounded-md bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">Keine noch nicht zugeordneten aktiven Übungen für „{candidateQuery}“ gefunden.</p> : null}
+          {candidateQuery ? candidates.length ? <div className="mt-4 grid gap-2" data-tour="obstacle-candidate-review">{candidates.map((candidate) => <ObstacleCandidateRow candidate={candidate} key={candidate.exerciseId} />)}</div> : <p className="mt-4 rounded-md bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">Keine noch nicht zugeordneten aktiven Übungen für „{candidateQuery}“ gefunden.</p> : null}
         </section>
 
         {obstacles.length ? (
-          <section className="catalog-results grid gap-4 xl:grid-cols-2">
+          <section className="catalog-results grid gap-4 xl:grid-cols-2" data-tour="obstacle-safety-review">
             {obstacles.map((obstacle) => <ObstacleCard obstacle={obstacle} key={obstacle.exerciseId} />)}
           </section>
         ) : (
@@ -232,7 +232,7 @@ function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) 
             <Link className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" href={`/exercises/${obstacle.exerciseId}`}>
               Übung öffnen
             </Link>
-            <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/exercises/${obstacle.exerciseId}/edit?from=obstacles#obstacle-guidance`}>
+            <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" data-tour="obstacle-edit" href={`/exercises/${obstacle.exerciseId}/edit?from=obstacles#obstacle-guidance`}>
               Hindernis bearbeiten
             </Link>
             <RemoveObstacleAssignmentForm exerciseId={obstacle.exerciseId} exerciseName={obstacle.name} />
