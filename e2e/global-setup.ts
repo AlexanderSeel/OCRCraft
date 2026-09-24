@@ -1,36 +1,29 @@
 import { createHmac } from "node:crypto";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { DuckDBInstance } from "@duckdb/node-api";
 
 const storageStatePath = path.join(process.cwd(), "e2e", ".auth", "storage-state.json");
 const e2eDatabasePath = process.env.OCRCRAFT_E2E_DB_PATH ?? path.join(process.cwd(), "e2e", ".auth", "ocrcraft-e2e.duckdb");
-const exportPath = path.join(process.cwd(), "e2e", ".auth", "database-export");
+const bundledInitialDatabasePath = path.join(process.cwd(), "data", "ocrcraft.initial.duckdb");
 
-function sqlPath(value: string): string {
-  return value.replaceAll("'", "''");
+async function resolveE2eSourceDatabase(): Promise<string> {
+  const configured = process.env.OCRCRAFT_E2E_SOURCE_DB_PATH ?? process.env.OCRCRAFT_DB_PATH;
+  if (configured) return configured;
+  await stat(bundledInitialDatabasePath);
+  return bundledInitialDatabasePath;
 }
 
 export default async function globalSetup(): Promise<void> {
-  const sourceDatabasePath = process.env.OCRCRAFT_E2E_SOURCE_DB_PATH
-    ?? process.env.OCRCRAFT_DB_PATH
-    ?? path.join(process.cwd(), "data", "ocrcraft.duckdb");
-  await rm(exportPath, { recursive: true, force: true });
+  const sourceDatabasePath = await resolveE2eSourceDatabase();
+  await mkdir(path.dirname(e2eDatabasePath), { recursive: true });
   await rm(e2eDatabasePath, { force: true });
+  await rm(`${e2eDatabasePath}.wal`, { force: true });
+  await copyFile(sourceDatabasePath, e2eDatabasePath);
 
-  const sourceInstance = await DuckDBInstance.create(sourceDatabasePath, { access_mode: "READ_ONLY" });
-  const sourceConnection = await sourceInstance.connect();
-  try {
-    await sourceConnection.run(`EXPORT DATABASE '${sqlPath(exportPath)}' (FORMAT PARQUET)`);
-  } finally {
-    sourceConnection.closeSync();
-    sourceInstance.closeSync();
-  }
-
-  const instance = await DuckDBInstance.create(e2eDatabasePath);
+  const instance = await DuckDBInstance.create(e2eDatabasePath, { access_mode: "READ_WRITE" });
   const connection = await instance.connect();
   try {
-    await connection.run(`IMPORT DATABASE '${sqlPath(exportPath)}'`);
 
     const email = "e2e@ocrcraft.local";
     const e2eUserResult = await connection.runAndReadAll(
