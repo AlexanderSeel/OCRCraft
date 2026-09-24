@@ -45,6 +45,7 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 - [x] Outdoor-Review-Führung ergänzt: Portabilitäts-Audit, sichere Anreicherung und Kandidatenfreigabe sind als getrennte Prüfschritte erklärt und per E2E geprüft.
 - [x] AI-Entwurfsführung ergänzt: Vorschlagserzeugung, deterministischer Review sowie offene/historische Entwürfe und Trainerfreigabe sind getrennt erklärt und per E2E geprüft.
 - [x] Gruppenführung ergänzt: Gruppenerstellung, Filterung sowie Standard- und Schutzwerte sind als eigene Arbeitsschritte erklärt und per E2E geprüft.
+- [x] Interaktive Tourführung erweitert: aktive responsive Ziele werden markiert, zum sichtbaren Element gescrollt und können pro Schritt über „Zum Element springen“ erneut angesprungen werden; die Markierung respektiert `prefers-reduced-motion`.
 - [ ] Fachliche Tiefenführungen für Medienrechte, Outdoor-Review, AI-Drafts, Gruppenregeln und Trainingsspeicherung mit echten Bearbeitungs-/Reviewaktionen ergänzen.
 
 ## P2 – Qualität, Analysen und Workflows

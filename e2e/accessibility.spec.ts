@@ -207,6 +207,8 @@ test("help center tutorial explains its workspace and glossary sections", async 
   const { dialog } = await openTutorial(page, "/help", "Hilfezentrum");
 
   await expect(page.locator("[data-tour='help-reopen'][data-tour-active='true']")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Zum Element springen" })).toBeEnabled();
+  await dialog.getByRole("button", { name: "Zum Element springen" }).click();
   await dialog.getByRole("button", { name: "Weiter" }).click();
   await expect(page.locator("[data-tour='help-workspaces'][data-tour-active='true']")).toBeVisible();
   await dialog.getByRole("button", { name: "Weiter" }).click();

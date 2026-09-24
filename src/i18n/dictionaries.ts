@@ -23,16 +23,17 @@ export interface UiDictionary {
   readonly tourFinish: string;
   readonly tourSkip: string;
   readonly tourStep: string;
+  readonly tourLocate: string;
 }
 
 export const dictionaries: Readonly<Record<Locale, UiDictionary>> = {
   de: {
     navigation: { overview: "Dashboard", training: "Training", exercises: "Übungen", games: "Spiele", aiDrafts: "AI-Entwürfe", obstacles: "Hindernisse", outdoor: "Outdoor", groups: "Gruppen", media: "Medien" },
-    language: "Sprache", languageGerman: "Deutsch", languageEnglish: "English", appearance: "Darstellung", themeSystem: "System", themeLight: "Hell", themeDark: "Dunkel", skipToContent: "Zum Hauptinhalt springen", pageActions: "Seitenaktionen", breadcrumbLabel: "Brotkrümelnavigation", mobileNavigation: "Hauptnavigation mobil", navigationLabel: "Hauptnavigation", help: "Tutorial öffnen", version: "Version", tourClose: "Tutorial schließen", tourPrevious: "Zurück", tourNext: "Weiter", tourFinish: "Fertig", tourSkip: "Überspringen", tourStep: "Schritt",
+    language: "Sprache", languageGerman: "Deutsch", languageEnglish: "English", appearance: "Darstellung", themeSystem: "System", themeLight: "Hell", themeDark: "Dunkel", skipToContent: "Zum Hauptinhalt springen", pageActions: "Seitenaktionen", breadcrumbLabel: "Brotkrümelnavigation", mobileNavigation: "Hauptnavigation mobil", navigationLabel: "Hauptnavigation", help: "Tutorial öffnen", version: "Version", tourClose: "Tutorial schließen", tourPrevious: "Zurück", tourNext: "Weiter", tourFinish: "Fertig", tourSkip: "Überspringen", tourStep: "Schritt", tourLocate: "Zum Element springen",
   },
   en: {
     navigation: { overview: "Dashboard", training: "Training", exercises: "Exercises", games: "Games", aiDrafts: "AI drafts", obstacles: "Obstacles", outdoor: "Outdoor", groups: "Groups", media: "Media" },
-    language: "Language", languageGerman: "German", languageEnglish: "English", appearance: "Appearance", themeSystem: "System", themeLight: "Light", themeDark: "Dark", skipToContent: "Skip to main content", pageActions: "Page actions", breadcrumbLabel: "Breadcrumb navigation", mobileNavigation: "Mobile main navigation", navigationLabel: "Main navigation", help: "Open tutorial", version: "Version", tourClose: "Close tutorial", tourPrevious: "Back", tourNext: "Next", tourFinish: "Done", tourSkip: "Skip", tourStep: "Step",
+    language: "Language", languageGerman: "German", languageEnglish: "English", appearance: "Appearance", themeSystem: "System", themeLight: "Light", themeDark: "Dark", skipToContent: "Skip to main content", pageActions: "Page actions", breadcrumbLabel: "Breadcrumb navigation", mobileNavigation: "Mobile main navigation", navigationLabel: "Main navigation", help: "Open tutorial", version: "Version", tourClose: "Close tutorial", tourPrevious: "Back", tourNext: "Next", tourFinish: "Done", tourSkip: "Skip", tourStep: "Step", tourLocate: "Jump to element",
   },
 };
 

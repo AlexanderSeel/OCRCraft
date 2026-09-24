@@ -375,6 +375,14 @@ html[data-theme="dark"] [class~="hover:bg-[#e5e9ed]"]:hover {
   outline: 3px solid var(--brand);
   outline-offset: 4px;
   box-shadow: 0 0 0 8px color-mix(in srgb, var(--brand) 18%, transparent);
+  animation: tour-target-pulse 1.8s ease-in-out infinite;
+}
+@keyframes tour-target-pulse {
+  0%, 100% { outline-offset: 4px; }
+  50% { outline-offset: 7px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-tour-active="true"] { animation: none; }
 }
 @media (min-width: 640px) {
   .admin-panel { padding: 1.25rem; }
