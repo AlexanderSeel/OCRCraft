@@ -368,6 +368,7 @@ API-Schlüssel und andere Secrets dürfen nicht committed werden.
 - [Offene Vorhaben](./plan.md)
 - [Betrieb und Backup](./docs/operations.md)
 - [Designsystem](./docs/design-system.md)
+- [UX-Konzept](./docs/ux-concept.md)
 - [UI-Komponenten](./docs/ui-components.md)
 - [OCR-Fähigkeitsmatrix](./docs/ocr-skill-matrix.md)
 - [OCRFRA-Hindernisinventar](./docs/ocrfra-obstacle-inventory.md)
