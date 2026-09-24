@@ -167,7 +167,28 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
     ],
   },
   { id: "games", de: "Spiele", en: "Games", steps: areaSteps("games", "Spiele", "games") },
-  { id: "groups", de: "Gruppen", en: "Groups", steps: areaSteps("groups", "Gruppen", "groups") },
+  {
+    id: "groups",
+    de: "Gruppen",
+    en: "Groups",
+    steps: [
+      {
+        selector: "[data-tour='group-create']",
+        de: { title: "Gruppe anlegen", text: "Nutze eine Startvorlage oder beginne leer. Name, Zielgruppe und Altersbereich bilden die Grundlage für sichere Trainingsvorschläge." },
+        en: { title: "Create a group", text: "Use a preset or start blank. Name, audience, and age range form the basis for safe training suggestions." },
+      },
+      {
+        selector: "[data-tour='group-filters']",
+        de: { title: "Gruppen finden", text: "Filtere aktive oder archivierte Gruppen nach Name und Zielgruppe, ohne die gespeicherten Standardwerte zu verändern." },
+        en: { title: "Find groups", text: "Filter active or archived groups by name and audience without changing saved defaults." },
+      },
+      {
+        selector: "[data-tour='group-cards']",
+        de: { title: "Standards prüfen", text: "Prüfe Alter, Teilnehmerzahl, Dauer, Ort, Equipment, Risikoprofil und Schutzprofil. Diese Werte können in Quick Create als Vereinsstandard dienen." },
+        en: { title: "Review defaults", text: "Review age, participant count, duration, location, equipment, risk profile, and safeguarding profile. These values can guide Quick Create." },
+      },
+    ],
+  },
   {
     id: "media",
     de: "Medienreview",

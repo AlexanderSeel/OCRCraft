@@ -99,12 +99,13 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         ) : null}
 
         {!archivedView ? (
-          <Disclosure
-            className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]"
-            open={Boolean(selectedPreset)}
-            summaryClassName="px-5 py-4 font-black"
-            summary="+ Neue Gruppe anlegen"
-          >
+          <div data-tour="group-create">
+            <Disclosure
+              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]"
+              open={Boolean(selectedPreset)}
+              summaryClassName="px-5 py-4 font-black"
+              summary="+ Neue Gruppe anlegen"
+            >
             <div className="border-t border-[var(--border)] px-5 pt-5">
               <div className="text-xs font-black uppercase tracking-[0.1em] text-[var(--muted)]">Startvorlage</div>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -144,12 +145,13 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                 </button>
               </div>
             </form>
-          </Disclosure>
+            </Disclosure>
+          </div>
         ) : null}
 
         <CatalogSummaryStrip items={[{ label: archivedView ? "Archivierte Gruppen" : "Gruppen", value: groupPage.total }]} />
 
-        <div className="catalog-workspace grid min-w-0 gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
+        <div className="catalog-workspace grid min-w-0 gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start" data-tour="group-filters">
         <CatalogFilterPanel hasFilters={Boolean(searchQuery || audienceFilter || query.size)} resetHref={archivedView ? "/groups?archived=1" : "/groups"} title="Gruppenfilter">
             <input name="archived" type="hidden" value={archivedView ? "1" : "0"} />
             <label className="grid gap-1 text-sm font-bold">
@@ -170,7 +172,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         </CatalogFilterPanel>
         <div className="min-w-0 space-y-6">
         <CatalogSummaryStrip items={[{ label: "Aktueller Bereich", value: groupPage.total === 0 ? "0" : `${Math.min((page - 1) * pageSize + 1, groupPage.total)}–${Math.min(page * pageSize, groupPage.total)} von ${groupPage.total}` }]} />
-        <section className="catalog-results grid gap-4 xl:grid-cols-2">
+        <section className="catalog-results grid gap-4 xl:grid-cols-2" data-tour="group-cards">
           {groups.map((group) => (
             <Card
               as="article"

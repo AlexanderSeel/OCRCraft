@@ -245,3 +245,14 @@ test("AI draft tutorial separates proposal, review and approval", async ({ page 
   await dialog.getByRole("button", { name: "Weiter" }).click();
   await expect(page.locator("[data-tour='ai-draft-filters'][data-tour-active='true']")).toBeVisible();
 });
+
+test("groups tutorial covers creation, filtering and defaults", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
+  const { dialog } = await openTutorial(page, "/groups", "Gruppen");
+
+  await expect(page.locator("[data-tour='group-create'][data-tour-active='true']")).toBeVisible();
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='group-filters'][data-tour-active='true']")).toBeVisible();
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='group-cards'][data-tour-active='true']")).toBeVisible();
+});
