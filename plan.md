@@ -28,6 +28,7 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 
 ## P1 – UX/UI-Konzept und Einheitlichkeit
 
+- [x] Gemeinsame Katalog-Pagination auf den zentralen UI-Button-Adapter umgestellt; Fokus-, Radius- und Statusregeln gelten damit einheitlich für Übungen, Trainings, Gruppen, Hindernisse, Medien, Spiele, Vorlagen und Outdoor-Reviews.
 - [ ] UI-Konsistenz über alle Routen prüfen und abschließen: Formfelder, Buttons, Abstände, Radien, Typografie, Statusfarben, Tabellen, Cards, Dialoge, Pagination und mobile Navigation ausschließlich aus den lokalen UI-Bausteinen beziehen.
 - [ ] Accessibility- und Regression-Gate erweitern: Browser-Fokus-/Kontrastprüfung, Touch-Ziele, reduzierte Bewegung, Formularfehler am Feld, Dialog-/Popover-Escape und Fokus-Rückgabe sowie mobile Shell für alle Fachseiten.
 - [ ] HyperUI-Übernahme abschließen: Übergangsklassen und doppeltes Seiten-Markup entfernen, Quellenhinweise erhalten und nach jedem Batch die vollständige Abschlussroutine ausführen.
