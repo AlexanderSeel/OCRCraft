@@ -22,11 +22,28 @@ function manifestFields(item) {
   };
 }
 
-function pngMetadata(bytes) {
-  if (bytes.length < 24 || bytes.readUInt32BE(0) !== 0x89504e47 || bytes.toString("ascii", 12, 16) !== "IHDR") {
-    throw new Error("Die Datei ist kein gültiges PNG.");
+function imageMetadata(bytes, fileName) {
+  if (bytes.length >= 24 && bytes.readUInt32BE(0) === 0x89504e47 && bytes.toString("ascii", 12, 16) === "IHDR") {
+    return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20), contentType: "image/png" };
   }
-  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+  if (bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8) {
+    let offset = 2;
+    while (offset + 9 < bytes.length) {
+      if (bytes[offset] !== 0xff) { offset += 1; continue; }
+      const marker = bytes[offset + 1];
+      offset += 2;
+      if (marker === 0xd8 || marker === 0xd9 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+      if (offset + 2 > bytes.length) break;
+      const segmentLength = bytes.readUInt16BE(offset);
+      if (segmentLength < 2 || offset + segmentLength > bytes.length) break;
+      const isStartOfFrame = [0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf].includes(marker);
+      if (isStartOfFrame && segmentLength >= 7) {
+        return { width: bytes.readUInt16BE(offset + 5), height: bytes.readUInt16BE(offset + 3), contentType: "image/jpeg" };
+      }
+      offset += segmentLength;
+    }
+  }
+  throw new Error(`Die Datei ist kein gültiges unterstütztes Bild: ${fileName}`);
 }
 
 function normalize(value) {
@@ -120,7 +137,7 @@ async function main() {
       }
 
       const bytes = await readFile(path.join(packageRoot, "images", fields.fileName));
-      const metadata = pngMetadata(bytes);
+      const metadata = imageMetadata(bytes, fields.fileName);
       const destination = path.join(imageRoot, "named", exercise.seedKey ?? exercise.id, fields.fileName);
       await mkdir(path.dirname(destination), { recursive: true });
       await writeFile(destination, bytes);
@@ -134,12 +151,13 @@ async function main() {
           consent_required,consent_confirmed,is_primary
         ) VALUES (
           $assetId::UUID,$exerciseId::UUID,'image','club_created',$provider,'pending','generated',
-          'filesystem',$storageKey,$storageUri,'image/png',$width,$height,$sha256,
+          'filesystem',$storageKey,$storageUri,$contentType,$width,$height,$sha256,
           current_timestamp,$licenseLabel,$sourceReference,$usageNote,'approved',false,true,false
         )
       `, {
         assetId: randomUUID(), exerciseId: exercise.id, provider: IMAGE_PACKAGE_PROVIDER,
-        storageKey, storageUri: `/generated/exercises/${storageKey}`, width: metadata.width, height: metadata.height, sha256,
+        storageKey, storageUri: `/generated/exercises/${storageKey}`, contentType: metadata.contentType,
+        width: metadata.width, height: metadata.height, sha256,
         licenseLabel: IMAGE_PACKAGE_LICENSE, sourceReference,
         usageNote: `${fields.sourceBatch}: ${fields.notes}`,
       });
