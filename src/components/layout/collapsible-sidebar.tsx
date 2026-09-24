@@ -37,6 +37,10 @@ export function CollapsibleSidebar() {
           <svg aria-hidden="true" className="size-5 shrink-0" fill="none" viewBox="0 0 24 24"><path d="M12 3.5 13.4 5l2-.2.8 1.8 1.8.8-.2 2L19.5 11l-1.4 1.5 1.4 1.5-1.7 1.6.2 2-1.8.8-.8 1.8-2-.2L12 21l-1.5-1.4-2 .2-.8-1.8-1.8-.8.2-2L4.5 14l1.4-1.5L4.5 11l1.6-1.6-.2-2 1.8-.8.8-1.8 2 .2L12 3.5Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.6" /><circle cx="12" cy="12.5" r="2.5" stroke="currentColor" strokeWidth="1.6" /></svg>
           {!collapsed ? <span>Administration</span> : null}
         </Link>
+        <Link aria-label="Hilfezentrum" className={`mt-0.5 min-h-11 rounded-md text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)] ${collapsed ? "mx-auto flex size-11 items-center justify-center" : "flex items-center gap-3 px-3"}`} href="/help" title="Hilfezentrum">
+          <svg aria-hidden="true" className="size-5 shrink-0" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.7" /><path d="M9.8 9.2a2.4 2.4 0 1 1 3.7 2c-.9.6-1.5 1.1-1.5 2.3M12 17h.01" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" /></svg>
+          {!collapsed ? <span>Hilfezentrum</span> : null}
+        </Link>
         {!collapsed ? <div className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--sidebar-muted)]">{APP_RELEASE_LABEL}</div> : null}
       </div>
     </aside>

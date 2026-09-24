@@ -369,6 +369,7 @@ API-Schlüssel und andere Secrets dürfen nicht committed werden.
 ## Weitere Dokumentation
 
 - [Offene Vorhaben](./plan.md)
+- Hilfezentrum direkt in der App unter `/help`
 - [Betrieb und Backup](./docs/operations.md)
 - [Designsystem](./docs/design-system.md)
 - [UX-Konzept](./docs/ux-concept.md)

@@ -32,7 +32,6 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 
 - [ ] Kernführungen fachlich vertiefen: „Übung erstellen“, „Hindernis erstellen/zuordnen“ und „Trainingsplan erstellen“ erklären Eingaben, Sicherheitsprüfung, Trainerreview und Speichern in der tatsächlichen Reihenfolge.
 - [ ] Tutorial-Tests ergänzen: Tastatur, Escape, Fokus, reduzierte Bewegung, mobile Ansicht, Sprachwechsel und korrekte Zielmarken für jeden Kernworkflow per Playwright prüfen.
-- [ ] Ein dauerhaft zugängliches Hilfezentrum als Einstieg für „Tutorial erneut öffnen“, Glossar und kurze Fachhinweise ergänzen.
 
 ## P2 – Qualität, Analysen und Workflows
 
