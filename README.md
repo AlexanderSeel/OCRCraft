@@ -314,6 +314,7 @@ Voraussetzungen:
 
 - Node.js `>=20.19.0`
 - npm
+- Git LFS (für `data/ocrcraft.initial.duckdb`)
 
 Installation:
 
