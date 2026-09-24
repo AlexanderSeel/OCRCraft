@@ -246,6 +246,8 @@ Wichtige Eigenschaften:
 
 Ein routebewusstes Tutorial erklärt wichtige Arbeitsbereiche direkt in der Anwendung.
 
+Die Tutorial-Grundlage deckt alle zentralen Arbeitsbereiche ab; die konkrete fachliche Vertiefung einzelner Kernworkflows wird separat weiterentwickelt.
+
 ## Internationalisierung
 
 Deutsch ist die Primärsprache. Die Anwendung besitzt eine typisierte DE/EN-Dictionary-Struktur und einen persistenten Sprachumschalter.

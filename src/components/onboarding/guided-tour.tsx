@@ -5,47 +5,7 @@ import { usePathname } from "next/navigation";
 import { APP_RELEASE_LABEL } from "@/config/app-version";
 import { Dialog } from "@/components/ui/dialog";
 import { useLocale } from "@/components/i18n/locale-provider";
-
-type TourCopy = { readonly title: string; readonly text: string };
-type TourStep = { readonly selector: string; readonly de: TourCopy; readonly en: TourCopy };
-type TourGuide = { readonly id: string; readonly de: string; readonly en: string; readonly steps: readonly TourStep[] };
-
-const guides: readonly TourGuide[] = [
-  { id: "overview", de: "Dashboard", en: "Dashboard", steps: commonSteps("overview") },
-  { id: "training", de: "Trainingsplanung", en: "Training planning", steps: commonSteps("training") },
-  { id: "exercises", de: "Übungsbibliothek", en: "Exercise library", steps: commonSteps("exercises") },
-  { id: "exercise-create", de: "Übung erstellen", en: "Create an exercise", steps: [{ selector: "[data-tour='exercise-identity']", de: { title: "Grunddaten", text: "Beginne mit Name, Kategorie und Sicherheitsrahmen. Danach öffnet sich der vollständige Editor." }, en: { title: "Core data", text: "Start with the name, category and safety frame. The full editor opens next." } }, { selector: "[data-tour='page-content']", de: { title: "Vollständiger Editor", text: "Ergänze anschließend Equipment, Körperregionen, Dosierung, Progression und DE/EN-Coaching." }, en: { title: "Full editor", text: "Then add equipment, body regions, dosage, progression and DE/EN coaching." } }] },
-  { id: "obstacle-create", de: "Hindernis erstellen", en: "Create an obstacle", steps: [{ selector: "[data-tour='obstacle-create']", de: { title: "Übung zuordnen", text: "Übernimm eine bestehende Übung, statt sie zu duplizieren. Die Hindernis-Guidance bleibt strukturiert." }, en: { title: "Assign an exercise", text: "Reuse an existing exercise instead of duplicating it. Obstacle guidance stays structured." } }, { selector: "[data-tour='page-content']", de: { title: "Sicherheit prüfen", text: "Prüfe Aufbau, freie Sicherheitszone, Kapazität und sichere Fallback-Variante vor der Nutzung." }, en: { title: "Check safety", text: "Check setup, clear safety zone, capacity and a safe fallback before use." } }] },
-  { id: "training-create", de: "Trainingsplan erstellen", en: "Create a training plan", steps: [{ selector: "[data-tour='quick-create']", de: { title: "Quick Create", text: "Starte mit Gruppe, Alter, Dauer und Ziel. OCRCraft berechnet daraus einen prüfbaren Entwurf." }, en: { title: "Quick Create", text: "Start with group, age, duration and goal. OCRCraft creates a reviewable draft." } }, { selector: "[data-tour='builder']", de: { title: "Plan prüfen", text: "Kontrolliere Aufwärmen, Hauptteil und Cooldown, passe Übungen an und speichere erst nach der Trainerprüfung." }, en: { title: "Review the plan", text: "Check warm-up, main part and cooldown, adjust exercises and save only after trainer review." } }] },
-  { id: "groups", de: "Gruppen verwalten", en: "Manage groups", steps: commonSteps("groups") },
-  { id: "games", de: "Spiele verwalten", en: "Manage games", steps: commonSteps("games") },
-  { id: "media", de: "Medien prüfen", en: "Review media", steps: commonSteps("media") },
-  { id: "ai-drafts", de: "AI-Entwürfe prüfen", en: "Review AI drafts", steps: commonSteps("aiDrafts") },
-  { id: "outdoor", de: "Outdoor-Varianten", en: "Outdoor variants", steps: commonSteps("outdoor") },
-  { id: "admin", de: "Administration", en: "Administration", steps: commonSteps("admin") },
-];
-
-function commonSteps(area: string): readonly TourStep[] {
-  return [
-    { selector: `[data-tour='nav-${area}']`, de: { title: "Bereich öffnen", text: "Nutze die Hauptnavigation, um diesen Arbeitsbereich direkt zu erreichen." }, en: { title: "Open the area", text: "Use the main navigation to reach this workspace directly." } },
-    { selector: "[data-tour='page-content']", de: { title: "Arbeitsfläche", text: "Die Seite zeigt Ergebnisse, Filter und Aktionen in einem einheitlichen, prüfbaren Aufbau." }, en: { title: "Workspace", text: "The page keeps results, filters and actions in one consistent, reviewable layout." } },
-  ];
-}
-
-function guideForPath(pathname: string): TourGuide {
-  if (pathname === "/exercises/new") return guides.find((guide) => guide.id === "exercise-create")!;
-  if (pathname === "/obstacles") return guides.find((guide) => guide.id === "obstacle-create")!;
-  if (pathname === "/quick-create" || pathname === "/training/builder") return guides.find((guide) => guide.id === "training-create")!;
-  if (pathname.startsWith("/training")) return guides.find((guide) => guide.id === "training")!;
-  if (pathname.startsWith("/exercises/ai-drafts")) return guides.find((guide) => guide.id === "ai-drafts")!;
-  if (pathname.startsWith("/exercises")) return guides.find((guide) => guide.id === "exercises")!;
-  if (pathname.startsWith("/games")) return guides.find((guide) => guide.id === "games")!;
-  if (pathname.startsWith("/groups")) return guides.find((guide) => guide.id === "groups")!;
-  if (pathname.startsWith("/media")) return guides.find((guide) => guide.id === "media")!;
-  if (pathname.startsWith("/admin/outdoor")) return guides.find((guide) => guide.id === "outdoor")!;
-  if (pathname.startsWith("/admin")) return guides.find((guide) => guide.id === "admin")!;
-  return guides.find((guide) => guide.id === "overview")!;
-}
+import { guideForPath } from "./guided-tour-core";
 
 export function GuidedTour() {
   const pathname = usePathname();

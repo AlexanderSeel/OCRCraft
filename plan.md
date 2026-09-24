@@ -30,7 +30,6 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 
 ## P1 – Interaktive Tutorials
 
-- [ ] Tutorial-Grundlage auf alle Arbeitsbereiche erweitern: Dashboard, Training, Übungen, Hindernisse, Spiele, Gruppen, Medien, AI-Entwürfe, Outdoor und Administration erhalten routebewusste Schritte mit DE/EN-Texten und echten Zielmarken.
 - [ ] Kernführungen fachlich vertiefen: „Übung erstellen“, „Hindernis erstellen/zuordnen“ und „Trainingsplan erstellen“ erklären Eingaben, Sicherheitsprüfung, Trainerreview und Speichern in der tatsächlichen Reihenfolge.
 - [ ] Tutorial-Zustand verbessern: Fortschritt pro Bereich speichern, Wiedereinstieg ermöglichen, fehlende Zielmarken verständlich behandeln und keine Führung automatisch über kritische Formulare legen.
 - [ ] Tutorial-Tests ergänzen: Tastatur, Escape, Fokus, reduzierte Bewegung, mobile Ansicht, Sprachwechsel und korrekte Zielmarken für jeden Kernworkflow per Playwright prüfen.
