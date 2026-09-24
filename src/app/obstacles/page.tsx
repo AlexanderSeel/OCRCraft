@@ -123,7 +123,7 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
         </CatalogFilterPanel>
         <div className="min-w-0 space-y-6">
 
-        <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+        <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]" data-tour="obstacle-create">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-base font-black">Bestehende Übung als Hindernis übernehmen</h2>

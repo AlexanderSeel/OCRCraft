@@ -92,7 +92,11 @@ const migrations: readonly Migration[] = [
   { version: 80, fileName: "080_external_import_sources.sql" },
   { version: 81, fileName: "081_ocrfra_additional_obstacles.sql" },
   { version: 82, fileName: "082_ocrfra_template_game_pack.sql" },
+  { version: 83, fileName: "083_ocr_candidate_provenance.sql" },
+  { version: 84, fileName: "084_portable_training_catalog.sql" },
 ];
+
+const initialSchemaFileName = "initial-v1.sql";
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {
   return Promise.all(
@@ -103,6 +107,24 @@ export async function readAllMigrationScripts(): Promise<readonly string[]> {
       ),
     ),
   );
+}
+
+async function readInitialSchemaScript(): Promise<string> {
+  return readFile(
+    path.join(process.cwd(), "src", "server", "db", initialSchemaFileName),
+    "utf8",
+  );
+}
+
+async function isFreshDatabase(): Promise<boolean> {
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      SELECT count(*)
+      FROM information_schema.tables
+      WHERE table_schema='main' AND table_name <> 'schema_migrations'
+    `);
+    return Number(reader.getRows()[0]?.[0] ?? 0) === 0;
+  });
 }
 
 async function getAppliedVersions(): Promise<Set<number>> {
@@ -135,6 +157,13 @@ export async function runSqlScript(
 }
 
 export async function applyPendingMigrations(): Promise<readonly number[]> {
+  if (await isFreshDatabase()) {
+    await withDuckDbConnection(async (connection) => {
+      await runSqlScript(connection, await readInitialSchemaScript());
+    });
+    return migrations.map(({ version }) => version);
+  }
+
   const applied = await getAppliedVersions();
   const scripts = await readAllMigrationScripts();
   const newlyApplied: number[] = [];

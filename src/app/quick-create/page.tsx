@@ -43,7 +43,7 @@ export default async function QuickCreatePage({ searchParams }: PageProps) {
         </div>
       )}
     >
-      <QuickCreateWizard
+      <div data-tour="quick-create"><QuickCreateWizard
         templatePresets={TRAINING_TEMPLATES.map((template) => ({
           key: template.key,
           title: template.titleDe,
@@ -91,7 +91,7 @@ export default async function QuickCreatePage({ searchParams }: PageProps) {
           defaultGroupSplitCount: group.defaultGroupSplitCount,
           defaultStationGroupSize: group.defaultStationGroupSize,
         }))}
-      />
+      /></div>
     </AppShell>
   );
 }

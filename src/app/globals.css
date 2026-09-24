@@ -368,6 +368,14 @@ html[data-theme="dark"] [class~="hover:bg-[#e5e9ed]"]:hover {
   padding: 1rem;
   box-shadow: var(--shadow-card);
 }
+
+[data-tour-active="true"] {
+  position: relative;
+  z-index: 30;
+  outline: 3px solid var(--brand);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--brand) 18%, transparent);
+}
 @media (min-width: 640px) {
   .admin-panel { padding: 1.25rem; }
 }

@@ -6,7 +6,7 @@ Die Kernstruktur bleibt sichtbar: **Aufwärmen → Hauptteil → Cooldown & Stre
 
 ## Status
 
-Die produktive Grundlage steht auf `main`. Der Katalog wird dynamisch aus versionierten Seeds und importierten Datensätzen aufgebaut. Übungen besitzen deutsche und englische Identität, Aliase, Körperregionen, Muskel- und Gegenmuskelbeziehungen, Equipment, Bewegungsmuster, Zielgruppen-, Risiko- und Coachingdaten.
+OCRCraft steht auf Release `1.0.0`. Die sichtbare App-Version steht in der Desktop-Sidebar und die Datenbank besitzt eine reproduzierbare v1.0-Fresh-Install-Baseline. Der Katalog wird dynamisch aus versionierten Seeds und importierten Datensätzen aufgebaut. Übungen besitzen deutsche und englische Identität, Aliase, Körperregionen, Muskel- und Gegenmuskelbeziehungen, Equipment, Bewegungsmuster, Zielgruppen-, Risiko- und Coachingdaten.
 
 Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Abgeschlossene Meilensteine sind unten zusammengefasst; die produktive Betriebsroutine ist in [`docs/operations.md`](./docs/operations.md) dokumentiert.
 
@@ -22,6 +22,12 @@ Der verbleibende Fahrplan steht kompakt in [`plan.md`](./plan.md). Abgeschlossen
 - Internationalisierungsgrundlage: typisierte DE/EN-Dictionaries, persistierter Sprachumschalter und übersetzte globale Navigation/Theme-Beschriftungen; die vollständige Fachseiten-Abdeckung bleibt in `plan.md` offen.
 - Übersetzungsqualität: Der Admin-Tab „Datenqualität“ prüft Dictionary-Schlüssel auf fehlende und verwaiste Einträge; Fachseiten können schrittweise an dieselbe Schlüsselstruktur angebunden werden.
 - Strukturierte Übersetzungsqualität: Der Admin-Vollständigkeitsbericht prüft pro DE/EN-Datensatz Detailfelder, Ausführungsschritte, Coaching-Cues und Fehlerkorrekturen getrennt.
+- Datenbank-Release 1.0: 82 nummerierte Migrationen bis Version 83 werden über [`src/server/db/initial-v1.sql`](./src/server/db/initial-v1.sql) als atomare Fresh-Install-Baseline ausgeliefert; bestehende Datenbanken bleiben upgradefähig.
+- Datenkuratierung: Quellenregister, 70%-Matching, OCR-Relevanz-Audit für 177 Kandidaten, High-Signal-Review, OCR-/OCRFRA-Lückenbatches, Quellen-/Lizenztrennung und Katalog-Coverage sind dokumentiert und getestet.
+- OCRFRA-Fachpakete: lokale Hindernisse, OCR-Fähigkeitsmatrix, Templates, Spielkatalog, Sicherheitszonen, Fallbacks, Altersgrenzen und Trainerfreigaben sind strukturiert hinterlegt.
+- UI-Konsolidierung: lokale Form-, Card-, Feedback-, Dialog-, Popover-, Pagination-, Sidebar-, Toast- und Filterbausteine sowie das kompakte Coral/Lime/Graphit-Designsystem sind über die zentralen Katalog- und Trainingsseiten eingeführt.
+- Qualitäts- und Sicherheitsgates: statische UI-Prüfung, Playwright-Regressionen, Auth-/RBAC-Schutz, Kids-/Youth-Regeln, serverseitige Domänenvalidierung, AI-Review-Blocker und vollständige Seed-/Übersetzungsberichte sind vorhanden.
+- Interaktive Orientierung: Release 1.0 enthält eine routebewusste DE/EN-Tour für Dashboard, Kataloge, Administration, Übungserstellung, Hinderniszuordnung, Quick Create und Training Builder.
 
 ## Funktionen
 
@@ -102,6 +108,8 @@ Trainings können auf der Detailseite als Version-Snapshot gespeichert und mit e
 - AI-Entwürfe und Outdoor-Review mit gemeinsamen URL-basierten Such-/Statusfiltern und kompakten Reset-Zuständen
 - Medienkatalog mit gemeinsamem Ergebniszähler sowie URL-basierten Review-, Generierungs-, Quellen- und Medientypfiltern
 - Vorlagenkatalog mit kompaktem gemeinsamem Filterpanel für Zielgruppe und Schwerpunkt, getrennt vom Vereinsvorlagenbereich
+- zentrale Tutorial-Schaltfläche in der App-Shell mit Schrittfortschritt, Zurück/Weiter, Escape, Überspringen und Fokus auf den erklärten Arbeitsbereich
+- App-Version `1.0.0` sichtbar in der Desktop-Sidebar und im Tutorial-Kontext
 
 ## Voraussetzungen
 

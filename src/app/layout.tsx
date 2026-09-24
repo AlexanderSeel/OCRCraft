@@ -5,7 +5,7 @@ import { LocaleProvider } from "@/components/i18n/locale-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "OCRCraft",
+  title: "OCRCraft 1.0",
   description: "Trainingsplanung für OCR, Functional Training und Breitensport",
 };
 

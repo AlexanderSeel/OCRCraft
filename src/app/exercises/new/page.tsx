@@ -14,7 +14,7 @@ export default function NewExercisePage() {
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[var(--muted)]">
           <span className="font-black text-[var(--foreground)]">Schritt 1 von 2:</span> Grunddaten speichern. Anschließend wird dieselbe vollständige Bearbeitungsoberfläche geöffnet, die auch für bestehende Übungen verwendet wird.
         </div>
-        <ExerciseForm action={createExerciseAction} submitLabel="Anlegen & vollständigen Editor öffnen" />
+        <div data-tour="exercise-identity"><ExerciseForm action={createExerciseAction} submitLabel="Anlegen & vollständigen Editor öffnen" /></div>
       </div>
     </AppShell>
   );

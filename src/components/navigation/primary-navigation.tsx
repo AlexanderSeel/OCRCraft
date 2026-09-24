@@ -36,6 +36,7 @@ export function PrimaryNavigation({ variant, collapsed = false }: PrimaryNavigat
                 className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-md border-l-2 px-2.5 text-xs font-bold transition ${active ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)]"}`}
                 href={href}
                 key={href}
+                data-tour={`nav-${key}`}
               >
                 <NavIcon label={key} />
                 {label}
@@ -59,6 +60,7 @@ export function PrimaryNavigation({ variant, collapsed = false }: PrimaryNavigat
             className={`min-h-11 rounded-md border-l-2 text-sm font-semibold transition ${collapsed ? "mx-auto flex size-11 items-center justify-center px-0" : "flex items-center gap-3 px-3"} ${active ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--sidebar-foreground)]" : "border-transparent text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]"}`}
             href={href}
             key={href}
+            data-tour={`nav-${key}`}
           >
             <span className={active ? "text-[var(--brand)]" : ""}><NavIcon label={key} /></span>
             {!collapsed ? <span className="truncate">{label}</span> : null}

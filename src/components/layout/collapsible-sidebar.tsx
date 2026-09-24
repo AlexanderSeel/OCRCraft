@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 import { PrimaryNavigation } from "@/components/navigation/primary-navigation";
+import { APP_RELEASE_LABEL } from "@/config/app-version";
 
 const STORAGE_KEY = "ocrcraft-sidebar-collapsed";
 
@@ -32,10 +33,11 @@ export function CollapsibleSidebar() {
       {collapsed ? <div className="flex justify-center border-b border-[var(--sidebar-border)] p-1.5"><button aria-label="Hauptnavigation vergrößern" className="grid size-10 place-items-center rounded-md text-lg font-black text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" onClick={toggle} title="Navigation vergrößern" type="button">›</button></div> : null}
       <PrimaryNavigation collapsed={collapsed} variant="sidebar" />
       <div className={`mt-auto border-t border-[var(--sidebar-border)] ${collapsed ? "p-1.5" : "p-2.5"}`}>
-        <Link aria-label="Administration" className={`min-h-11 rounded-md text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)] ${collapsed ? "mx-auto flex size-11 items-center justify-center" : "flex items-center gap-3 px-3"}`} href="/admin?tab=overview" title="Administration">
+        <Link aria-label="Administration" className={`min-h-11 rounded-md text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)] ${collapsed ? "mx-auto flex size-11 items-center justify-center" : "flex items-center gap-3 px-3"}`} data-tour="nav-admin" href="/admin?tab=overview" title="Administration">
           <svg aria-hidden="true" className="size-5 shrink-0" fill="none" viewBox="0 0 24 24"><path d="M12 3.5 13.4 5l2-.2.8 1.8 1.8.8-.2 2L19.5 11l-1.4 1.5 1.4 1.5-1.7 1.6.2 2-1.8.8-.8 1.8-2-.2L12 21l-1.5-1.4-2 .2-.8-1.8-1.8-.8.2-2L4.5 14l1.4-1.5L4.5 11l1.6-1.6-.2-2 1.8-.8.8-1.8 2 .2L12 3.5Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.6" /><circle cx="12" cy="12.5" r="2.5" stroke="currentColor" strokeWidth="1.6" /></svg>
           {!collapsed ? <span>Administration</span> : null}
         </Link>
+        {!collapsed ? <div className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--sidebar-muted)]">{APP_RELEASE_LABEL}</div> : null}
       </div>
     </aside>
   );

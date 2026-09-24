@@ -45,7 +45,7 @@ export default async function TrainingBuilderPage({ searchParams }: PageProps) {
       )}
     >
       <div className="space-y-6">
-        <TrainingQuickPlanner equipmentOptions={equipmentOptions} obstacleOptions={obstacleOptions} />
+        <div data-tour="builder"><TrainingQuickPlanner equipmentOptions={equipmentOptions} obstacleOptions={obstacleOptions} /></div>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
           <form className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end" method="get">

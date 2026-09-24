@@ -108,7 +108,7 @@ test("exercise filter dialog closes with Escape and returns focus to its trigger
 
   const dialog = page.getByRole("dialog", { name: "Muskelgruppen" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Schließen" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Dialog schließen" })).toBeVisible();
 
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
@@ -126,4 +126,22 @@ test("language switcher changes global navigation and persists after reload", as
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("combobox", { name: "Language" })).toHaveValue("en");
+});
+
+test("guided tutorial advances, focuses its target and closes with Escape", async ({ page }) => {
+  await page.goto("/exercises/new", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Tutorial öffnen" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Übung erstellen" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("Grunddaten")).toBeVisible();
+  await expect(page.locator("[data-tour='exercise-identity'][data-tour-active='true']")).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(dialog.getByText("Vollständiger Editor")).toBeVisible();
+  await expect(page.locator("main[data-tour-active='true']")).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(page.locator("[data-tour-active='true']")).toHaveCount(0);
 });

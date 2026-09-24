@@ -12,6 +12,26 @@ async function runScript(connection: Awaited<ReturnType<InstanceType<typeof Duck
 }
 
 describe("database migrations", () => {
+  it("applies the generated v1.0 baseline to a fresh DuckDB database", async () => {
+    const instance = await DuckDBInstance.create(":memory:");
+    const connection = await instance.connect();
+
+    try {
+      const baseline = await readFile(path.join(process.cwd(), "src", "server", "db", "initial-v1.sql"), "utf8");
+      await runScript(connection, baseline);
+
+      const migrations = await connection.runAndReadAll("SELECT count(*) FROM schema_migrations");
+      const exercises = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL");
+      const gameCatalog = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key LIKE 'game-%'");
+
+      expect(Number(migrations.getRows()[0]?.[0])).toBe(83);
+      expect(Number(exercises.getRows()[0]?.[0])).toBeGreaterThanOrEqual(140);
+      expect(Number(gameCatalog.getRows()[0]?.[0])).toBe(13);
+    } finally {
+      connection.closeSync();
+    }
+  });
+
   it("applies the complete migration chain to a fresh DuckDB database", async () => {
     const instance = await DuckDBInstance.create(":memory:");
     const connection = await instance.connect();
@@ -41,6 +61,12 @@ describe("database migrations", () => {
         ["training_sessions", "organization_mode"],
         ["training_sessions", "route_name"],
       ]);
+
+      const portability = await connection.runAndReadAll(`
+        SELECT table_name FROM information_schema.tables
+        WHERE table_name='exercise_environment_reviews'
+      `);
+      expect(portability.getRows()).toEqual([["exercise_environment_reviews"]]);
 
       const gameCatalog = await connection.runAndReadAll(`
         SELECT count(*), count(*) FILTER (WHERE exercise_type='game')

@@ -37,6 +37,7 @@ const migrationFiles = [
   "073_seed_individual_quality_review.sql",
   "078_ocr_hanging_battle_rope_cohort.sql",
   "079_ocrfra_club_obstacle_pack.sql",
+  "083_ocr_candidate_provenance.sql",
 ] as const;
 
 async function runSqlScript(connection: Awaited<ReturnType<InstanceType<typeof DuckDBInstance>["connect"]>>, sql: string) {
@@ -86,6 +87,14 @@ describe("initial exercise catalog", () => {
         )
       `);
       expect(ocrHangingCohort).toBe(5);
+      const externalCandidateReferences = await scalar(connection, `
+        SELECT count(*) FROM exercise_source_references r
+        JOIN exercises e ON e.id=r.exercise_id
+        WHERE e.seed_key IN ('hanging-straight-leg-raise','hanging-pike','hanging-oblique-knee-raise','battle-rope-waves')
+          AND r.provider='ExerciseDB' AND r.source_type='reference'
+          AND r.license_label='External reference only'
+      `);
+      expect(externalCandidateReferences).toBe(4);
       const ocrfraClubObstaclePack = await scalar(connection, `
         SELECT count(*) FROM exercises WHERE seed_key IN (
           'club-irish-table','club-weaver','club-rotating-rig-elements',

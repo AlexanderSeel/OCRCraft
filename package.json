@@ -1,6 +1,6 @@
 {
   "name": "ocrcraft",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "engines": {
     "node": ">=20.19.0"
@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "eslint .",
     "check:ui": "node scripts/check-ui-regressions.mjs",
+    "db:build-initial": "node scripts/build-initial-schema.mjs",
     "data:audit": "node scripts/audit-source-catalogs.mjs",
     "data:match": "node scripts/match-source-catalogs.mjs",
     "data:ocr-relevance": "node scripts/audit-ocr-relevance.mjs",
