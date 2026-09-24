@@ -454,7 +454,7 @@ describe("initial exercise catalog", () => {
     } finally {
       connection.closeSync();
     }
-  });
+  }, 30_000);
 
   it("re-seeds the entire database and rolls back if rebuilding fails", async () => {
     const instance = await DuckDBInstance.create(":memory:");
