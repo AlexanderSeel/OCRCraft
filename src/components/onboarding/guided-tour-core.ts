@@ -96,3 +96,29 @@ function byId(id: TourGuide["id"]): TourGuide {
   if (!guide) throw new Error(`Unknown tutorial guide: ${id}`);
   return guide;
 }
+
+
+export interface TourProgress {
+  readonly stepIndex: number;
+  readonly completed: boolean;
+}
+
+export function parseTourProgress(raw: string | null, stepCount: number): TourProgress {
+  const safeStepCount = Math.max(1, Math.trunc(stepCount));
+  if (!raw) return { stepIndex: 0, completed: false };
+  try {
+    const parsed = JSON.parse(raw) as Partial<TourProgress>;
+    const completed = parsed.completed === true;
+    const numericStep = Number(parsed.stepIndex ?? 0);
+    const stepIndex = Number.isFinite(numericStep)
+      ? Math.min(safeStepCount - 1, Math.max(0, Math.trunc(numericStep)))
+      : 0;
+    return { stepIndex, completed };
+  } catch {
+    return { stepIndex: 0, completed: false };
+  }
+}
+
+export function serializeTourProgress(progress: TourProgress): string {
+  return JSON.stringify(progress);
+}

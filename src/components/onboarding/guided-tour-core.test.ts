@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { guideForPath, TOUR_GUIDES } from "./guided-tour-core";
+import { guideForPath, parseTourProgress, serializeTourProgress, TOUR_GUIDES } from "./guided-tour-core";
 
 describe("guided tour route registry", () => {
   it.each([
@@ -34,5 +34,12 @@ describe("guided tour route registry", () => {
         expect(step.en.text.trim()).not.toBe("");
       }
     }
+  });
+  it("restores and safely clamps persisted progress", () => {
+    expect(parseTourProgress(null, 3)).toEqual({ stepIndex: 0, completed: false });
+    expect(parseTourProgress('{"stepIndex":1,"completed":false}', 3)).toEqual({ stepIndex: 1, completed: false });
+    expect(parseTourProgress('{"stepIndex":99,"completed":true}', 3)).toEqual({ stepIndex: 2, completed: true });
+    expect(parseTourProgress("broken", 3)).toEqual({ stepIndex: 0, completed: false });
+    expect(serializeTourProgress({ stepIndex: 2, completed: false })).toBe('{"stepIndex":2,"completed":false}');
   });
 });
