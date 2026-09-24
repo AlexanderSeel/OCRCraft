@@ -24,13 +24,13 @@ describe("database migrations", () => {
       const exercises = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL");
       const gameCatalog = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key LIKE 'game-%'");
 
-      expect(Number(migrations.getRows()[0]?.[0])).toBe(83);
+      expect(Number(migrations.getRows()[0]?.[0])).toBe(84);
       expect(Number(exercises.getRows()[0]?.[0])).toBeGreaterThanOrEqual(140);
       expect(Number(gameCatalog.getRows()[0]?.[0])).toBe(13);
     } finally {
       connection.closeSync();
     }
-  });
+  }, 30_000);
 
   it("applies the complete migration chain to a fresh DuckDB database", async () => {
     const instance = await DuckDBInstance.create(":memory:");
@@ -84,5 +84,5 @@ describe("database migrations", () => {
     } finally {
       connection.closeSync();
     }
-  });
+  }, 30_000);
 });

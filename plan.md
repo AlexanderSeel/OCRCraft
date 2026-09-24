@@ -15,12 +15,13 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 
 ## P1 – Daten und Fachlichkeit
 
-- [ ] Portable Hallen-/Outdoor-Katalogisierung abschließen: alle aktiven Übungen müssen portables Equipment oder eine dokumentierte Multirig-/Eigengewicht-Variante besitzen; studioexklusive Importübungen bleiben archiviert und nachvollziehbar.
+- [ ] Portable Hallen-/Outdoor-Katalogisierung abschließen: alle aktiven Übungen müssen portables Equipment oder eine dokumentierte Multirig-/Eigengewicht-Variante besitzen; studioexklusive Importübungen bleiben archiviert und werden mit einem Type Fitnessstudio getaggt und nachvollziehbar.
 - [ ] Konvertierungsreview für importierte Übungen durchführen: generische Outdoor-Texte durch bewegungsspezifische Varianten ersetzen und unklare Ersatzgeräte fachlich freigeben.
 - [ ] Portable-Equipment-Filter und Verfügbarkeitsprüfung in Übungs- und Trainingseditor sichtbar machen; Ersatz-Equipment muss in der Outdoor-Planung automatisch als Planungsgrundlage erscheinen.
 - [ ] Kanonische ExerciseDB-Feldanreicherung abschließen: die 159 noch blockierten Kandidaten fachlich entscheiden; nur freigegebene Lücken erhalten eigene DE/EN-Coaching-, Sicherheits- und Progressionsfelder.
 - [ ] Kuratierte Seed-Batches als vollständige Lieferpakete abschließen: Migration, Quellenregister, Reviewstatus, Vollständigkeitsbericht, Domain-Tests, `typecheck`, `lint`, `check:ui`, Unit-, Build- und E2E-Prüfung.
 - [ ] OCR-Fähigkeitsmatrix und lokale OCRFRA-Maße in Coverage- und Freigabeworkflows durchgängig verbinden; unbestätigte Vereinsmaße bleiben sichtbar offen.
+- [ ] Die readme.md wird zur einer richtigen Übersicht und Features dieser App umgeschrieben, mit detailierten Infos. Nicht aber ein Migrations oder Update Dokumnet, dafür gibt es Release Notes
 
 ## P1 – UX/UI-Konzept und Einheitlichkeit
 
