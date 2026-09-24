@@ -177,12 +177,18 @@ test("training tutorial works in Quick Create and Builder with saved progress", 
   await expect(page.locator("[data-tour='quick-create'][data-tour-active='true']")).toBeVisible();
   await first.dialog.getByRole("button", { name: "Weiter" }).click();
   await expect(first.dialog.getByText("Plan prüfen")).toBeVisible();
+  await first.dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(first.dialog.getByText("Speichern")).toBeVisible();
+  await expect(page.locator("[data-tour='training-save'][data-tour-active='true']")).toBeVisible();
   await page.keyboard.press("Escape");
 
   await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
   const trigger = page.locator("[data-tour-trigger='guided-help']");
   await trigger.click();
   const resumed = page.getByRole("dialog", { name: "Trainingsplan erstellen" });
+  await expect(resumed.getByText("Speichern")).toBeVisible();
+  await expect(page.locator("[data-tour='training-save'][data-tour-active='true']")).toBeVisible();
+  await resumed.getByRole("button", { name: "Zurück" }).click();
   await expect(resumed.getByText("Plan prüfen")).toBeVisible();
   await expect(page.locator("[data-tour='builder'][data-tour-active='true']")).toBeVisible();
 });

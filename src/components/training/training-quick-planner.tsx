@@ -249,7 +249,7 @@ export function TrainingQuickPlanner({
         </details>
       </div>
 
-      <div className="mt-5 flex flex-wrap justify-end gap-2">
+      <div className="mt-5 flex flex-wrap justify-end gap-2" data-tour="training-save">
         <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] disabled:opacity-50" disabled={busy} onClick={generate} type="button">
           {busy ? "Plane…" : "Quickplan erstellen"}
         </button>

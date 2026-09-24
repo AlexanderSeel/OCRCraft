@@ -71,6 +71,11 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
         de: { title: "Plan prüfen", text: "Kontrolliere Aufwärmen, Hauptteil und Cooldown, passe Übungen an und speichere erst nach der Trainerprüfung." },
         en: { title: "Review the plan", text: "Check warm-up, main part and cooldown, adjust exercises and save only after trainer review." },
       },
+      {
+        selector: "[data-tour='training-save']",
+        de: { title: "Speichern", text: "Erzeuge zuerst einen Entwurf, prüfe Warnungen und speichere erst danach den bearbeitbaren Trainingsplan." },
+        en: { title: "Save the plan", text: "Create a draft first, review warnings, and save the editable training plan only afterwards." },
+      },
     ],
   },
   { id: "games", de: "Spiele", en: "Games", steps: areaSteps("games", "Spiele", "games") },

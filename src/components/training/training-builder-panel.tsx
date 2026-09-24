@@ -688,7 +688,7 @@ export function TrainingBuilderPanel({
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-          <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-wrap items-end gap-3" data-tour="training-save">
             <label className="grid min-w-64 flex-1 gap-2 text-sm font-bold">Trainingstitel<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Optional" value={title} /></label>
             <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] disabled:opacity-50" disabled={!canGenerate || busy} onClick={() => void generate()} type="button">{pending ? "Plane …" : builderMode === "ai" ? "AI-Vorschlag erzeugen" : "Lokal planen"}</button>
             <button className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] disabled:opacity-50" disabled={!draft || busy} onClick={() => void save()} type="button">Training speichern</button>
