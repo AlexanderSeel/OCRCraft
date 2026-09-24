@@ -15,6 +15,7 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 
 ## P1 – Daten und Fachlichkeit
 
+- [x] Lizenzfreie, benannte Übungsbilder importiert: 20 Nutzerbilder sind den portablen Übungen zugeordnet, als eigene Primärmedien registriert und externe Bildreferenzen entfernt; nahe Zuordnungen bleiben im Importskript nachvollziehbar.
 - [ ] Offene Outdoor-Konvertierungsreviews fachlich abarbeiten: alle durch Migration 87 als `pending` markierten Importvarianten einzeln prüfen/freigeben; generische Maschinen und mehrdeutige Ersatzgeräte bleiben bis zur Entscheidung blockiert.
 - [ ] Kanonische ExerciseDB-Feldanreicherung abschließen: die 159 noch blockierten Kandidaten fachlich entscheiden; nur freigegebene Lücken erhalten eigene DE/EN-Coaching-, Sicherheits- und Progressionsfelder.
 - [ ] Kuratierte Seed-Batches als vollständige Lieferpakete abschließen: Migration, Quellenregister, Reviewstatus, Vollständigkeitsbericht, Domain-Tests, `typecheck`, `lint`, `check:ui`, Unit-, Build- und E2E-Prüfung.
