@@ -46,6 +46,32 @@ export interface OutdoorVariantCandidatePreview {
   readonly movementFamily: ReturnType<typeof inferOutdoorMovementFamily>;
 }
 
+export interface PortabilityAuditSummary {
+  readonly total: number;
+  readonly portable: number;
+  readonly converted: number;
+  readonly blocked: number;
+  readonly pending: number;
+  readonly latestReviewAt: string | null;
+}
+
+export interface PortabilityAuditEntry {
+  readonly exerciseId: string;
+  readonly name: string;
+  readonly disposition: "portable" | "converted" | "blocked";
+  readonly reason: string;
+  readonly replacementEquipment: string;
+  readonly sources: string;
+  readonly reviewStatus: string;
+  readonly reviewedAt: string;
+  readonly reviewerName: string | null;
+}
+
+export interface PortabilityAuditOverview {
+  readonly summary: PortabilityAuditSummary;
+  readonly entries: readonly PortabilityAuditEntry[];
+}
+
 interface ImportedExerciseRow {
   readonly id: string;
   readonly name: string;
@@ -175,6 +201,78 @@ function previewFromPlan(
       : outdoorVariantText(plan, "de", movementContext),
     movementFamily: inferOutdoorMovementFamily(movementContext),
   };
+}
+
+export async function getPortabilityAuditOverview(limit = 30): Promise<PortabilityAuditOverview> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const summaryReader = await connection.runAndReadAll(`
+      SELECT
+        count(*),
+        count(*) FILTER (WHERE disposition='portable'),
+        count(*) FILTER (WHERE disposition='converted'),
+        count(*) FILTER (WHERE disposition='blocked'),
+        count(*) FILTER (WHERE COALESCE(review_status,'catalog')='pending'),
+        max(reviewed_at)::VARCHAR
+      FROM exercise_environment_reviews
+    `);
+    const summaryRow = summaryReader.getRows()[0] ?? [];
+
+    const entryReader = await connection.runAndReadAll(`
+      SELECT
+        r.exercise_id::VARCHAR,
+        COALESCE(t.name,e.canonical_name),
+        r.disposition,
+        r.reason,
+        COALESCE(r.replacement_equipment,''),
+        COALESCE((
+          SELECT string_agg(source.provider, ', ' ORDER BY source.provider)
+          FROM (
+            SELECT DISTINCT sr.provider
+            FROM exercise_source_references sr
+            WHERE sr.exercise_id=e.id
+          ) source
+        ), CASE WHEN e.seed_key IS NOT NULL THEN 'ocrcraft-seed' ELSE 'unbekannt' END),
+        COALESCE(r.review_status,'catalog'),
+        r.reviewed_at::VARCHAR,
+        (
+          SELECT u.display_name
+          FROM app_users u
+          WHERE u.id=r.reviewed_by
+          LIMIT 1
+        )
+      FROM exercise_environment_reviews r
+      JOIN exercises e ON e.id=r.exercise_id
+      LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
+      ORDER BY
+        CASE COALESCE(r.review_status,'catalog') WHEN 'pending' THEN 0 ELSE 1 END,
+        r.reviewed_at DESC,
+        COALESCE(t.name,e.canonical_name)
+      LIMIT $limit
+    `, { limit: Math.max(1, Math.min(100, Math.trunc(limit))) });
+
+    return {
+      summary: {
+        total: Number(summaryRow[0] ?? 0),
+        portable: Number(summaryRow[1] ?? 0),
+        converted: Number(summaryRow[2] ?? 0),
+        blocked: Number(summaryRow[3] ?? 0),
+        pending: Number(summaryRow[4] ?? 0),
+        latestReviewAt: summaryRow[5] == null ? null : String(summaryRow[5]),
+      },
+      entries: entryReader.getRows().map((row) => ({
+        exerciseId: String(row[0]),
+        name: String(row[1]),
+        disposition: String(row[2]) as PortabilityAuditEntry["disposition"],
+        reason: String(row[3]),
+        replacementEquipment: String(row[4] ?? ""),
+        sources: String(row[5] ?? "unbekannt"),
+        reviewStatus: String(row[6] ?? "catalog"),
+        reviewedAt: String(row[7]),
+        reviewerName: row[8] == null ? null : String(row[8]),
+      })),
+    };
+  });
 }
 
 /**

@@ -4,8 +4,10 @@ import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
 import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
 import {
+  getPortabilityAuditOverview,
   listOutdoorVariantCandidates,
   type OutdoorVariantCandidatePreview,
+  type PortabilityAuditEntry,
 } from "@/server/exercises/outdoor-variant-enrichment-service";
 import {
   approveOutdoorVariantCandidateAction,
@@ -32,9 +34,10 @@ interface PageProps {
 }
 
 export default async function OutdoorVariantAdminPage({ searchParams }: PageProps) {
-  const [result, candidates] = await Promise.all([
+  const [result, candidates, portabilityAudit] = await Promise.all([
     searchParams,
     listOutdoorVariantCandidates(),
+    getPortabilityAuditOverview(),
   ]);
   const hasResult = result.scanned != null;
   const searchQuery = result.q?.trim().toLocaleLowerCase("de-DE") ?? "";
@@ -94,6 +97,39 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
             </div>
           </section>
         ) : null}
+
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Qualitätsworkflow</div>
+              <h2 className="mt-1 text-xl font-black">Portabilitäts-Audit</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+                Zeigt die persistierte Portabilitätsentscheidung mit Herkunft, Begründung, Ersatz-Equipment und Reviewstatus. Offene Reviews stehen zuerst.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <MetaTag label="Gesamt" value={String(portabilityAudit.summary.total)} />
+              <MetaTag label="Portabel" value={String(portabilityAudit.summary.portable)} />
+              <MetaTag label="Konvertiert" value={String(portabilityAudit.summary.converted)} />
+              <MetaTag label="Blockiert" value={String(portabilityAudit.summary.blocked)} />
+              <MetaTag label="Review offen" value={String(portabilityAudit.summary.pending)} />
+            </div>
+          </div>
+          {portabilityAudit.summary.latestReviewAt ? (
+            <p className="mt-3 text-xs font-bold text-[var(--muted)]">
+              Letzte Audit-Aktualisierung: {formatAuditTime(portabilityAudit.summary.latestReviewAt)}
+            </p>
+          ) : null}
+          <div className="mt-4 grid gap-2">
+            {portabilityAudit.entries.length > 0 ? portabilityAudit.entries.map((entry) => (
+              <PortabilityAuditRow entry={entry} key={entry.exerciseId} />
+            )) : (
+              <div className="rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">
+                Noch keine Portabilitätsentscheidungen vorhanden.
+              </div>
+            )}
+          </div>
+        </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -173,6 +209,51 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
       </div></OverviewLayout>
     </AppShell>
   );
+}
+
+function PortabilityAuditRow({ entry }: { readonly entry: PortabilityAuditEntry }) {
+  return (
+    <article className="grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link className="font-black underline-offset-4 hover:underline" href={`/exercises/${entry.exerciseId}`}>
+            {entry.name}
+          </Link>
+          <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs font-black">
+            {portabilityDispositionLabel(entry.disposition)}
+          </span>
+          {entry.reviewStatus === "pending" ? (
+            <span className="rounded-full border border-[var(--warning)] bg-[var(--warning-bg)] px-2.5 py-1 text-xs font-black text-[var(--warning)]">Review offen</span>
+          ) : null}
+        </div>
+        <p className="mt-2 text-sm leading-6">{entry.reason}</p>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--muted)]">
+          <span><strong>Quelle:</strong> {entry.sources}</span>
+          <span><strong>Ersatz:</strong> {entry.replacementEquipment || "–"}</span>
+          <span><strong>Review:</strong> {formatAuditTime(entry.reviewedAt)}{entry.reviewerName ? ` · ${entry.reviewerName}` : ""}</span>
+        </div>
+      </div>
+      <Link className="grid min-h-9 place-items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href={`/exercises/${entry.exerciseId}/edit`}>
+        Prüfen
+      </Link>
+    </article>
+  );
+}
+
+function portabilityDispositionLabel(value: PortabilityAuditEntry["disposition"]): string {
+  if (value === "portable") return "Portabel";
+  if (value === "converted") return "Konvertiert";
+  return "Blockiert";
+}
+
+function formatAuditTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("de-DE", {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: "Europe/Berlin",
+  }).format(date);
 }
 
 function pageHref(page: number, query: string, status: string, size: number): string {
