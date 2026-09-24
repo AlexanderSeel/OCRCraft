@@ -31,11 +31,28 @@ export default async function globalSetup(): Promise<void> {
   const connection = await instance.connect();
   try {
     await connection.run(`IMPORT DATABASE '${sqlPath(exportPath)}'`);
-    const userResult = await connection.runAndReadAll("SELECT email FROM app_users WHERE active=true ORDER BY created_at LIMIT 1");
-    const email = String(userResult.getRows()[0]?.[0] ?? "").trim().toLowerCase();
+
+    const existingUserResult = await connection.runAndReadAll("SELECT email FROM app_users WHERE active=true ORDER BY created_at LIMIT 1");
+    let email = String(existingUserResult.getRows()[0]?.[0] ?? "").trim().toLowerCase();
+    if (!email) {
+      email = "e2e@ocrcraft.local";
+      await connection.run(
+        `INSERT INTO app_users (email,display_name,role,active)
+         VALUES ($email,'OCRCraft E2E','super_admin',true)`,
+        { email },
+      );
+    }
+
     const codeResult = await connection.runAndReadAll("SELECT club_access_code FROM app_auth_settings WHERE id=1");
-    const secret = String(codeResult.getRows()[0]?.[0] ?? process.env.OCRCRAFT_LOGIN_CODE ?? "").trim();
-    if (!email || !secret) throw new Error("E2E-Sitzung kann ohne aktiven Testbenutzer und Vereinscode nicht erstellt werden.");
+    let secret = String(codeResult.getRows()[0]?.[0] ?? process.env.OCRCRAFT_LOGIN_CODE ?? "").trim();
+    if (!secret) {
+      secret = "ocrcraft-e2e-access";
+      await connection.run(
+        `INSERT OR REPLACE INTO app_auth_settings (id,club_access_code,updated_at)
+         VALUES (1,$secret,current_timestamp)`,
+        { secret },
+      );
+    }
 
     const issuedAt = Math.floor(Date.now() / 1000);
     const payload = `${email}|${issuedAt}`;
