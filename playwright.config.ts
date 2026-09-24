@@ -29,6 +29,7 @@ export default defineConfig({
     env: {
       OCRCRAFT_DB_PATH: playwrightDatabasePath,
       OCRCRAFT_LOGIN_CODE: process.env.OCRCRAFT_LOGIN_CODE ?? "",
+      OCRCRAFT_ACTOR_EMAIL: "e2e@ocrcraft.local",
       OCRCRAFT_AUTO_IMPORT_EXTERNAL_EXERCISES: "false",
     },
     reuseExistingServer: !process.env.CI,

@@ -32,13 +32,22 @@ export default async function globalSetup(): Promise<void> {
   try {
     await connection.run(`IMPORT DATABASE '${sqlPath(exportPath)}'`);
 
-    const existingUserResult = await connection.runAndReadAll("SELECT email FROM app_users WHERE active=true ORDER BY created_at LIMIT 1");
-    let email = String(existingUserResult.getRows()[0]?.[0] ?? "").trim().toLowerCase();
-    if (!email) {
-      email = "e2e@ocrcraft.local";
+    const email = "e2e@ocrcraft.local";
+    const e2eUserResult = await connection.runAndReadAll(
+      "SELECT id::VARCHAR FROM app_users WHERE lower(email)=lower($email) LIMIT 1",
+      { email },
+    );
+    if (e2eUserResult.getRows().length === 0) {
       await connection.run(
         `INSERT INTO app_users (email,display_name,role,active)
          VALUES ($email,'OCRCraft E2E','super_admin',true)`,
+        { email },
+      );
+    } else {
+      await connection.run(
+        `UPDATE app_users
+         SET display_name='OCRCraft E2E',role='super_admin',active=true,updated_at=current_timestamp
+         WHERE lower(email)=lower($email)`,
         { email },
       );
     }
