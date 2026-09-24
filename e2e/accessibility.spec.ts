@@ -132,6 +132,7 @@ async function openTutorial(page: Page, route: string, title: string) {
   await page.goto(route, { waitUntil: "domcontentloaded" });
   const trigger = page.locator("[data-tour-trigger='guided-help']");
   await expect(trigger).toBeVisible();
+  await expect(trigger).toHaveAttribute("data-tour-ready", "true");
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: title });
   await expect(dialog).toBeVisible();
@@ -160,7 +161,7 @@ test("exercise-create tutorial advances, focuses targets and restores focus afte
 
 test("obstacle tutorial reaches navigation, workspace and assignment target", async ({ page }) => {
   await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
-  const { dialog } = await openTutorial(page, "/obstacles", "Hindernisse");
+  const { dialog } = await openTutorial(page, "/obstacles", "Hindernis erstellen / zuordnen");
 
   await expect(page.locator("[data-tour='nav-obstacles'][data-tour-active='true']").first()).toBeVisible();
   await dialog.getByRole("button", { name: "Weiter" }).click();
@@ -173,7 +174,7 @@ test("obstacle tutorial reaches navigation, workspace and assignment target", as
 
 test("training tutorial works in Quick Create and Builder with saved progress", async ({ page }) => {
   await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
-  const first = await openTutorial(page, "/quick-create", "Trainingsplan erstellen");
+  const first = await openTutorial(page, "/quick-create", "Quick Create Training");
   await expect(page.locator("[data-tour='quick-create'][data-tour-active='true']")).toBeVisible();
   await first.dialog.getByRole("button", { name: "Weiter" }).click();
   await expect(first.dialog.getByText("Plan prüfen")).toBeVisible();
@@ -185,7 +186,7 @@ test("training tutorial works in Quick Create and Builder with saved progress", 
   await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
   const trigger = page.locator("[data-tour-trigger='guided-help']");
   await trigger.click();
-  const resumed = page.getByRole("dialog", { name: "Trainingsplan erstellen" });
+  const resumed = page.getByRole("dialog", { name: "Quick Create Training" });
   await expect(resumed.getByText("Speichern")).toBeVisible();
   await expect(page.locator("[data-tour='training-save'][data-tour-active='true']")).toBeVisible();
   await resumed.getByRole("button", { name: "Zurück" }).click();

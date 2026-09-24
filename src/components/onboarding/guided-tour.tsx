@@ -23,13 +23,18 @@ export function GuidedTour() {
   const step = guide.steps[stepIndex] ?? guide.steps[0];
   const progressKey = `ocrcraft-tour-progress:${guide.id}`;
 
+  useEffect(() => {
+    document.querySelector("[data-tour-trigger='guided-help']")?.setAttribute("data-tour-ready", "true");
+  }, []);
+
   const focusStep = useCallback(() => {
     document.querySelectorAll("[data-tour-active='true']").forEach((element) => element.removeAttribute("data-tour-active"));
-    const target = document.querySelector<HTMLElement>(step.selector);
+    const targets = Array.from(document.querySelectorAll<HTMLElement>(step.selector));
+    const target = targets.find((element) => element.getClientRects().length > 0) ?? targets[0];
     setTourState((current) => current.guideId === guide.id
-      ? { ...current, targetAvailable: Boolean(target) }
+      ? { ...current, targetAvailable: targets.length > 0 }
       : current);
-    target?.setAttribute("data-tour-active", "true");
+    targets.forEach((element) => element.setAttribute("data-tour-active", "true"));
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [guide.id, step]);
 
@@ -53,9 +58,12 @@ export function GuidedTour() {
     window.localStorage.setItem(progressKey, serializeTourProgress({ stepIndex: nextStepIndex, completed }));
   }
 
-  function targetExists(index: number): boolean {
+  function activateTarget(index: number): boolean {
+    document.querySelectorAll("[data-tour-active='true']").forEach((element) => element.removeAttribute("data-tour-active"));
     const candidate = guide.steps[index] ?? guide.steps[0];
-    return Boolean(document.querySelector(candidate.selector));
+    const targets = Array.from(document.querySelectorAll<HTMLElement>(candidate.selector));
+    targets.forEach((element) => element.setAttribute("data-tour-active", "true"));
+    return targets.length > 0;
   }
 
   function start() {
@@ -65,7 +73,7 @@ export function GuidedTour() {
       guideId: guide.id,
       open: true,
       stepIndex: nextStepIndex,
-      targetAvailable: targetExists(nextStepIndex),
+      targetAvailable: activateTarget(nextStepIndex),
     });
   }
 
@@ -79,7 +87,7 @@ export function GuidedTour() {
       guideId: guide.id,
       open: true,
       stepIndex: bounded,
-      targetAvailable: targetExists(bounded),
+      targetAvailable: activateTarget(bounded),
     });
     persist(bounded, false);
   }
@@ -94,7 +102,7 @@ export function GuidedTour() {
   }
 
   return <>
-    <button aria-label={dictionary.help} className="grid size-10 place-items-center rounded-md border border-[var(--border)] bg-[var(--surface)] text-base font-black text-[var(--muted)] hover:text-[var(--foreground)]" data-tour-trigger="guided-help" onClick={start} title={`${dictionary.help}: ${locale === "de" ? guide.de : guide.en}`} type="button">?</button>
+    <button aria-label={dictionary.help} className="grid size-10 place-items-center rounded-md border border-[var(--border)] bg-[var(--surface)] text-base font-black text-[var(--muted)] hover:text-[var(--foreground)]" data-tour-ready="false" data-tour-trigger="guided-help" onClick={start} title={`${dictionary.help}: ${locale === "de" ? guide.de : guide.en}`} type="button">?</button>
     {open ? <Dialog onClose={close} title={locale === "de" ? guide.de : guide.en} eyebrow={APP_RELEASE_LABEL}>
       <div aria-live="polite" className="grid gap-4">
         <div className="flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]"><span>{dictionary.tourStep} {stepIndex + 1} / {guide.steps.length}</span><button className="font-black underline underline-offset-4" onClick={close} type="button">{dictionary.tourSkip}</button></div>
