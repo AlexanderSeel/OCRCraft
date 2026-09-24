@@ -3,6 +3,8 @@ import { AppShell } from "@/components/app-shell";
 import { ExerciseForm } from "@/components/exercises/exercise-form";
 import { createExerciseAction } from "../actions";
 
+export const dynamic = "force-dynamic";
+
 export default function NewExercisePage() {
   return (
     <AppShell
