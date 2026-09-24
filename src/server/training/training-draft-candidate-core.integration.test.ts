@@ -37,6 +37,7 @@ async function createFixture() {
     CREATE TABLE exercise_movement_patterns (exercise_id VARCHAR, movement_pattern_id VARCHAR);
     CREATE TABLE equipment (
       id VARCHAR PRIMARY KEY,
+      seed_key VARCHAR,
       name_de VARCHAR,
       name_en VARCHAR,
       quantity_available INTEGER,
@@ -110,9 +111,9 @@ async function createFixture() {
     INSERT INTO exercise_body_regions VALUES ('kids-carry','core'),('kids-carry','forearms-grip');
     INSERT INTO exercise_movement_patterns VALUES ('kids-carry','carry'),('kids-carry','locomotion');
     INSERT INTO equipment VALUES
-      ('bag','Sandsack','Sandbag',8,false),
-      ('unknown-stock','Hütchen','Cones',NULL,false),
-      ('archived-equipment','Altgerät','Old Equipment',12,true);
+      ('bag','sandbag','Sandsack','Sandbag',8,false),
+      ('unknown-stock','cones','Hütchen','Cones',NULL,false),
+      ('archived-equipment',NULL,'Altgerät','Old Equipment',12,true);
     INSERT INTO exercise_equipment VALUES ('kids-carry','bag',2);
     INSERT INTO exercise_tags VALUES ('kids-carry','carry'),('kids-carry','teamwork');
     INSERT INTO exercise_details (
@@ -143,12 +144,12 @@ describe("training draft candidate query", () => {
     const connection = await createFixture();
     try {
       await expect(runTrainingEquipmentOptionsQuery(connection, "de")).resolves.toEqual([
-        { id: "unknown-stock", name: "Hütchen", quantityAvailable: null },
-        { id: "bag", name: "Sandsack", quantityAvailable: 8 },
+        { id: "unknown-stock", seedKey: "cones", name: "Hütchen", quantityAvailable: null, portability: "portable" },
+        { id: "bag", seedKey: "sandbag", name: "Sandsack", quantityAvailable: 8, portability: "portable" },
       ]);
       await expect(runTrainingEquipmentOptionsQuery(connection, "en")).resolves.toEqual([
-        { id: "unknown-stock", name: "Cones", quantityAvailable: null },
-        { id: "bag", name: "Sandbag", quantityAvailable: 8 },
+        { id: "unknown-stock", seedKey: "cones", name: "Cones", quantityAvailable: null, portability: "portable" },
+        { id: "bag", seedKey: "sandbag", name: "Sandbag", quantityAvailable: 8, portability: "portable" },
       ]);
     } finally {
       connection.closeSync();
