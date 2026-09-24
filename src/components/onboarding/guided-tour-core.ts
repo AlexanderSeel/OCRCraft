@@ -190,7 +190,28 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
       },
     ],
   },
-  { id: "ai-drafts", de: "AI-Entwürfe", en: "AI drafts", steps: areaSteps("aiDrafts", "AI-Entwürfe", "AI drafts") },
+  {
+    id: "ai-drafts",
+    de: "AI-Entwürfe prüfen",
+    en: "Review AI drafts",
+    steps: [
+      {
+        selector: "[data-tour='ai-draft-create']",
+        de: { title: "Vorschlag erzeugen", text: "Formuliere ein Trainingsbriefing mit Zielgruppe, Zweck und verfügbarem Equipment. Die AI erzeugt nur einen Entwurf, keine aktive Übung." },
+        en: { title: "Create a proposal", text: "Write a training brief with audience, purpose, and available equipment. AI creates only a draft, never an active exercise." },
+      },
+      {
+        selector: "[data-tour='ai-draft-review']",
+        de: { title: "Review Queue", text: "Prüfe Vorschlag, Herkunft, Begründung und den deterministischen Review. Blocker müssen vor einer Freigabe aufgelöst werden." },
+        en: { title: "Review queue", text: "Check the proposal, provenance, rationale, and deterministic review. Blockers must be resolved before approval." },
+      },
+      {
+        selector: "[data-tour='ai-draft-filters']",
+        de: { title: "Offene und historische Entwürfe", text: "Nutze Suche, Filter und Verlauf, um offene Entwürfe gezielt zu bearbeiten. Erst die Trainerfreigabe öffnet den Voll-Editor." },
+        en: { title: "Open and historical drafts", text: "Use search, filters, and history to work through drafts deliberately. Trainer approval is required before opening the full editor." },
+      },
+    ],
+  },
   {
     id: "outdoor",
     de: "Outdoor-Varianten",

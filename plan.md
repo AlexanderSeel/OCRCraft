@@ -42,6 +42,7 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 - [x] Tutorial-Trigger kennzeichnet den Abschluss der SSR-/Hydration-Phase explizit; damit können E2E- und Assistenzpfade den interaktiven Bereitschaftszustand prüfen.
 - [x] Medienreview-Führung ergänzt: Filter, Batch-/KI-Aktionen sowie Rechte- und Fachreviewkarten sind als konkrete Arbeitsschritte erklärt und per E2E geprüft.
 - [x] Outdoor-Review-Führung ergänzt: Portabilitäts-Audit, sichere Anreicherung und Kandidatenfreigabe sind als getrennte Prüfschritte erklärt und per E2E geprüft.
+- [x] AI-Entwurfsführung ergänzt: Vorschlagserzeugung, deterministischer Review sowie offene/historische Entwürfe und Trainerfreigabe sind getrennt erklärt und per E2E geprüft.
 - [ ] Fachliche Tiefenführungen für Medienrechte, Outdoor-Review, AI-Drafts, Gruppenregeln und Trainingsspeicherung mit echten Bearbeitungs-/Reviewaktionen ergänzen.
 
 ## P2 – Qualität, Analysen und Workflows

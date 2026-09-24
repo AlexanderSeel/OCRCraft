@@ -85,7 +85,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
           </Alert>
         ) : null}
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6" data-tour="ai-draft-create">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Entwurf erzeugen</div>
@@ -123,13 +123,13 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
           </form>
         </section>
 
-        <section className="catalog-results space-y-4">
+        <section className="catalog-results space-y-4" data-tour="ai-draft-review">
           <div>
             <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Review Queue</div>
             <h2 className="mt-1 text-xl font-black">{showHistory ? "Alle AI-Entwürfe" : "Offene AI-Entwürfe"}</h2>
           </div>
 
-          <div className="catalog-workspace grid min-w-0 gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
+          <div className="catalog-workspace grid min-w-0 gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start" data-tour="ai-draft-filters">
           <CatalogFilterPanel hasFilters={Boolean(searchQuery || showHistory || page !== 1 || pageSize !== 12)} resetHref={showHistory ? "/exercises/ai-drafts?history=1" : "/exercises/ai-drafts"} title="Entwurfsfilter">
               {showHistory ? <input name="history" type="hidden" value="1" /> : null}
               <label className="grid gap-1 text-sm font-bold">

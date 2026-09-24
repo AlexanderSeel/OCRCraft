@@ -234,3 +234,14 @@ test("outdoor tutorial covers audit, enrichment and candidate review", async ({ 
   await dialog.getByRole("button", { name: "Weiter" }).click();
   await expect(page.locator("[data-tour='outdoor-candidates'][data-tour-active='true']")).toBeVisible();
 });
+
+test("AI draft tutorial separates proposal, review and approval", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
+  const { dialog } = await openTutorial(page, "/exercises/ai-drafts", "AI-Entwürfe prüfen");
+
+  await expect(page.locator("[data-tour='ai-draft-create'][data-tour-active='true']")).toBeVisible();
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='ai-draft-review'][data-tour-active='true']")).toBeVisible();
+  await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='ai-draft-filters'][data-tour-active='true']")).toBeVisible();
+});
