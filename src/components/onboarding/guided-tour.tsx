@@ -26,11 +26,21 @@ export function GuidedTour() {
   const focusStep = useCallback(() => {
     document.querySelectorAll("[data-tour-active='true']").forEach((element) => element.removeAttribute("data-tour-active"));
     const target = document.querySelector<HTMLElement>(step.selector);
+    setTourState((current) => current.guideId === guide.id
+      ? { ...current, targetAvailable: Boolean(target) }
+      : current);
     target?.setAttribute("data-tour-active", "true");
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [step]);
+  }, [guide.id, step]);
 
-  useEffect(() => { if (open) focusStep(); return () => { document.querySelectorAll("[data-tour-active='true']").forEach((element) => element.removeAttribute("data-tour-active")); }; }, [focusStep, open]);
+  useEffect(() => {
+    if (!open) return undefined;
+    const frame = window.requestAnimationFrame(focusStep);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.querySelectorAll("[data-tour-active='true']").forEach((element) => element.removeAttribute("data-tour-active"));
+    };
+  }, [focusStep, open]);
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setTourState((current) => ({ ...current, open: false }));

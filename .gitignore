@@ -8,11 +8,17 @@ coverage/
 .env.*
 !.env.example
 data/*.duckdb
+!data/ocrcraft.initial.duckdb
 data/*.wal
 data/*.wal.*
 data/*.tmp
 data/*.write.lock
 /public/generated/exercises/
+!/public/generated/
+!/public/generated/exercises/
+/public/generated/exercises/*
+!/public/generated/exercises/named/
+!/public/generated/exercises/named/**
 .DS_Store
 Thumbs.db
 

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
+import { copyFile, mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import {
   DuckDBInstance,
@@ -9,14 +9,35 @@ import {
 
 const defaultDatabasePath = path.join(process.cwd(), "data", "ocrcraft.duckdb");
 const databasePath = process.env.OCRCRAFT_DB_PATH ?? defaultDatabasePath;
+const bundledInitialDatabasePath = path.join(process.cwd(), "data", "ocrcraft.initial.duckdb");
 const lockPath = `${databasePath}.write.lock`;
 const lockRetryMs = 100;
 const lockTimeoutMs = 30_000;
 
 let instancePromise: Promise<DuckDBInstance> | undefined;
 
+async function restoreBundledInitialDatabaseIfMissing(): Promise<void> {
+  if (databasePath === ":memory:") return;
+  try {
+    await stat(databasePath);
+    return;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+
+  try {
+    await stat(bundledInitialDatabasePath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
+    throw error;
+  }
+
+  await copyFile(bundledInitialDatabasePath, databasePath);
+}
+
 async function createInstance(): Promise<DuckDBInstance> {
   await mkdir(path.dirname(databasePath), { recursive: true });
+  await restoreBundledInitialDatabaseIfMissing();
   try {
     return await DuckDBInstance.create(databasePath, { access_mode: "READ_WRITE" });
   } catch (error) {

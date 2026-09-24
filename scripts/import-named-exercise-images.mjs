@@ -6,31 +6,6 @@ import { DuckDBInstance } from "@duckdb/node-api";
 const IMAGE_PACKAGE_PROVIDER = "OCRCraft named image package";
 const IMAGE_PACKAGE_LICENSE = "OCRCraft generated asset";
 
-// Explicit mappings keep filename-to-exercise decisions reviewable. The two
-// closest-match entries are portable movement equivalents, not silent imports.
-const IMAGE_MAPPINGS = [
-  ["01-resistance-band-row.png", { seedKey: "band-row" }],
-  ["02-medicine-ball-slam.png", { canonicalName: "medicine ball overhead slam" }],
-  ["03-sandbag-romanian-deadlift.png", { canonicalName: "dumbbell romanian deadlift" }],
-  ["04-resistance-band-chest-press.png", { canonicalName: "resistance band seated chest press" }],
-  ["05-kettlebell-farmer-carry.png", { seedKey: "farmer-carry" }],
-  ["06-glute-bridge.png", { seedKey: "glute-bridge" }],
-  ["07-plank-shoulder-taps.png", { seedKey: "plank-shoulder-tap" }],
-  ["08-box-step-up.png", { seedKey: "box-stepup" }],
-  ["09-kettlebell-goblet-squat.png", { seedKey: "kettlebell-goblet-squat" }],
-  ["10-resistance-band-wood-chop.png", { seedKey: "band-anti-rotation-press" }],
-  ["11-resistance-band-overhead-press.png", { canonicalName: "resistance band seated shoulder press" }],
-  ["12-resistance-band-pull-apart.png", { canonicalName: "band reverse fly" }],
-  ["13-kettlebell-reverse-lunge.png", { seedKey: "reverse-lunge" }],
-  ["14-kettlebell-swing.png", { canonicalName: "kettlebell swing" }],
-  ["15-push-up.png", { seedKey: "pushup" }],
-  ["16-sandbag-front-carry.png", { seedKey: "sandbag-front-carry" }],
-  ["17-side-plank.png", { seedKey: "side-plank" }],
-  ["18-dead-bug.png", { seedKey: "dead-bug" }],
-  ["19-bird-dog.png", { seedKey: "bird-dog" }],
-  ["20-mountain-climber.png", { seedKey: "mountain-climber" }],
-];
-
 function argumentValue(name) {
   const prefix = `${name}=`;
   const argument = process.argv.find((value) => value.startsWith(prefix));
@@ -44,44 +19,100 @@ function pngMetadata(bytes) {
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
 }
 
-async function findExercise(connection, selector, fileName) {
-  const where = selector.seedKey ? "e.seed_key=$value" : "lower(e.canonical_name)=lower($value)";
-  const value = selector.seedKey ?? selector.canonicalName;
+function normalize(value) {
+  return value.toLocaleLowerCase("de-DE").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function tokenMatch(label, displayName) {
+  const labelTokens = new Set(normalize(label).split(" ").filter(Boolean));
+  const displayTokens = normalize(displayName).split(" ").filter(Boolean);
+  return displayTokens.length > 0 && displayTokens.every((token) => labelTokens.has(token) || labelTokens.has(token.replace(/s$/, "")));
+}
+
+async function loadManifest(packageRoot) {
+  return JSON.parse(await readFile(path.join(packageRoot, "import-manifest.json"), "utf8"));
+}
+
+async function loadExerciseLabels(connection) {
   const result = await connection.runAndReadAll(`
-    SELECT e.id::VARCHAR,COALESCE(t.name,e.canonical_name),COALESCE(e.seed_key,e.id::VARCHAR)
+    SELECT e.id::VARCHAR,e.seed_key,e.canonical_name,COALESCE(t.name,''),COALESCE(a.alias,'')
     FROM exercises e
-    LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
-    WHERE ${where}
-  `, { value });
-  if (result.getRows().length !== 1) throw new Error(`${fileName}: Zielübung nicht eindeutig gefunden (${value}).`);
-  const row = result.getRows()[0];
-  return { id: String(row[0]), name: String(row[1]), key: String(row[2]) };
+    LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale IN ('de','en')
+    LEFT JOIN exercise_aliases a ON a.exercise_id=e.id
+    WHERE e.archived=false
+  `);
+  const labels = new Map();
+  for (const row of result.getRows()) {
+    const id = String(row[0]);
+    const item = labels.get(id) ?? { id, seedKey: row[1] == null ? null : String(row[1]), canonicalName: String(row[2]), labels: [] };
+    item.labels.push(String(row[2]), String(row[3]), String(row[4]));
+    labels.set(id, item);
+  }
+  return [...labels.values()];
+}
+
+async function resolveExercise(manifestItem, exercises, licensedExerciseIds) {
+  if (manifestItem.suggested_seed_key) {
+    const exact = exercises.filter((exercise) => exercise.seedKey === manifestItem.suggested_seed_key);
+    return exact.length === 1 ? exact[0] : null;
+  }
+  const matches = exercises.filter((exercise) => exercise.labels.some((label) => tokenMatch(label, manifestItem.display_name)));
+  if (matches.length === 1) return matches[0];
+  const licensedMatches = matches.filter((exercise) => licensedExerciseIds.has(exercise.id));
+  return licensedMatches.length === 1 ? licensedMatches[0] : null;
 }
 
 async function main() {
   const sourceRoot = path.resolve(argumentValue("--source") ?? process.env.OCRCRAFT_NAMED_IMAGE_SOURCE ?? path.join(process.cwd(), "named-exercise-images"));
-  const packageRoot = (await stat(sourceRoot)).isDirectory() ? sourceRoot : path.dirname(sourceRoot);
+  const sourceStat = await stat(sourceRoot);
+  const hasImagesDirectory = await stat(path.join(sourceRoot, "images")).then(() => true).catch(() => false);
+  const packageRoot = sourceStat.isDirectory() ? sourceRoot : path.dirname(sourceRoot);
+  if (!hasImagesDirectory) throw new Error(`Erwartet einen Paketordner mit images/: ${packageRoot}`);
   const imageRoot = path.join(process.cwd(), "public", "generated", "exercises");
   const instance = await DuckDBInstance.create(path.join(process.cwd(), "data", "ocrcraft.duckdb"));
   const connection = await instance.connect();
   const imported = [];
+  const skipped = [];
 
   try {
-    await connection.run("BEGIN TRANSACTION");
-    await connection.run("DELETE FROM exercise_media_assets WHERE source_type='external_reference'");
-    await connection.run("DELETE FROM exercise_media_assets WHERE provider=$provider", { provider: IMAGE_PACKAGE_PROVIDER });
+    const manifest = await loadManifest(packageRoot);
+    const exercises = await loadExerciseLabels(connection);
+    const existingResult = await connection.runAndReadAll(`
+      SELECT exercise_id::VARCHAR,storage_key,source_type,review_status,generation_status
+      FROM exercise_media_assets
+    `);
+    const existingKeys = new Set(existingResult.getRows().map((row) => String(row[1] ?? "")));
+    const approvedExercises = new Set(existingResult.getRows()
+      .filter((row) => String(row[3]) === "approved" && String(row[4]) === "generated" && String(row[2]) !== "external_reference")
+      .map((row) => String(row[0])));
+    const licensedExerciseIds = new Set(existingResult.getRows()
+      .filter((row) => String(row[2]) === "external_reference")
+      .map((row) => String(row[0])));
 
-    for (const [fileName, selector] of IMAGE_MAPPINGS) {
-      const bytes = await readFile(path.join(packageRoot, fileName));
+    await connection.run("BEGIN TRANSACTION");
+    for (const manifestItem of manifest) {
+      const exercise = await resolveExercise(manifestItem, exercises, licensedExerciseIds);
+      if (!exercise) {
+        skipped.push({ fileName: manifestItem.filename, reason: "ambiguous-or-unmatched", displayName: manifestItem.display_name });
+        continue;
+      }
+      const storageKey = `named/${exercise.seedKey ?? exercise.id}/${manifestItem.filename}`;
+      if (existingKeys.has(storageKey)) {
+        skipped.push({ fileName: manifestItem.filename, reason: "already-imported", exercise: exercise.seedKey ?? exercise.id });
+        continue;
+      }
+      if (approvedExercises.has(exercise.id)) {
+        skipped.push({ fileName: manifestItem.filename, reason: "approved-media-preserved", exercise: exercise.seedKey ?? exercise.id });
+        continue;
+      }
+
+      const bytes = await readFile(path.join(packageRoot, "images", manifestItem.filename));
       const metadata = pngMetadata(bytes);
-      const exercise = await findExercise(connection, selector, fileName);
-      const storageKey = `named/${exercise.key}/${fileName}`;
-      const destination = path.join(imageRoot, "named", exercise.key, fileName);
+      const destination = path.join(imageRoot, "named", exercise.seedKey ?? exercise.id, manifestItem.filename);
       await mkdir(path.dirname(destination), { recursive: true });
       await writeFile(destination, bytes);
       const sha256 = createHash("sha256").update(bytes).digest("hex");
 
-      await connection.run("UPDATE exercise_media_assets SET is_primary=false,updated_at=current_timestamp WHERE exercise_id=$exerciseId::UUID", { exerciseId: exercise.id });
       await connection.run(`
         INSERT INTO exercise_media_assets (
           id,exercise_id,media_type,source_type,provider,review_status,generation_status,
@@ -89,21 +120,21 @@ async function main() {
           generated_at,license_label,source_reference,usage_note,rights_status,
           consent_required,consent_confirmed,is_primary
         ) VALUES (
-          $assetId::UUID,$exerciseId::UUID,'image','club_created',$provider,'approved','generated',
+          $assetId::UUID,$exerciseId::UUID,'image','club_created',$provider,'pending','generated',
           'filesystem',$storageKey,$storageUri,'image/png',$width,$height,$sha256,
-          current_timestamp,$licenseLabel,$sourceReference,$usageNote,'approved',false,true,true
+          current_timestamp,$licenseLabel,$sourceReference,$usageNote,'approved',false,true,false
         )
       `, {
         assetId: randomUUID(), exerciseId: exercise.id, provider: IMAGE_PACKAGE_PROVIDER,
         storageKey, storageUri: `/generated/exercises/${storageKey}`, width: metadata.width, height: metadata.height, sha256,
-        licenseLabel: IMAGE_PACKAGE_LICENSE, sourceReference: "ocrcraft_exercise_images_named.zip",
-        usageNote: "Vom Nutzer bereitgestelltes, generiertes Bild; ersetzt externe Referenzmedien.",
+        licenseLabel: IMAGE_PACKAGE_LICENSE, sourceReference: "ocrcraft_exercise_images_codex_import.zip",
+        usageNote: `${manifestItem.source_batch}: ${manifestItem.notes}`,
       });
-      imported.push(`${fileName} -> ${exercise.name}`);
+      existingKeys.add(storageKey);
+      imported.push({ fileName: manifestItem.filename, exercise: exercise.seedKey ?? exercise.canonicalName });
     }
-
     await connection.run("COMMIT");
-    console.log(JSON.stringify({ sourceRoot, imported: imported.length, mappings: imported, externalReferencesRemoved: true }, null, 2));
+    console.log(JSON.stringify({ sourceRoot, imported: imported.length, skipped: skipped.length, mappings: imported, skippedItems: skipped }, null, 2));
   } catch (error) {
     await connection.run("ROLLBACK");
     throw error;

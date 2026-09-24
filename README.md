@@ -14,6 +14,27 @@ OCRCraft ist als Trainerwerkzeug ausgelegt: Automatik und KI dürfen Vorschläge
 
 Der Übungskatalog ist die fachliche Basis der Anwendung. Übungen können gesucht, gefiltert, erstellt, bearbeitet, archiviert und wiederhergestellt werden.
 
+- Betriebssicherheit: Authentifizierung, RBAC und erweiterbare Rollen/Rechte, Audit-Events, Backup/Restore, portable Exporte/Importe und persistente Hintergrundaufgaben.
+- Trainingsplanung: Quick Create und Training Builder mit Warm-up/Hauptteil/Cooldown, Alters-/Risiko-/Equipment-/Kapazitätsregeln, AI-Revalidierung, Versionen, Alternativen, Undo/Redo, Team- und Partnerformaten.
+- Katalogqualität: zweisprachige Seeds, Aliase, Coaching-/Sicherheitsfelder, Facetten, Progressionen/Regressionen, Games, Hindernisse, Outdoor-Varianten, Dublettenprüfung und Medienreview.
+- Gruppen und Schutz: editierbare Kids-/Youth-Profile, Trainerqualifikation, Aufsicht, Hindernissperren, Maximalrisiken und nicht abschwächbare `hardSafetyConstraints`.
+- Katalog-UX: gemeinsame Liste/Klein/Groß/Detail-Ansichten, URL-Filter, Ergebniszähler, Seitengrößen, Pagination und Filter-Sidepanels für alle zentralen Kataloge; Dashboard-Kennzahlen stammen aus Repository-Aggregaten.
+- Qualitätssicherung: Accessibility- und Playwright-Gates, Kids-/Builder-/Quick-Create-Pfade, UI-Review-Gate gegen feste Katalogzähler und bekannte Legacy-Texte sowie vollständige TypeScript-/Vitest-/Build-Prüfungen.
+- UI-Bausteinschicht: lokale Dialog-/Popover-, Form-, Pagination-, Tab-, Sidebar- und Toast-Komponenten mit Fokus-, Live-Region- und Token-Regeln; siehe [`docs/ui-components.md`](./docs/ui-components.md).
+- Internationalisierungsgrundlage: typisierte DE/EN-Dictionaries, persistierter Sprachumschalter und übersetzte globale Navigation/Theme-Beschriftungen; die vollständige Fachseiten-Abdeckung bleibt in `plan.md` offen.
+- Übersetzungsqualität: Der Admin-Tab „Datenqualität“ prüft Dictionary-Schlüssel auf fehlende und verwaiste Einträge; Fachseiten können schrittweise an dieselbe Schlüsselstruktur angebunden werden.
+- Strukturierte Übersetzungsqualität: Der Admin-Vollständigkeitsbericht prüft pro DE/EN-Datensatz Detailfelder, Ausführungsschritte, Coaching-Cues und Fehlerkorrekturen getrennt.
+- Datenbank-Release 1.0: 86 nummerierte Migrationen bis Version 87 werden über [`src/server/db/initial-v1.sql`](./src/server/db/initial-v1.sql) als atomare Fresh-Install-Baseline ausgeliefert; bestehende Datenbanken bleiben upgradefähig.
+- Hallen-/Outdoor-Katalog: Importierte Studio-Lasten werden auf Kettlebell, Sandbag, Widerstandsband, Matte oder Körpergewicht umgeschrieben; nicht sinnvoll konvertierbare Studio- und Cardiogeräte verlassen den aktiven Katalog, bleiben als Provenienz erhalten und tragen die Facette `Fitnessstudio`. Der aktive kuratierte Katalog besitzt einen nachvollziehbaren Portabilitäts-/Stationsreview in `exercise_environment_reviews`.
+- Medienbereinigung: 20 benannte, portable Nutzerbilder sind als freigegebene Primärmedien importiert. Weitere 37 Bilder aus dem Codex-Manifest wurden als lokale `club_created`-Medien mit Reviewstatus `pending` ergänzt; vorhandene freigegebene Medien bleiben geschützt und unklare Zuordnungen werden nicht geraten.
+- Equipment-Planung: Training Builder und Outdoor-Übungseditor zeigen Bestand sowie `Portabel`, `Fest / Rig` oder `Nicht klassifiziert`; Outdoor startet mit Portable-Filter und verwendet das hinterlegte Ersatz-Equipment automatisch für die Verfügbarkeitsprüfung.
+- Outdoor-Konvertierungsreview: automatische Import-Ersetzungen basieren auf einer expliziten Freigabeliste statt Geräte-String-Heuristiken. Bereits migrierte Konvertierungen werden einmalig als `pending` in den Fachreview gestellt; die Vorschau nutzt Bewegungsmuster bzw. konservative Namensableitung, Trainertexte bleiben erhalten und die Freigabe wird mit Reviewer/Zeitpunkt protokolliert.
+- Datenkuratierung: Quellenregister, 70%-Matching, OCR-Relevanz-Audit für 177 Kandidaten, High-Signal-Review, OCR-/OCRFRA-Lückenbatches, Quellen-/Lizenztrennung und Katalog-Coverage sind dokumentiert und getestet.
+- OCRFRA-Fachpakete: lokale Hindernisse, OCR-Fähigkeitsmatrix, Templates, Spielkatalog, Sicherheitszonen, Fallbacks, Altersgrenzen und Trainerfreigaben sind strukturiert hinterlegt.
+- UI-Konsolidierung: lokale Form-, Card-, Feedback-, Dialog-, Popover-, Pagination-, Sidebar-, Toast- und Filterbausteine sowie das kompakte Coral/Lime/Graphit-Designsystem sind über die zentralen Katalog- und Trainingsseiten eingeführt.
+- Qualitäts- und Sicherheitsgates: statische UI-Prüfung, Playwright-Regressionen, Auth-/RBAC-Schutz, Kids-/Youth-Regeln, serverseitige Domänenvalidierung, AI-Review-Blocker und vollständige Seed-/Übersetzungsberichte sind vorhanden.
+- Interaktive Orientierung: Release 1.0 enthält eine routebewusste DE/EN-Tour für Dashboard, Kataloge, Administration, Übungserstellung, Hinderniszuordnung, Quick Create und Training Builder.
+
 Pro Übung können unter anderem gepflegt werden:
 
 - deutscher und englischer Name sowie Aliase
