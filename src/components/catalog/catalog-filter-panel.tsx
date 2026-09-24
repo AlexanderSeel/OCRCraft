@@ -19,7 +19,7 @@ export function CatalogFilterPanel({
         {children}
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <button className={buttonClass("primary", "flex-1")} type="submit">Filtern</button>
-          {hasFilters ? <Link className="inline-flex min-h-11 items-center rounded-md border border-[var(--border)] px-3 text-center text-xs font-black hover:bg-[var(--surface-subtle)]" href={resetHref}>Zurücksetzen</Link> : null}
+          {hasFilters ? <Link className={buttonClass("secondary", "flex-1")} href={resetHref}>Zurücksetzen</Link> : null}
         </div>
       </form>
     </FilterSidePanel>
