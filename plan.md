@@ -35,7 +35,6 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 
 ## P1 – Interaktive Tutorials
 
-- [ ] Kernführungen fachlich vertiefen: „Übung erstellen“ und „Hindernis erstellen/zuordnen“ führen jetzt durch Eingaben, Sicherheits-/Trainerreview und Speichern bzw. Zuordnung; „Trainingsplan erstellen“ muss Quick Create und Builder noch als getrennte, tatsächlich erreichbare Schrittfolgen behandeln.
 
 ## P2 – Qualität, Analysen und Workflows
 

@@ -266,6 +266,7 @@ Wichtige Eigenschaften:
 - zugängliche Formulare und Dialoge
 
 Ein routebewusstes Tutorial erklärt wichtige Arbeitsbereiche direkt in der Anwendung.
+ Quick Create und Training Builder besitzen getrennte, tatsächlich erreichbare Schrittfolgen für Eingaben, Planungsgrenzen, Trainerreview und Speichern.
  Das Hindernis-Tutorial führt über Kandidatensuche, Risikoprüfung, Freizone/Kapazität und den abschließenden Trainerreview.
 
 Die Tutorial-Grundlage deckt alle zentralen Arbeitsbereiche ab; die konkrete fachliche Vertiefung einzelner Kernworkflows wird separat weiterentwickelt. Tutorial-Regression deckt Tastatur/Escape, Fokus-Rückgabe, reduzierte Bewegung, Mobile, Sprachwechsel und die Zielmarken der Kernworkflows per Playwright ab.

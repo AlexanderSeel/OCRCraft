@@ -76,24 +76,71 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
     ],
   },
   {
-    id: "training-create",
-    de: "Trainingsplan erstellen",
-    en: "Create a training plan",
+    id: "quick-create",
+    de: "Quick Create Training",
+    en: "Quick Create training",
     steps: [
       {
-        selector: "[data-tour='quick-create']",
-        de: { title: "Quick Create", text: "Starte mit Gruppe, Alter, Dauer und Ziel. OCRCraft berechnet daraus einen prüfbaren Entwurf." },
-        en: { title: "Quick Create", text: "Start with group, age, duration and goal. OCRCraft creates a reviewable draft." },
+        selector: "[data-tour='quick-create-audience']",
+        de: { title: "Gruppe, Alter und Dauer", text: "Lege zuerst Zielgruppe, Altersbereich, Teilnehmerzahl und Dauer fest. Diese Werte begrenzen Skalierung und Sicherheitsregeln." },
+        en: { title: "Group, age, and duration", text: "Start with audience, age range, participant count, and duration. These values constrain scaling and safety rules." },
       },
       {
-        selector: "[data-tour='builder']",
-        de: { title: "Plan prüfen", text: "Kontrolliere Aufwärmen, Hauptteil und Cooldown, passe Übungen an und speichere erst nach der Trainerprüfung." },
-        en: { title: "Review the plan", text: "Check warm-up, main part and cooldown, adjust exercises and save only after trainer review." },
+        selector: "[data-tour='quick-create-goals']",
+        de: { title: "Ziele und Körperregionen", text: "Wähle Trainingsziele, Fokusregionen und bei Bedarf Bereiche, die bewusst nicht belastet werden sollen." },
+        en: { title: "Goals and body regions", text: "Choose training goals, focus regions, and any areas that should deliberately not be loaded." },
+      },
+      {
+        selector: "[data-tour='quick-create-format']",
+        de: { title: "Ort, Format und Bestand", text: "Ort, Rotationsgruppen, Equipment und reale OCR-Hindernisse werden als praktische Planungsgrenzen übernommen." },
+        en: { title: "Location, format, and inventory", text: "Location, rotation groups, equipment, and real OCR obstacles are treated as practical planning constraints." },
+      },
+      {
+        selector: "[data-tour='quick-create-intensity']",
+        de: { title: "Belastung festlegen", text: "Wähle Technik, ausgewogene Belastung oder Conditioning. Sicherheitsregeln werden dadurch niemals abgeschwächt." },
+        en: { title: "Set training load", text: "Choose technique, balanced load, or conditioning. Safety rules are never weakened by this choice." },
+      },
+      {
+        selector: "[data-tour='quick-create-review']",
+        de: { title: "Trainerreview", text: "Prüfe Zusammenfassung, Warnungen und den erzeugten Entwurf. Erst nach dieser Kontrolle wird gespeichert." },
+        en: { title: "Trainer review", text: "Review the summary, warnings, and generated draft. Save only after this check." },
+      },
+      {
+        selector: "[data-tour='quick-create-actions']",
+        de: { title: "Entwurf erzeugen und speichern", text: "Erzeuge den Trainingsentwurf, kontrolliere ihn und speichere anschließend die validierte Einheit." },
+        en: { title: "Generate and save the draft", text: "Generate the training draft, review it, and then save the validated session." },
+      },
+    ],
+  },
+  {
+    id: "training-builder",
+    de: "Training Builder",
+    en: "Training Builder",
+    steps: [
+      {
+        selector: "[data-tour='builder-setup']",
+        de: { title: "Rahmen festlegen", text: "Definiere Zielgruppe, Alter, Teilnehmerzahl, Dauer und Ort als harte Planungsparameter." },
+        en: { title: "Set the frame", text: "Define audience, age, participant count, duration, and location as hard planning parameters." },
+      },
+      {
+        selector: "[data-tour='builder-structure']",
+        de: { title: "Trainingsstruktur", text: "Lege Warm-up, Hauptteile, Cooldown, Rotationsgruppen und Programmierung je Hauptteil fest." },
+        en: { title: "Training structure", text: "Set warm-up, main parts, cooldown, rotation groups, and programming for each main part." },
+      },
+      {
+        selector: "[data-tour='builder-goals']",
+        de: { title: "Ziele und Auswahlregeln", text: "Wähle Ziele, Übungstypen, Körperregionen und Wunschübungen. Ausschlüsse bleiben harte Grenzen." },
+        en: { title: "Goals and selection rules", text: "Choose goals, exercise types, body regions, and preferred exercises. Exclusions remain hard constraints." },
+      },
+      {
+        selector: "[data-tour='builder-format']",
+        de: { title: "Format, Equipment und Hindernisse", text: "Format, Intensität, Equipmentbestand und OCR-Hindernisse steuern die tatsächliche Umsetzbarkeit." },
+        en: { title: "Format, equipment, and obstacles", text: "Format, intensity, equipment inventory, and OCR obstacles control real-world feasibility." },
       },
       {
         selector: "[data-tour='training-save']",
-        de: { title: "Speichern", text: "Erzeuge zuerst einen Entwurf, prüfe Warnungen und speichere erst danach den bearbeitbaren Trainingsplan." },
-        en: { title: "Save the plan", text: "Create a draft first, review warnings, and save the editable training plan only afterwards." },
+        de: { title: "Planen, prüfen, speichern", text: "Erzeuge zuerst einen lokalen oder AI-Entwurf, prüfe Warnungen und Änderungen und speichere erst dann." },
+        en: { title: "Plan, review, and save", text: "Generate a local or AI draft first, review warnings and changes, and only then save it." },
       },
     ],
   },
@@ -107,7 +154,8 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
 
 export function guideForPath(pathname: string): TourGuide {
   if (pathname === "/exercises/new") return byId("exercise-create");
-  if (pathname === "/quick-create" || pathname === "/training/builder") return byId("training-create");
+  if (pathname === "/quick-create") return byId("quick-create");
+  if (pathname === "/training/builder") return byId("training-builder");
   if (pathname.startsWith("/exercises/ai-drafts")) return byId("ai-drafts");
   if (pathname.startsWith("/exercises")) return byId("exercises");
   if (pathname.startsWith("/obstacles")) return byId("obstacles");

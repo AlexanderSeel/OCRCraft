@@ -430,7 +430,7 @@ export function TrainingBuilderPanel({
           </section>
         ) : null}
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" data-tour="builder-setup">
           <h2 className="text-lg font-black">Planungsengine</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {([
@@ -502,7 +502,7 @@ export function TrainingBuilderPanel({
           </div>
         </section>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" data-tour="builder-structure">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-black">Trainingsstruktur & Organisation</h2>
@@ -598,7 +598,7 @@ export function TrainingBuilderPanel({
           )}
         </section>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" data-tour="builder-goals">
           <h2 className="text-lg font-black">Ziele & Übungstypen</h2>
           <div className="mt-4 flex flex-wrap gap-2">
             {exerciseTrainingGoals.map((goal) => {
@@ -632,7 +632,7 @@ export function TrainingBuilderPanel({
           </div>
         </section>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" data-tour="builder-format">
           <h2 className="text-lg font-black">Format & Belastung</h2>
           <div className="mt-3 flex flex-wrap gap-2">{TRAINING_FORMATS.filter((format) => format !== "free").map((format) => <Toggle key={format} active={formats.includes(format)} onClick={() => {
             const selecting = !formats.includes(format);

@@ -436,7 +436,7 @@ export function QuickCreateWizard({
             </div>
           ) : null}
           {step === 1 ? (
-            <div>
+            <div data-tour="quick-create-audience">
               <h3 className="text-lg font-black">Für wen und wie lange?</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Diese Angaben steuern Skalierung, Umfang und spätere Vereinsregeln.</p>
 
@@ -535,7 +535,7 @@ export function QuickCreateWizard({
           ) : null}
 
           {step === 2 ? (
-            <div>
+            <div data-tour="quick-create-goals">
               <h3 className="text-lg font-black">Was soll die Einheit erreichen?</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Wähle einen klaren Schwerpunkt und optional unterstützende Bereiche.</p>
               <div className="mt-5 flex flex-wrap gap-2">
@@ -610,7 +610,7 @@ export function QuickCreateWizard({
           ) : null}
 
           {step === 3 ? (
-            <div>
+            <div data-tour="quick-create-format">
               <h3 className="text-lg font-black">Wie und wo soll trainiert werden?</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Formate lassen sich kombinieren. Ort, Rotationsgruppen, Equipment und optional der reale Hindernisbestand begrenzen die praktische Planung.</p>
 
@@ -764,7 +764,7 @@ export function QuickCreateWizard({
           ) : null}
 
           {step === 4 ? (
-            <div>
+            <div data-tour="quick-create-intensity">
               <h3 className="text-lg font-black">Wie anspruchsvoll?</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Belastungssteuerung darf konfigurierte Sicherheitsregeln nie überschreiben.</p>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -804,7 +804,7 @@ export function QuickCreateWizard({
           ) : null}
 
           {step === 5 ? (
-            <div>
+            <div data-tour="quick-create-review">
               <h3 className="text-lg font-black">Entwurf prüfen</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Diese Parameter werden gegen den realen Übungspool und die deterministischen Planungsregeln ausgewertet.</p>
 
@@ -895,7 +895,7 @@ export function QuickCreateWizard({
               Weiter
             </button>
           ) : (
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2" data-tour="quick-create-actions">
               <button
                 className={buttonClass("secondary", "px-5")}
                 disabled={generating || persisting}
