@@ -183,7 +183,7 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
         en: { title: "Find groups", text: "Filter active or archived groups by name and audience without changing saved defaults." },
       },
       {
-        selector: "[data-tour='group-cards']",
+        selector: "[data-tour='group-results']",
         de: { title: "Standards prüfen", text: "Prüfe Alter, Teilnehmerzahl, Dauer, Ort, Equipment, Risikoprofil und Schutzprofil. Diese Werte können in Quick Create als Vereinsstandard dienen." },
         en: { title: "Review defaults", text: "Review age, participant count, duration, location, equipment, risk profile, and safeguarding profile. These values can guide Quick Create." },
       },

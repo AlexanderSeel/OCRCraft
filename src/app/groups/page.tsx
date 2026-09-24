@@ -170,7 +170,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
             </label>
             <CatalogPageSize value={pageSize} />
         </CatalogFilterPanel>
-        <div className="min-w-0 space-y-6">
+        <div className="min-w-0 space-y-6" data-tour="group-results">
         <CatalogSummaryStrip items={[{ label: "Aktueller Bereich", value: groupPage.total === 0 ? "0" : `${Math.min((page - 1) * pageSize + 1, groupPage.total)}–${Math.min(page * pageSize, groupPage.total)} von ${groupPage.total}` }]} />
         <section className="catalog-results grid gap-4 xl:grid-cols-2" data-tour="group-cards">
           {groups.map((group) => (

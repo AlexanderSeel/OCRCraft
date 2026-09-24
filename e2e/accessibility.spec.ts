@@ -254,5 +254,5 @@ test("groups tutorial covers creation, filtering and defaults", async ({ page })
   await dialog.getByRole("button", { name: "Weiter" }).click();
   await expect(page.locator("[data-tour='group-filters'][data-tour-active='true']")).toBeVisible();
   await dialog.getByRole("button", { name: "Weiter" }).click();
-  await expect(page.locator("[data-tour='group-cards'][data-tour-active='true']")).toBeVisible();
+  await expect(page.locator("[data-tour='group-results'][data-tour-active='true']")).toBeVisible();
 });
