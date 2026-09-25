@@ -583,7 +583,7 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
             <label className="grid gap-1 text-xs font-bold">
               Review-Notiz
               <textarea
-                className="min-h-20 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 font-normal"
+                className={`${formControlClass} min-h-20 p-2 font-normal`}
                 defaultValue={asset.reviewNotes ?? ""}
                 maxLength={2000}
                 name="reviewNotes"
@@ -594,7 +594,7 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
               <span className="text-xs text-[var(--muted)]">
                 {asset.reviewerName && asset.reviewedAt ? `Zuletzt geprüft von ${asset.reviewerName} · ${formatJobTime(asset.reviewedAt)}` : "Noch nicht fachlich geprüft"}
               </span>
-              <button className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" type="submit">
+              <button className={buttonClass("secondary", "px-3 text-xs")} type="submit">
                 Prüfung speichern
               </button>
             </div>
@@ -606,7 +606,7 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
             <input name="assetId" type="hidden" value={asset.id} />
             <input name="exerciseId" type="hidden" value={asset.exerciseId} />
             {asset.reviewStatus !== "approved" && approvalReady ? (
-              <button className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" name="reviewStatus" type="submit" value="approved">
+              <button className={buttonClass("primary", "px-3 py-2 text-xs")} name="reviewStatus" type="submit" value="approved">
                 Freigeben
               </button>
             ) : asset.reviewStatus !== "approved" ? (
@@ -615,20 +615,20 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
               </span>
             ) : null}
             {asset.reviewStatus !== "rejected" ? (
-              <button className="rounded-lg border border-[var(--danger)] px-3 py-2 text-xs font-black text-[var(--danger)]" name="reviewStatus" type="submit" value="rejected">
+              <button className={buttonClass("danger", "px-3 py-2 text-xs")} name="reviewStatus" type="submit" value="rejected">
                 Ablehnen
               </button>
             ) : null}
             {asset.reviewStatus !== "pending" ? (
-              <button className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" name="reviewStatus" type="submit" value="pending">
+              <button className={buttonClass("secondary", "px-3 py-2 text-xs")} name="reviewStatus" type="submit" value="pending">
                 Review öffnen
               </button>
             ) : null}
           </form>
-          <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/exercises/${asset.exerciseId}`}>
+          <Link className={buttonClass("secondary", "px-3 py-2 text-xs")} href={`/exercises/${asset.exerciseId}`}>
             Übung öffnen
           </Link>
-          <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={`/exercises/${asset.exerciseId}/edit`}>
+          <Link className={buttonClass("secondary", "px-3 py-2 text-xs")} href={`/exercises/${asset.exerciseId}/edit`}>
             Übung bearbeiten
           </Link>
           {asset.mediaType === "video" && asset.imageUrl ? (
@@ -657,7 +657,7 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
             />
           ) : null}
           {sourceHref ? (
-            <a className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={sourceHref} rel="noreferrer" target="_blank">
+            <a className={buttonClass("secondary", "px-3 py-2 text-xs")} href={sourceHref} rel="noreferrer" target="_blank">
               Quelle
             </a>
           ) : null}
@@ -717,13 +717,13 @@ function LegacyMigrationRow({ candidate }: { readonly candidate: LegacyTriptychM
           <form action={queueMediaBatchAction}>
             <input name="batchAction" type="hidden" value="generate_ai_image" />
             <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
-            <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
+            <button className={buttonClass("primary", "px-3 text-xs")} type="submit">
               Sequenz erzeugen
             </button>
           </form>
         ) : null}
         {state === "review_pending" ? (
-          <Link className="grid min-h-10 place-items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href={`/media?q=${encodeURIComponent(candidate.exerciseName)}&review=pending`}>
+          <Link className={buttonClass("secondary", "px-3 text-xs")} href={`/media?q=${encodeURIComponent(candidate.exerciseName)}&review=pending`}>
             Sequenz prüfen
           </Link>
         ) : null}
@@ -735,7 +735,7 @@ function LegacyMigrationRow({ candidate }: { readonly candidate: LegacyTriptychM
         {state === "ready_to_finalize" ? (
           <form action={finalizeLegacyTriptychMigrationAction}>
             <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
-            <button className="min-h-10 rounded-lg border border-[var(--danger)] px-3 text-xs font-black text-[var(--danger)]" type="submit">
+            <button className={buttonClass("danger", "px-3 text-xs")} type="submit">
               Legacy als ersetzt markieren
             </button>
           </form>
@@ -758,7 +758,7 @@ function RecentMediaJobRow({ job }: { readonly job: RecentMediaGenerationJob }) 
         {job.status === "failed" ? (
           <form action={retryMediaGenerationJobAction}>
             <input name="exerciseId" type="hidden" value={job.exerciseId} />
-            <button className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black" type="submit">
+            <button className={buttonClass("secondary", "px-3 py-2 text-xs")} type="submit">
               Erneut versuchen
             </button>
           </form>
@@ -794,7 +794,7 @@ function ReviewSelect({
   return (
     <label className="grid gap-1 text-xs font-bold">
       {label}
-      <select className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal" defaultValue={value} name={name}>
+      <select className={`${formControlClass} px-2 font-normal`} defaultValue={value} name={name}>
         <option value="unreviewed">Noch nicht geprüft</option>
         <option value="pass">Bestanden</option>
         <option value="needs_changes">Korrektur erforderlich</option>

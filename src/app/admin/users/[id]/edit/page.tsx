@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import { TRAINER_QUALIFICATION_LABELS, TRAINER_QUALIFICATION_LEVELS } from "@/domain/training/trainer-qualification";
 import { listAppUsers } from "@/server/auth/identity-service";
 import { deleteUserAction, setUserPasswordAction, updateUserAction } from "../../../identity-actions";
@@ -14,13 +15,13 @@ type FieldErrors = Partial<Record<UserEditField, string>>;
 export default async function EditUserPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; field?: string; saved?: string }> }) {
   const [{ id }, query, users] = await Promise.all([params, searchParams, listAppUsers()]);
   const user = users.find((item) => item.id === id);
-  if (!user) return <AppShell title="Benutzer nicht gefunden" subtitle="Das Profil ist nicht mehr vorhanden."><Link className="inline-flex rounded-lg border border-[var(--border)] px-4 py-2 font-bold" href="/admin?tab=users">Zurück zu Benutzer & Profile</Link></AppShell>;
+  if (!user) return <AppShell title="Benutzer nicht gefunden" subtitle="Das Profil ist nicht mehr vorhanden."><Link className={buttonClass("secondary", "px-4")} href="/admin?tab=users">Zurück zu Benutzer & Profile</Link></AppShell>;
 
   const fieldErrors = getFieldErrors(query.error, query.field);
   const firstErrorField = Object.keys(fieldErrors)[0] as UserEditField | undefined;
   return <AppShell title={`Profil bearbeiten: ${user.firstName} ${user.lastName}`} subtitle="Alle Identitäts- und Zugriffsänderungen werden serverseitig geprüft.">
     <div className="mx-auto max-w-3xl space-y-5">
-      <Link className="inline-flex rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold" href="/admin?tab=users">← Benutzer & Profile</Link>
+      <Link className={buttonClass("secondary", "px-3 text-sm")} href="/admin?tab=users">← Benutzer & Profile</Link>
       {query.error ? <p aria-live="assertive" className="rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm font-bold text-[var(--danger)]">{errorMessage(query.error, firstErrorField)}</p> : null}
       {query.saved ? <p aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">{query.saved === "password" ? "Passwort wurde gesetzt." : "Profil wurde gespeichert."}</p> : null}
       <form action={updateUserAction} className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
@@ -37,9 +38,9 @@ export default async function EditUserPage({ params, searchParams }: { params: P
         <FileField error={fieldErrors.profileImage} />
         <Field error={fieldErrors.profileImageUri} label="Profilbild-URL" name="profileImageUri" value={user.profileImageUri ?? ""} />
         <label className="flex items-center gap-2 text-sm font-bold sm:col-span-2"><input defaultChecked={user.active} name="active" type="checkbox" /> Benutzer aktiv</label>
-        <ActionProgressButton className="min-h-11 rounded-lg bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)] sm:col-span-2" pendingLabel="Profil wird gespeichert …">Änderungen speichern</ActionProgressButton>
+        <ActionProgressButton className={buttonClass("primary", "px-4 sm:col-span-2")} pendingLabel="Profil wird gespeichert …">Änderungen speichern</ActionProgressButton>
       </form>
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"><h2 className="text-lg font-black">Zugang verwalten</h2><form action={setUserPasswordAction} className="mt-3 flex flex-wrap items-end gap-3"><input name="id" type="hidden" value={user.id} /><label className="grid min-w-60 flex-1 gap-1 text-sm font-bold">Neues Passwort<input className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 font-normal" minLength={8} name="password" required type="password" /></label><ActionProgressButton className="min-h-11 rounded-lg border border-[var(--border)] px-4 text-sm font-black" pendingLabel="Passwort wird gesetzt …">Passwort setzen</ActionProgressButton></form><div className="mt-5 border-t border-[var(--border)] pt-4"><ConfirmPopoverForm action={deleteUserAction} description={`Der Zugang „${user.displayName}“ wird dauerhaft gelöscht.`} title="Benutzer löschen?" triggerLabel="Benutzer löschen"><input name="id" type="hidden" value={user.id} /></ConfirmPopoverForm></div></section>
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"><h2 className="text-lg font-black">Zugang verwalten</h2><form action={setUserPasswordAction} className="mt-3 flex flex-wrap items-end gap-3"><input name="id" type="hidden" value={user.id} /><label className="grid min-w-60 flex-1 gap-1 text-sm font-bold">Neues Passwort<input className={`${formControlClass} font-normal`} minLength={8} name="password" required type="password" /></label><ActionProgressButton className={buttonClass("secondary", "px-4")} pendingLabel="Passwort wird gesetzt …">Passwort setzen</ActionProgressButton></form><div className="mt-5 border-t border-[var(--border)] pt-4"><ConfirmPopoverForm action={deleteUserAction} description={`Der Zugang „${user.displayName}“ wird dauerhaft gelöscht.`} title="Benutzer löschen?" triggerLabel="Benutzer löschen"><input name="id" type="hidden" value={user.id} /></ConfirmPopoverForm></div></section>
     </div>
   </AppShell>;
 }
@@ -66,7 +67,7 @@ function FileField({ error }: { error?: string }) {
 }
 
 function FieldError({ id, message }: { id: string; message?: string }) { return message ? <span className="field-error text-sm font-semibold text-[var(--danger)]" id={id} role="alert">{message}</span> : null; }
-function controlClass(error?: string) { return `min-h-11 rounded-lg border ${error ? "border-[var(--danger)] ring-2 ring-[color-mix(in_srgb,var(--danger)_25%,transparent)]" : "border-[var(--border)]"} bg-[var(--surface-subtle)] px-3 font-normal`; }
+function controlClass(error?: string) { return `${formControlClass} ${error ? "border-[var(--danger)] ring-2 ring-[color-mix(in_srgb,var(--danger)_25%,transparent)]" : "bg-[var(--surface-subtle)]"} font-normal`; }
 
 function getFieldErrors(code?: string, field?: string): FieldErrors {
   if (code !== "invalid" || !isUserEditField(field)) return {};

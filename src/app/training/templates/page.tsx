@@ -7,6 +7,7 @@ import { CatalogPagination, CatalogResultCount } from "@/components/catalog/cata
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import {
   TRAINING_TEMPLATES,
   TRAINING_TEMPLATE_FOCUS_KEYS,
@@ -47,13 +48,13 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
       subtitle="Versionierte OCRCraft-Vorlagen mit nachvollziehbarer Strukturreferenz. Inhalte bleiben frei anpassbar und durchlaufen weiterhin alle Sicherheitsregeln."
       actions={(
         <div className="flex flex-wrap gap-2">
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/training">
+          <Link className={buttonClass("secondary", "px-4")} href="/training">
             Training
           </Link>
-          <Link className="rounded-xl bg-[var(--control-strong)] px-4 py-2.5 text-sm font-black text-[var(--control-strong-foreground)]" href="/quick-create">
+          <Link className={buttonClass("primary", "px-4")} href="/quick-create">
             Ohne Vorlage starten
           </Link>
-          <Link className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent-foreground)]" href="/training/builder?mode=ai">
+          <Link className={buttonClass("accent", "px-4")} href="/training/builder?mode=ai">
             Neue Vorlage mit AI planen
           </Link>
         </div>
@@ -103,7 +104,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
                   <div className="mt-auto flex flex-wrap gap-2 pt-4">
                     <form action={instantiateClubTrainingTemplateAction} className="flex-1">
                       <input name="templateId" type="hidden" value={item.id} />
-                      <button className="min-h-10 w-full rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
+                      <button className={buttonClass("primary", "w-full px-3 text-xs")} type="submit">
                         Als Training bearbeiten
                       </button>
                     </form>
@@ -113,9 +114,9 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
                       <p className="mt-2 text-xs leading-5 text-[var(--muted)]">Für Änderungen an Phasen oder Übungen öffnest du die Vorlage als Training und speicherst danach eine neue, geprüfte Vorlage.</p>
                       <form action={updateClubTrainingTemplateAction} className="mt-3 grid gap-2">
                         <input name="templateId" type="hidden" value={item.id} />
-                        <label className="grid gap-1 text-xs font-bold">Name<input className="min-h-10 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 text-sm font-normal" defaultValue={item.name} maxLength={120} minLength={2} name="name" required /></label>
-                        <label className="grid gap-1 text-xs font-bold">Beschreibung<textarea className="min-h-20 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-2 text-sm font-normal" defaultValue={item.description ?? ""} maxLength={1000} name="description" /></label>
-                        <button className="min-h-10 rounded-md bg-[var(--brand)] px-3 text-xs font-black text-[var(--brand-foreground)]" type="submit">Metadaten speichern</button>
+                        <label className="grid gap-1 text-xs font-bold">Name<input className={`${formControlClass} px-2 text-sm font-normal`} defaultValue={item.name} maxLength={120} minLength={2} name="name" required /></label>
+                        <label className="grid gap-1 text-xs font-bold">Beschreibung<textarea className={`${formControlClass} min-h-20 px-2 py-2 text-sm font-normal`} defaultValue={item.description ?? ""} maxLength={1000} name="description" /></label>
+                        <button className={buttonClass("primary", "px-3 text-xs")} type="submit">Metadaten speichern</button>
                       </form>
                     </details>
                   </div>
@@ -133,14 +134,14 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
           <CatalogFilterPanel hasFilters={Boolean(audience || focus || page !== 1 || pageSize !== 12)} resetHref="/training/templates" title="Vorlagenfilter">
             <label className="grid gap-2 text-sm font-bold">
               Zielgruppe
-              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={audience} name="audience">
+              <select className={`${formControlClass} font-normal`} defaultValue={audience} name="audience">
                 <option value="">Alle</option>
                 {audiences.map((value) => <option key={value} value={value}>{trainingTemplateAudienceLabel(value)}</option>)}
               </select>
             </label>
             <label className="grid gap-2 text-sm font-bold">
               Schwerpunkt
-              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={focus} name="focus">
+              <select className={`${formControlClass} font-normal`} defaultValue={focus} name="focus">
                 <option value="">Alle</option>
                 {TRAINING_TEMPLATE_FOCUS_KEYS.map((value) => <option key={value} value={value}>{trainingTemplateFocusLabel(value)}</option>)}
               </select>
@@ -184,7 +185,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
 
               <div className="mt-auto pt-5">
                 <Link
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]"
+                  className={buttonClass("primary", "w-full px-4")}
                   href={"/quick-create?template=" + encodeURIComponent(item.key)}
                 >
                   Vorlage in Quick Create öffnen

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Disclosure } from "@/components/ui/disclosure";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import {
   TRAINER_QUALIFICATION_LABELS,
   TRAINER_QUALIFICATION_LEVELS,
@@ -42,10 +43,10 @@ export default async function SafetyProfilesPage({ searchParams }: PageProps) {
       subtitle="Wiederverwendbare Alters-, Risiko-, Impact-, Aufsichts- und Hindernisgrenzen für Vereinsgruppen."
       actions={
         <div className="flex flex-wrap gap-2">
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/groups">
+          <Link className={buttonClass("secondary", "px-4")} href="/groups">
             Gruppen
           </Link>
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href={archived ? "/groups/safety-profiles" : "/groups/safety-profiles?archived=1"}>
+          <Link className={buttonClass("secondary", "px-4")} href={archived ? "/groups/safety-profiles" : "/groups/safety-profiles?archived=1"}>
             {archived ? "Aktive Profile" : "Archiv"}
           </Link>
         </div>
@@ -70,7 +71,7 @@ export default async function SafetyProfilesPage({ searchParams }: PageProps) {
             <form action={createYouthSafetyProfileAction} className="border-t border-[var(--border)] p-5">
               <ProfileFields obstacles={obstacles} />
               <div className="mt-4 flex justify-end">
-                <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
+                <button className={buttonClass("primary", "px-5")} type="submit">
                   Schutzprofil anlegen
                 </button>
               </div>
@@ -114,12 +115,12 @@ export default async function SafetyProfilesPage({ searchParams }: PageProps) {
                       <input name="id" type="hidden" value={profile.id} />
                       <ProfileFields obstacles={obstacles} profile={profile} />
                       <div className="mt-4 flex justify-end">
-                        <button className="rounded-lg bg-[var(--control-strong)] px-4 py-2 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">Änderungen speichern</button>
+                        <button className={buttonClass("primary", "px-4 text-xs")} type="submit">Änderungen speichern</button>
                       </div>
                     </form>
                   </Disclosure>
                 ) : null}
-                <ConfirmPopoverForm action={setYouthSafetyProfileArchivedAction} description={profile.archived ? "Das Sicherheitsprofil wird wieder für die aktive Gruppenplanung verfügbar." : "Das Sicherheitsprofil wird archiviert; bestehende Trainings bleiben erhalten."} title={profile.archived ? "Sicherheitsprofil wiederherstellen?" : "Sicherheitsprofil archivieren?"} triggerClassName="min-h-11 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-black" triggerLabel={profile.archived ? "Wiederherstellen" : "Archivieren"}>
+                <ConfirmPopoverForm action={setYouthSafetyProfileArchivedAction} description={profile.archived ? "Das Sicherheitsprofil wird wieder für die aktive Gruppenplanung verfügbar." : "Das Sicherheitsprofil wird archiviert; bestehende Trainings bleiben erhalten."} title={profile.archived ? "Sicherheitsprofil wiederherstellen?" : "Sicherheitsprofil archivieren?"} triggerClassName={buttonClass("secondary", "px-4")} triggerLabel={profile.archived ? "Wiederherstellen" : "Archivieren"}>
                   <input name="id" type="hidden" value={profile.id} />
                   <input name="archived" type="hidden" value={profile.archived ? "false" : "true"} />
                 </ConfirmPopoverForm>
@@ -145,18 +146,18 @@ function ProfileFields({
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <label className="grid gap-1.5 text-sm font-bold md:col-span-2">
           Name
-          <input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={profile?.name ?? ""} maxLength={120} name="name" required />
+          <input className={`${formControlClass} font-normal`} defaultValue={profile?.name ?? ""} maxLength={120} name="name" required />
         </label>
         <label className="grid gap-1.5 text-sm font-bold">
           Zielgruppe
-          <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={profile?.audience ?? "kids"} name="audience">
+          <select className={`${formControlClass} font-normal`} defaultValue={profile?.audience ?? "kids"} name="audience">
             <option value="kids">Kinder</option>
             <option value="youth">Jugend</option>
           </select>
         </label>
         <label className="grid gap-1.5 text-sm font-bold">
           Aufsicht
-          <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={profile?.supervisionRequirement ?? "direct"} name="supervisionRequirement">
+          <select className={`${formControlClass} font-normal`} defaultValue={profile?.supervisionRequirement ?? "direct"} name="supervisionRequirement">
             <option value="normal">Normale Aufsicht</option>
             <option value="increased">Erhöhte Aufsicht</option>
             <option value="direct">Direkte Traineraufsicht</option>
@@ -164,28 +165,28 @@ function ProfileFields({
         </label>
         <label className="grid gap-1.5 text-sm font-bold">
           Mindestqualifikation Trainer
-          <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={profile?.minimumTrainerQualification ?? "assistant"} name="minimumTrainerQualification">
+          <select className={`${formControlClass} font-normal`} defaultValue={profile?.minimumTrainerQualification ?? "assistant"} name="minimumTrainerQualification">
             {TRAINER_QUALIFICATION_LEVELS.map((level) => <option key={level} value={level}>{TRAINER_QUALIFICATION_LABELS[level]}</option>)}
           </select>
         </label>
-        <label className="grid gap-1.5 text-sm font-bold">Mindestalter<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={profile?.minAge ?? 7} max={17} min={3} name="minAge" type="number" /></label>
-        <label className="grid gap-1.5 text-sm font-bold">Höchstalter<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={profile?.maxAge ?? 11} max={17} min={3} name="maxAge" type="number" /></label>
+        <label className="grid gap-1.5 text-sm font-bold">Mindestalter<input className={`${formControlClass} font-normal`} defaultValue={profile?.minAge ?? 7} max={17} min={3} name="minAge" type="number" /></label>
+        <label className="grid gap-1.5 text-sm font-bold">Höchstalter<input className={`${formControlClass} font-normal`} defaultValue={profile?.maxAge ?? 11} max={17} min={3} name="maxAge" type="number" /></label>
         <label className="grid gap-1.5 text-sm font-bold">
           Maximales Risiko
-          <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={profile?.maximumRiskLevel ?? "medium"} name="maximumRiskLevel">
+          <select className={`${formControlClass} font-normal`} defaultValue={profile?.maximumRiskLevel ?? "medium"} name="maximumRiskLevel">
             <option value="low">Niedrig</option><option value="medium">Mittel</option><option value="high">Hoch</option>
           </select>
         </label>
         <label className="grid gap-1.5 text-sm font-bold">
           Maximaler Impact
-          <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={profile?.maximumImpactLevel ?? "moderate"} name="maximumImpactLevel">
+          <select className={`${formControlClass} font-normal`} defaultValue={profile?.maximumImpactLevel ?? "moderate"} name="maximumImpactLevel">
             <option value="low">Niedrig</option><option value="moderate">Moderat</option><option value="high">Hoch</option>
           </select>
         </label>
       </div>
       <label className="mt-4 grid gap-1.5 text-sm font-bold">
         Hinweise
-        <textarea className="min-h-20 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 font-normal" defaultValue={profile?.notes ?? ""} maxLength={1200} name="notes" />
+        <textarea className={`${formControlClass} min-h-20 p-3 font-normal`} defaultValue={profile?.notes ?? ""} maxLength={1200} name="notes" />
       </label>
       <details className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" open={restricted.size > 0}>
         <summary className="cursor-pointer text-sm font-black">Gesperrte Hindernisse ({restricted.size})</summary>

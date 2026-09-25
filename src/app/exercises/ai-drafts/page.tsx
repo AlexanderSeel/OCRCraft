@@ -8,6 +8,7 @@ import { Disclosure } from "@/components/ui/disclosure";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import { exerciseCategoryLabels, exercisePhaseLabels } from "@/domain/exercise/model";
 import { getConfiguredAiExerciseDraftProvider } from "@/server/exercises/ai-exercise-draft-provider";
 import { countAiExerciseDrafts, listAiExerciseDrafts } from "@/server/exercises/ai-exercise-draft-repository";
@@ -54,16 +55,16 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
       actions={(
         <div className="flex flex-wrap gap-2">
           <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black"
+            className={buttonClass("secondary", "px-4")}
             href={showHistory ? "/exercises/ai-drafts" : "/exercises/ai-drafts?history=1"}
           >
             {showHistory ? "Offene Entwürfe" : "Verlauf"}
           </Link>
           {!showHistory ? (
-            <div data-tour="ai-draft-approval-action"><ConfirmPopoverForm action={approveAllAiExerciseDraftsAction} confirmLabel="Alle freigeben" description="Alle freigabefähigen AI-Entwürfe werden als Übungen angelegt. Entwürfe mit Review-Blockern bleiben offen." title="Alle freigabefähigen Entwürfe freigeben?" triggerClassName="rounded-xl border border-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent)]" triggerLabel="Alle freigeben" /></div>
+            <div data-tour="ai-draft-approval-action"><ConfirmPopoverForm action={approveAllAiExerciseDraftsAction} confirmLabel="Alle freigeben" description="Alle freigabefähigen AI-Entwürfe werden als Übungen angelegt. Entwürfe mit Review-Blockern bleiben offen." title="Alle freigabefähigen Entwürfe freigeben?" triggerClassName={buttonClass("accent", "px-4")} triggerLabel="Alle freigeben" /></div>
           ) : null}
           <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black"
+            className={buttonClass("secondary", "px-4")}
             href="/exercises"
           >
             ← Übungsbibliothek
@@ -100,7 +101,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
             <label className="grid gap-2 text-sm font-black">
               Briefing
               <textarea
-                className="min-h-32 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 font-normal leading-6 outline-none focus:border-[var(--focus)]"
+                className={`${formControlClass} min-h-32 p-3 font-normal leading-6`}
                 maxLength={3000}
                 minLength={10}
                 name="brief"
@@ -110,7 +111,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
             </label>
             <div className="flex justify-end">
               <button
-                className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] disabled:opacity-50"
+                className={buttonClass("primary", "px-5")}
                 disabled={!provider}
                 type="submit"
               >
@@ -131,7 +132,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
               {showHistory ? <input name="history" type="hidden" value="1" /> : null}
               <label className="grid gap-1 text-sm font-bold">
                 Suchen
-                <input className="h-11 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={query.q ?? ""} name="q" placeholder="z. B. Carry, Partner, Grip ..." />
+                <input className={`${formControlClass} min-w-0 font-normal`} defaultValue={query.q ?? ""} name="q" placeholder="z. B. Carry, Partner, Grip ..." />
               </label>
               <CatalogPageSize options={[6, 12, 24]} value={pageSize} />
           </CatalogFilterPanel>
@@ -206,18 +207,18 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
 
                   {draft.status === "pending" ? (
                     <div className="view-actions mt-4 flex flex-wrap justify-end gap-2 border-t border-[var(--border)] pt-4">
-                      <ConfirmPopoverForm action={rejectAiExerciseDraftAction} confirmLabel="Entwurf verwerfen" description="Der AI-Entwurf wird verworfen und steht anschließend nicht mehr zur Freigabe bereit." title="AI-Entwurf verwerfen?" triggerClassName="min-h-10 rounded-lg border border-[var(--danger)] px-4 py-2 text-xs font-black text-[var(--danger)]" triggerLabel="Verwerfen">
+                      <ConfirmPopoverForm action={rejectAiExerciseDraftAction} confirmLabel="Entwurf verwerfen" description="Der AI-Entwurf wird verworfen und steht anschließend nicht mehr zur Freigabe bereit." title="AI-Entwurf verwerfen?" triggerClassName={buttonClass("danger", "px-4 text-xs")} triggerLabel="Verwerfen">
                         <input name="id" type="hidden" value={draft.id} />
                       </ConfirmPopoverForm>
                       {!draft.review?.blocking ? (
-                        <ConfirmPopoverForm action={approveAiExerciseDraftAction} confirmLabel="Freigeben" description="Aus dem Entwurf wird eine aktive Übung angelegt und im vollständigen Editor geöffnet." title="AI-Entwurf freigeben?" triggerClassName="min-h-10 rounded-lg bg-[var(--control-strong)] px-4 py-2 text-xs font-black text-[var(--control-strong-foreground)]" triggerLabel="Freigeben & im Voll-Editor öffnen">
+                        <ConfirmPopoverForm action={approveAiExerciseDraftAction} confirmLabel="Freigeben" description="Aus dem Entwurf wird eine aktive Übung angelegt und im vollständigen Editor geöffnet." title="AI-Entwurf freigeben?" triggerClassName={buttonClass("primary", "px-4 text-xs")} triggerLabel="Freigeben & im Voll-Editor öffnen">
                           <input name="id" type="hidden" value={draft.id} />
                         </ConfirmPopoverForm>
                       ) : null}
                     </div>
                   ) : draft.approvedExerciseId ? (
                     <div className="mt-4 flex justify-end border-t border-[var(--border)] pt-4">
-                      <Link className="text-sm font-black underline underline-offset-4" href={`/exercises/${draft.approvedExerciseId}/edit`}>
+                      <Link className={buttonClass("secondary", "px-3 text-xs")} href={`/exercises/${draft.approvedExerciseId}/edit`}>
                         Freigegebene Übung öffnen
                       </Link>
                     </div>
