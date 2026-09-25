@@ -100,18 +100,23 @@ describe("database migrations", () => {
       expect(Number(pendingBlockedReviews.getRows()[0]?.[0])).toBe(0);
 
       const blockedStudioClassification = await connection.runAndReadAll(`
-        SELECT count(*)
+        SELECT
+          count(*) FILTER (WHERE r.disposition='blocked'),
+          count(*) FILTER (
+            WHERE r.disposition='blocked'
+              AND e.archived=true
+              AND e.outdoor_suitable=false
+              AND EXISTS (
+                SELECT 1 FROM exercise_tags et
+                WHERE et.exercise_id=e.id AND et.tag_id='fitnessstudio'
+              )
+          )
         FROM exercise_environment_reviews r
         JOIN exercises e ON e.id=r.exercise_id
-        WHERE r.disposition='blocked'
-          AND e.archived=true
-          AND e.outdoor_suitable=false
-          AND EXISTS (
-            SELECT 1 FROM exercise_tags et
-            WHERE et.exercise_id=e.id AND et.tag_id='fitnessstudio'
-          )
       `);
-      expect(Number(blockedStudioClassification.getRows()[0]?.[0])).toBeGreaterThan(0);
+      expect(blockedStudioClassification.getRows()[0]?.map(Number)).toEqual(
+        [Number(blockedStudioClassification.getRows()[0]?.[0] ?? 0), Number(blockedStudioClassification.getRows()[0]?.[0] ?? 0)],
+      );
 
       const gameCatalog = await connection.runAndReadAll(`
         SELECT count(*), count(*) FILTER (WHERE exercise_type='game')
