@@ -12,10 +12,11 @@ export async function GET(request: NextRequest): Promise<Response> {
   try {
     await requireAdmin();
     const query = request.nextUrl.searchParams.get("q")?.trim() ?? "";
-    const batch = request.nextUrl.searchParams.get("batch")?.trim() ?? "";
-    if (batch && !isCodexImageP1BatchId(batch)) {
+    const batchValue = request.nextUrl.searchParams.get("batch")?.trim() ?? "";
+    if (batchValue && !isCodexImageP1BatchId(batchValue)) {
       return Response.json({ error: "Unknown Codex image batch." }, { status: 400 });
     }
+    const batch = batchValue && isCodexImageP1BatchId(batchValue) ? batchValue : null;
     const seedKeys = batch ? codexImageP1BatchSeedKeys(batch) : [];
     const payload = await buildCodexImageTaskExport({ query, limit: 1000, seedKeys });
     const suffix = batch ? `-${batch}` : query ? "-filtered" : "";

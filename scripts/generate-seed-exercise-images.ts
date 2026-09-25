@@ -11,14 +11,15 @@ import { createExerciseImageStorageFromEnvironment } from "../src/server/images/
 async function main(): Promise<void> {
   loadEnvConfig(process.cwd());
   const args = process.argv.slice(2);
-  const batchArgument = args.find((value) => value.startsWith("--batch="))?.slice("--batch=".length).trim() ?? "";
+  const batchValue = args.find((value) => value.startsWith("--batch="))?.slice("--batch=".length).trim() ?? "";
   const allSeeds = args.includes("--all-seeds");
-  if (!allSeeds && !batchArgument) {
+  if (!allSeeds && !batchValue) {
     throw new Error("Pass --all-seeds or --batch=<single-subject|ocrfra-obstacles|games-partner>.");
   }
-  if (batchArgument && !isCodexImageP1BatchId(batchArgument)) {
-    throw new Error(`Unknown image batch: ${batchArgument}`);
+  if (batchValue && !isCodexImageP1BatchId(batchValue)) {
+    throw new Error(`Unknown image batch: ${batchValue}`);
   }
+  const batchArgument = batchValue && isCodexImageP1BatchId(batchValue) ? batchValue : null;
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is not set in the environment or .env file.");
   }

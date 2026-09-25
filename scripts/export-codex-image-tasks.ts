@@ -16,10 +16,11 @@ interface ExportArgs {
 function parseArgs(argv: readonly string[]): ExportArgs {
   const option = (name: string) => argv.find((value) => value.startsWith(`--${name}=`))?.slice(name.length + 3);
   const parsedLimit = Number(option("limit") ?? "1000");
-  const batch = option("batch")?.trim() ?? "";
-  if (batch && !isCodexImageP1BatchId(batch)) {
-    throw new Error(`Unknown --batch=${batch}. Use single-subject, ocrfra-obstacles or games-partner.`);
+  const batchValue = option("batch")?.trim() ?? "";
+  if (batchValue && !isCodexImageP1BatchId(batchValue)) {
+    throw new Error(`Unknown --batch=${batchValue}. Use single-subject, ocrfra-obstacles or games-partner.`);
   }
+  const batch = batchValue && isCodexImageP1BatchId(batchValue) ? batchValue : null;
   const explicitSeedKeys = (option("seed-keys") ?? "")
     .split(",")
     .map((value) => value.trim())
