@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import {
   getTrainingSessionById,
   listTrainingSessions,
@@ -31,7 +32,7 @@ export default async function CombineTrainingPage({ params, searchParams }: Page
       subtitle={`„${session.title}“ mit einer zweiten gespeicherten Einheit zu einem neuen Entwurf zusammenführen.`}
       actions={
         <Link
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+          className={buttonClass("secondary", "px-4")}
           href={`/training/${session.id}`}
         >
           ← Zurück zum Training
@@ -62,7 +63,7 @@ export default async function CombineTrainingPage({ params, searchParams }: Page
               <label className="grid gap-2 text-sm font-bold">
                 Zweites Training
                 <select
-                  className="h-12 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+                  className={`${formControlClass} h-12 font-normal`}
                   name="secondSessionId"
                   required
                 >
@@ -78,7 +79,7 @@ export default async function CombineTrainingPage({ params, searchParams }: Page
               <label className="grid gap-2 text-sm font-bold">
                 Titel des kombinierten Trainings
                 <input
-                  className="h-12 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+                  className={`${formControlClass} h-12 font-normal`}
                   maxLength={120}
                   name="title"
                   placeholder={`${session.title} + …`}
@@ -94,7 +95,7 @@ export default async function CombineTrainingPage({ params, searchParams }: Page
 
               <div className="flex justify-end">
                 <button
-                  className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)]"
+                  className={buttonClass("accent", "px-5")}
                   type="submit"
                 >
                   Als neuen Entwurf kombinieren

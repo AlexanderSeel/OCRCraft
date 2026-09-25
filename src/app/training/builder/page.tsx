@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import {
   TrainingBuilderPanel,
   type TrainingBuilderInitialState,
@@ -39,8 +40,8 @@ export default async function TrainingBuilderPage({ searchParams }: PageProps) {
       subtitle="Schneller lokaler Plan oder detaillierter AI-/Sport-Builder – beide aus dem freigegebenen OCRCraft-Übungspool und mit derselben Sicherheitsprüfung."
       actions={(
         <div className="flex flex-wrap gap-2">
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/quick-create">Quick Create Wizard</Link>
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/training">Trainings</Link>
+          <Link className={buttonClass("secondary", "px-4")} href="/quick-create">Quick Create Wizard</Link>
+          <Link className={buttonClass("secondary", "px-4")} href="/training">Trainings</Link>
         </div>
       )}
     >
@@ -51,13 +52,13 @@ export default async function TrainingBuilderPage({ searchParams }: PageProps) {
           <form className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end" method="get">
             <label className="grid gap-1.5 text-sm font-black">
               Bestehendes generiertes Training als Basis
-              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={initialState?.sourceTrainingId ?? ""} name="source">
+              <select className={`${formControlClass} font-normal`} defaultValue={initialState?.sourceTrainingId ?? ""} name="source">
                 <option value="">Neues Training</option>
                 {sourceTrainingOptions.map((option) => <option key={option.id} value={option.id}>{option.title} · {option.totalDurationMinutes} Min. · {option.itemCount} Übungen</option>)}
               </select>
             </label>
-            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Parameter laden</button>
-            {initialState ? <Link className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--border)] px-4 text-sm font-black" href="/training/builder">Zurücksetzen</Link> : null}
+            <button className={buttonClass("primary", "px-4")} type="submit">Parameter laden</button>
+            {initialState ? <Link className={buttonClass("secondary", "px-4")} href="/training/builder">Zurücksetzen</Link> : null}
           </form>
           <p className="mt-2 text-xs leading-5 text-[var(--muted)]">Die ursprünglichen Builder-Parameter werden mit der aktuell gespeicherten Hauptteil-/Team-/Rotationsstruktur und Programmierung kombiniert. Das bestehende Training wird nicht überschrieben; Speichern erzeugt immer einen neuen Entwurf.</p>
           {source && !initialState ? <p className="mt-2 text-xs font-bold text-[var(--danger)]">Für dieses Training ist keine gültige Builder-Generation-History verfügbar. Es bleibt unverändert.</p> : null}

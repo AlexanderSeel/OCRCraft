@@ -13,6 +13,7 @@ import {
 } from "@/domain/training/model";
 import { updateTrainingMainPartProgrammingAction } from "@/app/training/[id]/programming-action";
 import { Disclosure } from "@/components/ui/disclosure";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 
 interface PersistedMainPartProgrammingFormProps {
   readonly sessionId: string;
@@ -76,7 +77,7 @@ export function PersistedMainPartProgrammingForm({
         <label className="grid gap-1.5 text-xs font-bold">
           Programmierung
           <select
-            className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+            className={`${formControlClass} h-10 min-h-0 font-normal`}
             name="mode"
             onChange={(event) => setMode(event.target.value as MainPartProgrammingMode)}
             value={programming.mode}
@@ -98,7 +99,7 @@ export function PersistedMainPartProgrammingForm({
             <label className="grid gap-1.5 text-xs font-bold">
               Ziel
               <select
-                className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                className={`${formControlClass} h-10 min-h-0 font-normal`}
                 name="scoreMode"
                 onChange={(event) => setProgramming({ ...programming, scoreMode: event.target.value as MainPartScoreMode })}
                 value={programming.scoreMode ?? "quality"}
@@ -127,7 +128,7 @@ export function PersistedMainPartProgrammingForm({
             <label className="grid gap-1.5 text-xs font-bold">
               Einheit
               <select
-                className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                className={`${formControlClass} h-10 min-h-0 font-normal`}
                 name="everyUnit"
                 onChange={(event) => setProgramming({ ...programming, everyUnit: event.target.value as MainPartEveryUnit })}
                 value={programming.everyUnit ?? "metres"}
@@ -156,7 +157,7 @@ export function PersistedMainPartProgrammingForm({
             <label className="grid gap-1.5 text-xs font-bold">
               Partner-Arbeitsweise
               <select
-                className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                className={`${formControlClass} h-10 min-h-0 font-normal`}
                 name="partnerMode"
                 onChange={(event) => {
                   const partnerMode = event.target.value as PartnerWorkMode;
@@ -185,7 +186,7 @@ export function PersistedMainPartProgrammingForm({
         ) : null}
 
         <div className="flex justify-end">
-          <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-4 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
+          <button className={buttonClass("primary", "px-4 text-xs")} type="submit">
             Hauptteil-Programmierung speichern
           </button>
         </div>
@@ -206,7 +207,7 @@ function NumberInput({ label, name, min, max, value, onChange }: {
     <label className="grid gap-1.5 text-xs font-bold">
       {label}
       <input
-        className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                className={`${formControlClass} h-10 min-h-0 font-normal`}
         max={max}
         min={min}
         name={name}

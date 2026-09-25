@@ -27,6 +27,7 @@ import {
 } from "./exercise-autocomplete-picker";
 import { MainPartProgrammingEditor } from "./main-part-programming-editor";
 import { Disclosure } from "@/components/ui/disclosure";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
 import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
@@ -484,18 +485,18 @@ export function TrainingBuilderPanel({
           <h2 className="text-lg font-black">Gruppe & Rahmen</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <Field label="Zielgruppe">
-              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" onChange={(event) => { setAudience(event.target.value); invalidate(); }} value={audience}>
+              <select className={formControlClass} onChange={(event) => { setAudience(event.target.value); invalidate(); }} value={audience}>
                 <option value="kids">Kids</option>
                 <option value="youth">Jugend</option>
                 <option value="adults">Erwachsene</option>
                 <option value="mixed">Mixed</option>
               </select>
             </Field>
-            <Field label="Alter"><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" onChange={(event) => { setAgeRange(event.target.value); invalidate(); }} value={ageRange} /></Field>
-            <Field label="Teilnehmer"><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" min={1} max={200} onChange={(event) => { setParticipants(clampInteger(Number(event.target.value), 1, 200)); invalidate(); }} type="number" value={participants} /></Field>
-            <Field label="Dauer"><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" max={180} min={30} onChange={(event) => { setDuration(clampInteger(Number(event.target.value), 30, 180)); invalidate(); }} type="number" value={duration} /></Field>
+            <Field label="Alter"><input className={formControlClass} onChange={(event) => { setAgeRange(event.target.value); invalidate(); }} value={ageRange} /></Field>
+            <Field label="Teilnehmer"><input className={formControlClass} min={1} max={200} onChange={(event) => { setParticipants(clampInteger(Number(event.target.value), 1, 200)); invalidate(); }} type="number" value={participants} /></Field>
+            <Field label="Dauer"><input className={formControlClass} max={180} min={30} onChange={(event) => { setDuration(clampInteger(Number(event.target.value), 30, 180)); invalidate(); }} type="number" value={duration} /></Field>
             <Field label="Ort">
-              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3" onChange={(event) => { setLocation(event.target.value); invalidate(); }} value={location}>
+              <select className={formControlClass} onChange={(event) => { setLocation(event.target.value); invalidate(); }} value={location}>
                 <option value="mixed">Flexibel</option><option value="indoor">Indoor</option><option value="outdoor">Outdoor</option>
               </select>
             </Field>
@@ -554,7 +555,7 @@ export function TrainingBuilderPanel({
           <div className="mt-5 grid gap-4 border-t border-[var(--border)] pt-4 sm:grid-cols-2">
             <Field label="Organisation im Hauptteil">
               <select
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+                className={formControlClass}
                 onChange={(event) => { setOrganizationMode(event.target.value === "team" ? "team" : "solo"); invalidate(); }}
                 value={organizationMode}
               >
@@ -573,7 +574,7 @@ export function TrainingBuilderPanel({
             ) : (
               <Field label="Rotationsgruppen (optional)">
                 <input
-                  className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                  className={`${formControlClass} font-normal`}
                   max={Math.min(20, Math.max(1, participants))}
                   min={1}
                   onChange={(event) => {
@@ -650,7 +651,7 @@ export function TrainingBuilderPanel({
               <label className="grid gap-2 text-sm font-black">
                 Teamwettkampfstil
                 <select
-                  className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                  className={`${formControlClass} font-normal`}
                   onChange={(event) => applyCompetitionStyle(event.target.value)}
                   value={competitionStyleKey}
                 >
@@ -689,9 +690,9 @@ export function TrainingBuilderPanel({
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="flex flex-wrap items-end gap-3" data-tour="training-save">
-            <label className="grid min-w-64 flex-1 gap-2 text-sm font-bold">Trainingstitel<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Optional" value={title} /></label>
-            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] disabled:opacity-50" disabled={!canGenerate || busy} onClick={() => void generate()} type="button">{pending ? "Plane …" : builderMode === "ai" ? "AI-Vorschlag erzeugen" : "Lokal planen"}</button>
-            <button className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] disabled:opacity-50" disabled={!draft || busy} onClick={() => void save()} type="button">Training speichern</button>
+            <label className="grid min-w-64 flex-1 gap-2 text-sm font-bold">Trainingstitel<input className={`${formControlClass} font-normal`} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Optional" value={title} /></label>
+            <button className={buttonClass("primary", "px-5")} disabled={!canGenerate || busy} onClick={() => void generate()} type="button">{pending ? "Plane …" : builderMode === "ai" ? "AI-Vorschlag erzeugen" : "Lokal planen"}</button>
+            <button className={buttonClass("accent", "px-5")} disabled={!draft || busy} onClick={() => void save()} type="button">Training speichern</button>
           </div>
           {error ? <div className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-4 text-sm text-[var(--danger)]">{error}</div> : null}
           {savedId ? <div className="mt-4 rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold"><Link className="underline underline-offset-4" href={`/training/${savedId}`}>Gespeichertes Training öffnen</Link></div> : null}
@@ -762,7 +763,7 @@ function Field({ label, children }: { readonly label: string; readonly children:
 }
 
 function NumberField({ label, value, min, max, onChange }: { readonly label: string; readonly value: number; readonly min: number; readonly max: number; readonly onChange: (value: number) => void }) {
-  return <Field label={label}><input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" max={max} min={min} onChange={(event) => onChange(clampInteger(Number(event.target.value), min, max))} type="number" value={value} /></Field>;
+  return <Field label={label}><input className={`${formControlClass} font-normal`} max={max} min={min} onChange={(event) => onChange(clampInteger(Number(event.target.value), min, max))} type="number" value={value} /></Field>;
 }
 
 function Toggle({ active, onClick, children }: { readonly active: boolean; readonly onClick: () => void; readonly children: React.ReactNode }) {

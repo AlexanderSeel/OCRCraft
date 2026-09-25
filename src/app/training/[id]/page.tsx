@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { Disclosure } from "@/components/ui/disclosure";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import { Alert } from "@/components/ui/feedback";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import { AddTrainingItemForm } from "@/components/training/add-training-item-form";
 import { PersistedMainPartProgrammingForm } from "@/components/training/persisted-main-part-programming-form";
 import { ReplaceTrainingItemForm } from "@/components/training/replace-training-item-form";
@@ -71,7 +72,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
         <div className="flex flex-wrap gap-2">
           {editable && generation ? (
             <Link
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+              className={buttonClass("secondary", "px-4")}
               href={`/training/builder?source=${session.id}`}
             >
               Im Builder anpassen
@@ -79,7 +80,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           ) : null}
           {editable ? (
             <Link
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+              className={buttonClass("secondary", "px-4")}
               href={`/training/${session.id}/combine`}
             >
               Kombinieren
@@ -87,20 +88,20 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           ) : null}
           <form action={duplicateAction}>
             <button
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+              className={buttonClass("secondary", "px-4")}
               type="submit"
             >
               Training duplizieren
             </button>
           </form>
           <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            className={buttonClass("secondary", "px-4")}
             href="/training"
           >
             ← Trainings
           </Link>
           <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            className={buttonClass("secondary", "px-4")}
             href={`/training/${session.id}/trainer`}
             target="_blank"
           >
@@ -135,9 +136,9 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div><h2 className="font-black">Versionen</h2><p className="mt-1 text-sm text-[var(--muted)]">Snapshots sichern Training, Phasen und Übungen für eine spätere Wiederherstellung.</p></div>
-            <form action={createTrainingVersionAction.bind(null, session.id)}><button className="min-h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-sm font-black" type="submit">Snapshot erstellen</button></form>
+            <form action={createTrainingVersionAction.bind(null, session.id)}><button className={buttonClass("secondary", "px-3 text-sm")} type="submit">Snapshot erstellen</button></form>
           </div>
-          {versions.length ? <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{versions.map((version) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2" key={version.id}><span><strong className="text-[var(--foreground)]">Version {version.versionNumber}</strong> · {version.createdAt}{version.createdBy ? ` · ${version.createdBy}` : ""}</span><form action={restoreTrainingVersionAction}><input name="sessionId" type="hidden" value={session.id} /><input name="versionId" type="hidden" value={version.id} /><button className="rounded-lg border border-[var(--border)] px-2 py-1 font-black" type="submit">Wiederherstellen</button></form></li>)}</ul> : <p className="mt-3 text-sm text-[var(--muted)]">Noch kein Snapshot vorhanden.</p>}
+          {versions.length ? <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{versions.map((version) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2" key={version.id}><span><strong className="text-[var(--foreground)]">Version {version.versionNumber}</strong> · {version.createdAt}{version.createdBy ? ` · ${version.createdBy}` : ""}</span><form action={restoreTrainingVersionAction}><input name="sessionId" type="hidden" value={session.id} /><input name="versionId" type="hidden" value={version.id} /><button className={buttonClass("secondary", "px-2 py-1 text-xs")} type="submit">Wiederherstellen</button></form></li>)}</ul> : <p className="mt-3 text-sm text-[var(--muted)]">Noch kein Snapshot vorhanden.</p>}
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
@@ -152,7 +153,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
             <label className="grid gap-1 text-sm font-bold">
               Vorlagenname
               <input
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                className={`${formControlClass} font-normal`}
                 defaultValue={session.title}
                 maxLength={120}
                 minLength={2}
@@ -163,13 +164,13 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
             <label className="grid gap-1 text-sm font-bold">
               Beschreibung
               <input
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                className={`${formControlClass} font-normal`}
                 maxLength={1000}
                 name="description"
                 placeholder="Optional: Einsatz, Gruppe oder besondere Hinweise"
               />
             </label>
-            <button className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-4 text-sm font-black" type="submit">
+            <button className={buttonClass("secondary", "px-4")} type="submit">
               Vorlage speichern
             </button>
           </form>
@@ -199,7 +200,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
             <label className="grid gap-2 text-sm font-bold">
               Organisation Hauptteil
               <select
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                className={`${formControlClass} font-normal`}
                 defaultValue={session.organizationMode}
                 name="organizationMode"
               >
@@ -210,7 +211,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
             <label className="grid gap-2 text-sm font-bold">
               Teamgröße
               <input
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                className={`${formControlClass} font-normal`}
                 defaultValue={session.teamSize ?? 4}
                 max={20}
                 min={2}
@@ -220,7 +221,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
               <span className="text-xs font-normal leading-5 text-[var(--muted)]">Wird nur bei Teamorganisation verwendet.</span>
             </label>
             <button
-              className="min-h-11 self-end rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-4 text-sm font-black hover:bg-[var(--surface-elevated)]"
+              className={buttonClass("secondary", "self-end px-4")}
               type="submit"
             >
               Organisation speichern
@@ -235,7 +236,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           <label className="grid gap-2 text-sm font-bold">
             Trainingstitel
             <input
-              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+              className={`${formControlClass} font-normal`}
               defaultValue={session.title}
               maxLength={120}
               name="title"
@@ -245,7 +246,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           <label className="grid gap-2 text-sm font-bold">
             Status
             <select
-              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal outline-none focus:border-[var(--focus)]"
+              className={`${formControlClass} font-normal`}
               defaultValue={session.status}
               name="status"
             >
@@ -257,15 +258,15 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           </label>
           <Disclosure className="md:col-span-2 xl:col-span-3" summaryClassName="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2.5 text-sm font-bold" summary="Optionale Route & GPS-Daten">
             <div className="mt-3 grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 md:grid-cols-2">
-              <label className="grid gap-2 text-sm font-bold">Routenname<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={session.routeName ?? ""} maxLength={160} name="routeName" placeholder="z. B. Vereinsrunde" /></label>
-              <label className="grid gap-2 text-sm font-bold">Strecke (m)<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={session.routeDistanceMetres ?? ""} min="0.1" name="routeDistanceMetres" step="0.1" type="number" /></label>
-              <label className="grid gap-2 text-sm font-bold">Untergrund<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={session.routeSurface ?? ""} maxLength={160} name="routeSurface" placeholder="Asphalt, Waldweg …" /></label>
-              <label className="grid gap-2 text-sm font-bold">GPS-/Kartenreferenz<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={session.routeGpsReference ?? ""} maxLength={500} name="routeGpsReference" placeholder="Link oder interne Referenz" /></label>
-              <label className="grid gap-2 text-sm font-bold md:col-span-2">Routenhinweise<textarea className="min-h-20 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 font-normal" defaultValue={session.routeNotes ?? ""} maxLength={2000} name="routeNotes" /></label>
+              <label className="grid gap-2 text-sm font-bold">Routenname<input className={`${formControlClass} font-normal`} defaultValue={session.routeName ?? ""} maxLength={160} name="routeName" placeholder="z. B. Vereinsrunde" /></label>
+              <label className="grid gap-2 text-sm font-bold">Strecke (m)<input className={`${formControlClass} font-normal`} defaultValue={session.routeDistanceMetres ?? ""} min="0.1" name="routeDistanceMetres" step="0.1" type="number" /></label>
+              <label className="grid gap-2 text-sm font-bold">Untergrund<input className={`${formControlClass} font-normal`} defaultValue={session.routeSurface ?? ""} maxLength={160} name="routeSurface" placeholder="Asphalt, Waldweg …" /></label>
+              <label className="grid gap-2 text-sm font-bold">GPS-/Kartenreferenz<input className={`${formControlClass} font-normal`} defaultValue={session.routeGpsReference ?? ""} maxLength={500} name="routeGpsReference" placeholder="Link oder interne Referenz" /></label>
+              <label className="grid gap-2 text-sm font-bold md:col-span-2">Routenhinweise<textarea className={`${formControlClass} min-h-20 p-3 font-normal`} defaultValue={session.routeNotes ?? ""} maxLength={2000} name="routeNotes" /></label>
             </div>
           </Disclosure>
           <button
-            className="min-h-11 self-end rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
+            className={buttonClass("primary", "self-end px-5")}
             type="submit"
           >
             Metadaten speichern
@@ -341,7 +342,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                             {editable && phase.items.length > 1 ? (
                               <button
                                 aria-label={`${item.exerciseName} per Drag-and-Drop verschieben`}
-                                className="cursor-grab rounded-md px-2 py-1 text-sm font-black text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)] active:cursor-grabbing"
+                                className={buttonClass("ghost", "size-9 cursor-grab px-0 text-sm text-[var(--muted)] active:cursor-grabbing")}
                                 data-training-drag-id={item.id}
                                 draggable
                                 title="Ziehen, um die Reihenfolge zu ändern"
@@ -383,7 +384,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                 <input name="direction" type="hidden" value="up" />
                                 <button
                                   aria-label={`${item.exerciseName} nach oben verschieben`}
-                                  className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-elevated)] disabled:opacity-35"
+                                  className={buttonClass("secondary", "size-10 px-0 text-lg")}
                                   disabled={index === 0}
                                   type="submit"
                                 >
@@ -396,7 +397,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                 <input name="direction" type="hidden" value="down" />
                                 <button
                                   aria-label={`${item.exerciseName} nach unten verschieben`}
-                                  className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-elevated)] disabled:opacity-35"
+                                  className={buttonClass("secondary", "size-10 px-0 text-lg")}
                                   disabled={index === phase.items.length - 1}
                                   type="submit"
                                 >
@@ -412,7 +413,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                       <label className="grid gap-1 text-xs font-bold">
                                         Dauer (Min.)
                                         <input
-                                          className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                          className={`${formControlClass} h-10 min-h-0 font-normal`}
                                           defaultValue={item.durationMinutes}
                                           min={1}
                                           name="durationMinutes"
@@ -423,7 +424,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                       <label className="grid gap-1 text-xs font-bold">
                                         Format
                                         <select
-                                          className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                          className={`${formControlClass} h-10 min-h-0 font-normal`}
                                           defaultValue={item.format ?? ""}
                                           name="format"
                                         >
@@ -444,7 +445,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                       <label className="grid gap-1 text-xs font-bold">
                                         Level / freie Variante
                                         <input
-                                          className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                          className={`${formControlClass} h-10 min-h-0 font-normal`}
                                           defaultValue={item.levelLabel ?? ""}
                                           maxLength={120}
                                           name="levelLabel"
@@ -456,7 +457,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                         <label className="grid gap-1 text-xs font-bold">
                                           Hauptteil Nr.
                                           <input
-                                            className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                            className={`${formControlClass} h-10 min-h-0 font-normal`}
                                             defaultValue={item.mainPartIndex ?? 1}
                                             max={12}
                                             min={1}
@@ -467,7 +468,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                         <label className="grid gap-1 text-xs font-bold">
                                           Hauptteil-Bezeichnung
                                           <input
-                                            className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                                            className={`${formControlClass} h-10 min-h-0 font-normal`}
                                             defaultValue={item.mainPartTitle ?? `Hauptteil ${item.mainPartIndex ?? 1}`}
                                             maxLength={120}
                                             name="mainPartTitle"
@@ -478,7 +479,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                     <label className="grid gap-1 text-xs font-bold">
                                       Trainingshinweis
                                       <textarea
-                                        className="min-h-24 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 font-normal leading-6"
+                                        className={`${formControlClass} min-h-24 p-3 font-normal leading-6`}
                                         defaultValue={item.instructions ?? ""}
                                         maxLength={4000}
                                         name="instructions"
@@ -486,7 +487,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                     </label>
                                     <div className="flex justify-end">
                                       <button
-                                        className="rounded-lg bg-[var(--control-strong)] px-4 py-2 text-xs font-black text-[var(--control-strong-foreground)]"
+                                        className={buttonClass("primary", "px-4 text-xs")}
                                         type="submit"
                                       >
                                         Eintrag speichern
