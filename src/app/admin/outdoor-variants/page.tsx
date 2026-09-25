@@ -168,7 +168,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
             Eine Übung wird nur als outdoor-geeignet markiert, wenn alle erkannten Studio-Abhängigkeiten vollständig ersetzt werden können. Bereits migrierte Konvertierungen mit Systemtext bleiben einzeln reviewpflichtig und erhalten eine bewegungsspezifische Vorschau. Trainertexte werden nicht überschrieben. Nur neue, eindeutig sichere Vorschläge können gesammelt angewendet werden.
           </div>
 
-          <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <div className="mt-5 flex flex-wrap justify-end gap-2" data-tour="outdoor-approval-action">
             {deterministicReviewCount > 0 ? (
               <ConfirmPopoverForm action={approveDeterministicOutdoorReviewsAction} confirmLabel="Reviews freigeben" description={`${deterministicReviewCount} eindeutig sichere Outdoor-Reviews werden freigegeben und als erledigt markiert.`} title="Outdoor-Reviews freigeben?" triggerClassName="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 text-sm font-black" triggerLabel={`${deterministicReviewCount} eindeutige Reviews freigeben`} />
             ) : null}

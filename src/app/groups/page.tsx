@@ -428,7 +428,7 @@ function GroupFields({
           ))}
         </select>
       </label>
-      <label className="grid gap-1.5 text-sm font-bold">
+      <label className="grid gap-1.5 text-sm font-bold" data-tour="group-safety-rule">
         Kids/Youth-Schutzprofil
         <select
           className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"

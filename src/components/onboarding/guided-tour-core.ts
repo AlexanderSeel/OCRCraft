@@ -139,8 +139,13 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
       },
       {
         selector: "[data-tour='training-save']",
-        de: { title: "Planen, prüfen, speichern", text: "Erzeuge zuerst einen lokalen oder AI-Entwurf, prüfe Warnungen und Änderungen und speichere erst dann." },
-        en: { title: "Plan, review, and save", text: "Generate a local or AI draft first, review warnings and changes, and only then save it." },
+        de: { title: "Entwurf erzeugen", text: "Erzeuge zuerst einen lokalen oder AI-Entwurf. Der Speichern-Button bleibt gesperrt, bis ein validierter Entwurf vorhanden ist." },
+        en: { title: "Generate the draft", text: "Generate a local or AI draft first. Saving stays disabled until a validated draft exists." },
+      },
+      {
+        selector: "[data-tour='training-save']",
+        de: { title: "Trainerreview und Speichern", text: "Prüfe Warnungen, Phasen, Ersetzungen und Belastung. Speichere erst danach; serverseitige Sicherheitsfehler blockieren die Persistenz weiterhin." },
+        en: { title: "Trainer review and save", text: "Review warnings, phases, replacements, and load. Save only afterwards; server-side safety errors continue to block persistence." },
       },
     ],
   },
@@ -187,6 +192,11 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
         de: { title: "Standards prüfen", text: "Prüfe Alter, Teilnehmerzahl, Dauer, Ort, Equipment, Risikoprofil und Schutzprofil. Diese Werte können in Quick Create als Vereinsstandard dienen." },
         en: { title: "Review defaults", text: "Review age, participant count, duration, location, equipment, risk profile, and safeguarding profile. These values can guide Quick Create." },
       },
+      {
+        selector: "[data-tour='group-safety-rule']",
+        de: { title: "Kids/Youth-Schutzprofil zuweisen", text: "Wähle ein passendes Schutzprofil als harte Gruppenregel. Diese Grenze wird bei der Trainingsplanung übernommen und darf nicht durch AI oder Intensitätswahl abgeschwächt werden." },
+        en: { title: "Assign a Kids/Youth safeguarding profile", text: "Choose the appropriate safeguarding profile as a hard group rule. Training planning inherits this boundary and AI or intensity settings cannot weaken it." },
+      },
     ],
   },
   {
@@ -208,6 +218,11 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
         selector: "[data-tour='media-review']",
         de: { title: "Rechte und fachliches Review", text: "Prüfe Rechte, Einwilligung, Biomechanik und Textübereinstimmung. Externe oder unvollständig geprüfte Medien dürfen nicht still freigegeben werden." },
         en: { title: "Rights and expert review", text: "Check rights, consent, biomechanics, and text matching. External or incomplete media reviews must not be silently approved." },
+      },
+      {
+        selector: "[data-tour='media-approval-action']",
+        de: { title: "Freigabe bewusst entscheiden", text: "Speichere zuerst Biomechanik- und Textprüfung. Freigeben ist erst danach möglich; Ablehnen oder Review erneut öffnen bleiben getrennte Entscheidungen." },
+        en: { title: "Make an explicit approval decision", text: "Save biomechanics and text-match review first. Approval is only available afterwards; rejection and reopening review remain separate decisions." },
       },
     ],
   },
@@ -231,6 +246,11 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
         de: { title: "Offene und historische Entwürfe", text: "Nutze Suche, Filter und Verlauf, um offene Entwürfe gezielt zu bearbeiten. Erst die Trainerfreigabe öffnet den Voll-Editor." },
         en: { title: "Open and historical drafts", text: "Use search, filters, and history to work through drafts deliberately. Trainer approval is required before opening the full editor." },
       },
+      {
+        selector: "[data-tour='ai-draft-approval-action']",
+        de: { title: "Nur freigabefähige Entwürfe übernehmen", text: "Die Sammelfreigabe verarbeitet ausschließlich Entwürfe ohne Reviewblocker. Blockierte Vorschläge bleiben offen und müssen einzeln korrigiert werden." },
+        en: { title: "Approve only eligible drafts", text: "Bulk approval processes only drafts without review blockers. Blocked proposals remain open and require individual correction." },
+      },
     ],
   },
   {
@@ -252,6 +272,11 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
         selector: "[data-tour='outdoor-candidates']",
         de: { title: "Kandidaten fachlich prüfen", text: "Filtere nach Status, öffne die Übung und entscheide pro Kandidat über Equipment, Bewegungsmuster und Trainerfreigabe." },
         en: { title: "Review candidates", text: "Filter by status, open the exercise, and decide per candidate on equipment, movement pattern, and trainer approval." },
+      },
+      {
+        selector: "[data-tour='outdoor-approval-action']",
+        de: { title: "Nur deterministisch sichere Reviews sammeln", text: "Die Sammelaktion darf nur vollständig strukturierte Ersatzgeräte ohne verbleibende Maschinenabhängigkeit freigeben. Mehrdeutige Fälle bleiben im Einzelreview." },
+        en: { title: "Bulk-approve only deterministic reviews", text: "The bulk action may approve only fully structured replacements without remaining machine dependency. Ambiguous cases stay in individual review." },
       },
     ],
   },

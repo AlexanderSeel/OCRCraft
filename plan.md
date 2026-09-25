@@ -55,7 +55,7 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 - [x] AI-Entwurfsführung ergänzt: Vorschlagserzeugung, deterministischer Review sowie offene/historische Entwürfe und Trainerfreigabe sind getrennt erklärt und per E2E geprüft.
 - [x] Gruppenführung ergänzt: Gruppenerstellung, Filterung sowie Standard- und Schutzwerte sind als eigene Arbeitsschritte erklärt und per E2E geprüft.
 - [x] Interaktive Tourführung erweitert: aktive responsive Ziele werden markiert, zum sichtbaren Element gescrollt und können pro Schritt über „Zum Element springen“ erneut angesprungen werden; die Markierung respektiert `prefers-reduced-motion`.
-- [ ] Fachliche Tiefenführungen für Medienrechte, Outdoor-Review, AI-Drafts, Gruppenregeln und Trainingsspeicherung mit echten Bearbeitungs-/Reviewaktionen ergänzen.
+- [x] Fachliche Tiefenführungen abgeschlossen: Medienrechte führen bis zur expliziten Freigabeentscheidung, Outdoor bis zur deterministischen Sammelfreigabe, AI-Drafts bis zur blocker-sicheren Freigabe, Gruppen bis zum Kids/Youth-Schutzprofil und der Training Builder bis zur validierten Trainerreview-/Speicheraktion; die Zielmarken sind per Playwright abgesichert.
 
 ## P2 – Qualität, Analysen und Workflows
 

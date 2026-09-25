@@ -60,7 +60,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
             {showHistory ? "Offene Entwürfe" : "Verlauf"}
           </Link>
           {!showHistory ? (
-            <ConfirmPopoverForm action={approveAllAiExerciseDraftsAction} confirmLabel="Alle freigeben" description="Alle freigabefähigen AI-Entwürfe werden als Übungen angelegt. Entwürfe mit Review-Blockern bleiben offen." title="Alle freigabefähigen Entwürfe freigeben?" triggerClassName="rounded-xl border border-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent)]" triggerLabel="Alle freigeben" />
+            <div data-tour="ai-draft-approval-action"><ConfirmPopoverForm action={approveAllAiExerciseDraftsAction} confirmLabel="Alle freigeben" description="Alle freigabefähigen AI-Entwürfe werden als Übungen angelegt. Entwürfe mit Review-Blockern bleiben offen." title="Alle freigabefähigen Entwürfe freigeben?" triggerClassName="rounded-xl border border-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent)]" triggerLabel="Alle freigeben" /></div>
           ) : null}
           <Link
             className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black"

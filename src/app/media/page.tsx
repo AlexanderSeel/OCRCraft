@@ -558,7 +558,7 @@ function MediaCard({ asset }: { readonly asset: MediaCatalogItem }) {
           </form>
         ) : null}
 
-        <div className="view-actions flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
+        <div className="view-actions flex flex-wrap gap-2 border-t border-[var(--border)] pt-3" data-tour="media-approval-action">
           <form action={updateMediaReviewStatusAction} className="flex flex-wrap gap-2">
             <input name="assetId" type="hidden" value={asset.id} />
             <input name="exerciseId" type="hidden" value={asset.exerciseId} />

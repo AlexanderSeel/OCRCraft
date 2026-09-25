@@ -366,3 +366,32 @@ test("native required-field errors stay attached to the invalid field", async ({
   expect(describedBy).toBeTruthy();
   await expect(page.locator(`#${describedBy?.split(" ").at(-1)}`)).toHaveAttribute("role", "alert");
 });
+
+
+test("media tutorial reaches explicit approval action", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
+  const { dialog } = await openTutorial(page, "/media", "Medienreview");
+  for (let index = 0; index < 3; index += 1) await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='media-approval-action'][data-tour-active='true']").first()).toBeVisible();
+});
+
+test("outdoor tutorial reaches deterministic approval action", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
+  const { dialog } = await openTutorial(page, "/admin/outdoor-variants", "Outdoor-Varianten");
+  for (let index = 0; index < 3; index += 1) await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='outdoor-approval-action'][data-tour-active='true']")).toBeVisible();
+});
+
+test("AI draft tutorial reaches approval action even with an empty review queue", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
+  const { dialog } = await openTutorial(page, "/exercises/ai-drafts", "AI-Entwürfe prüfen");
+  for (let index = 0; index < 3; index += 1) await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='ai-draft-approval-action'][data-tour-active='true']")).toBeVisible();
+});
+
+test("groups tutorial reaches the safeguarding rule input", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
+  const { dialog } = await openTutorial(page, "/groups", "Gruppen");
+  for (let index = 0; index < 3; index += 1) await dialog.getByRole("button", { name: "Weiter" }).click();
+  await expect(page.locator("[data-tour='group-safety-rule'][data-tour-active='true']").first()).toBeVisible();
+});

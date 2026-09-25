@@ -281,7 +281,7 @@ Ein routebewusstes Tutorial erklärt wichtige Arbeitsbereiche direkt in der Anwe
  Quick Create und Training Builder besitzen getrennte, tatsächlich erreichbare Schrittfolgen für Eingaben, Planungsgrenzen, Trainerreview und Speichern.
  Das Hindernis-Tutorial führt über Kandidatensuche, Risikoprüfung, Freizone/Kapazität und den abschließenden Trainerreview.
 
-Die Tutorial-Grundlage deckt alle zentralen Arbeitsbereiche ab; die konkrete fachliche Vertiefung einzelner Kernworkflows wird separat weiterentwickelt. Tutorial-Regression deckt Tastatur/Escape, Fokus-Rückgabe, reduzierte Bewegung, Mobile, Sprachwechsel und die Zielmarken der Kernworkflows per Playwright ab.
+Die Tutorial-Grundlage deckt alle zentralen Arbeitsbereiche ab. Tiefenführungen reichen bei Medienrechten, Outdoor-Review, AI-Drafts, Gruppenregeln und Trainingsspeicherung bis zu den tatsächlichen Review-/Freigabeaktionen. Tutorial-Regression deckt Tastatur/Escape, Fokus-Rückgabe, reduzierte Bewegung, Mobile, Sprachwechsel und die Zielmarken der Kernworkflows per Playwright ab.
  Tutorial-Fortschritt wird pro Bereich lokal gespeichert; Führungen starten nur auf Benutzeraktion und weisen verständlich auf aktuell nicht sichtbare Zielmarken hin.
 
 ## Internationalisierung
