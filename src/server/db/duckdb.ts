@@ -114,7 +114,10 @@ async function tryTakeLock(): Promise<LockHandle | null> {
     await file.writeFile(JSON.stringify({ pid: process.pid, createdAt: Date.now() }), "utf8");
     return { close: async () => { await file.close(); await unlink(lockPath).catch(() => undefined); } };
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+    // Windows can report EPERM instead of EEXIST while another process has
+    // the lockfile open. Treat both codes as contention and keep polling.
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code !== "EEXIST" && code !== "EPERM") throw error;
     try {
       const metadata = JSON.parse(await readFile(lockPath, "utf8")) as { pid?: number };
       if (!(await processIsAlive(Number(metadata.pid)))) await unlink(lockPath).catch(() => undefined);

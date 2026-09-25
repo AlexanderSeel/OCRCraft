@@ -173,7 +173,7 @@ test("obstacle tutorial reaches navigation, workspace and assignment target", as
 
 test("critical action popover receives focus and returns it after Escape", async ({ page }) => {
   await page.goto("/media", { waitUntil: "domcontentloaded" });
-  await page.getByText("Batch-Operationen", { exact: true }).first().click();
+  await page.locator("summary").filter({ hasText: "Batch-Operationen" }).click();
 
   const trigger = page.getByRole("button", { name: "Alle passenden Medien freigeben" });
   await trigger.click();

@@ -751,7 +751,56 @@ export async function retireLegacyTriptychsAfterApprovedSequence(
 }
 export interface ExerciseMediaChoice { readonly id:string; readonly url:string|null; readonly mediaType:string; readonly sourceType:string; readonly reviewStatus:string; readonly generationStatus:string; readonly isPrimary:boolean; }
 export async function listExerciseMediaChoices(exerciseId:string):Promise<readonly ExerciseMediaChoice[]>{ await ensureDatabaseReady(); return withDuckDbConnection(async c=>{const r=await c.runAndReadAll("SELECT id::VARCHAR,storage_uri,media_type,source_type,review_status,generation_status,COALESCE(is_primary,false) FROM exercise_media_assets WHERE exercise_id=$exerciseId::UUID ORDER BY is_primary DESC,created_at DESC",{exerciseId}); return r.getRows().map(x=>({id:String(x[0]),url:safeExerciseImageUri(x[1]),mediaType:String(x[2]),sourceType:String(x[3]),reviewStatus:String(x[4]),generationStatus:String(x[5]),isPrimary:Boolean(x[6])}));}); }
-export async function setPrimaryExerciseMedia(exerciseId:string,assetId:string):Promise<boolean>{ await ensureDatabaseReady(); return withDuckDbConnection(async c=>{const valid=await c.runAndReadAll("SELECT 1 FROM exercise_media_assets WHERE id=$assetId::UUID AND exercise_id=$exerciseId::UUID AND generation_status='generated' LIMIT 1",{assetId,exerciseId}); if(!valid.getRows().length)return false; await c.run("BEGIN TRANSACTION"); try{await c.run("UPDATE exercise_media_assets SET is_primary=false,updated_at=current_timestamp WHERE exercise_id=$exerciseId::UUID AND id<>$assetId::UUID",{exerciseId,assetId}); await c.run("UPDATE exercise_media_assets SET is_primary=true,updated_at=current_timestamp WHERE id=$assetId::UUID AND exercise_id=$exerciseId::UUID",{assetId,exerciseId}); await c.run("COMMIT"); return true;}catch(e){await c.run("ROLLBACK");throw e;}}); }
+export async function setPrimaryExerciseMedia(exerciseId: string, assetId: string): Promise<boolean> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const valid = await connection.runAndReadAll(`
+      SELECT 1
+      FROM exercise_media_assets
+      WHERE id=$assetId::UUID
+        AND exercise_id=$exerciseId::UUID
+        AND generation_status='generated'
+      LIMIT 1
+    `, { assetId, exerciseId });
+    if (!valid.getRows().length) return false;
+
+    await connection.run("BEGIN TRANSACTION");
+    try {
+      // DuckDB checks parent FKs during updates. Release only job references
+      // that block a real primary-status transition; untouched assets remain
+      // fully linked to their generation history.
+      await connection.run(`
+        UPDATE exercise_image_generation_jobs
+        SET asset_id=NULL
+        WHERE asset_id IN (
+          SELECT id
+          FROM exercise_media_assets
+          WHERE exercise_id=$exerciseId::UUID
+            AND ((COALESCE(is_primary,false)=true AND id<>$assetId::UUID)
+              OR (id=$assetId::UUID AND COALESCE(is_primary,false)=false))
+        )
+      `, { assetId, exerciseId });
+      await connection.run(`
+        UPDATE exercise_media_assets
+        SET is_primary=false, updated_at=current_timestamp
+        WHERE exercise_id=$exerciseId::UUID
+          AND id<>$assetId::UUID
+          AND COALESCE(is_primary,false)=true
+      `, { assetId, exerciseId });
+      await connection.run(`
+        UPDATE exercise_media_assets
+        SET is_primary=true, updated_at=current_timestamp
+        WHERE id=$assetId::UUID
+          AND exercise_id=$exerciseId::UUID
+      `, { assetId, exerciseId });
+      await connection.run("COMMIT");
+      return true;
+    } catch (error) {
+      await connection.run("ROLLBACK");
+      throw error;
+    }
+  });
+}
 export async function deleteExerciseMediaAsset(exerciseId: string, assetId: string): Promise<boolean> {
   if (!UUID_PATTERN.test(exerciseId) || !UUID_PATTERN.test(assetId)) return false;
   await ensureDatabaseReady();

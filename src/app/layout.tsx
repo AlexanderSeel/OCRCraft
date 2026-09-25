@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ToastProvider } from "@/components/ui/toast";
 import { LocaleProvider } from "@/components/i18n/locale-provider";
+import { APP_VERSION } from "@/config/app-version";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "OCRCraft 1.0",
+  title: `OCRCraft ${APP_VERSION}`,
   description: "Trainingsplanung für OCR, Functional Training und Breitensport",
 };
 
