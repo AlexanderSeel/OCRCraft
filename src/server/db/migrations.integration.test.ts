@@ -145,7 +145,7 @@ describe("database migrations", () => {
 
       const ocrfraSkillCoverage = await connection.runAndReadAll(`
         SELECT
-          count(*) FILTER (WHERE e.seed_key LIKE 'club-%' AND e.exercise_type='obstacle'),
+          count(DISTINCT e.id) FILTER (WHERE e.seed_key LIKE 'club-%' AND e.exercise_type='obstacle'),
           count(DISTINCT s.exercise_id) FILTER (WHERE e.seed_key LIKE 'club-%' AND e.exercise_type='obstacle')
         FROM exercises e
         LEFT JOIN exercise_ocr_skills s ON s.exercise_id=e.id
