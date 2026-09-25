@@ -31,7 +31,7 @@ export function ExerciseMediaManager({ exerciseName, choices, selectAction, dele
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {choices.map((choice) => (
               <article className={`overflow-hidden rounded-xl border ${choice.isPrimary ? "border-[var(--accent)]" : "border-[var(--border)]"}`} key={choice.id}>
-                <div className="aspect-[4/3] bg-white">
+                <div className="aspect-[4/3] bg-[var(--surface-elevated)]">
                   {choice.url ? <ImageLightbox alt={`${exerciseName} · Medienauswahl`} className="h-full w-full object-contain" containerClassName="relative h-full" src={choice.url} /> : <div className="grid h-full place-items-center p-3 text-center text-xs text-[var(--muted)]">Keine Vorschau</div>}
                 </div>
                 <div className="space-y-2 p-3">

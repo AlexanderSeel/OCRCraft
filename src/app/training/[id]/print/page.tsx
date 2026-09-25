@@ -22,7 +22,7 @@ export default async function TrainingPrintPage({ params }: PageProps) {
   const guidanceByExerciseId = await getTrainingExerciseGuidanceMap(exerciseIds, session.locale);
 
   return (
-    <main className="min-h-screen bg-white p-4 text-slate-950 sm:p-8 print:min-h-0 print:p-0" id="training-print-view">
+    <main className="min-h-screen bg-[var(--surface)] p-4 text-[var(--foreground)] sm:p-8 print:min-h-0 print:p-0" id="training-print-view">
       <style>{`
         #training-print-view {
           --foreground: #0f172a;
@@ -46,7 +46,7 @@ export default async function TrainingPrintPage({ params }: PageProps) {
       <div className="mx-auto max-w-5xl">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <Link
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-black hover:bg-slate-50"
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
             href={`/training/${session.id}`}
           >
             ← Training

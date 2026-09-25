@@ -309,7 +309,7 @@ export function MuscleMap({
       <div className={compact && mode !== "display" ? "muscle-workspace grid items-start gap-3" : compact ? "mx-auto w-full max-w-56" : "muscle-workspace grid items-start gap-4"}>
         <div className={compact ? "muscle-figure mx-auto w-full max-w-[220px]" : visualCompact ? "muscle-figure mx-auto w-full max-w-[300px]" : "muscle-figure mx-auto w-full max-w-[360px]"}>
           <div
-            className={`relative mx-auto aspect-[376/504] w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)] ${interactive ? "cursor-pointer" : ""}`}
+            className={`relative mx-auto aspect-[376/504] w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--muscle-canvas)] shadow-[var(--shadow-card)] ${interactive ? "cursor-pointer" : ""}`}
             onClick={handleMapClick}
             onMouseLeave={() => setHoveredPart(null)}
             onMouseMove={handleMapMouseMove}

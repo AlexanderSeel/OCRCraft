@@ -125,7 +125,7 @@ function ToastCard({
         </div>
         <button
           aria-label="Benachrichtigung schließen"
-          className="shrink-0 rounded-md px-2 py-1 text-xs font-black hover:bg-black/5 dark:hover:bg-white/10"
+          className="shrink-0 rounded-md px-2 py-1 text-xs font-black hover:bg-[var(--surface-subtle)]"
           onClick={() => dismiss(toast.id)}
           type="button"
         >
