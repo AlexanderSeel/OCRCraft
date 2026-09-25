@@ -36,6 +36,9 @@ jobs:
       - name: UI review gate
         run: npm run check:ui
 
+      - name: Architecture and dependency gate
+        run: npm run check:architecture
+
       - name: Typecheck
         run: npm run typecheck
 

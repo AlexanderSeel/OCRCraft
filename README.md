@@ -349,6 +349,7 @@ Die vollständige lokale Abschlussroutine lautet:
 
 ```bash
 npm run check:ui
+npm run check:architecture
 npm run typecheck
 npm test -- --run
 npm run lint
