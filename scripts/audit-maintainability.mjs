@@ -54,7 +54,7 @@ const rawButtons = corpusEntries
   .filter(([file, content]) => {
     const rel = normalized(file);
     return (rel.startsWith("src/app/") || rel.startsWith("src/components/"))
-      && /<button\b[^>]*className=/.test(content);
+      && /<button\b[^>]*className=(?:"[^"]*"|\{`[^`]*`\})/.test(content);
   })
   .map(([file]) => normalized(file));
 

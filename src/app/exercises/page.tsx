@@ -219,11 +219,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             { label: "Zuletzt verwendet", value: recentById.size },
           ]} />
           {archived ? (
-            <Link className="font-bold text-[var(--foreground)]" href="/exercises">
+            <Link className={buttonClass("secondary", "px-3")} href="/exercises">
               Aktive Übungen anzeigen
             </Link>
           ) : (
-            <Link className="font-bold text-[var(--foreground)]" href="/exercises?status=archived">
+            <Link className={buttonClass("secondary", "px-3")} href="/exercises?status=archived">
               Archiv anzeigen
             </Link>
           )}

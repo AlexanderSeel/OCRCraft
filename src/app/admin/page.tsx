@@ -9,7 +9,7 @@ import { Disclosure } from "@/components/ui/disclosure";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Card, CardHeader } from "@/components/ui/card";
-import { buttonClass } from "@/components/ui/form";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import { AdminTabs, normalizeAdminTab } from "@/components/admin/admin-tabs";
 import { AiProviderSettingsPanel } from "@/components/admin/ai-provider-settings-panel";
 import { SearchProfileSettingsPanel } from "@/components/admin/search-profile-settings-panel";
@@ -130,7 +130,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </section> : null}
         {activeTab === "queue" ? <section className="admin-panel">
           <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Betrieb</div><h2 className="mt-1 text-xl font-black">Hintergrundaufgaben</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Laufende Prüfungen und Wartungsaktionen blockieren die Oberfläche nicht. Fehlgeschlagene Aufgaben können erneut gestartet oder abgeschlossene Einträge gelöscht werden.</p></div>
-          <div className="mt-5 grid gap-3">{appTasks.length === 0 && queueIssues.length === 0 ? <EmptyState title="Noch keine Aufgaben vorhanden">Laufende und abgeschlossene Hintergrundaufgaben werden hier angezeigt.</EmptyState> : <>{appTasks.map((task) => <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={task.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-black">{task.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">{task.status} · {task.createdAt}</p></div><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{task.progress}%</span></div>{task.progressMessage ? <p className="mt-2 text-sm text-[var(--muted)]">{task.progressMessage}</p> : null}{task.errorMessage ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{task.errorMessage}</p> : null}<div className="mt-3 flex flex-wrap gap-2">{task.status === "running" || task.status === "queued" ? <form action={cancelAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--danger)] px-3 py-1.5 text-xs font-black text-[var(--danger)]">Abbrechen</button></form> : null}{task.status === "failed" || task.status === "cancelled" ? <form action={retryAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Erneut starten</button></form> : null}{task.status === "succeeded" || task.status === "failed" || task.status === "cancelled" ? <form action={deleteAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-black">Löschen</button></form> : null}</div></article>)}{queueIssues.filter((issue) => issue.source === "media").map((issue) => <article className="rounded-xl border border-[var(--danger)] bg-[var(--surface-subtle)] p-4" key={`media-${issue.id}`}><div className="flex items-start justify-between gap-3"><div><h3 className="font-black">{issue.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">KI-Bildjob · {issue.status} · {issue.createdAt}</p></div><span className="text-xs font-black">{issue.progress}%</span></div>{issue.message ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{issue.message}</p> : null}{issue.status === "media:failed" ? <form action={deleteFailedMediaJobAction} className="mt-3"><input name="id" type="hidden" value={issue.id} /><button className="rounded-lg border border-[var(--danger)] px-3 py-1.5 text-xs font-black text-[var(--danger)]">Fehler löschen</button></form> : null}</article>)}</>}</div>
+          <div className="mt-5 grid gap-3">{appTasks.length === 0 && queueIssues.length === 0 ? <EmptyState title="Noch keine Aufgaben vorhanden">Laufende und abgeschlossene Hintergrundaufgaben werden hier angezeigt.</EmptyState> : <>{appTasks.map((task) => <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" key={task.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-black">{task.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">{task.status} · {task.createdAt}</p></div><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{task.progress}%</span></div>{task.progressMessage ? <p className="mt-2 text-sm text-[var(--muted)]">{task.progressMessage}</p> : null}{task.errorMessage ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{task.errorMessage}</p> : null}<div className="mt-3 flex flex-wrap gap-2">{task.status === "running" || task.status === "queued" ? <form action={cancelAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className={buttonClass("danger", "px-3 py-1.5 text-xs")}>Abbrechen</button></form> : null}{task.status === "failed" || task.status === "cancelled" ? <form action={retryAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className={buttonClass("secondary", "px-3 py-1.5 text-xs")}>Erneut starten</button></form> : null}{task.status === "succeeded" || task.status === "failed" || task.status === "cancelled" ? <form action={deleteAppTaskAction}><input name="id" type="hidden" value={task.id} /><button className={buttonClass("secondary", "px-3 py-1.5 text-xs")}>Löschen</button></form> : null}</div></article>)}{queueIssues.filter((issue) => issue.source === "media").map((issue) => <article className="rounded-xl border border-[var(--danger)] bg-[var(--surface-subtle)] p-4" key={`media-${issue.id}`}><div className="flex items-start justify-between gap-3"><div><h3 className="font-black">{issue.title}</h3><p className="mt-1 text-xs text-[var(--muted)]">KI-Bildjob · {issue.status} · {issue.createdAt}</p></div><span className="text-xs font-black">{issue.progress}%</span></div>{issue.message ? <p className="mt-2 rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-2 text-xs text-[var(--danger)]">{issue.message}</p> : null}{issue.status === "media:failed" ? <form action={deleteFailedMediaJobAction} className="mt-3"><input name="id" type="hidden" value={issue.id} /><button className={buttonClass("danger", "px-3 py-1.5 text-xs")}>Fehler löschen</button></form> : null}</article>)}</>}</div>
         </section> : null}
         {activeTab === "imports" ? <ExternalImportPanel completeness={importCompleteness} sources={importSources} /> : null}
         {activeTab === "database" ? <section id="database-settings" className="admin-panel scroll-mt-24">
@@ -152,7 +152,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           {restored ? <Alert tone="success">Backup wiederhergestellt: {restored}. Vorher wurde automatisch ein Sicherheitsbackup erstellt.</Alert> : null}
           {restoreError ? <Alert tone="danger">{restoreError === "confirmation" ? "Zur Wiederherstellung muss der Dateiname exakt bestätigt werden." : "Das Backup konnte nicht wiederhergestellt werden."}</Alert> : null}
           <form action={createDatabaseBackupAction} className="mt-4">
-            <ActionProgressButton className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-4 text-sm font-black" pendingLabel="Backup wird erstellt …">Datenbank sichern</ActionProgressButton>
+            <ActionProgressButton className={buttonClass("secondary", "px-4")} pendingLabel="Backup wird erstellt …">Datenbank sichern</ActionProgressButton>
           </form>
           <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
             <h3 className="text-sm font-black">Portable Daten exportieren</h3>
@@ -160,7 +160,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <form action="/api/admin/export" className="mt-3 flex flex-wrap items-center gap-3" method="get" target="_blank">
               {[["exercises", "Übungen"], ["details", "Details"], ["mapping", "Mapping"], ["trainings", "Trainings"], ["groups", "Gruppen"], ["media", "Medien"], ["provenance", "Provenienz"]].map(([value, label]) => <label className="inline-flex items-center gap-2 text-xs font-bold" key={value}><input defaultChecked name="section" type="checkbox" value={value} />{label}</label>)}
               <label className="inline-flex items-center gap-2 text-xs font-bold"><input name="includeBinary" type="checkbox" value="1" />Binärmedien einbetten (größerer Export)</label>
-              <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black" type="submit">JSON exportieren</button>
+              <button className={buttonClass("secondary", "px-3 py-2 text-xs")} type="submit">JSON exportieren</button>
             </form>
           </div>
           <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
@@ -168,7 +168,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Nur versionierte `ocrcraft-portable`-JSON-Dateien importieren. Der Schreibvorgang ist auf Super-Admins begrenzt und läuft transaktional.</p>
             <form action="/api/admin/import" className="mt-3 flex flex-wrap items-center gap-3" encType="multipart/form-data" method="post" target="_blank">
               <input accept="application/json,.json" className="max-w-full text-xs" name="file" required type="file" />
-              <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black" type="submit">JSON importieren</button>
+              <button className={buttonClass("secondary", "px-3 py-2 text-xs")} type="submit">JSON importieren</button>
             </form>
           </div>
           <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
@@ -197,7 +197,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 </label>
                 <input
                   autoComplete="off"
-                  className="min-h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+                  className={`${formControlClass} text-sm`}
                   id="reseed-confirmation"
                   name="confirmation"
                   pattern="OCRCRAFT ZURÜCKSETZEN"
@@ -205,7 +205,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   title="OCRCRAFT ZURÜCKSETZEN"
                 />
                 <div className="flex flex-wrap justify-end gap-2">
-                  <ActionProgressButton className="min-h-11 rounded-xl bg-[var(--danger)] px-4 text-sm font-black text-white" pendingLabel="Migrationen und Initialdaten werden aufgebaut …">Löschen und neu aufbauen</ActionProgressButton>
+                  <ActionProgressButton className={buttonClass("danger", "px-4")} pendingLabel="Migrationen und Initialdaten werden aufgebaut …">Löschen und neu aufbauen</ActionProgressButton>
                 </div>
               </form>
             </div>
@@ -354,20 +354,20 @@ function ExternalImportPanel({ sources, completeness }: { readonly sources: read
           </CardHeader>
           <form action={saveExternalImportSourceAction} className="mt-4 grid gap-3">
             <input name="provider" type="hidden" value={provider} />
-            <label className="grid gap-1 text-sm font-bold">Quelladresse<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={item?.baseUrl} name="baseUrl" required /></label>
-            <label className="grid gap-1 text-sm font-bold">{provider === "exercisedb" ? "RapidAPI-Schlüssel" : "Optionaler Zugriffsschlüssel"}<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" name="apiKey" placeholder={item?.hasApiKey ? "leer lassen, um den Schlüssel zu behalten" : "Zugriffsschlüssel"} type="password" /></label>
+            <label className="grid gap-1 text-sm font-bold">Quelladresse<input className={`${formControlClass} font-normal`} defaultValue={item?.baseUrl} name="baseUrl" required /></label>
+            <label className="grid gap-1 text-sm font-bold">{provider === "exercisedb" ? "RapidAPI-Schlüssel" : "Optionaler Zugriffsschlüssel"}<input className={`${formControlClass} font-normal`} name="apiKey" placeholder={item?.hasApiKey ? "leer lassen, um den Schlüssel zu behalten" : "Zugriffsschlüssel"} type="password" /></label>
             <div className="flex flex-wrap items-center gap-3 text-xs font-bold"><label className="inline-flex items-center gap-2"><input defaultChecked={item?.enabled ?? true} name="enabled" type="checkbox" value="1" />Quelle aktiv</label>{item?.hasApiKey ? <label className="inline-flex items-center gap-2"><input name="clearApiKey" type="checkbox" value="1" />Schlüssel löschen</label> : null}</div>
-            <button className="min-h-10 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" type="submit">Quelle speichern</button>
+            <button className={buttonClass("secondary", "px-3 py-2 text-xs")} type="submit">Quelle speichern</button>
           </form>
           <form action={testExternalImportSourceAction} className="mt-2">
             <input name="provider" type="hidden" value={provider} />
-            <button className="min-h-10 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" type="submit">Verbindung testen</button>
+            <button className={buttonClass("secondary", "px-3 py-2 text-xs")} type="submit">Verbindung testen</button>
           </form>
           <form action={importExternalExercisesAction} className="mt-4 grid gap-2 border-t border-[var(--border)] pt-4 sm:grid-cols-[1fr_auto] sm:items-end">
             <input name="provider" type="hidden" value={provider} />
-            <label className="grid gap-1 text-xs font-bold">Maximale Datensätze<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm" defaultValue="25" max="200" min="1" name="limit" type="number" /></label>
+            <label className="grid gap-1 text-xs font-bold">Maximale Datensätze<input className={`${formControlClass} text-sm`} defaultValue="25" max="200" min="1" name="limit" type="number" /></label>
             <label className="inline-flex items-center gap-2 text-xs font-bold sm:col-span-2"><input name="autoTranslate" type="checkbox" value="1" />Fehlende deutsche Texte automatisch übersetzen</label>
-            <div className="flex flex-wrap gap-2 sm:col-span-2"><button className="min-h-10 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" formAction={previewExternalImportSourceAction} type="submit">Vorschau laden</button><button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">Import starten</button></div>
+            <div className="flex flex-wrap gap-2 sm:col-span-2"><button className={buttonClass("secondary", "px-3 py-2 text-xs")} formAction={previewExternalImportSourceAction} type="submit">Vorschau laden</button><button className={buttonClass("primary", "px-3 py-2 text-xs")} type="submit">Import starten</button></div>
           </form>
           <p className="mt-3 text-xs text-[var(--muted)]">{item?.lastImportAt ? `Letzter Import: ${item.lastImportAt} · ${item.lastImportResult ?? "ohne Ergebnis"}` : "Noch kein Import ausgeführt."}</p>
         </Card>;

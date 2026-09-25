@@ -43,19 +43,19 @@ export default async function TrainingPage({ searchParams }: PageProps) {
       actions={archived ? undefined : (
         <div className="flex flex-wrap gap-2">
           <Link
-            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            className={buttonClass("secondary", "px-3.5")}
             href="/training/templates"
           >
             Vorlagen
           </Link>
           <Link
-            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            className={buttonClass("secondary", "px-3.5")}
             href="/training/builder"
           >
             Training Builder
           </Link>
           <Link
-            className="rounded-md bg-[var(--brand)] px-3.5 py-2.5 text-sm font-black text-[var(--brand-foreground)] hover:bg-[var(--brand-strong)]"
+            className={buttonClass("primary", "px-3.5")}
             href="/quick-create"
           >
             + Quick Create
@@ -127,26 +127,26 @@ export default async function TrainingPage({ searchParams }: PageProps) {
                   <div className="view-actions flex flex-wrap justify-end gap-2">
                     {!archived ? (
                       <Link
-                        className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-subtle)]"
+                        className={buttonClass("secondary", "px-3 py-2 text-xs")}
                         href={`/training/${session.id}/combine`}
                       >
                         Kombinieren
                       </Link>
                     ) : null}
                     <Link
-                      className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-subtle)]"
+                      className={buttonClass("secondary", "px-3 py-2 text-xs")}
                       href={`/training/${session.id}/trainer`}
                     >
                       Trainermodus
                     </Link>
                     <Link
-                      className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-subtle)]"
+                      className={buttonClass("secondary", "px-3 py-2 text-xs")}
                       href={`/training/${session.id}/print`}
                     >
                       Drucken
                     </Link>
                     <Link
-                      className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black hover:bg-[var(--surface-subtle)]"
+                      className={buttonClass("secondary", "px-3 py-2 text-xs")}
                       href={`/training/${session.id}`}
                     >
                       {archived ? "Ansehen / Wiederherstellen" : "Details"}
