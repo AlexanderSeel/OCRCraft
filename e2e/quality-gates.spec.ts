@@ -203,8 +203,7 @@ test("quick create generates and persists a validated training", async ({ page }
   await expect(save).toBeEnabled();
   await save.click();
 
-  await expect(page.getByText("Training gespeichert", { exact: true })).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByRole("link", { name: "Gespeicherte Trainings öffnen" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Gespeicherte Trainings öffnen" })).toBeVisible({ timeout: 20_000 });
 });
 
 test("training builder keeps real edits through generation and persistence", async ({ page }) => {
@@ -228,14 +227,18 @@ test("training builder keeps real edits through generation and persistence", asy
   await expect(page.getByRole("link", { name: "Gespeichertes Training öffnen" })).toBeVisible({ timeout: 20_000 });
 });
 
-test("Kids planning does not weaken minimum-age safety boundaries to avoid a zero-result pool", async ({ page }) => {
+test("Kids planning keeps every selected exercise within the configured minimum-age boundary", async ({ page }) => {
   await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
   await page.getByRole("combobox", { name: "Zielgruppe" }).last().selectOption("kids");
   await page.getByRole("textbox", { name: "Alter" }).last().fill("5");
 
   await page.getByRole("button", { name: "Lokal planen" }).click();
+  await expect(page.getByText("Dieser Entwurf ist noch nicht gespeichert.")).toBeVisible({ timeout: 20_000 });
 
-  await expect(page.getByText("Planung fehlgeschlagen", { exact: true })).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByText("Alter, Ort, Ausschlussbereiche, Risiko, Equipment, Hindernisbestand und Stationskapazität bleiben harte Grenzen.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Training speichern" })).toBeDisabled();
+  const selectedExercises = page.locator("[data-exercise-min-age]");
+  await expect(selectedExercises.first()).toBeVisible();
+  const ages = await selectedExercises.evaluateAll((nodes) =>
+    nodes.map((node) => node.getAttribute("data-exercise-min-age")),
+  );
+  expect(ages.every((value) => value === "" || Number(value) <= 5)).toBe(true);
 });

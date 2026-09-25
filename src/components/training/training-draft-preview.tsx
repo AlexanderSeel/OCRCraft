@@ -210,7 +210,11 @@ function TrainingItemPreview({
   const replacing = replacingExerciseId === item.exercise.id;
 
   return (
-    <li className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
+    <li
+      className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3"
+      data-exercise-min-age={item.exercise.minimumAge ?? ""}
+      data-exercise-name={item.exercise.name}
+    >
       <div className="flex items-start justify-between gap-2">
         <span className="text-sm font-black">{item.exercise.name}</span>
         <span className="shrink-0 text-xs font-bold text-[var(--muted)]">{item.durationMinutes} Min.</span>

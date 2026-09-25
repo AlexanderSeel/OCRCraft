@@ -354,6 +354,7 @@ export function composeTrainingDraft(
           stationCapacity: candidate.stationCapacity,
           setupSeconds: candidate.setupSeconds ?? undefined,
           transitionSeconds: candidate.transitionSeconds ?? undefined,
+          minimumAge: candidate.minAge,
         },
         durationMinutes: durations[index] ?? 0,
         format: kind === "main" ? input.formats[0] : "free",
