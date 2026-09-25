@@ -312,6 +312,8 @@ UI → Service/Application → Repository → DuckDB
 
 React-Komponenten greifen nicht direkt auf DuckDB zu. Externe Eingaben und KI-Ausgaben werden vor Speicherung validiert.
 
+Ein CI-gestütztes Architektur-/Dependency-Gate prüft diese Schichtengrenzen, frameworkfreie Domain-Module, referenzierte Runtime-Abhängigkeiten sowie die Synchronität der dokumentierten Qualitätsbefehle.
+
 ## Technologie
 
 - Next.js
