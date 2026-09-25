@@ -24,7 +24,7 @@ describe("database migrations", () => {
       const exercises = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL");
       const gameCatalog = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key LIKE 'game-%'");
 
-      expect(migrations.getRows()[0]?.map(Number)).toEqual([88, 87]);
+      expect(migrations.getRows()[0]?.map(Number)).toEqual([89, 88]);
       expect(Number(exercises.getRows()[0]?.[0])).toBeGreaterThanOrEqual(140);
       expect(Number(gameCatalog.getRows()[0]?.[0])).toBe(13);
     } finally {
@@ -91,6 +91,27 @@ describe("database migrations", () => {
         ORDER BY column_name
       `);
       expect(reviewColumns.getRows()).toEqual([["review_status"], ["reviewed_by"]]);
+
+      const pendingBlockedReviews = await connection.runAndReadAll(`
+        SELECT count(*)
+        FROM exercise_environment_reviews
+        WHERE disposition='blocked' AND review_status='pending'
+      `);
+      expect(Number(pendingBlockedReviews.getRows()[0]?.[0])).toBe(0);
+
+      const blockedStudioClassification = await connection.runAndReadAll(`
+        SELECT count(*)
+        FROM exercise_environment_reviews r
+        JOIN exercises e ON e.id=r.exercise_id
+        WHERE r.disposition='blocked'
+          AND e.archived=true
+          AND e.outdoor_suitable=false
+          AND EXISTS (
+            SELECT 1 FROM exercise_tags et
+            WHERE et.exercise_id=e.id AND et.tag_id='fitnessstudio'
+          )
+      `);
+      expect(Number(blockedStudioClassification.getRows()[0]?.[0])).toBeGreaterThan(0);
 
       const gameCatalog = await connection.runAndReadAll(`
         SELECT count(*), count(*) FILTER (WHERE exercise_type='game')

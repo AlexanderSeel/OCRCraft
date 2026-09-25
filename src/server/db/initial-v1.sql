@@ -4821,6 +4821,43 @@ WHERE e.seed_key IS NOT NULL
     SELECT 1 FROM exercise_source_references r WHERE r.exercise_id=e.id
   );
 
+-- Source migration: 089_finalize_blocked_studio_reviews.sql
+INSERT OR IGNORE INTO tags (id,label_de,label_en)
+VALUES ('fitnessstudio','Fitnessstudio','Gym');
+
+INSERT OR IGNORE INTO exercise_tags (exercise_id,tag_id)
+SELECT r.exercise_id,'fitnessstudio'
+FROM exercise_environment_reviews r
+WHERE r.disposition='blocked';
+
+UPDATE exercises
+SET archived=true,
+    outdoor_suitable=false,
+    updated_at=current_timestamp
+WHERE id IN (
+  SELECT exercise_id FROM exercise_environment_reviews WHERE disposition='blocked'
+);
+
+UPDATE exercise_environment_reviews
+SET review_status='catalog',
+    reviewed_by=NULL,
+    reviewed_at=current_timestamp,
+    reason=CASE
+      WHEN trim(COALESCE(reason,''))=''
+        THEN 'Fitnessstudio-/Maschinenabhängigkeit ohne verlässlich ableitbare portable Widerstandslinie; als Studioübung blockiert.'
+      WHEN lower(reason) LIKE '%manuelle fachprüfung%'
+        THEN 'Fitnessstudio-/Maschinenabhängigkeit ohne verlässlich ableitbare portable Widerstandslinie; als Studioübung blockiert.'
+      ELSE reason
+    END,
+    replacement_equipment=''
+WHERE disposition='blocked'
+  AND COALESCE(review_status,'catalog')='pending';
+
+DELETE FROM exercise_outdoor_variant_equipment
+WHERE exercise_id IN (
+  SELECT exercise_id FROM exercise_environment_reviews WHERE disposition='blocked'
+);
+
 INSERT INTO schema_migrations (version, name) VALUES
   (1, 'initial'),
   (2, 'exercise_catalog'),
@@ -4908,6 +4945,7 @@ INSERT INTO schema_migrations (version, name) VALUES
   (85, 'portable_training_equipment_followup'),
   (86, 'portable_catalog_review_completion'),
   (87, 'reviewed_outdoor_conversion_policy'),
-  (88, 'seed_catalog_provenance');
+  (88, 'seed_catalog_provenance'),
+  (89, 'finalize_blocked_studio_reviews');
 
 COMMIT;
