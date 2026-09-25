@@ -316,6 +316,9 @@ export default async function MediaPage({ searchParams }: PageProps) {
                 <a className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href="/api/admin/media/codex-image-tasks?batch=games-partner">
                   Batch 3 · Spiele/Partner
                 </a>
+                <a className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href="/api/admin/media/codex-image-review">
+                  Pending-Review exportieren
+                </a>
                 <span className="rounded-full bg-[var(--surface-subtle)] px-3 py-1 text-xs font-black">
                   {missingImageExercises.length} angezeigt
                 </span>

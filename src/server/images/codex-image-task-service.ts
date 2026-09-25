@@ -6,7 +6,10 @@ import {
   buildCodexImageOutputFilename,
   chooseCodexImageFigurePresentation,
 } from "@/server/images/codex-image-task-core";
-import { listMediaGenerationCandidates } from "@/server/media/media-catalog-repository";
+import {
+  listMediaCatalog,
+  listMediaGenerationCandidates,
+} from "@/server/media/media-catalog-repository";
 import { getMediaGenerationCandidateReason } from "@/server/media/media-rights-core";
 import {
   CODEX_IMAGE_P1_BATCHES,
@@ -142,4 +145,69 @@ export async function getCodexImageP1BatchProgress(): Promise<readonly CodexImag
       readyToGenerate: remaining - activeJobs,
     };
   });
+}
+
+export async function buildCodexImageReviewExport(options: {
+  readonly seedKeys?: readonly string[];
+} = {}): Promise<Record<string, unknown>> {
+  const seedKeyFilter = new Set((options.seedKeys ?? []).map((value) => value.trim()).filter(Boolean));
+  const repository = new ExerciseImageGenerationRepository();
+  const pendingAssets = (await listMediaCatalog({
+    reviewStatus: "pending",
+    limit: 500,
+  })).filter((asset) =>
+    asset.mediaType === "image" || asset.mediaType === "illustration"
+  ).filter((asset) =>
+    seedKeyFilter.size === 0 || (asset.seedKey ? seedKeyFilter.has(asset.seedKey) : false)
+  );
+
+  const tasks: Record<string, unknown>[] = [];
+  for (const asset of pendingAssets) {
+    let expectedPrompt: string | null = null;
+    let promptError: string | null = null;
+    try {
+      const context = await repository.getContext(asset.seedKey ?? asset.exerciseId);
+      expectedPrompt = buildExerciseImagePrompt(
+        context,
+        asset.figurePresentation === "adult_woman" ? "adult_woman" : "adult_man",
+      );
+    } catch (error) {
+      promptError = error instanceof Error ? error.message : String(error);
+    }
+
+    tasks.push({
+      assetId: asset.id,
+      exerciseId: asset.exerciseId,
+      seedKey: asset.seedKey,
+      exerciseName: asset.exerciseName,
+      sourceType: asset.sourceType,
+      imageUrl: asset.imageUrl,
+      localPublicPath: asset.imageUrl?.startsWith("/") ? `public${asset.imageUrl}` : null,
+      generationStatus: asset.generationStatus,
+      reviewStatus: asset.reviewStatus,
+      biomechanicsReview: asset.biomechanicsReview,
+      textMatchReview: asset.textMatchReview,
+      reviewNotes: asset.reviewNotes,
+      sequenceStepCount: asset.sequenceStepCount,
+      figurePresentation: asset.figurePresentation,
+      expectedPrompt,
+      promptError,
+      reviewChecklist: [
+        "Exercise mechanics match the structured execution steps.",
+        "No merged people, duplicate limbs, impossible joints or malformed hands/feet.",
+        "Equipment and obstacle geometry match the exercise.",
+        "No unexplained extra participant is present.",
+        "Sequence frames keep the same main demonstrator and progress in the correct order.",
+        "The depicted movement remains safe and biomechanically plausible.",
+      ],
+    });
+  }
+
+  return {
+    format: "ocrcraft-codex-image-review-v1",
+    generatedAt: new Date().toISOString(),
+    requestedSeedKeys: seedKeyFilter.size > 0 ? [...seedKeyFilter] : null,
+    pendingAssetCount: tasks.length,
+    tasks,
+  };
 }

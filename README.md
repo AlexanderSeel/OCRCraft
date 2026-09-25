@@ -403,6 +403,11 @@ npm run exercise:images:codex-tasks -- --batch=games-partner
 npm run exercise:images:seed -- --batch=single-subject
 npm run exercise:images:seed -- --batch=ocrfra-obstacles
 npm run exercise:images:seed -- --batch=games-partner
+
+# Pending-Bilder für Codex-Review exportieren
+npm run exercise:images:codex-review -- --batch=single-subject
+npm run exercise:images:codex-review -- --batch=ocrfra-obstacles
+npm run exercise:images:codex-review -- --batch=games-partner
 ```
 
 Für P1-Batches läuft die Generierung absichtlich mit nur einer Bildanfrage gleichzeitig. Dadurch entsteht pro Aufgabe ein separates Asset statt einer Sammelgrafik; alle neuen Assets bleiben bis zur Biomechanik- und Text-Match-Prüfung im Status `pending`.
