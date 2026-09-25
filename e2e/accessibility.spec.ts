@@ -314,8 +314,13 @@ test("reduced-motion preference suppresses long transitions and animations", asy
     };
   });
   expect(timings).not.toBeNull();
-  expect(timings?.transition).toMatch(/0(?:\.0+)?(?:s|ms)|0\.01ms/);
-  expect(timings?.animation).toMatch(/0(?:\.0+)?(?:s|ms)|0\.01ms/);
+  const durationMs = (value: string | undefined) => (value ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => entry.endsWith("ms") ? Number.parseFloat(entry) : Number.parseFloat(entry) * 1000);
+  expect(durationMs(timings?.transition).every((value) => value <= 0.011)).toBe(true);
+  expect(durationMs(timings?.animation).every((value) => value <= 0.011)).toBe(true);
 });
 
 test("core semantic color pairs meet normal-text contrast in light and dark themes", async ({ page }) => {
@@ -326,10 +331,19 @@ test("core semantic color pairs meet normal-text contrast in light and dark them
     const ratios = await page.evaluate(() => {
       const style = getComputedStyle(document.documentElement);
       const parse = (value: string) => {
-        const match = value.trim().match(/^#([0-9a-f]{6})$/i);
-        if (!match) throw new Error(`Unsupported color value: ${value}`);
-        const hex = match[1];
-        return [0, 2, 4].map((index) => Number.parseInt(hex.slice(index, index + 2), 16) / 255);
+        const raw = value.trim();
+        const shortHex = raw.match(/^#([0-9a-f]{3})$/i);
+        if (shortHex) {
+          return shortHex[1].split("").map((part) => Number.parseInt(part + part, 16) / 255);
+        }
+        const longHex = raw.match(/^#([0-9a-f]{6})$/i);
+        if (longHex) {
+          const hex = longHex[1];
+          return [0, 2, 4].map((index) => Number.parseInt(hex.slice(index, index + 2), 16) / 255);
+        }
+        const rgb = raw.match(/^rgba?\((\d+(?:\.\d+)?)[, ]+(\d+(?:\.\d+)?)[, ]+(\d+(?:\.\d+)?)/i);
+        if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])].map((channel) => channel / 255);
+        throw new Error(`Unsupported color value: ${value}`);
       };
       const luminance = (value: string) => {
         const [r, g, b] = parse(value).map((channel) => channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);

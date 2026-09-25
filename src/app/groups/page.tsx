@@ -74,6 +74,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         <div className="flex flex-wrap gap-2">
           <Link
             className={buttonClass("secondary", "px-4")}
+            data-tour="group-safety-rule"
             href="/groups/safety-profiles"
           >
             Kids/Youth-Schutzprofile
