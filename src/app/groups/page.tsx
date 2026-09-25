@@ -12,6 +12,7 @@ import {
 } from "@/domain/training/group-presets";
 import type { TrainingFormat } from "@/domain/training/model";
 import { Disclosure } from "@/components/ui/disclosure";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
 import { buttonClass, formControlClass } from "@/components/ui/form";
@@ -229,18 +230,10 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                   </Disclosure>
                 ) : null}
 
-                <form action={setClubGroupArchivedAction}>
+                <ConfirmPopoverForm action={setClubGroupArchivedAction} description={group.archived ? "Die Gruppe wird wieder für die aktive Auswahl und Trainingsplanung verfügbar." : "Die Gruppe wird aus der aktiven Auswahl genommen. Bestehende Trainings bleiben erhalten."} title={group.archived ? "Gruppe wiederherstellen?" : "Gruppe archivieren?"} triggerClassName={group.archived ? "rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-black hover:bg-[var(--surface-subtle)]" : "rounded-xl border border-[var(--danger)] bg-[var(--surface)] px-4 py-3 text-sm font-black text-[var(--danger)] hover:bg-[var(--danger-bg)]"} triggerLabel={group.archived ? "Wiederherstellen" : "Archivieren"}>
                   <input name="id" type="hidden" value={group.id} />
                   <input name="archived" type="hidden" value={group.archived ? "false" : "true"} />
-                  <button
-                    className={group.archived
-                      ? "rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-black hover:bg-[var(--surface-subtle)]"
-                      : "rounded-xl border border-[var(--danger)] px-4 py-3 text-sm font-black text-[var(--danger)] hover:bg-[var(--danger-bg)]"}
-                    type="submit"
-                  >
-                    {group.archived ? "Wiederherstellen" : "Archivieren"}
-                  </button>
-                </form>
+                </ConfirmPopoverForm>
               </div>
             </Card>
           ))}

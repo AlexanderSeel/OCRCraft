@@ -5,6 +5,7 @@ import { MuscleMapDebugSetting } from "@/components/admin/muscle-map-debug-setti
 import { DuplicateReviewPanel } from "@/components/admin/duplicate-review-panel";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import { Disclosure } from "@/components/ui/disclosure";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Card, CardHeader } from "@/components/ui/card";
 import { buttonClass } from "@/components/ui/form";
@@ -55,6 +56,7 @@ interface AdminPageProps {
     readonly searchSaved?: string;
     readonly searchError?: string;
     readonly queueDeleted?: string;
+    readonly queued?: string;
     readonly roleSaved?: string;
     readonly roleError?: string;
     readonly importSaved?: string;
@@ -105,6 +107,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <AdminTabs active={activeTab} />
         {queueDeleted === "1" ? <Alert tone="success">Der fehlgeschlagene Medienjob wurde gelöscht.</Alert> : null}
         {queueDeleted === "0" ? <Alert tone="danger">Der Fehler konnte nicht gelöscht werden. Der Eintrag ist möglicherweise bereits entfernt oder noch nicht fehlgeschlagen.</Alert> : null}
+        {params.queued === "duplicate" ? <Alert tone="success">Die Dublettenentscheidung wurde in die Aufgabenqueue gestellt.</Alert> : null}
         {params.importSaved ? <Alert tone="success">Importquelle gespeichert.</Alert> : null}
         {params.imported ? <Alert tone="success">{params.imported} Übung(en) importiert, {params.skipped ?? "0"} bereits vorhanden oder übersprungen.</Alert> : null}
         {params.importTest === "ok" ? <Alert tone="success">Verbindung zu {params.provider === "exercisedb" ? "ExerciseDB" : "hasaneyldrm"} erfolgreich. Beispiel: {params.sample} · Datensätze verfügbar in der Testantwort: {params.available}.</Alert> : null}
@@ -166,7 +169,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </div>
           <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-black">Vorhandene Backups</h3><span className="text-xs font-bold text-[var(--muted)]">{backups.length} vorhanden</span></div>
-            {backups.length === 0 ? <p className="mt-2 text-sm text-[var(--muted)]">Noch kein Backup vorhanden.</p> : <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{backups.slice(0, 5).map((item) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2" key={item.fileName}><span><span className="font-bold text-[var(--foreground)]">{item.fileName}</span><span className="ml-2">{formatBytes(item.bytes)} · {item.createdAt}</span></span><form action={restoreDatabaseBackupAction} className="flex items-center gap-2"><input aria-label={`${item.fileName} bestätigen`} className="h-8 w-36 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-2 text-[10px]" name="confirmation" placeholder="Dateiname bestätigen" /><input name="fileName" type="hidden" value={item.fileName} /><button className="rounded-lg border border-[var(--danger)] px-2 py-1.5 text-[10px] font-black text-[var(--danger)]" type="submit">Wiederherstellen</button></form></li>)}</ul>}
+            {backups.length === 0 ? <p className="mt-2 text-sm text-[var(--muted)]">Noch kein Backup vorhanden.</p> : <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{backups.slice(0, 5).map((item) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2" key={item.fileName}><span><span className="font-bold text-[var(--foreground)]">{item.fileName}</span><span className="ml-2">{formatBytes(item.bytes)} · {item.createdAt}</span></span><ConfirmPopoverForm action={restoreDatabaseBackupAction} description="Das aktuelle Datenbankmodell wird durch den gewählten Backupstand ersetzt. Vorher wird ein Sicherheitsbackup angelegt." title="Backup wiederherstellen?" triggerLabel="Wiederherstellen"><input aria-label={`${item.fileName} bestätigen`} className="h-8 w-full rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-2 text-[10px]" name="confirmation" placeholder="Dateiname bestätigen" required /><input name="fileName" type="hidden" value={item.fileName} /></ConfirmPopoverForm></li>)}</ul>}
           </div>
           {reseedError ? (
             <Alert tone="danger">

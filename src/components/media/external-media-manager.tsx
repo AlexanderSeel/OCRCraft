@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
+import { ConfirmPopoverButton } from "@/components/ui/confirm-popover-form";
 
 interface ExerciseOption {
   readonly id: string;
@@ -195,15 +196,7 @@ export function ExternalMediaManager({
             <div className="flex flex-wrap justify-between gap-3 border-t border-[var(--border)] pt-4">
               <div>
                 {value?.id ? (
-                  <button
-                    className="min-h-11 rounded-xl border border-[var(--danger)] px-4 text-sm font-black text-[var(--danger)]"
-                    formAction={deleteAction}
-                    name="assetId"
-                    type="submit"
-                    value={value.id}
-                  >
-                    Medium entfernen
-                  </button>
+                  <ConfirmPopoverButton action={deleteAction} confirmLabel="Medium entfernen" description="Das externe Medium wird aus dem Katalog entfernt. Diese Aktion kann nicht über die Oberfläche rückgängig gemacht werden." name="assetId" title="Externes Medium entfernen?" triggerClassName="min-h-11 rounded-xl border border-[var(--danger)] px-4 py-2 text-sm font-black text-[var(--danger)]" triggerLabel="Medium entfernen" value={value.id} />
                 ) : null}
               </div>
               <div className="flex gap-2">

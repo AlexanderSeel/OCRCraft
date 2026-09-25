@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
 import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import {
   countDeterministicOutdoorReviews,
   getPortabilityAuditOverview,
@@ -88,6 +89,12 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
           </div>
         ) : null}
 
+        {result.bulkApproved ? (
+          <div aria-live="polite" className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm font-bold text-[var(--success-foreground)]">
+            {result.bulkApproved} eindeutige Outdoor-Reviews wurden freigegeben.
+          </div>
+        ) : null}
+
         {hasResult ? (
           <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
             <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Letzter Lauf</div>
@@ -161,16 +168,12 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
             Eine Übung wird nur als outdoor-geeignet markiert, wenn alle erkannten Studio-Abhängigkeiten vollständig ersetzt werden können. Bereits migrierte Konvertierungen mit Systemtext bleiben einzeln reviewpflichtig und erhalten eine bewegungsspezifische Vorschau. Trainertexte werden nicht überschrieben. Nur neue, eindeutig sichere Vorschläge können gesammelt angewendet werden.
           </div>
 
-          <form action={runOutdoorVariantEnrichmentAction} className="mt-5 flex justify-end">
-            <div className="flex flex-wrap justify-end gap-2">
-              <button className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 text-sm font-black" formAction={approveDeterministicOutdoorReviewsAction} type="submit">
-                {deterministicReviewCount > 0 ? `${deterministicReviewCount} eindeutige Reviews freigeben` : "Keine eindeutigen Reviews offen"}
-              </button>
-              <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
-                {ready.length > 0 ? `${ready.length} sichere Outdoor-Varianten gesammelt übernehmen` : "Importierte Übungen erneut prüfen"}
-              </button>
-            </div>
-          </form>
+          <div className="mt-5 flex flex-wrap justify-end gap-2">
+            {deterministicReviewCount > 0 ? (
+              <ConfirmPopoverForm action={approveDeterministicOutdoorReviewsAction} confirmLabel="Reviews freigeben" description={`${deterministicReviewCount} eindeutig sichere Outdoor-Reviews werden freigegeben und als erledigt markiert.`} title="Outdoor-Reviews freigeben?" triggerClassName="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 text-sm font-black" triggerLabel={`${deterministicReviewCount} eindeutige Reviews freigeben`} />
+            ) : null}
+            <ConfirmPopoverForm action={runOutdoorVariantEnrichmentAction} confirmLabel={ready.length > 0 ? "Varianten übernehmen" : "Prüfung starten"} description={ready.length > 0 ? `${ready.length} sichere Outdoor-Varianten werden gesammelt übernommen. Bereits vorhandene oder reviewpflichtige Übungen bleiben unverändert.` : "Die importierten Übungen werden erneut geprüft und sichere Outdoor-Varianten werden automatisch vorbereitet."} title={ready.length > 0 ? "Outdoor-Varianten übernehmen?" : "Outdoor-Prüfung starten?"} triggerClassName="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" triggerLabel={ready.length > 0 ? `${ready.length} sichere Outdoor-Varianten gesammelt übernehmen` : "Importierte Übungen erneut prüfen"} />
+          </div>
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6" data-tour="outdoor-candidates">
@@ -283,12 +286,9 @@ function CandidateCard({ candidate }: { readonly candidate: OutdoorVariantCandid
               Übung öffnen
             </Link>
             {candidate.status === "ready" || candidate.status === "review-required" ? (
-              <form action={approveOutdoorVariantCandidateAction}>
+              <ConfirmPopoverForm action={approveOutdoorVariantCandidateAction} confirmLabel="Variante freigeben" description="Die Outdoor-Variante wird für diese Übung freigegeben und kann anschließend in Trainingsplänen verwendet werden." title="Outdoor-Variante freigeben?" triggerClassName="min-h-9 rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" triggerLabel={candidate.status === "review-required" ? "Variante fachlich freigeben" : "Diese Variante übernehmen"}>
                 <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
-                <button className="min-h-9 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">
-                  {candidate.status === "review-required" ? "Variante fachlich freigeben" : "Diese Variante übernehmen"}
-                </button>
-              </form>
+              </ConfirmPopoverForm>
             ) : null}
           </div>
         </div>

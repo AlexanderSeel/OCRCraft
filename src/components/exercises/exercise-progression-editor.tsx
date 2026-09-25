@@ -1,4 +1,5 @@
 import type { ExerciseProgressionRelation, ExerciseRelationOption } from "@/server/exercises/exercise-repository";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 
 export function ExerciseProgressionEditor({
   relations,
@@ -19,7 +20,7 @@ export function ExerciseProgressionEditor({
         {relations.map((relation) => (
           <div className="flex items-start justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" key={relation.id}>
             <div><div className="text-xs font-black uppercase tracking-[0.1em] text-[var(--muted)]">{label(relation.type)}</div><div className="font-bold">{relation.exerciseName}</div>{relation.notesDe ? <p className="mt-1 text-sm text-[var(--muted)]">{relation.notesDe}</p> : null}</div>
-            <form action={deleteAction}><input name="relationId" type="hidden" value={relation.id} /><button className="text-xs font-black text-[var(--danger)]" disabled={disabled} type="submit">Entfernen</button></form>
+            {!disabled ? <ConfirmPopoverForm action={deleteAction} description={`Die Verknüpfung „${relation.exerciseName}“ wird aus dieser Übung entfernt.`} title="Verknüpfung entfernen?" triggerLabel="Entfernen"><input name="relationId" type="hidden" value={relation.id} /></ConfirmPopoverForm> : null}
           </div>
         ))}
       </div> : <p className="text-sm text-[var(--muted)]">Noch keine verknüpften Varianten.</p>}

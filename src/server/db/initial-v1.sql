@@ -4717,6 +4717,9 @@ WHERE e.archived=false
   );
 
 -- Source migration: 087_reviewed_outdoor_conversion_policy.sql
+-- Converted import variants are safe only after an explicit trainer/admin
+-- review. Portable aliases are normalized; ambiguous generic machines are
+-- blocked instead of receiving heuristic substitutions.
 ALTER TABLE exercise_environment_reviews
   ADD COLUMN IF NOT EXISTS review_status VARCHAR DEFAULT 'catalog';
 ALTER TABLE exercise_environment_reviews
@@ -4796,6 +4799,27 @@ SET replacement_equipment=COALESCE((
   WHERE ove.exercise_id=exercise_environment_reviews.exercise_id
 ), '')
 WHERE disposition IN ('portable','converted');
+
+-- Source migration: 088_seed_catalog_provenance.sql
+-- Seed exercises are original OCRCraft catalog content. Record that provenance
+-- explicitly so completeness review does not confuse missing source metadata
+-- with missing coaching or safety content.
+INSERT INTO exercise_source_references (
+  exercise_id,provider,title,source_url,source_type,license_label,notes
+)
+SELECT
+  e.id,
+  'OCRCraft',
+  'OCRCraft Seed Catalog v1.0',
+  'ocrcraft://seed-catalog/' || e.seed_key,
+  'trainer_authored',
+  'OCRCraft original content',
+  'Canonical OCRCraft seed entry; DE/EN exercise guidance is maintained in the application catalog.'
+FROM exercises e
+WHERE e.seed_key IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM exercise_source_references r WHERE r.exercise_id=e.id
+  );
 
 INSERT INTO schema_migrations (version, name) VALUES
   (1, 'initial'),
@@ -4883,6 +4907,7 @@ INSERT INTO schema_migrations (version, name) VALUES
   (84, 'portable_training_catalog'),
   (85, 'portable_training_equipment_followup'),
   (86, 'portable_catalog_review_completion'),
-  (87, 'reviewed_outdoor_conversion_policy');
+  (87, 'reviewed_outdoor_conversion_policy'),
+  (88, 'seed_catalog_provenance');
 
 COMMIT;

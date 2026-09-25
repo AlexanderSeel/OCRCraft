@@ -97,6 +97,7 @@ const migrations: readonly Migration[] = [
   { version: 85, fileName: "085_portable_training_equipment_followup.sql" },
   { version: 86, fileName: "086_portable_catalog_review_completion.sql" },
   { version: 87, fileName: "087_reviewed_outdoor_conversion_policy.sql" },
+  { version: 88, fileName: "088_seed_catalog_provenance.sql" },
 ];
 
 const initialSchemaFileName = "initial-v1.sql";

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ActionProgressButton } from "./action-progress-button";
 import { Dialog } from "../ui/dialog";
 import { ImageLightbox } from "../ui/image-lightbox";
+import { ConfirmPopoverForm } from "../ui/confirm-popover-form";
 
 interface DuplicateReviewTask {
   readonly id: string;
@@ -68,7 +68,7 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
           </label>
           <span className="text-xs font-semibold text-[var(--muted)]">{selected.size} ausgewählt</span>
           {selectedTasks.length > 0 ? (
-            <form action={bulkAction} className="flex flex-wrap items-center gap-2">
+            <ConfirmPopoverForm action={bulkAction} description={`Die ausgewählten ${selectedTasks.length} Dublettenentscheidungen werden gesammelt angewendet. Zusammenführungen archivieren einen Datensatz.`} title="Dublettenentscheidungen anwenden?" confirmLabel="Entscheidungen anwenden" triggerClassName="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" triggerLabel="Ausführen">
               {selectedTasks.map((task) => <input key={task.id} name="selection" type="hidden" value={`${task.id}:${task.leftExerciseId}:${task.rightExerciseId}`} />)}
               <label className="sr-only" htmlFor="bulk-duplicate-decision">Aktion</label>
               <select className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs font-bold" defaultValue="left" id="bulk-duplicate-decision" name="decision">
@@ -77,8 +77,7 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
                 <option value="both">Beide behalten</option>
                 <option value="ignored">Ignorieren</option>
               </select>
-              <ActionProgressButton className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" pendingLabel={`${selectedTasks.length} Einträge werden verarbeitet`}>Ausführen</ActionProgressButton>
-            </form>
+            </ConfirmPopoverForm>
           ) : null}
         </div>
       ) : null}
@@ -129,30 +128,31 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
                       <Info label="Sicherheit" value={record.safetyNotes || "Nicht hinterlegt"} />
                     </div>
                   ) : <p className="mt-4 text-sm text-[var(--muted)]">Inhalte konnten nicht geladen werden.</p>}
-                  <form action={resolveAction} className="mt-4">
+                  <ConfirmPopoverForm action={resolveAction} description={`„${side.name}“ bleibt erhalten; der andere Datensatz wird bei einer Zusammenführung archiviert.`} title={`${side.name} behalten?`} confirmLabel={side.primary ? "Linke behalten" : "Rechte behalten"} triggerClassName={side.primary ? "rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" : "rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black"} triggerLabel={side.primary ? "Linke behalten" : "Rechte behalten"}>
                     <input name="taskId" type="hidden" value={comparison.id} />
                     <input name="keepExerciseId" type="hidden" value={side.id} />
-                    <button className={side.primary ? "rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" : "rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black"} type="submit">{side.primary ? "Linke behalten" : "Rechte behalten"}</button>
-                  </form>
+                    <input name="leftExerciseId" type="hidden" value={comparison.leftExerciseId} />
+                    <input name="rightExerciseId" type="hidden" value={comparison.rightExerciseId} />
+                  </ConfirmPopoverForm>
                     </>;
                   })()}
                 </section>
               ))}
             </div>
-            <form action={resolveAction} className="mt-3">
-              <input name="taskId" type="hidden" value={comparison.id} /><input name="keepExerciseId" type="hidden" value={comparison.leftExerciseId} /><input name="status" type="hidden" value="ignored" />
-              <div className="flex flex-wrap gap-2">
-                <input name="resolutionDecision" type="hidden" value="not_duplicate" />
-                <button className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-bold text-[var(--muted)]" type="submit">Keine Dublette – ignorieren</button>
-              </div>
-            </form>
-            <form action={resolveAction} className="mt-2">
+            <ConfirmPopoverForm action={resolveAction} description="Die beiden Übungen bleiben getrennt und der Treffer wird als keine Dublette markiert." title="Treffer ignorieren?" triggerLabel="Keine Dublette – ignorieren">
+              <input name="taskId" type="hidden" value={comparison.id} /><input name="keepExerciseId" type="hidden" value={comparison.leftExerciseId} /><input name="leftExerciseId" type="hidden" value={comparison.leftExerciseId} /><input name="rightExerciseId" type="hidden" value={comparison.rightExerciseId} /><input name="status" type="hidden" value="ignored" />
+              <input name="resolutionDecision" type="hidden" value="not_duplicate" />
+            </ConfirmPopoverForm>
+            <div className="mt-2">
+            <ConfirmPopoverForm action={resolveAction} description="Beide Datensätze bleiben aktiv und der Treffer wird als echte Variante markiert." title="Beide Übungen behalten?" triggerLabel="Beide behalten – echte Variante" triggerClassName="rounded-lg border border-[var(--control-strong)] px-3 py-2 text-xs font-bold text-[var(--control-strong)]">
               <input name="taskId" type="hidden" value={comparison.id} />
               <input name="keepExerciseId" type="hidden" value={comparison.leftExerciseId} />
+              <input name="leftExerciseId" type="hidden" value={comparison.leftExerciseId} />
+              <input name="rightExerciseId" type="hidden" value={comparison.rightExerciseId} />
               <input name="status" type="hidden" value="ignored" />
               <input name="resolutionDecision" type="hidden" value="keep_both" />
-              <button className="rounded-lg border border-[var(--control-strong)] px-3 py-2 text-xs font-bold text-[var(--control-strong)]" type="submit">Beide behalten – echte Variante</button>
-            </form>
+            </ConfirmPopoverForm>
+            </div>
         </Dialog>
       ) : null}
     </>

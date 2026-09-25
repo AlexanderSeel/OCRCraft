@@ -1,4 +1,5 @@
 import type { SearchProfile } from "@/server/search/search-profile-repository";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 
 type FormAction = (formData: FormData) => Promise<void>;
 
@@ -75,10 +76,7 @@ export function SearchProfileSettingsPanel({
                   <input name="id" type="hidden" value={profile.id} />
                   <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">Profil aktivieren</button>
                 </form>
-                <form action={deleteAction}>
-                  <input name="id" type="hidden" value={profile.id} />
-                  <button className="min-h-10 rounded-lg border border-[var(--danger)] px-3 text-xs font-black text-[var(--danger)]" type="submit">Löschen</button>
-                </form>
+                <ConfirmPopoverForm action={deleteAction} description={`Das Suchprofil „${profile.name}“ wird dauerhaft gelöscht.`} title="Suchprofil löschen?" triggerLabel="Löschen"><input name="id" type="hidden" value={profile.id} /></ConfirmPopoverForm>
               </div>
             ) : null}
           </article>

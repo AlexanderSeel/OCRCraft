@@ -228,7 +228,7 @@ function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) 
             </div>
           </details>
 
-          <div className="view-actions flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
+          <div className="view-actions obstacle-actions flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
             <Link className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" href={`/exercises/${obstacle.exerciseId}`}>
               Übung öffnen
             </Link>

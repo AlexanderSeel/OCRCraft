@@ -33,6 +33,9 @@ import { updateExerciseObstacleGuidanceAction } from "../obstacle-actions";
 import { addExerciseProgressionRelationAction, deleteExerciseProgressionRelationAction } from "../progression-actions";
 import { listExerciseMediaChoices } from "@/server/media/media-catalog-repository";
 import { generateExerciseImageAction, selectExerciseImageAction } from "../../actions";
+import { deleteExerciseMediaAction } from "../../actions";
+import { ExerciseMediaManager } from "@/components/exercises/exercise-media-manager";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 
 interface PageProps {
   readonly params: Promise<{ id: string }>;
@@ -59,6 +62,8 @@ interface PageProps {
     hardDeleteError?: string;
     mediaSaved?: string;
     mediaQueued?: string;
+    mediaDeleted?: string;
+    mediaError?: string;
     from?: string;
   }>;
 }
@@ -98,6 +103,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
   const addProgressionAction = addExerciseProgressionRelationAction.bind(null, exercise.id);
   const deleteProgressionAction = deleteExerciseProgressionRelationAction.bind(null, exercise.id);
   const selectImageAction = selectExerciseImageAction.bind(null, exercise.id);
+  const deleteImageAction = deleteExerciseMediaAction.bind(null, exercise.id);
   const generateImageAction = generateExerciseImageAction.bind(null, exercise.id);
   const manualExercise = exercise.seedKey == null;
   const fullEditorOpen = manualExercise || Boolean(
@@ -155,6 +161,8 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         {status.progressionSaved ? <Notice>Progressionsbeziehung gespeichert.</Notice> : null}
         {status.obstacleSaved ? <Notice>Hindernis-Guidance, Stationskapazität und Sicherheitszone wurden gespeichert.</Notice> : null}
         {status.mediaSaved ? <Notice>Das Bild wurde als primäres Übungsbild ausgewählt.</Notice> : null}
+        {status.mediaDeleted ? <Notice>Das zusätzliche Bild wurde entfernt.</Notice> : null}
+        {status.mediaError ? <ErrorNotice>{status.mediaError === "primary" ? "Das Hauptbild kann nicht gelöscht werden. Wähle zuerst ein anderes Hauptbild." : "Das Bild konnte nicht entfernt werden."}</ErrorNotice> : null}
         {status.mediaQueued ? <Notice>Die Bildgenerierung wurde im Hintergrund eingeplant.</Notice> : null}
         {status.progressionError ? <ErrorNotice>Die Progressionsbeziehung ist ungültig oder konnte nicht gespeichert werden.</ErrorNotice> : null}
         {status.classificationError === "invalid" ? <ErrorNotice>Die Klassifikation ist unvollständig oder ungültig. Wähle mindestens ein Trainingsziel.</ErrorNotice> : null}
@@ -178,7 +186,7 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         </details>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-          <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-black">Medien</h2><p className="mt-1 text-sm text-[var(--muted)]">Wähle ein vorhandenes Bild als Standard oder plane eine neue KI-Sequenz ein.</p></div><form action={generateImageAction}><button className="min-h-10 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Neues Bild per KI erzeugen</button></form></div>
+          <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-black">Medien</h2><p className="mt-1 text-sm text-[var(--muted)]">Wähle ein vorhandenes Bild als Standard oder plane eine neue KI-Sequenz ein.</p></div><div className="flex flex-wrap gap-2">{mediaChoices.length > 1 ? <ExerciseMediaManager choices={mediaChoices} deleteAction={deleteImageAction} exerciseName={exercise.nameDe} selectAction={selectImageAction} /> : null}<form action={generateImageAction}><button className="min-h-10 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Neues Bild per KI erzeugen</button></form></div></div>
           {mediaChoices.length ? <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{mediaChoices.map((media) => <form action={selectImageAction} className={`rounded-xl border p-3 ${media.isPrimary ? "border-[var(--accent)]" : "border-[var(--border)]"}`} key={media.id}><input name="assetId" type="hidden" value={media.id} />{media.url ? <ImageLightbox alt="Übungsbild" className="h-32 w-full rounded-lg bg-white object-contain" containerClassName="relative h-32" src={media.url} /> : <div className="grid h-32 place-items-center rounded-lg bg-[var(--surface-subtle)] text-xs text-[var(--muted)]">Kein Vorschaubild</div>}<div className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="font-bold">{media.sourceType === "ai_generated" ? "KI" : "Extern"} · {media.reviewStatus}</span>{media.generationStatus === "generated" ? <button className="rounded-lg border border-[var(--border)] px-2 py-1 font-black" type="submit">{media.isPrimary ? "Ausgewählt" : "Auswählen"}</button> : <span className="text-[var(--muted)]">{media.generationStatus}</span>}</div></form>)}</div> : <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Noch kein Bild vorhanden.</p>}
         </section>
 
@@ -298,21 +306,16 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
                   : "Archivieren entfernt die Übung aus aktiver Bibliothek und Suche, erhält sie aber für Referenzen."}
               </p>
             </div>
-            <form action={toggleArchivedAction}>
-              <button className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black" type="submit">
-                {exercise.archived ? "Wiederherstellen" : "Archivieren"}
-              </button>
-            </form>
+            <ConfirmPopoverForm action={toggleArchivedAction} description={exercise.archived ? "Die Übung wird wieder in Bibliothek und Suche aufgenommen." : "Die Übung wird aus der aktiven Bibliothek und Suche entfernt, bleibt aber für Referenzen erhalten."} title={exercise.archived ? "Übung wiederherstellen?" : "Übung archivieren?"} triggerClassName="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black" triggerLabel={exercise.archived ? "Wiederherstellen" : "Archivieren"} />
           </div>
         </section>
         {exercise.archived && exercise.seedKey == null && actor?.role === "super_admin" ? (
           <section className="rounded-2xl border border-[var(--danger)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
             <h2 className="font-black text-[var(--danger)]">Endgültig löschen</h2>
             <p className="mt-1 text-sm text-[var(--muted)]">Nur archivierte Vereinsübungen ohne Trainings-, Medien- oder Quellenreferenzen können dauerhaft gelöscht werden. Seeds sind geschützt.</p>
-            <form action={hardDeleteAction} className="mt-4 flex flex-wrap items-end gap-3">
-              <label className="grid gap-1 text-xs font-bold"><span>Bestätigung</span><input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3" name="confirmation" placeholder="ENDGÜLTIG LÖSCHEN" required /></label>
-              <button className="min-h-10 rounded-lg bg-[var(--danger)] px-4 text-sm font-black text-white" type="submit">Dauerhaft löschen</button>
-            </form>
+            <ConfirmPopoverForm action={hardDeleteAction} confirmLabel="Dauerhaft löschen" description="Diese Aktion kann nicht rückgängig gemacht werden. Es werden nur zulässige, archivierte Vereinsübungen akzeptiert." title="Übung endgültig löschen?" triggerClassName="min-h-10 rounded-lg bg-[var(--danger)] px-4 text-sm font-black text-white" triggerLabel="Dauerhaft löschen">
+              <label className="grid w-full gap-1 text-xs font-bold"><span>Tippe ENDGÜLTIG LÖSCHEN</span><input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3" name="confirmation" placeholder="ENDGÜLTIG LÖSCHEN" required /></label>
+            </ConfirmPopoverForm>
           </section>
         ) : null}
       </div>

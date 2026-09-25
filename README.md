@@ -24,15 +24,21 @@ Der Übungskatalog ist die fachliche Basis der Anwendung. Übungen können gesuc
 - Internationalisierungsgrundlage: typisierte DE/EN-Dictionaries, persistierter Sprachumschalter und übersetzte globale Navigation/Theme-Beschriftungen; die vollständige Fachseiten-Abdeckung bleibt in `plan.md` offen.
 - Übersetzungsqualität: Der Admin-Tab „Datenqualität“ prüft Dictionary-Schlüssel auf fehlende und verwaiste Einträge; Fachseiten können schrittweise an dieselbe Schlüsselstruktur angebunden werden.
 - Strukturierte Übersetzungsqualität: Der Admin-Vollständigkeitsbericht prüft pro DE/EN-Datensatz Detailfelder, Ausführungsschritte, Coaching-Cues und Fehlerkorrekturen getrennt.
-- Datenbank-Release 1.0: 86 nummerierte Migrationen bis Version 87 werden über [`src/server/db/initial-v1.sql`](./src/server/db/initial-v1.sql) als atomare Fresh-Install-Baseline ausgeliefert; bestehende Datenbanken bleiben upgradefähig.
+- Datenbank-Release 1.0: 87 nummerierte Migrationen bis Version 88 werden über [`src/server/db/initial-v1.sql`](./src/server/db/initial-v1.sql) als atomare Fresh-Install-Baseline ausgeliefert; bestehende Datenbanken bleiben upgradefähig.
 - Hallen-/Outdoor-Katalog: Importierte Studio-Lasten werden auf Kettlebell, Sandbag, Widerstandsband, Matte oder Körpergewicht umgeschrieben; nicht sinnvoll konvertierbare Studio- und Cardiogeräte verlassen den aktiven Katalog, bleiben als Provenienz erhalten und tragen die Facette `Fitnessstudio`. Der aktive kuratierte Katalog besitzt einen nachvollziehbaren Portabilitäts-/Stationsreview in `exercise_environment_reviews`.
 - Medienbereinigung: 20 benannte, portable Nutzerbilder und 37 weitere Codex-Bilder bleiben als lokale Medien erhalten. Die 48 eindeutig zugeordneten Bilder aus Batch 2 bis Batch 4 wurden nach P1 als neue, anatomisch geprüfte `1536×1024`-Sequenzillustrationen erzeugt; die alten kleinen/cropped Batch-Dateien und ihre DB-Referenzen wurden entfernt. 84 unklare Zuordnungen wurden weiterhin nicht geraten. Der deploybare Initialstand enthält damit 105 lokale Bildmedien.
 - Outdoor-Review: Der Adminbereich bietet einen expliziten Sammelreview für eindeutig portabel abbildbare Konvertierungen. Freigegeben werden nur Datensätze mit strukturiertem Ersatz-Equipment und ohne Maschinen-/Instabilitätsgerät; unklare Fälle bleiben im Einzelreview.
+- Outdoor-Review-Stand: 801 deterministisch sichere Konvertierungen wurden mit Super-Admin-Review freigegeben; 191 Fälle mit generischen Maschinen oder mehrdeutigen Ersatzgeräten bleiben blockiert und sichtbar offen.
+- Seed-Provenienz: Migration 88 ordnet allen bisher quellenlosen OCRCraft-Seed-Übungen eine interne Originalquelle zu. Dadurch sind 184 von 196 Seed-Übungen vollständig; 12 fehlende Bewegungsmuster bleiben als fachliche Review-Lücken sichtbar.
 - Equipment-Planung: Training Builder und Outdoor-Übungseditor zeigen Bestand sowie `Portabel`, `Fest / Rig` oder `Nicht klassifiziert`; Outdoor startet mit Portable-Filter und verwendet das hinterlegte Ersatz-Equipment automatisch für die Verfügbarkeitsprüfung.
 - Outdoor-Konvertierungsreview: automatische Import-Ersetzungen basieren auf einer expliziten Freigabeliste statt Geräte-String-Heuristiken. Bereits migrierte Konvertierungen werden einmalig als `pending` in den Fachreview gestellt; die Vorschau nutzt Bewegungsmuster bzw. konservative Namensableitung, Trainertexte bleiben erhalten und die Freigabe wird mit Reviewer/Zeitpunkt protokolliert.
 - Datenkuratierung: Quellenregister, 70%-Matching, OCR-Relevanz-Audit für 177 Kandidaten, High-Signal-Review, OCR-/OCRFRA-Lückenbatches, Quellen-/Lizenztrennung und Katalog-Coverage sind dokumentiert und getestet.
 - OCRFRA-Fachpakete: lokale Hindernisse, OCR-Fähigkeitsmatrix, Templates, Spielkatalog, Sicherheitszonen, Fallbacks, Altersgrenzen und Trainerfreigaben sind strukturiert hinterlegt.
 - UI-Konsolidierung: lokale Form-, Card-, Feedback-, Dialog-, Popover-, Pagination-, Sidebar-, Toast- und Filterbausteine sowie das kompakte Coral/Lime/Graphit-Designsystem sind über die zentralen Katalog- und Trainingsseiten eingeführt.
+- Medien-UX: Übungen mit mehreren Bildern besitzen im Editor eine Schnellverwaltung zum Setzen des Hauptbilds und zum Löschen zusätzlicher Assets; das Hauptbild bleibt geschützt.
+- Bestätigungs-UX: Kritische Freigaben, Löschungen, Archivierungen, Zusammenführungen und Outdoor-Sammelaktionen werden durch ein zugängliches Bestätigungs-Popover abgesichert; Abbrechen, Escape und Klick außerhalb schließen die Bestätigung ohne Submit.
+- Tastaturzugänglichkeit: Bestätigungs-Popover setzen den Fokus beim Öffnen in den Dialog und geben ihn beim Schließen an den Auslöser zurück.
+- Hindernis-UX: Im Listenmodus bleibt die direkte Bearbeitung von Hindernis-Guidance sichtbar.
 - Qualitäts- und Sicherheitsgates: statische UI-Prüfung, Playwright-Regressionen, Auth-/RBAC-Schutz, Kids-/Youth-Regeln, serverseitige Domänenvalidierung, AI-Review-Blocker und vollständige Seed-/Übersetzungsberichte sind vorhanden.
 - Interaktive Orientierung: Release 1.0 enthält eine routebewusste DE/EN-Tour für Dashboard, Kataloge, Administration, Übungserstellung, Hinderniszuordnung, Quick Create und Training Builder.
 
@@ -197,6 +203,8 @@ KI-gestützte Funktionen umfassen unter anderem Trainingsvorschläge, Bildgeneri
 ### Hintergrundaufgaben
 
 Längere Vorgänge laufen über eine persistente Aufgabenqueue.
+
+Duplikat-Scans sowie Einzel- und Sammelentscheidungen werden als `duplicate_scan` bzw. `duplicate_resolve` eingeplant und im Adminbereich unter „Aufgabenqueue“ verfolgt.
 
 Dazu zählen zum Beispiel:
 

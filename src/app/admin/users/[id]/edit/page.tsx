@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import { TRAINER_QUALIFICATION_LABELS, TRAINER_QUALIFICATION_LEVELS } from "@/domain/training/trainer-qualification";
 import { listAppUsers } from "@/server/auth/identity-service";
 import { deleteUserAction, setUserPasswordAction, updateUserAction } from "../../../identity-actions";
@@ -38,7 +39,7 @@ export default async function EditUserPage({ params, searchParams }: { params: P
         <label className="flex items-center gap-2 text-sm font-bold sm:col-span-2"><input defaultChecked={user.active} name="active" type="checkbox" /> Benutzer aktiv</label>
         <ActionProgressButton className="min-h-11 rounded-lg bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)] sm:col-span-2" pendingLabel="Profil wird gespeichert …">Änderungen speichern</ActionProgressButton>
       </form>
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"><h2 className="text-lg font-black">Zugang verwalten</h2><form action={setUserPasswordAction} className="mt-3 flex flex-wrap items-end gap-3"><input name="id" type="hidden" value={user.id} /><label className="grid min-w-60 flex-1 gap-1 text-sm font-bold">Neues Passwort<input className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 font-normal" minLength={8} name="password" required type="password" /></label><ActionProgressButton className="min-h-11 rounded-lg border border-[var(--border)] px-4 text-sm font-black" pendingLabel="Passwort wird gesetzt …">Passwort setzen</ActionProgressButton></form><form action={deleteUserAction} className="mt-5 border-t border-[var(--border)] pt-4"><input name="id" type="hidden" value={user.id} /><ActionProgressButton className="min-h-11 rounded-lg border border-[var(--danger)] px-4 py-2 text-sm font-black text-[var(--danger)]" pendingLabel="Benutzer wird gelöscht …">Benutzer löschen</ActionProgressButton></form></section>
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"><h2 className="text-lg font-black">Zugang verwalten</h2><form action={setUserPasswordAction} className="mt-3 flex flex-wrap items-end gap-3"><input name="id" type="hidden" value={user.id} /><label className="grid min-w-60 flex-1 gap-1 text-sm font-bold">Neues Passwort<input className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 font-normal" minLength={8} name="password" required type="password" /></label><ActionProgressButton className="min-h-11 rounded-lg border border-[var(--border)] px-4 text-sm font-black" pendingLabel="Passwort wird gesetzt …">Passwort setzen</ActionProgressButton></form><div className="mt-5 border-t border-[var(--border)] pt-4"><ConfirmPopoverForm action={deleteUserAction} description={`Der Zugang „${user.displayName}“ wird dauerhaft gelöscht.`} title="Benutzer löschen?" triggerLabel="Benutzer löschen"><input name="id" type="hidden" value={user.id} /></ConfirmPopoverForm></div></section>
     </div>
   </AppShell>;
 }

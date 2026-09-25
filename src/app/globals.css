@@ -397,6 +397,7 @@ html[data-theme="dark"] [class~="hover:bg-[#e5e9ed]"]:hover {
 .overview-layout[data-view="list"] .catalog-card { gap: 0.5rem; }
 .overview-layout[data-view="list"] .catalog-card .view-actions { margin-top: 0.75rem; }
 .overview-layout[data-view="list"] .catalog-card .view-actions > *:not(:last-child) { display: none; }
+.overview-layout[data-view="list"] .catalog-card .obstacle-actions > * { display: flex; }
 .overview-layout[data-view="small"] .catalog-card .view-secondary { display: none; }
 .overview-layout[data-view="list"] .catalog-card { min-height: 0; }
 @media (min-width: 640px) {

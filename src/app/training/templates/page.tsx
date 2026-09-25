@@ -6,6 +6,7 @@ import { CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
 import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import {
   TRAINING_TEMPLATES,
   TRAINING_TEMPLATE_FOCUS_KEYS,
@@ -106,12 +107,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
                         Als Training bearbeiten
                       </button>
                     </form>
-                    <form action={archiveClubTrainingTemplateAction}>
-                      <input name="templateId" type="hidden" value={item.id} />
-                      <button className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" type="submit">
-                        Archivieren
-                      </button>
-                    </form>
+                    <ConfirmPopoverForm action={archiveClubTrainingTemplateAction} description={`Die Vorlage „${item.name}“ wird aus der aktiven Vorlagenauswahl entfernt.`} title="Vorlage archivieren?" triggerLabel="Archivieren"><input name="templateId" type="hidden" value={item.id} /></ConfirmPopoverForm>
                     <details className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
                       <summary className="cursor-pointer text-xs font-black">Vorlagenname / Beschreibung bearbeiten</summary>
                       <p className="mt-2 text-xs leading-5 text-[var(--muted)]">Für Änderungen an Phasen oder Übungen öffnest du die Vorlage als Training und speicherst danach eine neue, geprüfte Vorlage.</p>

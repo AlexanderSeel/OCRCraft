@@ -8,7 +8,6 @@ import { createDatabaseBackup } from "@/server/db/backup-service";
 import { recordAuditEvent } from "@/server/db/audit-service";
 import { activateSearchProfile, deleteSearchProfile, saveSearchProfile } from "@/server/search/search-profile-repository";
 import { reseedAllDatabaseData } from "@/server/db/reseed-service";
-import { resolveDuplicateTask } from "@/server/exercises/duplicate-review-service";
 import {
   approveDeterministicOutdoorReviews,
   enrichImportedGymExerciseForOutdoor,
@@ -17,7 +16,7 @@ import {
 import { requireAdmin, requireSuperAdmin } from "@/server/auth/identity-service";
 import { restoreDatabaseBackup } from "@/server/db/restore-service";
 import { aiProviderInstanceIdSchema, aiProviderKindSchema, deleteAiProviderInstance, disconnectAiProviderOAuth, saveAiProviderInstance, type AiCapability } from "@/server/ai/ai-provider-settings-repository";
-import { cancelAppTask, deleteAppTask, enqueueAppTask, retryAppTask } from "@/server/queue/app-task-repository";
+import { cancelAppTask, deleteAppTask, duplicateResolutionPayloadSchema, enqueueAppTask, retryAppTask } from "@/server/queue/app-task-repository";
 import { runAppTaskQueue } from "@/server/queue/app-task-worker";
 import { deleteFailedMediaGenerationJob } from "@/server/media/media-generation-job-repository";
 import { saveExternalImportSource } from "@/server/exercises/import/external-import-source-repository";
@@ -244,7 +243,7 @@ export async function deleteFailedMediaJobAction(formData: FormData): Promise<vo
 }
 
 export async function resolveDuplicateExerciseAction(formData: FormData): Promise<void> {
-  await requireAdmin();
+  const actor = await requireAdmin();
   const taskId = String(formData.get("taskId") ?? "");
   const keepExerciseId = String(formData.get("keepExerciseId") ?? "");
   const status = String(formData.get("status") ?? "merged") === "ignored" ? "ignored" : "merged";
@@ -252,10 +251,18 @@ export async function resolveDuplicateExerciseAction(formData: FormData): Promis
   const resolutionDecision = requestedDecision === "keep_both"
     ? "keep_both"
     : status === "ignored" ? "not_duplicate" : "keep_one";
-  if (!taskId || !keepExerciseId) return;
-  await resolveDuplicateTask(taskId, keepExerciseId, status, resolutionDecision);
+  const taskInput = z.string().uuid().safeParse(taskId);
+  const keepInput = z.string().uuid().safeParse(keepExerciseId);
+  if (!taskInput.success || !keepInput.success) return;
+  const decision = status === "ignored" ? (resolutionDecision === "keep_both" ? "both" : "ignored") : keepExerciseId === String(formData.get("leftExerciseId") ?? "") ? "left" : "right";
+  const payload = duplicateResolutionPayloadSchema.parse({
+    resolutions: [{ taskId, leftExerciseId: String(formData.get("leftExerciseId") ?? keepExerciseId), rightExerciseId: String(formData.get("rightExerciseId") ?? keepExerciseId), decision }],
+  });
+  await enqueueAppTask({ type: "duplicate_resolve", title: "Dublettenentscheidung anwenden", requestedBy: actor.id, payload });
+  void runAppTaskQueue();
   revalidatePath("/admin");
   revalidatePath("/exercises");
+  redirect("/admin?tab=quality&queued=duplicate");
 }
 
 export async function resolveDuplicateExercisesBulkAction(formData: FormData): Promise<void> {
@@ -267,8 +274,12 @@ export async function resolveDuplicateExercisesBulkAction(formData: FormData): P
     return taskId && leftExerciseId && rightExerciseId ? [{ taskId, leftExerciseId, rightExerciseId, decision }] : [];
   });
   if (resolutions.length) {
-    await enqueueAppTask({ type: "duplicate_resolve", title: `${resolutions.length} Dublettenentscheidungen anwenden`, requestedBy: actor.id, payload: { resolutions } });
+    const payload = duplicateResolutionPayloadSchema.parse({ resolutions });
+    await enqueueAppTask({ type: "duplicate_resolve", title: `${resolutions.length} Dublettenentscheidungen anwenden`, requestedBy: actor.id, payload });
     void runAppTaskQueue();
+    revalidatePath("/admin");
+    revalidatePath("/exercises");
+    redirect("/admin?tab=quality&queued=duplicate");
   }
 
   revalidatePath("/admin");

@@ -20,11 +20,11 @@ describe("database migrations", () => {
       const baseline = await readFile(path.join(process.cwd(), "src", "server", "db", "initial-v1.sql"), "utf8");
       await runScript(connection, baseline);
 
-      const migrations = await connection.runAndReadAll("SELECT count(*) FROM schema_migrations");
+      const migrations = await connection.runAndReadAll("SELECT max(version), count(*) FROM schema_migrations");
       const exercises = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL");
       const gameCatalog = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key LIKE 'game-%'");
 
-      expect(Number(migrations.getRows()[0]?.[0])).toBe(86);
+      expect(migrations.getRows()[0]?.map(Number)).toEqual([88, 87]);
       expect(Number(exercises.getRows()[0]?.[0])).toBeGreaterThanOrEqual(140);
       expect(Number(gameCatalog.getRows()[0]?.[0])).toBe(13);
     } finally {

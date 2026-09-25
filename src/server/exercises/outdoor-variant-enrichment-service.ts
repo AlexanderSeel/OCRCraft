@@ -3,6 +3,20 @@ import "server-only";
 import type { DuckDBConnection } from "@duckdb/node-api";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
+
+const DETERMINISTIC_OUTDOOR_REVIEW_PREDICATE = `
+  r.disposition='converted' AND r.review_status='pending'
+  AND trim(coalesce(r.replacement_equipment,''))<>''
+  AND EXISTS (SELECT 1 FROM exercise_outdoor_variant_equipment ove WHERE ove.exercise_id=r.exercise_id)
+  AND NOT EXISTS (
+    SELECT 1 FROM exercise_outdoor_variant_equipment ove
+    JOIN equipment eq ON eq.id=ove.equipment_id
+    WHERE ove.exercise_id=r.exercise_id
+      AND eq.seed_key IN ('machine','external-machine','smith-machine','external-smith-machine',
+        'external-leverage-machine','external-bosu-ball','external-stability-ball',
+        'external-wheel-roller','external-hammer','external-roller','external-weighted')
+  )
+`;
 import {
   buildOutdoorVariantPlan,
   buildPreconvertedOutdoorVariantPlan,
@@ -569,17 +583,7 @@ export async function approveDeterministicOutdoorReviews(reviewedBy: string): Pr
     const reader = await connection.runAndReadAll(`
       UPDATE exercise_environment_reviews r
       SET review_status='approved', reviewed_at=current_timestamp, reviewed_by=$reviewedBy::UUID
-      WHERE r.disposition='converted' AND r.review_status='pending'
-        AND trim(coalesce(r.replacement_equipment,''))<>''
-        AND EXISTS (SELECT 1 FROM exercise_outdoor_variant_equipment ove WHERE ove.exercise_id=r.exercise_id)
-        AND NOT EXISTS (
-          SELECT 1 FROM exercise_outdoor_variant_equipment ove
-          JOIN equipment eq ON eq.id=ove.equipment_id
-          WHERE ove.exercise_id=r.exercise_id
-            AND eq.seed_key IN ('machine','external-machine','smith-machine','external-smith-machine',
-              'external-leverage-machine','external-bosu-ball','external-stability-ball',
-              'external-wheel-roller','external-hammer','external-roller','external-weighted')
-        )
+      WHERE ${DETERMINISTIC_OUTDOOR_REVIEW_PREDICATE}
       RETURNING r.exercise_id
     `, { reviewedBy });
     return reader.getRows().length;
@@ -591,17 +595,7 @@ export async function countDeterministicOutdoorReviews(): Promise<number> {
   return withDuckDbConnection(async (connection) => {
     const reader = await connection.runAndReadAll(`
       SELECT count(*) FROM exercise_environment_reviews r
-      WHERE r.disposition='converted' AND r.review_status='pending'
-        AND trim(coalesce(r.replacement_equipment,''))<>''
-        AND EXISTS (SELECT 1 FROM exercise_outdoor_variant_equipment ove WHERE ove.exercise_id=r.exercise_id)
-        AND NOT EXISTS (
-          SELECT 1 FROM exercise_outdoor_variant_equipment ove
-          JOIN equipment eq ON eq.id=ove.equipment_id
-          WHERE ove.exercise_id=r.exercise_id
-            AND eq.seed_key IN ('machine','external-machine','smith-machine','external-smith-machine',
-              'external-leverage-machine','external-bosu-ball','external-stability-ball',
-              'external-wheel-roller','external-hammer','external-roller','external-weighted')
-        )
+      WHERE ${DETERMINISTIC_OUTDOOR_REVIEW_PREDICATE}
     `);
     return Number(reader.getRows()[0]?.[0] ?? 0);
   });

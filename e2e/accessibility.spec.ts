@@ -171,6 +171,21 @@ test("obstacle tutorial reaches navigation, workspace and assignment target", as
   await expect(dialog.getByText("Kandidat prüfen")).toBeVisible();
 });
 
+test("critical action popover receives focus and returns it after Escape", async ({ page }) => {
+  await page.goto("/media", { waitUntil: "domcontentloaded" });
+  await page.getByText("Batch-Operationen", { exact: true }).first().click();
+
+  const trigger = page.getByRole("button", { name: "Alle passenden Medien freigeben" });
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Alle passenden Medien freigeben?" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Abbrechen" })).toBeFocused();
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
 test("training tutorials work in Quick Create and Builder", async ({ page }) => {
   await page.addInitScript(() => window.localStorage.setItem("ocrcraft-locale", "de"));
   const first = await openTutorial(page, "/quick-create", "Quick Create Training");

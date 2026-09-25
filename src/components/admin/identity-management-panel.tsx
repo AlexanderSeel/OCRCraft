@@ -9,6 +9,7 @@ import {
 } from "@/domain/training/trainer-qualification";
 import { Dialog } from "@/components/ui/dialog";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import { IdentityLoginDialog } from "./identity-login-dialog";
 import { ImageLightbox } from "../ui/image-lightbox";
 
@@ -76,7 +77,7 @@ export function IdentityManagementPanel({ users, createAction, updateAction, log
         <ActionProgressButton className="min-h-11 rounded-lg bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" pendingLabel="Profil wird gespeichert …">Profil speichern</ActionProgressButton>
       </form>
       <form action={setPasswordAction} className="mt-4 flex flex-wrap items-end gap-2 border-t border-[var(--border)] pt-4"><input name="id" type="hidden" value={editing.id} /><label className="grid min-w-56 flex-1 gap-1 text-sm font-bold">Neues Passwort<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-normal" minLength={8} name="password" required type="password" /></label><ActionProgressButton className="min-h-10 rounded-lg border border-[var(--border)] px-3 text-sm font-black" pendingLabel="Passwort wird gesetzt …">Passwort setzen</ActionProgressButton></form>
-      <form action={deleteAction} className="mt-3"><input name="id" type="hidden" value={editing.id} /><ActionProgressButton className="min-h-10 rounded-lg border border-[var(--danger)] px-3 text-sm font-black text-[var(--danger)]" pendingLabel="Benutzer wird gelöscht …">Benutzer löschen</ActionProgressButton></form>
+      <div className="mt-3 flex justify-end"><ConfirmPopoverForm action={deleteAction} description={`Der Zugang „${editing.displayName}“ wird dauerhaft gelöscht.`} title="Benutzer löschen?" triggerLabel="Benutzer löschen"><input name="id" type="hidden" value={editing.id} /></ConfirmPopoverForm></div>
     </Dialog> : null}
   </section>;
 }

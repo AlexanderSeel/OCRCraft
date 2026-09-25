@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { Disclosure } from "@/components/ui/disclosure";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import { Alert } from "@/components/ui/feedback";
 import { AddTrainingItemForm } from "@/components/training/add-training-item-form";
 import { PersistedMainPartProgrammingForm } from "@/components/training/persisted-main-part-programming-form";
@@ -506,17 +507,10 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                   sessionId={session.id}
                                 />
                               </div>
-                              <form action={deleteTrainingItemAction}>
+                              <ConfirmPopoverForm action={deleteTrainingItemAction} description={`„${item.exerciseName}“ wird aus diesem Training entfernt. Die Übung selbst bleibt im Katalog erhalten.`} title="Übung aus Training entfernen?" triggerLabel="Entfernen">
                                 <input name="sessionId" type="hidden" value={session.id} />
                                 <input name="itemId" type="hidden" value={item.id} />
-                                <button
-                                  aria-label={`${item.exerciseName} aus Training entfernen`}
-                                  className="rounded-lg border border-[var(--danger)] px-3 py-2 text-xs font-black text-[var(--danger)] hover:bg-[var(--danger-bg)]"
-                                  type="submit"
-                                >
-                                  Entfernen
-                                </button>
-                              </form>
+                              </ConfirmPopoverForm>
                             </div>
                           </div>
                         ) : null}

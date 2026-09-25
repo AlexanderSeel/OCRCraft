@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readFile, rm } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { DuckDBInstance } from "@duckdb/node-api";
 
@@ -23,9 +23,12 @@ const instance = await DuckDBInstance.create(outputPath);
 const connection = await instance.connect();
 try {
   const applied = new Set((await connection.runAndReadAll("SELECT version FROM schema_migrations")).getRows().map(([version]) => Number(version)));
-  for (const version of [86, 87]) {
+  const migrationFiles = (await readdir(migrationsDirectory))
+    .filter((fileName) => /^\d{3}_.*\.sql$/.test(fileName))
+    .sort();
+  for (const fileName of migrationFiles) {
+    const version = Number(fileName.slice(0, 3));
     if (applied.has(version)) continue;
-    const fileName = `${String(version).padStart(3, "0")}_${version === 86 ? "portable_catalog_review_completion" : "reviewed_outdoor_conversion_policy"}.sql`;
     await runScript(connection, await readFile(path.join(migrationsDirectory, fileName), "utf8"));
   }
 

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
+import { ConfirmPopoverButton } from "@/components/ui/confirm-popover-form";
 import {
   aiCapabilityLabel,
   aiPriorityLabel,
@@ -502,13 +503,7 @@ function AiProviderEditor({
       <div className="flex flex-wrap justify-between gap-3 border-t border-[var(--border)] pt-4">
         <div>
           {provider ? (
-            <button
-              className="min-h-11 rounded-xl border border-[var(--danger)] px-4 text-sm font-black text-[var(--danger)]"
-              formAction={deleteAction}
-              type="submit"
-            >
-              AI entfernen
-            </button>
+            <ConfirmPopoverButton action={deleteAction} confirmLabel="AI entfernen" description="Die AI-Instanz, ihre Zuordnungen und gespeicherten Einstellungen werden entfernt." name="id" title="AI-Instanz entfernen?" triggerClassName="min-h-11 rounded-xl border border-[var(--danger)] px-4 py-2 text-sm font-black text-[var(--danger)]" triggerLabel="AI entfernen" value={provider.id} />
           ) : null}
         </div>
         <div className="flex gap-2">

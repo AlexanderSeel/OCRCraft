@@ -9,6 +9,7 @@ import { OrphanedMediaCleanupForm } from "@/components/media/orphaned-media-clea
 import { ExternalMediaManager } from "@/components/media/external-media-manager";
 import { VideoPopoverButton } from "@/components/media/video-popover-button";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
 import {
@@ -266,19 +267,12 @@ export default async function MediaPage({ searchParams }: PageProps) {
                 Ausgewählte freigeben
               </button>
             </form>
-            <form action={queueMediaBatchAction} className="mt-2 flex flex-wrap items-center gap-2">
-              <input name="batchAction" type="hidden" value="approve_media" />
-              <input name="approveAll" type="hidden" value="1" />
-              <input name="filterQuery" type="hidden" value={query} />
-              <input name="filterReviewStatus" type="hidden" value={reviewStatus} />
-              <input name="filterGenerationStatus" type="hidden" value={generationStatus} />
-              <input name="filterSourceType" type="hidden" value={sourceType} />
-              <input name="filterMediaType" type="hidden" value={mediaType} />
-              <button className="min-h-10 rounded-xl border border-[var(--border-strong)] px-3 py-2 text-xs font-black" type="submit">
-                Alle passenden Medien freigeben
-              </button>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <ConfirmPopoverForm action={queueMediaBatchAction} description="Alle Medien, die zu den aktuellen Filtern passen, werden als freigegeben markiert. Prüfe vorher besonders Rechte- und Quellenstatus." title="Alle passenden Medien freigeben?" triggerClassName="min-h-10 rounded-xl border border-[var(--border-strong)] px-3 py-2 text-xs font-black" triggerLabel="Alle passenden Medien freigeben">
+                <input name="batchAction" type="hidden" value="approve_media" /><input name="approveAll" type="hidden" value="1" /><input name="filterQuery" type="hidden" value={query} /><input name="filterReviewStatus" type="hidden" value={reviewStatus} /><input name="filterGenerationStatus" type="hidden" value={generationStatus} /><input name="filterSourceType" type="hidden" value={sourceType} /><input name="filterMediaType" type="hidden" value={mediaType} />
+              </ConfirmPopoverForm>
               <span className="text-xs text-[var(--muted)]">Aktuelle Filter werden verwendet.</span>
-            </form>
+            </div>
           </div>
           <div className="rounded-xl bg-[var(--surface-subtle)] p-3">
             <div className="text-xs font-black uppercase tracking-[0.08em] text-[var(--muted)]">KI-Bildjobs</div>

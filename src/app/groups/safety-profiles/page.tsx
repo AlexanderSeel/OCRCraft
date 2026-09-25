@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Disclosure } from "@/components/ui/disclosure";
+import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import {
   TRAINER_QUALIFICATION_LABELS,
   TRAINER_QUALIFICATION_LEVELS,
@@ -118,13 +119,10 @@ export default async function SafetyProfilesPage({ searchParams }: PageProps) {
                     </form>
                   </Disclosure>
                 ) : null}
-                <form action={setYouthSafetyProfileArchivedAction}>
+                <ConfirmPopoverForm action={setYouthSafetyProfileArchivedAction} description={profile.archived ? "Das Sicherheitsprofil wird wieder für die aktive Gruppenplanung verfügbar." : "Das Sicherheitsprofil wird archiviert; bestehende Trainings bleiben erhalten."} title={profile.archived ? "Sicherheitsprofil wiederherstellen?" : "Sicherheitsprofil archivieren?"} triggerClassName="min-h-11 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-black" triggerLabel={profile.archived ? "Wiederherstellen" : "Archivieren"}>
                   <input name="id" type="hidden" value={profile.id} />
                   <input name="archived" type="hidden" value={profile.archived ? "false" : "true"} />
-                  <button className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black" type="submit">
-                    {profile.archived ? "Wiederherstellen" : "Archivieren"}
-                  </button>
-                </form>
+                </ConfirmPopoverForm>
               </div>
             </article>
           ))}

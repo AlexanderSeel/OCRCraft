@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import {
   createExercise,
   hardDeleteExercise,
@@ -15,7 +16,8 @@ import {
 import { requireTrainer } from "@/server/auth/identity-service";
 import { enqueueExerciseImageGenerationJobs } from "@/server/media/media-generation-job-repository";
 import { runExerciseImageGenerationQueue } from "@/server/media/media-generation-worker";
-import { setPrimaryExerciseMedia } from "@/server/media/media-catalog-repository";
+import { deleteExerciseMediaAsset, setPrimaryExerciseMedia } from "@/server/media/media-catalog-repository";
+import { recordAuditEvent } from "@/server/db/audit-service";
 import { setExerciseFavorite } from "@/server/exercises/exercise-personalization-repository";
 
 export interface ExerciseFormState {
@@ -113,6 +115,26 @@ export async function selectExerciseImageAction(id: string, formData: FormData):
   revalidatePath(`/exercises/${id}/edit`);
   revalidatePath(`/exercises/${id}`);
   redirect(`/exercises/${id}/edit?mediaSaved=1`);
+}
+
+export async function deleteExerciseMediaAction(id: string, formData: FormData): Promise<void> {
+  const actor = await requireTrainer();
+  const assetId = z.string().uuid().safeParse(formData.get("assetId"));
+  if (!assetId.success) redirect(`/exercises/${id}/edit?mediaError=invalid`);
+  const deleted = await deleteExerciseMediaAsset(id, assetId.data);
+  if (!deleted) redirect(`/exercises/${id}/edit?mediaError=primary`);
+  await recordAuditEvent({
+    action: "media.exercise_asset.delete",
+    entityType: "exercise_media_asset",
+    entityId: assetId.data,
+    actorType: "user",
+    actorId: actor.id,
+    metadata: { exerciseId: id },
+  });
+  revalidatePath(`/exercises/${id}`);
+  revalidatePath(`/exercises/${id}/edit`);
+  revalidatePath("/media");
+  redirect(`/exercises/${id}/edit?mediaDeleted=1`);
 }
 
 export async function generateExerciseImageAction(id: string): Promise<void> {

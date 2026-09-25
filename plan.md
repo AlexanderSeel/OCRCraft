@@ -21,17 +21,22 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 - [x] Korrigiertes Batch 2 verarbeitet: 37 weitere lokale Bilder sind als `club_created`/`pending` importiert, 7 vorhandene freigegebene Medien blieben geschützt und 36 mehrdeutige Zuordnungen wurden für das Review zurückgestellt; der Initial-DuckDB-Snapshot wurde mit 94 lokalen Bildmedien neu gebaut.
 - [x] P1-Regeneration der letzten drei Bildpakete abgeschlossen: 48 eindeutig zugeordnete Übungen aus Batch 2–4 wurden mit dem Code-Prompt als 1536×1024-Assets neu erzeugt, anatomisch geprüft und im Initialstand ersetzt; die alten Batch-Quellen haben keine aktiven DB-Referenzen mehr.
 - [x] Reviewtes Batch 3 verarbeitet: 40 weitere JPG-Bilder sind als `club_created`/`pending` importiert, 8 vorhandene freigegebene Medien blieben geschützt und 18 mehrdeutige Zuordnungen wurden für das Review zurückgestellt; der Importer validiert nun PNG und JPEG und der Initial-DuckDB-Snapshot enthält 134 lokale Bildmedien.
-- [x] Anatomisch geprüftes Batch 4 verarbeitet: 35 weitere JPG-Bilder sind als `club_created`/`pending` importiert, 8 vorhandene freigegebene Medien blieben geschützt und 30 mehrdeutige Zuordnungen wurden fürs Review zurückgestellt; der Initial-DuckDB-Snapshot enthält nun 169 lokale Bildmedien.
-- [ ] Offene Outdoor-Konvertierungsreviews fachlich abarbeiten: alle durch Migration 87 als `pending` markierten Importvarianten einzeln prüfen/freigeben; generische Maschinen und mehrdeutige Ersatzgeräte bleiben bis zur Entscheidung blockiert.
+- [ ] Anatomisch geprüfte Bilder für alle Übungen ohne Bild erzeugen
+- [ ] Prüfe alle Übungen auf Fitness Studio Geräte versuche sie auf Outdoor/Hallenübungen mit entsprechenden Tools wie Kettlebell, Boxen, Seile, Bänder, etc. zu konvertieren, wenn dies nicht möglich ist diese Übung als Fitnessstudio kategorisieren. Ansonsten prüfen ob eine Bild aus der ExercisseDB oder nicht AI verwendet wird und ein entsprechendes auf Basis des AI Bild Prompts erstellen im Chat und zuordnen
+- [ ] Offene Outdoor-Konvertierungsreviews fachlich abarbeiten: 801 deterministisch sichere Konvertierungen sind freigegeben; 191 generische Maschinen-/Mehrdeutigkeitsfälle bleiben bis zur Einzelentscheidung blockiert.
 - [x] Deterministischer Outdoor-Sammelreview ergänzt: Admins können ausschließlich Konvertierungen mit strukturiertem Ersatz-Equipment und ohne verbliebene Maschinenabhängigkeit gesammelt freigeben; mehrdeutige Fälle bleiben einzeln reviewpflichtig.
-- [ ] Kanonische ExerciseDB-Feldanreicherung abschließen: die 159 noch blockierten Kandidaten fachlich entscheiden; nur freigegebene Lücken erhalten eigene DE/EN-Coaching-, Sicherheits- und Progressionsfelder.
+- [ ] Kanonische ExerciseDB-Feldanreicherung abschließen: Die Provenienz-Lücke wurde für 164 Seed-Einträge geschlossen; aktuell bleiben 12 echte Bewegungsmuster-Lücken fachlich zu entscheiden. Nur freigegebene Lücken erhalten eigene DE/EN-Coaching-, Sicherheits- und Progressionsfelder.
 - [ ] Kuratierte Seed-Batches als vollständige Lieferpakete abschließen: Migration, Quellenregister, Reviewstatus, Vollständigkeitsbericht, Domain-Tests, `typecheck`, `lint`, `check:ui`, Unit-, Build- und E2E-Prüfung.
 - [ ] OCR-Fähigkeitsmatrix und lokale OCRFRA-Maße in Coverage- und Freigabeworkflows durchgängig verbinden; unbestätigte Vereinsmaße bleiben sichtbar offen.
 
 ## P1 – UX/UI-Konzept und Einheitlichkeit
 
+- [x] Medien-Schnellverwaltung ergänzt: Bei Übungen mit mehreren Assets öffnet ein barrierearmer Dialog zur Auswahl des Hauptbilds und zum Löschen zusätzlicher Bilder; das Hauptbild ist gegen versehentliches Löschen geschützt.
+- [x] Hinderniskatalog im Listenmodus korrigiert: Die direkte Bearbeiten-Aktion bleibt neben dem Öffnen- und Entfernen-Workflow sichtbar.
 - [x] Gemeinsame Katalog-Pagination auf den zentralen UI-Button-Adapter umgestellt; Fokus-, Radius- und Statusregeln gelten damit einheitlich für Übungen, Trainings, Gruppen, Hindernisse, Medien, Spiele, Vorlagen und Outdoor-Reviews.
 - [x] Gemeinsame Katalog-Filter verwenden für Anwenden und Zurücksetzen dieselben zentralen Button-Varianten; der responsive Filter-Workflow bleibt auf allen Katalogseiten konsistent.
+- [x] Kritische Freigabe-, Lösch-, Archivierungs-, Zusammenführungs- und Outdoor-Review-Aktionen zeigen vor dem Absenden ein gemeinsames, per Escape schließbares Bestätigungs-Popover; bestehende Speichern-Formulare verwenden dafür eine form-kompatible Variante.
+- [x] Bestätigungs-Popover sind tastaturbedienbar: Trigger verwenden `aria-haspopup`/`aria-controls`, der erste Dialogfokus wird gesetzt und beim Schließen an den auslösenden Button zurückgegeben.
 - [ ] UI-Konsistenz über alle Routen prüfen und abschließen: Formfelder, Buttons, Abstände, Radien, Typografie, Statusfarben, Tabellen, Cards, Dialoge, Pagination und mobile Navigation ausschließlich aus den lokalen UI-Bausteinen beziehen.
 - [ ] Accessibility- und Regression-Gate erweitern: Browser-Fokus-/Kontrastprüfung, Touch-Ziele, reduzierte Bewegung, Formularfehler am Feld, Dialog-/Popover-Escape und Fokus-Rückgabe sowie mobile Shell für alle Fachseiten.
 - [ ] HyperUI-Übernahme abschließen: Übergangsklassen und doppeltes Seiten-Markup entfernen, Quellenhinweise erhalten und nach jedem Batch die vollständige Abschlussroutine ausführen.
@@ -58,6 +63,8 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 
 ## P2 – Clean-Code- und Wartbarkeitsrunde
 
+- [x] Initial-Datenbank-Build entkoppelt: Migrationen werden automatisch aus dem nummerierten Migrationsverzeichnis erkannt; die deterministische Outdoor-Review-Regel wird zwischen Zählung und Freigabe geteilt und der Bulk-Workflow meldet das Ergebnis barrierearm zurück.
+- [x] Duplikatprüfung vereinheitlicht: Einzel- und Sammelentscheidungen laufen über `duplicate_resolve` in der Aufgabenqueue, Payloads werden am Rand validiert und der Worker meldet Sammelfortschritt bzw. unbekannte Tasktypen als Fehler.
 - [ ] Doppelte UI-Markups und lokale Varianten per AST-/Repository-Inventur erfassen, in zentrale Komponenten überführen und nach jedem Schritt visuell/regressiv prüfen.
 - [ ] Unnötigen oder toten Code entfernen: ungenutzte Exporte, verwaiste CSS-Klassen, nicht erreichbare Routen, doppelte Hilfsfunktionen und überholte Übergangskomponenten; Verhalten vorher/nachher testen.
 - [ ] Server-/Domain-Grenzen prüfen: React darf keine DuckDB-Abfragen enthalten, externe Eingaben bleiben schema-validiert, Domänenregeln bleiben frameworkfrei und Services bleiben zuständig für Orchestrierung.
