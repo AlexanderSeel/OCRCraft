@@ -1,4 +1,8 @@
 import { loadEnvConfig } from "@next/env";
+import {
+  codexImageP1BatchSeedKeys,
+  isCodexImageP1BatchId,
+} from "../src/server/images/codex-image-p1-batches";
 import { ExerciseImageGenerationRepository } from "../src/server/images/exercise-image-generation-repository";
 import { ExerciseImageGenerationService } from "../src/server/images/exercise-image-generation-service";
 import { OpenAIImageGenerator } from "../src/server/images/openai-image-generator";
@@ -6,8 +10,14 @@ import { createExerciseImageStorageFromEnvironment } from "../src/server/images/
 
 async function main(): Promise<void> {
   loadEnvConfig(process.cwd());
-  if (!process.argv.slice(2).includes("--all-seeds")) {
-    throw new Error("This command generates the remaining initial exercise illustrations. Pass --all-seeds to continue.");
+  const args = process.argv.slice(2);
+  const batchArgument = args.find((value) => value.startsWith("--batch="))?.slice("--batch=".length).trim() ?? "";
+  const allSeeds = args.includes("--all-seeds");
+  if (!allSeeds && !batchArgument) {
+    throw new Error("Pass --all-seeds or --batch=<single-subject|ocrfra-obstacles|games-partner>.");
+  }
+  if (batchArgument && !isCodexImageP1BatchId(batchArgument)) {
+    throw new Error(`Unknown image batch: ${batchArgument}`);
   }
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is not set in the environment or .env file.");
@@ -18,9 +28,16 @@ async function main(): Promise<void> {
   if (abandonedCount > 0) {
     process.stdout.write(`Marked ${abandonedCount} interrupted image jobs failed so they can be retried.\n`);
   }
-  const exercises = await repository.listSeedExercisesMissingImage();
+  const allMissingExercises = await repository.listSeedExercisesMissingImage();
+  const requestedSeedKeys = batchArgument ? new Set(codexImageP1BatchSeedKeys(batchArgument)) : null;
+  const exercises = requestedSeedKeys
+    ? allMissingExercises.filter((exercise) => requestedSeedKeys.has(exercise.seedKey))
+    : allMissingExercises;
+
   if (exercises.length === 0) {
-    process.stdout.write("All active seed exercises already have generated illustrations.\n");
+    process.stdout.write(batchArgument
+      ? `No remaining image candidates in batch ${batchArgument}.\n`
+      : "All active seed exercises already have generated illustrations.\n");
     return;
   }
 
@@ -30,8 +47,10 @@ async function main(): Promise<void> {
   let nextIndex = 0;
 
   try {
-    const concurrency = 8;
-    process.stdout.write(`Generating illustrations for ${exercises.length} active seed exercises (${concurrency} requests at a time). Existing generated assets are preserved.\n`);
+    const concurrency = batchArgument ? 1 : 8;
+    process.stdout.write(
+      `Generating illustrations for ${exercises.length} active seed exercises (${concurrency} request${concurrency === 1 ? "" : "s"} at a time). Existing generated assets are preserved; every new asset remains pending for biomechanics/text review.\n`,
+    );
     const worker = async (): Promise<void> => {
       while (nextIndex < exercises.length) {
         const index = nextIndex;
