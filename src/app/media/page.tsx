@@ -303,7 +303,16 @@ export default async function MediaPage({ searchParams }: PageProps) {
                   className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black"
                   href={missingQuery ? `/api/admin/media/codex-image-tasks?q=${encodeURIComponent(missingQuery)}` : "/api/admin/media/codex-image-tasks"}
                 >
-                  Codex-Aufgaben herunterladen
+                  Alle Codex-Aufgaben
+                </a>
+                <a className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href="/api/admin/media/codex-image-tasks?batch=single-subject">
+                  Batch 1 · Einzelperson
+                </a>
+                <a className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href="/api/admin/media/codex-image-tasks?batch=ocrfra-obstacles">
+                  Batch 2 · OCRFRA
+                </a>
+                <a className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href="/api/admin/media/codex-image-tasks?batch=games-partner">
+                  Batch 3 · Spiele/Partner
                 </a>
                 <span className="rounded-full bg-[var(--surface-subtle)] px-3 py-1 text-xs font-black">
                   {missingImageExercises.length} angezeigt

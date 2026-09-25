@@ -12,6 +12,7 @@ import { getMediaGenerationCandidateReason } from "@/server/media/media-rights-c
 export interface CodexImageTaskExportOptions {
   readonly query?: string;
   readonly limit?: number;
+  readonly seedKeys?: readonly string[];
 }
 
 export async function buildCodexImageTaskExport(
@@ -20,7 +21,11 @@ export async function buildCodexImageTaskExport(
   const query = options.query?.trim() ?? "";
   const limit = Math.max(1, Math.min(1000, Math.trunc(options.limit ?? 1000)));
   const candidates = await listMediaGenerationCandidates(query, limit);
-  const exportable = candidates.filter((candidate) => candidate.activeJobCount === 0);
+  const seedKeyFilter = new Set((options.seedKeys ?? []).map((value) => value.trim()).filter(Boolean));
+  const scopedCandidates = seedKeyFilter.size > 0
+    ? candidates.filter((candidate) => candidate.seedKey && seedKeyFilter.has(candidate.seedKey))
+    : candidates;
+  const exportable = scopedCandidates.filter((candidate) => candidate.activeJobCount === 0);
   const repository = new ExerciseImageGenerationRepository();
 
   const tasks: Record<string, unknown>[] = [];
@@ -75,9 +80,13 @@ export async function buildCodexImageTaskExport(
     format: "ocrcraft-codex-image-tasks-v1",
     generatedAt: new Date().toISOString(),
     query: query || null,
-    candidateCount: candidates.length,
+    candidateCount: scopedCandidates.length,
     taskCount: tasks.length,
-    skippedActiveImageJobs: candidates.length - exportable.length,
+    requestedSeedKeys: seedKeyFilter.size > 0 ? [...seedKeyFilter] : null,
+    skippedRequestedSeedKeys: seedKeyFilter.size > 0
+      ? [...seedKeyFilter].filter((seedKey) => !scopedCandidates.some((candidate) => candidate.seedKey === seedKey))
+      : [],
+    skippedActiveImageJobs: scopedCandidates.length - exportable.length,
     promptReadyCount: promptReady,
     promptBlockedCount: tasks.length - promptReady,
     generationRules: [

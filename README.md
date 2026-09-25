@@ -395,9 +395,12 @@ Aktuelle Codex-Aufgaben für alle Übungen ohne verwendbares Bild exportieren:
 
 ```bash
 npm run exercise:images:codex-tasks
+npm run exercise:images:codex-tasks -- --batch=single-subject
+npm run exercise:images:codex-tasks -- --batch=ocrfra-obstacles
+npm run exercise:images:codex-tasks -- --batch=games-partner
 ```
 
-Der Export wird standardmäßig nach `artifacts/codex-image-tasks.json` geschrieben. Er enthält den Ersatzgrund, den stabilen Zieldateinamen und – sofern die strukturierten DE/EN-Übungsdaten vollständig sind – exakt den OCRCraft-Bildprompt. Übungen mit bereits laufendem Bildjob werden nicht erneut eingeplant. Admins können denselben Export im Medienkatalog über **Codex-Aufgaben herunterladen** direkt aus dem aktuellen Datenbankstand erzeugen.
+Der Export wird standardmäßig nach `artifacts/codex-image-tasks.json` geschrieben. Er enthält den Ersatzgrund, den stabilen Zieldateinamen und – sofern die strukturierten DE/EN-Übungsdaten vollständig sind – exakt den OCRCraft-Bildprompt. Übungen mit bereits laufendem Bildjob werden nicht erneut eingeplant. Admins können denselben Export im Medienkatalog direkt aus dem aktuellen Datenbankstand erzeugen. Für die P1-Bildabarbeitung stehen zusätzlich drei stabile Batches bereit: **Einzelperson** (17 Seed-Keys), **OCRFRA-Hindernisse** (11) und **Spiele/Partner** (14). Ein Batch exportiert nur Übungen, die im aktuellen Datenbankstand weiterhin ein Ersatzbild benötigen; bereits versorgte Seeds werden als übersprungene Keys dokumentiert.
 
 Generierte Bilder liegen standardmäßig unter `public/generated/exercises/`.
 
