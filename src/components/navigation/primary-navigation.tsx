@@ -33,7 +33,7 @@ export function PrimaryNavigation({ variant, collapsed = false }: PrimaryNavigat
             return (
               <Link
                 aria-current={active ? "page" : undefined}
-                className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-md border-l-2 px-2.5 text-xs font-bold transition ${active ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)]"}`}
+                className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md border-l-2 px-2.5 text-xs font-bold transition ${active ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)]"}`}
                 href={href}
                 key={href}
                 data-tour={`nav-${key}`}

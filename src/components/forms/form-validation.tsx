@@ -18,6 +18,8 @@ export function FormValidation() {
       if (!label || label.querySelector(`[${errorAttribute}]`)) return;
       const message = document.createElement("span");
       message.setAttribute(errorAttribute, "true");
+      message.setAttribute("role", "alert");
+      message.setAttribute("aria-live", "polite");
       message.className = "field-error";
       message.id = `${field.name || "field"}-error-${++errorSequence}`;
       message.textContent = field.validity.valueMissing

@@ -3,10 +3,21 @@ import { expect, test, type Page } from "@playwright/test";
 const AUDIT_ROUTES = [
   "/",
   "/training",
+  "/training/templates",
   "/exercises",
+  "/exercises/new",
+  "/exercises/ai-drafts",
+  "/games",
+  "/obstacles",
+  "/groups",
+  "/groups/safety-profiles",
+  "/media",
   "/quick-create",
   "/training/builder",
+  "/admin/outdoor-variants",
+  "/admin?tab=overview",
   "/admin?tab=settings",
+  "/help",
 ] as const;
 
 async function collectBasicAccessibilityIssues(page: Page): Promise<readonly string[]> {
@@ -272,4 +283,86 @@ test("groups tutorial covers creation, filtering and defaults", async ({ page })
   await expect(page.locator("[data-tour='group-filters'][data-tour-active='true']")).toBeVisible();
   await dialog.getByRole("button", { name: "Weiter" }).click();
   await expect(page.locator("[data-tour='group-results'][data-tour-active='true']")).toBeVisible();
+});
+
+
+test("mobile navigation exposes 44px touch targets on every primary destination", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/exercises", { waitUntil: "domcontentloaded" });
+  const links = page.locator("nav[aria-label='Hauptnavigation mobil'] a");
+  await expect(links).toHaveCount(9);
+  const boxes = await links.evaluateAll((elements) => elements.map((element) => {
+    const box = element.getBoundingClientRect();
+    return { width: box.width, height: box.height, text: element.textContent?.trim() ?? "" };
+  }));
+  for (const box of boxes) {
+    expect(box.height, `${box.text} touch target height`).toBeGreaterThanOrEqual(44);
+    expect(box.width, `${box.text} touch target width`).toBeGreaterThanOrEqual(44);
+  }
+});
+
+test("reduced-motion preference suppresses long transitions and animations", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/exercises", { waitUntil: "domcontentloaded" });
+  const timings = await page.evaluate(() => {
+    const element = document.querySelector("main");
+    if (!element) return null;
+    const style = getComputedStyle(element);
+    return {
+      transition: style.transitionDuration,
+      animation: style.animationDuration,
+    };
+  });
+  expect(timings).not.toBeNull();
+  expect(timings?.transition).toMatch(/0(?:\.0+)?(?:s|ms)|0\.01ms/);
+  expect(timings?.animation).toMatch(/0(?:\.0+)?(?:s|ms)|0\.01ms/);
+});
+
+test("core semantic color pairs meet normal-text contrast in light and dark themes", async ({ page }) => {
+  await page.goto("/admin?tab=settings", { waitUntil: "domcontentloaded" });
+  for (const theme of ["light", "dark"] as const) {
+    const select = page.getByRole("combobox", { name: /Darstellung|Appearance/ });
+    await select.selectOption(theme);
+    const ratios = await page.evaluate(() => {
+      const style = getComputedStyle(document.documentElement);
+      const parse = (value: string) => {
+        const match = value.trim().match(/^#([0-9a-f]{6})$/i);
+        if (!match) throw new Error(`Unsupported color value: ${value}`);
+        const hex = match[1];
+        return [0, 2, 4].map((index) => Number.parseInt(hex.slice(index, index + 2), 16) / 255);
+      };
+      const luminance = (value: string) => {
+        const [r, g, b] = parse(value).map((channel) => channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const contrast = (foreground: string, background: string) => {
+        const a = luminance(style.getPropertyValue(foreground));
+        const b = luminance(style.getPropertyValue(background));
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      };
+      return {
+        body: contrast("--foreground", "--background"),
+        muted: contrast("--muted", "--surface"),
+        strongControl: contrast("--control-strong-foreground", "--control-strong"),
+      };
+    });
+    expect(ratios.body).toBeGreaterThanOrEqual(4.5);
+    expect(ratios.muted).toBeGreaterThanOrEqual(4.5);
+    expect(ratios.strongControl).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
+test("native required-field errors stay attached to the invalid field", async ({ page }) => {
+  await page.goto("/exercises/new", { waitUntil: "domcontentloaded" });
+  const required = page.locator("input:required, select:required, textarea:required").first();
+  await expect(required).toBeVisible();
+  await required.evaluate((element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement) => {
+    element.value = "";
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("invalid", { bubbles: false, cancelable: true }));
+  });
+  await expect(required).toHaveAttribute("aria-invalid", "true");
+  const describedBy = await required.getAttribute("aria-describedby");
+  expect(describedBy).toBeTruthy();
+  await expect(page.locator(`#${describedBy?.split(" ").at(-1)}`)).toHaveAttribute("role", "alert");
 });

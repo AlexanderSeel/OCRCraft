@@ -41,7 +41,7 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 - [x] E2E-Regression für kritische Bestätigungen ergänzt: Medienfreigabe öffnet per Tastatur, fokussiert den sichtbaren Dialoginhalt und gibt den Fokus nach Escape zurück; der Windows-DuckDB-Lock behandelt parallele `EPERM`-Kollisionen als Retry-Fall.
 - [x] Medienauswahl FK-sicher gemacht: Beim Wechsel des Hauptbilds werden nicht primäre, von abgeschlossenen Bildjobs referenzierte Assets nicht unnötig aktualisiert; echte Primärwechsel lösen nur die betroffene Jobreferenz kontrolliert.
 - [ ] UI-Konsistenz über alle Routen prüfen und abschließen: Formfelder, Buttons, Abstände, Radien, Typografie, Statusfarben, Tabellen, Cards, Dialoge, Pagination und mobile Navigation ausschließlich aus den lokalen UI-Bausteinen beziehen.
-- [ ] Accessibility- und Regression-Gate erweitern: Browser-Fokus-/Kontrastprüfung, Touch-Ziele, reduzierte Bewegung, Formularfehler am Feld, Dialog-/Popover-Escape und Fokus-Rückgabe sowie mobile Shell für alle Fachseiten.
+- [x] Accessibility- und Regression-Gate erweitert: alle zentralen Fachseiten laufen durch Landmark-/Name-/ID-Prüfung; Mobile-Navigation erzwingt 44px-Touch-Ziele, Light/Dark-Kontrast wird browserseitig geprüft, reduzierte Bewegung global respektiert, native Formularfehler sind am Feld angekündigt und Dialog-/Popover-Escape/Fokus-Rückgabe bleiben per Playwright abgesichert.
 - [ ] HyperUI-Übernahme abschließen: Übergangsklassen und doppeltes Seiten-Markup entfernen, Quellenhinweise erhalten und nach jedem Batch die vollständige Abschlussroutine ausführen.
 - [ ] Fachseiten vollständig auf Dictionaries umstellen: keine user-facing Hardcodings in Dashboard, Katalogen, Editoren, Admin, Trainingsdetail und Statusmeldungen.
 

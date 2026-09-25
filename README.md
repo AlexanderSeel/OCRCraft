@@ -42,7 +42,7 @@ Der Übungskatalog ist die fachliche Basis der Anwendung. Übungen können gesuc
 - E2E-Betrieb: Der kritische Medienfreigabe-Workflow ist per Playwright abgesichert; parallele Windows-DuckDB-Lock-Kollisionen werden beim E2E-/Worker-Start retrybar behandelt.
 - Medien-Datenintegrität: Der Wechsel des Hauptbilds berücksichtigt DuckDB-Fremdschlüssel auf abgeschlossenen Bildjobs und vermeidet unnötige Updates referenzierter Assets.
 - Hindernis-UX: Im Listenmodus bleibt die direkte Bearbeitung von Hindernis-Guidance sichtbar.
-- Qualitäts- und Sicherheitsgates: statische UI-Prüfung, Playwright-Regressionen, Auth-/RBAC-Schutz, Kids-/Youth-Regeln, serverseitige Domänenvalidierung, AI-Review-Blocker und vollständige Seed-/Übersetzungsberichte sind vorhanden.
+- Qualitäts- und Sicherheitsgates: statische UI-Prüfung, Playwright-Regressionen, Auth-/RBAC-Schutz, Kids-/Youth-Regeln, serverseitige Domänenvalidierung, AI-Review-Blocker und vollständige Seed-/Übersetzungsberichte sind vorhanden. Accessibility-Gates prüfen alle Kernrouten, 44px-Touch-Ziele, Light/Dark-Kontrast, reduzierte Bewegung, Formularfehler sowie Dialog-/Popover-Fokusverhalten.
 - Interaktive Orientierung: Release 1.0 enthält eine routebewusste DE/EN-Tour für Dashboard, Kataloge, Administration, Übungserstellung, Hinderniszuordnung, Quick Create und Training Builder.
 
 Pro Übung können unter anderem gepflegt werden:
