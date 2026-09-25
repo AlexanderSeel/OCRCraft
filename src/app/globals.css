@@ -307,31 +307,6 @@ textarea[aria-invalid="true"] {
   color: var(--accent-foreground);
 }
 
-/* Transitional compatibility while page-local utility colors are migrated to semantic tokens. */
-html[data-theme="dark"] .bg-white {
-  background-color: var(--surface) !important;
-}
-
-html[data-theme="dark"] [class~="bg-[#f0f4db]"] {
-  background-color: var(--accent-soft) !important;
-}
-
-html[data-theme="dark"] [class~="bg-[#f0f7d7]"] {
-  background-color: var(--success-bg) !important;
-}
-
-html[data-theme="dark"] [class~="border-[#b8d56c]"] {
-  border-color: var(--success-border) !important;
-}
-
-html[data-theme="dark"] [class~="text-[#53622b]"] {
-  color: var(--success-foreground) !important;
-}
-
-html[data-theme="dark"] [class~="hover:bg-[#e5e9ed]"]:hover {
-  background-color: var(--surface-subtle) !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto !important;

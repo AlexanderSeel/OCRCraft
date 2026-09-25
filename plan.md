@@ -42,7 +42,7 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 - [x] Medienauswahl FK-sicher gemacht: Beim Wechsel des Hauptbilds werden nicht primäre, von abgeschlossenen Bildjobs referenzierte Assets nicht unnötig aktualisiert; echte Primärwechsel lösen nur die betroffene Jobreferenz kontrolliert.
 - [ ] UI-Konsistenz über alle Routen prüfen und abschließen: Formfelder, Buttons, Abstände, Radien, Typografie, Statusfarben, Tabellen, Cards, Dialoge, Pagination und mobile Navigation ausschließlich aus den lokalen UI-Bausteinen beziehen.
 - [x] Accessibility- und Regression-Gate erweitert: alle zentralen Fachseiten laufen durch Landmark-/Name-/ID-Prüfung; Mobile-Navigation erzwingt 44px-Touch-Ziele, Light/Dark-Kontrast wird browserseitig geprüft, reduzierte Bewegung global respektiert, native Formularfehler sind am Feld angekündigt und Dialog-/Popover-Escape/Fokus-Rückgabe bleiben per Playwright abgesichert.
-- [ ] HyperUI-Übernahme abschließen: Übergangsklassen und doppeltes Seiten-Markup entfernen, Quellenhinweise erhalten und nach jedem Batch die vollständige Abschlussroutine ausführen.
+- [x] HyperUI-Übernahme abgeschlossen: HyperUI bleibt dokumentierte MIT-Markup-Referenz ohne Runtime-Paket; die alte Dark-Mode-Kompatibilität für `bg-white`/direkte Hex-Klassen ist entfernt und `check:ui` verbietet neue Legacy-/Fremdfarben zugunsten semantischer OCRCraft-Tokens.
 - [ ] Fachseiten vollständig auf Dictionaries umstellen: keine user-facing Hardcodings in Dashboard, Katalogen, Editoren, Admin, Trainingsdetail und Statusmeldungen.
 
 ## P1 – Interaktive Tutorials

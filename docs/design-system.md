@@ -104,4 +104,4 @@ Die Phase bleibt zusätzlich durch Text beschriftet; Farbe ist nie das einzige S
 
 ## HyperUI-Abgrenzung
 
-HyperUI ist MIT-lizenziert und wird ausschließlich als Referenz/Markup-Inspiration verwendet. OCRCraft lädt keine HyperUI-Runtime und installiert kein HyperUI-Paket. Fachkomponenten, Tokens und Verhalten bleiben projektintern.
+HyperUI ist MIT-lizenziert und wird ausschließlich als Referenz/Markup-Inspiration verwendet. OCRCraft lädt keine HyperUI-Runtime und installiert kein HyperUI-Paket. Fachkomponenten, Tokens und Verhalten bleiben projektintern. Die frühere Übergangskompatibilität für direkte `bg-white`-/Hex-Farbklassen ist entfernt; der UI-Gate verhindert deren Rückkehr.

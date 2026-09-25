@@ -6,6 +6,10 @@ const sourceRoot = join(process.cwd(), "src");
 const sourceExtensions = new Set([".tsx", ".ts"]);
 const forbiddenPatterns = [
   {
+    name: "direkte Legacy-/Fremdfarbe statt semantischem Token",
+    pattern: /(?:bg-white\b|bg-\[#[0-9a-fA-F]{3,8}\]|text-\[#[0-9a-fA-F]{3,8}\]|border-\[#[0-9a-fA-F]{3,8}\])/,
+  },
+  {
     name: "fester Katalogzähler in einer Vorlagenbeschreibung",
     pattern: /\b\d+\s+kuratierte\s+(?:OCRCraft-)?Startvorlagen\b/i,
   },
