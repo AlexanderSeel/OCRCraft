@@ -63,7 +63,7 @@ const requiredPatterns = [
   {
     file: join(sourceRoot, "components", "navigation", "primary-navigation.tsx"),
     name: "Mobile Navigation benötigt Landmarke und ausreichend große Links",
-    pattern: /aria-label=\{dictionary\.mobileNavigation\}[\s\S]*lg:hidden[\s\S]*min-h-10/,
+    pattern: /aria-label=\{dictionary\.mobileNavigation\}[\s\S]*lg:hidden[\s\S]*min-h-11/,
   },
   {
     file: join(sourceRoot, "app", "globals.css"),
