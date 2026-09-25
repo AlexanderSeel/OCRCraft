@@ -45,6 +45,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Data quality snapshot
+        run: npm run data:quality-snapshot
+
       - name: Build
         run: npm run build
 

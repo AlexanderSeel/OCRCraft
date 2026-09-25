@@ -28,7 +28,8 @@
     "exercise:translate:de": "node --conditions=react-server --import=tsx scripts/translate-hasaneyldrm-german.ts",
     "exercise:import:exercisedb": "node --conditions=react-server --import=tsx scripts/import-exercisedb-exercises.ts",
     "test:e2e": "playwright test",
-    "check:architecture": "node scripts/check-codebase-boundaries.mjs"
+    "check:architecture": "node scripts/check-codebase-boundaries.mjs",
+    "data:quality-snapshot": "node scripts/data-quality-snapshot.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1133.0",

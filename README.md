@@ -346,6 +346,13 @@ http://localhost:3000
 
 ## Qualitätsprüfungen
 
+Aktuellen Datenqualitäts-Snapshot (Bewegungsmuster, fehlende Bilder, Outdoor-Reviews, OCRFRA-Hindernisse) ausgeben:
+
+```bash
+npm run data:quality-snapshot
+```
+
+
 Die vollständige lokale Abschlussroutine lautet:
 
 ```bash
