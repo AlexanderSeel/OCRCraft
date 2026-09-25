@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { SeedCompletenessReportView } from "@/components/admin/seed-completeness-report";
 import { CatalogCoverageReportView } from "@/components/admin/catalog-coverage-report";
+import { QualityAnalyticsReportView } from "@/components/admin/quality-analytics-report";
 import { MuscleMapDebugSetting } from "@/components/admin/muscle-map-debug-setting";
 import { DuplicateReviewPanel } from "@/components/admin/duplicate-review-panel";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
@@ -14,6 +15,7 @@ import { AiProviderSettingsPanel } from "@/components/admin/ai-provider-settings
 import { SearchProfileSettingsPanel } from "@/components/admin/search-profile-settings-panel";
 import { getSeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { getCatalogCoverageReport } from "@/server/exercises/catalog-coverage-service";
+import { getQualityAnalyticsReport } from "@/server/quality/quality-analytics-service";
 import { getSearchIndexStates } from "@/server/search/search-index-service";
 import { listSearchProfiles } from "@/server/search/search-profile-repository";
 import { listRecentAuditEvents } from "@/server/db/audit-service";
@@ -77,10 +79,11 @@ interface AdminPageProps {
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const params = await searchParams;
   const activeTab = normalizeAdminTab(params.tab);
-  const [searchStates, seedCompleteness, catalogCoverage, duplicateTasks, auditEvents, backups, appUsers, aiProviders, appTasks, searchProfiles, queueIssues, accessRoles, roleAssignments, clubAccessCode, importSources, importCompleteness] = await Promise.all([
+  const [searchStates, seedCompleteness, catalogCoverage, qualityAnalytics, duplicateTasks, auditEvents, backups, appUsers, aiProviders, appTasks, searchProfiles, queueIssues, accessRoles, roleAssignments, clubAccessCode, importSources, importCompleteness] = await Promise.all([
     activeTab === "database" ? getSearchIndexStates() : Promise.resolve([]),
     activeTab === "overview" ? getSeedCompletenessReport() : Promise.resolve(null),
     activeTab === "overview" ? getCatalogCoverageReport() : Promise.resolve(null),
+    activeTab === "overview" ? getQualityAnalyticsReport() : Promise.resolve(null),
     activeTab === "quality" ? listDuplicateReviewTasks() : Promise.resolve([]),
     activeTab === "overview" ? listRecentAuditEvents() : Promise.resolve([]),
     activeTab === "database" ? listDatabaseBackups() : Promise.resolve([]),
@@ -116,6 +119,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         {params.importError ? <Alert tone="danger">{params.importError === "url" ? "Die Quelladresse muss eine HTTPS-Adresse sein." : params.importError === "run" ? "Der Import konnte nicht ausgeführt werden. Prüfe Quelle, Zugriffsschlüssel und Serverprotokoll." : "Die Importquelle konnte nicht gespeichert werden."}</Alert> : null}
         {activeTab === "overview" && seedCompleteness ? <SeedCompletenessReportView report={seedCompleteness} /> : null}
         {activeTab === "overview" && catalogCoverage ? <CatalogCoverageReportView report={catalogCoverage} /> : null}
+        {activeTab === "overview" && qualityAnalytics ? <QualityAnalyticsReportView report={qualityAnalytics} /> : null}
         {activeTab === "quality" ? <section className="admin-panel">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Datenqualität</div><h2 className="mt-1 text-xl font-black">Doppelungen prüfen</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Die Engine vergleicht normalisierte Namen, Aliase, Equipment, Körperregionen und externe IDs. Zusammenführen archiviert den überzähligen Datensatz und erhält die Trainingshistorie.</p></div>

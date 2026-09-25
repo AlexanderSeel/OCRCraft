@@ -61,8 +61,8 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 
 - [x] Seed-Katalog-Integrationstest erhält ein eigenes 30-Sekunden-Limit für den vollständigen DuckDB-Migrationslauf; die komplette Vitest-Suite ist mit 263/263 Tests grün.
 - [ ] Quick-Create-, Training-Editor-, Kids/Youth- und Theme-E2E ausbauen: echte Editoränderung, Speichern, Reviewblocker und geschützte Kids/Youth-Sperren abdecken.
-- [ ] Übungsnutzung, Körperregionen, Hindernisabdeckung, Laufvolumen, Wiederholungswarnungen und Nulltreffer aus Repository-/Service-Daten analysieren; Filterzustände müssen erklärbar bleiben.
-- [ ] Vollständigkeits- und KI-Ersetzungsanalysen weiter ausbauen: fehlende DE/EN-/Coaching-/Sicherheitsfelder, Ersatzquote, Blockierungsgründe und Trainerfreigaben nachvollziehbar darstellen; Medien ohne Nutzungsfreigabe werden bereits als eigene KI-Ersatzkandidaten ausgewiesen.
+- [x] Qualitätsanalyse aus Repository-/Service-Daten ergänzt: Admin-Übersicht zeigt Übungsnutzung und ungenutzte Übungen, fehlende Primärregionen, OCR-/Hindernisabdeckung, gespeichertes Laufvolumen, Running-Items, Wiederholungswarnungen der letzten sechs Trainings sowie Zielgruppen-/Orts-Szenarien mit erklärbaren Nulltreffern.
+- [x] Vollständigkeits- und KI-Ersetzungsanalyse erweitert: der Qualitätsreport kombiniert Katalog-Vollständigkeit mit Bildersatzgründen (`missing`, Rechteblocker, Generierungsfehler, unbrauchbar, laufender Job) sowie offenen und freigegebenen Medienreviews; die bestehenden DE/EN-/Coaching-/Sicherheitsdetails bleiben im Seed-Vollständigkeitsbericht drill-down-fähig.
 
 ## P2 – Clean-Code- und Wartbarkeitsrunde
 
