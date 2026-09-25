@@ -12,6 +12,7 @@ import { ImageLightbox } from "@/components/ui/image-lightbox";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import {
   getMediaCatalogSummary,
   listMediaCatalog,
@@ -103,10 +104,10 @@ export default async function MediaPage({ searchParams }: PageProps) {
       actions={(
         <div className="flex flex-wrap gap-2">
           <ExternalMediaManager deleteAction={deleteExternalMediaAction} saveAction={saveExternalMediaAction} />
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/exercises">
+          <Link className={buttonClass("secondary", "px-4")} href="/exercises">
             Übungskatalog
           </Link>
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/obstacles">
+          <Link className={buttonClass("secondary", "px-4")} href="/obstacles">
             Hindernisse
           </Link>
         </div>
@@ -213,7 +214,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
           <label className="grid gap-1 text-sm font-bold">
             Suchen
             <input
-              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+              className={formControlClass}
               defaultValue={query}
               name="q"
               placeholder="Übung oder Seed-Key"
@@ -258,14 +259,14 @@ export default async function MediaPage({ searchParams }: PageProps) {
             <form action={queueMediaBatchAction} className="mt-3 flex flex-wrap items-end gap-2" id="media-batch-form">
               <label className="grid gap-1 text-sm font-bold">
                 Batch-Aktion
-                <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" name="batchAction">
+              <select className={formControlClass} name="batchAction">
                   <option value="generate_ai_image">Neues Bild per KI erzeugen</option>
                 </select>
               </label>
-              <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 py-2 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
+              <button className={buttonClass("primary", "px-4 py-2")} type="submit">
                 Für Auswahl starten
               </button>
-              <button className="min-h-11 rounded-xl border border-[var(--accent)] px-4 py-2 text-sm font-black text-[var(--accent)]" name="approveSelection" type="submit" value="1">
+              <button className={buttonClass("accent", "px-4 py-2")} name="approveSelection" type="submit" value="1">
                 Ausgewählte freigeben
               </button>
             </form>
@@ -302,21 +303,21 @@ export default async function MediaPage({ searchParams }: PageProps) {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <a
-                  className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black"
+                  className={buttonClass("secondary", "px-3 text-xs")}
                   href={missingQuery ? `/api/admin/media/codex-image-tasks?q=${encodeURIComponent(missingQuery)}` : "/api/admin/media/codex-image-tasks"}
                 >
                   Alle Codex-Aufgaben
                 </a>
-                <a className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href="/api/admin/media/codex-image-tasks?batch=single-subject">
+                <a className={buttonClass("secondary", "px-3 text-xs")} href="/api/admin/media/codex-image-tasks?batch=single-subject">
                   Batch 1 · Einzelperson
                 </a>
-                <a className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href="/api/admin/media/codex-image-tasks?batch=ocrfra-obstacles">
+                <a className={buttonClass("secondary", "px-3 text-xs")} href="/api/admin/media/codex-image-tasks?batch=ocrfra-obstacles">
                   Batch 2 · OCRFRA
                 </a>
-                <a className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href="/api/admin/media/codex-image-tasks?batch=games-partner">
+                <a className={buttonClass("secondary", "px-3 text-xs")} href="/api/admin/media/codex-image-tasks?batch=games-partner">
                   Batch 3 · Spiele/Partner
                 </a>
-                <a className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" href="/api/admin/media/codex-image-review">
+                <a className={buttonClass("secondary", "px-3 text-xs")} href="/api/admin/media/codex-image-review">
                   Pending-Review exportieren
                 </a>
                 <span className="rounded-full bg-[var(--surface-subtle)] px-3 py-1 text-xs font-black">
@@ -356,17 +357,17 @@ export default async function MediaPage({ searchParams }: PageProps) {
               <label className="min-w-[260px] flex-1">
                 <span className="sr-only">Übungen ohne Bild suchen</span>
                 <input
-                  className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+                  className={`${formControlClass} w-full`}
                   defaultValue={missingQuery}
                   name="missingQ"
                   placeholder="Übung, Kategorie oder Seed-Key suchen"
                 />
               </label>
-              <button className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black" type="submit">
+              <button className={buttonClass("secondary", "px-4")} type="submit">
                 Liste filtern
               </button>
               {missingQuery ? (
-                <Link className="grid min-h-11 place-items-center rounded-xl border border-[var(--border)] px-4 text-sm font-black" href="/media">
+                <Link className={buttonClass("secondary", "px-4")} href="/media">
                   Suche löschen
                 </Link>
               ) : null}
@@ -816,7 +817,7 @@ function FilterSelect({
   return (
     <label className="grid gap-1 text-sm font-bold">
       {label}
-      <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={value} name={name}>
+      <select className={formControlClass} defaultValue={value} name={name}>
         {options.map(([id, text]) => <option key={id || "all"} value={id}>{text}</option>)}
       </select>
     </label>

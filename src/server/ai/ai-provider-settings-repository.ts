@@ -630,12 +630,6 @@ export async function resolveAiProviderChain(
   return [];
 }
 
-export async function resolveAiProvider(
-  capability: "training" | "exercise_draft",
-): Promise<ResolvedAiProvider | null> {
-  return (await resolveAiProviderChain(capability))[0] ?? null;
-}
-
 export async function getAiProviderDiscoveryConnection(input: {
   readonly instanceId?: string | null;
   readonly providerKind: AiProviderKind;

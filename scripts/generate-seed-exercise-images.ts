@@ -29,11 +29,8 @@ async function main(): Promise<void> {
   if (abandonedCount > 0) {
     process.stdout.write(`Marked ${abandonedCount} interrupted image jobs failed so they can be retried.\n`);
   }
-  const allMissingExercises = await repository.listSeedExercisesMissingImage();
-  const requestedSeedKeys = batchArgument ? new Set(codexImageP1BatchSeedKeys(batchArgument)) : null;
-  const exercises = requestedSeedKeys
-    ? allMissingExercises.filter((exercise) => requestedSeedKeys.has(exercise.seedKey))
-    : allMissingExercises;
+  const requestedSeedKeys = batchArgument ? codexImageP1BatchSeedKeys(batchArgument) : [];
+  const exercises = await repository.listSeedExercisesMissingImage(requestedSeedKeys);
 
   if (exercises.length === 0) {
     process.stdout.write(batchArgument

@@ -24,8 +24,12 @@ export interface ExerciseImageStorage {
 }
 
 function safeObjectKey(exerciseId: string, assetId: string, fileStem?: string): string {
-  const stem = fileStem && /^[a-z0-9][a-z0-9-]*$/i.test(fileStem) ? fileStem : assetId;
-  return `${fileStem && /^[a-z0-9][a-z0-9-]*$/i.test(fileStem) ? stem : exerciseId}/${stem}.png`;
+  const hasSafeStem = Boolean(fileStem && /^[a-z0-9][a-z0-9-]*$/i.test(fileStem));
+  const directory = hasSafeStem ? fileStem : exerciseId;
+  // Keep the readable seed-key directory, but make every generated object
+  // unique so a second review candidate cannot overwrite the first one.
+  const filename = hasSafeStem ? `${fileStem}-${assetId}` : assetId;
+  return `${directory}/${filename}.png`;
 }
 
 export class FileSystemExerciseImageStorage implements ExerciseImageStorage {

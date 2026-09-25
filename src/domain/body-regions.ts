@@ -90,7 +90,6 @@ export const BODY_REGION_OPTIONS = [...COARSE_BODY_REGION_IDS.map((id) => ({
 })), ...DETAIL_BODY_REGION_OPTIONS];
 
 const BODY_REGION_SET = new Set<string>(BODY_REGION_IDS);
-const BODY_REGION_ORDER = new Map<string, number>(BODY_REGION_IDS.map((id, index) => [id, index]));
 
 const LEGACY_BODY_REGION_ALIASES: Readonly<Record<string, BodyRegion>> = {
   arms: "upper-arms",
@@ -196,8 +195,4 @@ export function bodyRegionsOverlap(
     const normalized = normalizeBodyRegionId(value);
     return normalized ? requested.has(normalized) : false;
   });
-}
-
-export function bodyRegionSortIndex(id: string): number {
-  return BODY_REGION_ORDER.get(normalizeBodyRegionId(id) ?? id) ?? Number.MAX_SAFE_INTEGER;
 }

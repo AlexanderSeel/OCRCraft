@@ -80,17 +80,6 @@ export async function getObstacleCatalogSummary(): Promise<ObstacleCatalogSummar
   });
 }
 
-export async function listObstacleCatalog({
-  query = "",
-  riskLevel = "",
-  archived = false,
-  limit = 120,
-  offset = 0,
-}: ObstacleCatalogFilters = {}): Promise<readonly ObstacleCatalogItem[]> {
-  const page = await listObstacleCatalogPage({ query, riskLevel, archived, limit, offset });
-  return page.items;
-}
-
 export async function listObstacleCatalogPage({
   query = "",
   riskLevel = "",

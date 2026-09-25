@@ -58,16 +58,6 @@ async function createInstance(): Promise<DuckDBInstance> {
   }
 }
 
-export function getDuckDbInstance(): Promise<DuckDBInstance> {
-  instancePromise ??= createInstance();
-  return instancePromise;
-}
-
-export async function openDuckDbConnection(): Promise<DuckDBConnection> {
-  const instance = await getDuckDbInstance();
-  return instance.connect();
-}
-
 export async function withDuckDbConnection<T>(
   operation: (connection: DuckDBConnection) => Promise<T>,
 ): Promise<T> {

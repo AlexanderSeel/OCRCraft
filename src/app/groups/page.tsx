@@ -125,7 +125,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                   </Link>
                 ))}
                 {selectedPreset ? (
-                  <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href="/groups">
+                  <Link className={buttonClass("secondary", "px-3 py-2 text-xs")} href="/groups">
                     Ohne Vorlage
                   </Link>
                 ) : null}
@@ -231,7 +231,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                   </Disclosure>
                 ) : null}
 
-                <ConfirmPopoverForm action={setClubGroupArchivedAction} description={group.archived ? "Die Gruppe wird wieder für die aktive Auswahl und Trainingsplanung verfügbar." : "Die Gruppe wird aus der aktiven Auswahl genommen. Bestehende Trainings bleiben erhalten."} title={group.archived ? "Gruppe wiederherstellen?" : "Gruppe archivieren?"} triggerClassName={group.archived ? "rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-black hover:bg-[var(--surface-subtle)]" : "rounded-xl border border-[var(--danger)] bg-[var(--surface)] px-4 py-3 text-sm font-black text-[var(--danger)] hover:bg-[var(--danger-bg)]"} triggerLabel={group.archived ? "Wiederherstellen" : "Archivieren"}>
+                <ConfirmPopoverForm action={setClubGroupArchivedAction} description={group.archived ? "Die Gruppe wird wieder für die aktive Auswahl und Trainingsplanung verfügbar." : "Die Gruppe wird aus der aktiven Auswahl genommen. Bestehende Trainings bleiben erhalten."} title={group.archived ? "Gruppe wiederherstellen?" : "Gruppe archivieren?"} triggerClassName={buttonClass(group.archived ? "secondary" : "danger", "px-4 py-3")} triggerLabel={group.archived ? "Wiederherstellen" : "Archivieren"}>
                   <input name="id" type="hidden" value={group.id} />
                   <input name="archived" type="hidden" value={group.archived ? "false" : "true"} />
                 </ConfirmPopoverForm>

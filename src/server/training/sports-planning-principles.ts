@@ -10,16 +10,3 @@ export const SPORTS_PLANNING_PRINCIPLES = [
   "Cooldown should reduce intensity and relate to the demands of the main part using suitable recovery or mobility work.",
   "Prefer coherent purposeful exercise selections and recent-use variety over a random catalogue of movements.",
 ] as const;
-
-export const SPORTS_PLANNING_PRINCIPLES_DE = [
-  "Warm-up bereitet Bewegungsmuster und belastete Körperregionen des Hauptteils progressiv vor, ohne die Gruppe vorzuermüden.",
-  "Der Hauptteil priorisiert das angegebene Trainingsziel statt möglichst viele unabhängige Inhalte zu mischen.",
-  "Technisch anspruchsvolle, balancekritische oder komplex koordinative Aufgaben stehen normalerweise vor ermüdender Konditionierungsarbeit, sofern das Trainingsziel nichts anderes verlangt.",
-  "Unnötige High-Impact-/Hochrisiko-Ketten und drei direkt aufeinanderfolgende Übungen mit derselben lokalen Körperregion werden vermieden.",
-  "Wiederholte Bewegungsmuster werden – wenn passend – durch sinnvolle Gegenmuster wie Push/Pull, Squat/Hinge und Rotation/Brace ausgeglichen.",
-  "Bei explizitem Muskelfokus wird ein typischer Gegenmuskel oder ein ausgleichendes Muster berücksichtigt, ohne Sekundärmuskeln pauschal als Antagonisten zu behandeln.",
-  "Bei gemischten Gruppen werden bevorzugt freigegebene Level-1/2/3-Varianten desselben Bewegungsmusters genutzt; schwerer bedeutet nicht automatisch riskanter.",
-  "Alter, Ort, Equipmentbestand, Stationskapazität, Risiko-/Aufsichtsmetadaten und Trainer-Ausschlüsse bleiben harte Randbedingungen.",
-  "Der Cooldown reduziert die Belastung und greift Anforderungen des Hauptteils durch passende Recovery-/Mobility-Inhalte auf.",
-  "Eine kohärente, zweckmäßige Auswahl und Abwechslung gegenüber zuletzt genutzten Übungen ist wichtiger als zufällige Katalogvielfalt.",
-] as const;

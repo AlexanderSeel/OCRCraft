@@ -37,7 +37,3 @@ export function useResponsiveImageMap(imageRef: RefObject<HTMLImageElement | nul
 
   return scale;
 }
-
-export function scaledCoords(coordinates: readonly number[], scaleX: number, scaleY: number): string {
-  return coordinates.map((value, index) => String(Math.round(value * (index % 2 === 0 ? scaleX : scaleY)))).join(",");
-}

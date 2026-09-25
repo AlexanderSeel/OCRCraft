@@ -27,8 +27,8 @@ export async function buildCodexImageTaskExport(
 ): Promise<Record<string, unknown>> {
   const query = options.query?.trim() ?? "";
   const limit = Math.max(1, Math.min(1000, Math.trunc(options.limit ?? 1000)));
-  const candidates = await listMediaGenerationCandidates(query, limit);
   const seedKeyFilter = new Set((options.seedKeys ?? []).map((value) => value.trim()).filter(Boolean));
+  const candidates = await listMediaGenerationCandidates(query, limit, [...seedKeyFilter]);
   const scopedCandidates = seedKeyFilter.size > 0
     ? candidates.filter((candidate) => candidate.seedKey && seedKeyFilter.has(candidate.seedKey))
     : candidates;

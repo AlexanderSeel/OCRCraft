@@ -6,6 +6,7 @@ import { CatalogPagination, CatalogResultCount } from "@/components/catalog/cata
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
 import { EmptyState } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 import { exerciseCategoryLabels, type ExerciseCategory } from "@/domain/exercise/model";
 import { countExercises, listExercises } from "@/server/exercises/exercise-repository";
 
@@ -40,9 +41,9 @@ export default async function GamesPage({ searchParams }: PageProps) {
       subtitle="Spielerische Trainingsformen als vollwertige Katalogeinträge – mit denselben Sicherheits-, Medien-, Muskel-, Equipment- und Coachingdaten wie Übungen."
       actions={(
         <div className="flex flex-wrap gap-2">
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/exercises">Übungen</Link>
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/training">Training</Link>
-          <Link className="rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--accent-foreground)]" href="/games/new">+ Neues Spiel</Link>
+          <Link className={buttonClass("secondary", "px-4")} href="/exercises">Übungen</Link>
+          <Link className={buttonClass("secondary", "px-4")} href="/training">Training</Link>
+          <Link className={buttonClass("accent", "px-4")} href="/games/new">+ Neues Spiel</Link>
         </div>
       )}
     >
@@ -51,11 +52,11 @@ export default async function GamesPage({ searchParams }: PageProps) {
         <CatalogFilterPanel hasFilters={Boolean(query || archived || page !== 1 || pageSize !== 40)} resetHref="/games" title="Spielfilter">
             <label className="grid gap-1 text-sm font-bold">
               Suchen
-              <input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={query} name="q" placeholder="z. B. Team, Reaktion, OCR …" />
+              <input className={formControlClass} defaultValue={query} name="q" placeholder="z. B. Team, Reaktion, OCR …" />
             </label>
             <label className="grid gap-1 text-sm font-bold">
               Status
-              <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={archived ? "archived" : "active"} name="status">
+              <select className={formControlClass} defaultValue={archived ? "archived" : "active"} name="status">
                 <option value="active">Aktiv</option>
                 <option value="archived">Archiviert</option>
               </select>
@@ -98,8 +99,8 @@ export default async function GamesPage({ searchParams }: PageProps) {
                     {game.equipment.slice(0, 2).map((item) => <span className="rounded-full border border-[var(--border)] px-2.5 py-1" key={item}>{item}</span>)}
                   </div>
                   <div className="view-actions mt-auto flex flex-wrap gap-2 pt-4">
-                    <Link className="rounded-xl bg-[var(--control-strong)] px-4 py-2.5 text-sm font-black text-[var(--control-strong-foreground)]" href={`/exercises/${game.id}`}>Details</Link>
-                    <Link className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-black" href={`/exercises/${game.id}/edit`}>{archived ? "Ansehen / Wiederherstellen" : "Bearbeiten"}</Link>
+                    <Link className={buttonClass("primary", "px-4")} href={`/exercises/${game.id}`}>Details</Link>
+                    <Link className={buttonClass("secondary", "px-4")} href={`/exercises/${game.id}/edit`}>{archived ? "Ansehen / Wiederherstellen" : "Bearbeiten"}</Link>
                   </div>
                 </div>
               </Card>

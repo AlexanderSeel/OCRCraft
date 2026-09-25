@@ -1,6 +1,6 @@
 import "server-only";
 
-import { copyFile, readdir, stat, unlink } from "node:fs/promises";
+import { copyFile, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import { requireSuperAdmin } from "@/server/auth/identity-service";
 import { closeDuckDbInstance, getDuckDbPath, withDuckDbFileLock } from "./duckdb";
@@ -27,10 +27,4 @@ export async function restoreDatabaseBackup(fileName: string): Promise<{ readonl
     await copyFile(sourcePath, databasePath);
   });
   return { safetyBackup: safety.fileName };
-}
-
-export async function isDatabaseBackupAvailable(fileName: string): Promise<boolean> {
-  if (!backupNamePattern.test(fileName)) return false;
-  const directory = path.join(path.dirname(getDuckDbPath()), "backups");
-  return (await readdir(directory).catch(() => [] as string[])).includes(fileName);
 }

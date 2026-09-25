@@ -1,11 +1,11 @@
 import "server-only";
 
 import { z } from "zod";
-import { normalizePermissionGrants, permissionIncludes, permissionLevelSchema, permissionResourceSchema, type PermissionGrant, type PermissionLevel, type PermissionResource } from "@/domain/auth/permissions";
+import { normalizePermissionGrants, permissionLevelSchema, permissionResourceSchema, type PermissionGrant } from "@/domain/auth/permissions";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
 import { recordAuditEvent } from "@/server/db/audit-service";
-import { requireSuperAdmin, requireTrainer } from "./identity-service";
+import { requireSuperAdmin } from "./identity-service";
 
 export interface AccessRole {
   readonly id: string;
@@ -92,20 +92,4 @@ export async function assignAccessRoles(input: { readonly userId: string; readon
     for (const roleId of roleIds) await connection.run("INSERT INTO app_user_roles (user_id,role_id,assigned_by) VALUES ($userId::UUID,$roleId::UUID,$actorId::UUID)", { userId, roleId, actorId: actor.id });
   });
   await recordAuditEvent({ action: "role.assignment.updated", entityType: "user", entityId: userId, actorType: "user", actorId: actor.id });
-}
-
-export async function requirePermission(resource: PermissionResource, level: PermissionLevel): Promise<void> {
-  const actor = await requireTrainer();
-  const required = { resource: permissionResourceSchema.parse(resource), level: permissionLevelSchema.parse(level) };
-  if (actor.role === "super_admin" || (actor.role === "admin" && required.level !== "admin")) return;
-  const grants = await getActorCustomGrants(actor.id);
-  if (!permissionIncludes(grants, required)) throw new Error("The current OCRCraft actor is not authorized for this permission.");
-}
-
-async function getActorCustomGrants(userId: string): Promise<readonly PermissionGrant[]> {
-  return withDuckDbConnection(async (connection) => {
-    const reader = await connection.runAndReadAll("SELECT p.resource,p.access_level FROM app_user_roles ur JOIN app_role_permissions p ON p.role_id=ur.role_id JOIN app_roles r ON r.id=ur.role_id WHERE ur.user_id=$userId::UUID AND r.active", { userId });
-    const grants = reader.getRows().map((row) => ({ resource: permissionResourceSchema.parse(String(row[0])), level: permissionLevelSchema.parse(String(row[1])) }));
-    return normalizePermissionGrants(grants);
-  });
 }

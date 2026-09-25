@@ -10,6 +10,18 @@ const exerciseId = "35b80ab9-27a4-444d-96e4-0e3297957426";
 const assetId = "6f42f47b-3442-49eb-a6f3-5bc4fb374d18";
 
 describe("exercise image storage", () => {
+  it("keeps file-stem based assets unique per generation record", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "ocrcraft-image-test-"));
+    const storage = new FileSystemExerciseImageStorage(root);
+    try {
+      const stored = await storage.save({ exerciseId, assetId, fileStem: "easy-jog", bytes: new Uint8Array([1]), contentType: "image/png" });
+      expect(stored.storageKey).toBe(`easy-jog/easy-jog-${assetId}.png`);
+      expect(stored.storageUri).toBe(`/generated/exercises/easy-jog/easy-jog-${assetId}.png`);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("writes an image atomically to the filesystem and deletes it by storage key", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "ocrcraft-image-test-"));
     const storage = new FileSystemExerciseImageStorage(root);

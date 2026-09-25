@@ -170,7 +170,7 @@ Hindernisse können mit Übungen verknüpft werden und besitzen unter anderem:
 
 ### Medien und Bilder
 
-Der Medienbereich verwaltet Bilder, Illustrationen und Videos getrennt von den Übungsdaten.
+Der Medienbereich verwaltet Bilder, Illustrationen und Videos getrennt von den Übungsdaten. Für den offenen P1-Bildbacklog wurden 42 neue 1536×1024-Sequenzillustrationen erzeugt; sie bleiben bis zur fachlichen Prüfung `pending` und werden deshalb noch nicht in den deploybaren Initial-Snapshot übernommen.
 
 Unterstützt werden:
 
@@ -410,7 +410,7 @@ npm run exercise:images:codex-review -- --batch=ocrfra-obstacles
 npm run exercise:images:codex-review -- --batch=games-partner
 ```
 
-Für P1-Batches läuft die Generierung absichtlich mit nur einer Bildanfrage gleichzeitig. Dadurch entsteht pro Aufgabe ein separates Asset statt einer Sammelgrafik; alle neuen Assets bleiben bis zur Biomechanik- und Text-Match-Prüfung im Status `pending`.
+Für P1-Batches läuft die Generierung absichtlich mit nur einer Bildanfrage gleichzeitig. Dadurch entsteht pro Aufgabe ein separates Asset statt einer Sammelgrafik; alle neuen Assets bleiben bis zur Biomechanik- und Text-Match-Prüfung im Status `pending`. Ein explizit angeforderter P1-Batch darf ein unfreigegebenes oder unbrauchbares Altmedium zur erneuten Erzeugung aufnehmen, überspringt aber immer freigegebene brauchbare Medien.
 
 Der Export wird standardmäßig nach `artifacts/codex-image-tasks.json` geschrieben. Er enthält den Ersatzgrund, den stabilen Zieldateinamen und – sofern die strukturierten DE/EN-Übungsdaten vollständig sind – exakt den OCRCraft-Bildprompt. Übungen mit bereits laufendem Bildjob werden nicht erneut eingeplant. Admins können denselben Export im Medienkatalog direkt aus dem aktuellen Datenbankstand erzeugen. Für die P1-Bildabarbeitung stehen zusätzlich drei stabile Batches bereit: **Einzelperson** (17 Seed-Keys), **OCRFRA-Hindernisse** (11) und **Spiele/Partner** (14). Ein Batch exportiert nur Übungen, die im aktuellen Datenbankstand weiterhin ein Ersatzbild benötigen; bereits versorgte Seeds werden als übersprungene Keys dokumentiert.
 

@@ -250,9 +250,22 @@ export async function countMediaCatalog(filters: Omit<MediaCatalogFilters, "limi
 export async function listMediaGenerationCandidates(
   query = "",
   limit = 24,
+  includeSeedKeys: readonly string[] = [],
 ): Promise<readonly MediaGenerationCandidate[]> {
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
+    const seedKeys = [...new Set(includeSeedKeys.map((value) => value.trim()).filter(Boolean))];
+    const parameters: Record<string, string | number> = {
+      query: query.trim(),
+      limit: Math.max(1, Math.min(1000, limit)),
+    };
+    const seedKeyClause = seedKeys.length
+      ? seedKeys.map((seedKey, index) => {
+        const parameterName = `seedKey${index}`;
+        parameters[parameterName] = seedKey;
+        return `$${parameterName}`;
+      }).join(",")
+      : "";
     const reader = await connection.runAndReadAll(`
       SELECT
         e.id::VARCHAR,
@@ -296,22 +309,44 @@ export async function listMediaGenerationCandidates(
       FROM exercises e
       LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
       WHERE e.archived=false
-        AND NOT EXISTS (
-          SELECT 1
-          FROM exercise_media_assets m
-          WHERE m.exercise_id=e.id
-            AND m.media_type IN ('image','illustration')
-            AND m.generation_status='generated'
-            AND m.review_status<>'rejected'
-            AND (
-              m.source_type<>'external_reference'
-              OR (
-                COALESCE(m.rights_status,'unreviewed')='approved'
-                AND COALESCE(trim(m.license_label),'')<>''
-                AND COALESCE(trim(m.source_reference),'')<>''
-                AND (COALESCE(m.consent_required,false)=false OR COALESCE(m.consent_confirmed,false)=true)
+        AND (
+          NOT EXISTS (
+            SELECT 1
+            FROM exercise_media_assets m
+            WHERE m.exercise_id=e.id
+              AND m.media_type IN ('image','illustration')
+              AND m.generation_status='generated'
+              AND m.review_status<>'rejected'
+              AND (
+                m.source_type<>'external_reference'
+                OR (
+                  COALESCE(m.rights_status,'unreviewed')='approved'
+                  AND COALESCE(trim(m.license_label),'')<>''
+                  AND COALESCE(trim(m.source_reference),'')<>''
+                  AND (COALESCE(m.consent_required,false)=false OR COALESCE(m.consent_confirmed,false)=true)
+                )
               )
+          )
+          ${seedKeyClause ? `OR (
+            e.seed_key IN (${seedKeyClause})
+            AND NOT EXISTS (
+              SELECT 1
+              FROM exercise_media_assets approved_media
+              WHERE approved_media.exercise_id=e.id
+                AND approved_media.media_type IN ('image','illustration')
+                AND approved_media.generation_status='generated'
+                AND approved_media.review_status='approved'
+                AND (
+                  approved_media.source_type<>'external_reference'
+                  OR (
+                    COALESCE(approved_media.rights_status,'unreviewed')='approved'
+                    AND COALESCE(trim(approved_media.license_label),'')<>''
+                    AND COALESCE(trim(approved_media.source_reference),'')<>''
+                    AND (COALESCE(approved_media.consent_required,false)=false OR COALESCE(approved_media.consent_confirmed,false)=true)
+                  )
+                )
             )
+          )` : ""}
         )
         AND (
           $query=''
@@ -329,10 +364,7 @@ export async function listMediaGenerationCandidates(
         COALESCE(t.name,e.canonical_name),
         e.id
       LIMIT $limit
-    `, {
-      query: query.trim(),
-      limit: Math.max(1, Math.min(1000, limit)),
-    });
+    `, parameters);
 
     return reader.getRows().map((row) => ({
       exerciseId: String(row[0]),

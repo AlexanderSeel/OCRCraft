@@ -15,6 +15,7 @@ import { assignExerciseAsObstacleAction } from "./actions";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 import { Alert } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 
 export const dynamic = "force-dynamic";
 
@@ -54,10 +55,10 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
       subtitle="OCR-Hindernisse und obstacle-spezifische Übungen mit Aufbau, Sicherheitszone, Kapazität und Club-Abmessungen."
       actions={(
         <div className="flex flex-wrap gap-2">
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/exercises?category=ocr-skill">
+          <Link className={buttonClass("secondary", "px-4")} href="/exercises?category=ocr-skill">
             OCR-Übungen
           </Link>
-          <Link className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black" href="/media">
+          <Link className={buttonClass("secondary", "px-4")} href="/media">
             Medien
           </Link>
         </div>
@@ -97,7 +98,7 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
           <label className="grid gap-1 text-sm font-bold">
             Suchen
             <input
-              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+              className={formControlClass}
               defaultValue={query}
               name="q"
               placeholder="z. B. Wall, Rig, Cargo Net, Rope ..."
@@ -105,7 +106,7 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
           </label>
           <label className="grid gap-1 text-sm font-bold">
             Risiko
-            <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={riskLevel} name="risk">
+            <select className={formControlClass} defaultValue={riskLevel} name="risk">
               <option value="">Alle</option>
               <option value="low">Niedrig</option>
               <option value="medium">Mittel</option>
@@ -114,7 +115,7 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
           </label>
           <label className="grid gap-1 text-sm font-bold">
             Status
-            <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={archived ? "archived" : "active"} name="status">
+            <select className={formControlClass} defaultValue={archived ? "archived" : "active"} name="status">
               <option value="active">Aktiv</option>
               <option value="archived">Archiviert</option>
             </select>
@@ -131,13 +132,13 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
                 Suche im aktiven Übungskatalog. Die Übung wird nicht dupliziert, sondern erhält strukturierte Hindernis-Guidance.
               </p>
             </div>
-            <Link className="shrink-0 rounded-md border border-[var(--border)] px-3 py-2 text-sm font-black" href="/exercises">
+            <Link className={buttonClass("secondary", "shrink-0 px-3")} href="/exercises">
               Übungskatalog öffnen
             </Link>
           </div>
           <form className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row" data-tour="obstacle-candidate-search" method="get">
-            <label className="min-w-0 flex-1"><span className="sr-only">Bestehende Übung suchen</span><input className="h-11 w-full min-w-0 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3" defaultValue={candidateQuery} name="candidateQ" placeholder="Übung suchen, z. B. Box, Hang, Carry ..." /></label>
-            <button className="min-h-11 shrink-0 rounded-md bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Übungen suchen</button>
+            <label className="min-w-0 flex-1"><span className="sr-only">Bestehende Übung suchen</span><input className={`${formControlClass} min-w-0`} defaultValue={candidateQuery} name="candidateQ" placeholder="Übung suchen, z. B. Box, Hang, Carry ..." /></label>
+            <button className={buttonClass("primary", "shrink-0 px-5")} type="submit">Übungen suchen</button>
           </form>
           {candidateQuery ? candidates.length ? <div className="mt-4 grid gap-2" data-tour="obstacle-candidate-review">{candidates.map((candidate) => <ObstacleCandidateRow candidate={candidate} key={candidate.exerciseId} />)}</div> : <p className="mt-4 rounded-md bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]">Keine noch nicht zugeordneten aktiven Übungen für „{candidateQuery}“ gefunden.</p> : null}
         </section>
@@ -229,10 +230,10 @@ function ObstacleCard({ obstacle }: { readonly obstacle: ObstacleCatalogItem }) 
           </details>
 
           <div className="view-actions obstacle-actions flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
-            <Link className="rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" href={`/exercises/${obstacle.exerciseId}`}>
+            <Link className={buttonClass("primary", "px-3 py-2 text-xs")} href={`/exercises/${obstacle.exerciseId}`}>
               Übung öffnen
             </Link>
-            <Link className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" data-tour="obstacle-edit" href={`/exercises/${obstacle.exerciseId}/edit?from=obstacles#obstacle-guidance`}>
+            <Link className={buttonClass("secondary", "px-3 py-2 text-xs")} data-tour="obstacle-edit" href={`/exercises/${obstacle.exerciseId}/edit?from=obstacles#obstacle-guidance`}>
               Hindernis bearbeiten
             </Link>
             <RemoveObstacleAssignmentForm exerciseId={obstacle.exerciseId} exerciseName={obstacle.name} />
@@ -262,10 +263,10 @@ function ObstacleCandidateRow({ candidate }: { readonly candidate: ObstacleCandi
       </div>
       <form action={assignExerciseAsObstacleAction} className="flex flex-wrap justify-end gap-2">
         <input name="exerciseId" type="hidden" value={candidate.exerciseId} />
-        <button className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black" name="next" type="submit" value="catalog">
+        <button className={buttonClass("secondary", "px-3 py-2 text-xs")} name="next" type="submit" value="catalog">
           Übernehmen
         </button>
-        <button className="min-h-11 rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)]" name="next" type="submit" value="edit">
+        <button className={buttonClass("primary", "px-3 py-2 text-xs")} name="next" type="submit" value="edit">
           Übernehmen & prüfen
         </button>
       </form>

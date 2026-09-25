@@ -117,7 +117,3 @@ export async function applyPendingMigrations(): Promise<readonly number[]> {
 
   return newlyApplied;
 }
-
-export async function runMigrations(): Promise<void> {
-  await applyPendingMigrations();
-}

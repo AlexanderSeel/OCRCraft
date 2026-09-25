@@ -69,20 +69,42 @@ export class ExerciseImageGenerationRepository implements ExerciseImageGeneratio
     }));
   }
 
-  async listSeedExercisesMissingImage(): Promise<readonly { readonly exerciseId: string; readonly seedKey: string }[]> {
+  async listSeedExercisesMissingImage(
+    includeSeedKeys: readonly string[] = [],
+  ): Promise<readonly { readonly exerciseId: string; readonly seedKey: string }[]> {
     await ensureDatabaseReady();
 
     return withDuckDbConnection(async (connection) => {
+      const seedKeys = [...new Set(includeSeedKeys.map((value) => value.trim()).filter(Boolean))];
+      const parameters: Record<string, string> = {};
+      const seedKeyClause = seedKeys.length
+        ? seedKeys.map((seedKey, index) => {
+          const parameterName = `seedKey${index}`;
+          parameters[parameterName] = seedKey;
+          return `$${parameterName}`;
+        }).join(",")
+        : "";
       const reader = await connection.runAndReadAll(`
         SELECT e.id::VARCHAR, e.seed_key
         FROM exercises e
         WHERE e.archived=false AND e.seed_key IS NOT NULL
-          AND NOT EXISTS (
-            SELECT 1 FROM exercise_media_assets m
-            WHERE m.exercise_id=e.id AND m.generation_status='generated'
+          AND (
+            NOT EXISTS (
+              SELECT 1 FROM exercise_media_assets m
+              WHERE m.exercise_id=e.id AND m.generation_status='generated'
+            )
+            ${seedKeyClause ? `OR (
+              e.seed_key IN (${seedKeyClause})
+              AND NOT EXISTS (
+                SELECT 1 FROM exercise_media_assets approved_media
+                WHERE approved_media.exercise_id=e.id
+                  AND approved_media.generation_status='generated'
+                  AND approved_media.review_status='approved'
+              )
+            )` : ""}
           )
         ORDER BY e.seed_key
-      `);
+      `, parameters);
       return reader.getRows().map((row) => ({ exerciseId: String(row[0]), seedKey: String(row[1]) }));
     });
   }

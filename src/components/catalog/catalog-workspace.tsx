@@ -1,28 +1,8 @@
 import type { ReactNode } from "react";
-import { OverviewLayout } from "@/components/overview-layout";
 
 export interface CatalogSummaryItem {
   readonly label: string;
   readonly value: ReactNode;
-}
-
-export function CatalogWorkspace({
-  children,
-  filters,
-  storageKey,
-}: {
-  readonly children: ReactNode;
-  readonly filters: ReactNode;
-  readonly storageKey: string;
-}) {
-  return (
-    <OverviewLayout storageKey={storageKey}>
-      <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
-        <div className="min-w-0">{filters}</div>
-        <div className="min-w-0 space-y-5">{children}</div>
-      </div>
-    </OverviewLayout>
-  );
 }
 
 export function CatalogSummaryStrip({ items }: { readonly items: readonly CatalogSummaryItem[] }) {

@@ -11,7 +11,6 @@ export const duplicateResolutionSchema = z.object({
   decision: z.enum(["left", "right", "both", "ignored"]),
 });
 export const duplicateResolutionPayloadSchema = z.object({ resolutions: z.array(duplicateResolutionSchema).min(1) });
-export type DuplicateResolutionPayload = z.infer<typeof duplicateResolutionPayloadSchema>;
 export interface AppTask { readonly id:string; readonly taskType:AppTaskType; readonly title:string; readonly status:AppTaskStatus; readonly progress:number; readonly progressMessage:string|null; readonly errorMessage:string|null; readonly createdAt:string; readonly startedAt:string|null; readonly finishedAt:string|null; readonly payload:unknown; }
 export interface AppTaskSummary { readonly queued:number; readonly running:number; readonly failed:number; }
 export interface QueueIssue { readonly id:string; readonly title:string; readonly status:string; readonly progress:number; readonly message:string|null; readonly createdAt:string; readonly source:"task"|"media"; }

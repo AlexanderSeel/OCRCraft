@@ -13,7 +13,6 @@ import {
 } from "../../domain/training/model";
 
 export const TRAINING_BUILDER_MODES = ["local", "ai"] as const;
-export type TrainingBuilderMode = (typeof TRAINING_BUILDER_MODES)[number];
 
 export const mainPartProgrammingSchema = z.object({
   mode: z.enum(MAIN_PART_PROGRAMMING_MODES),
