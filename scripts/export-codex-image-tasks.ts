@@ -1,13 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { buildExerciseImagePrompt } from "@/server/images/exercise-image-prompt-builder";
-import { ExerciseImageGenerationRepository } from "@/server/images/exercise-image-generation-repository";
-import {
-  buildCodexImageOutputFilename,
-  chooseCodexImageFigurePresentation,
-} from "@/server/images/codex-image-task-core";
-import { listMediaGenerationCandidates } from "@/server/media/media-catalog-repository";
-import { getMediaGenerationCandidateReason } from "@/server/media/media-rights-core";
+import { buildCodexImageTaskExport } from "@/server/images/codex-image-task-service";
 
 interface ExportArgs {
   readonly output: string;
@@ -27,85 +20,18 @@ function parseArgs(argv: readonly string[]): ExportArgs {
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
-  const candidates = await listMediaGenerationCandidates(args.query, args.limit);
-  const exportable = candidates.filter((candidate) => candidate.activeJobCount === 0);
-  const repository = new ExerciseImageGenerationRepository();
-
-  const tasks = [];
-  let promptReady = 0;
-
-  for (const [zeroBasedIndex, candidate] of exportable.entries()) {
-    const identifier = candidate.seedKey ?? candidate.exerciseId;
-    const figurePresentation = chooseCodexImageFigurePresentation(identifier);
-    const reason = getMediaGenerationCandidateReason(candidate);
-    let prompt: string | null = null;
-    let promptError: string | null = null;
-
-    try {
-      const context = await repository.getContext(identifier);
-      prompt = buildExerciseImagePrompt(context, figurePresentation);
-      promptReady += 1;
-    } catch (error) {
-      promptError = error instanceof Error ? error.message : String(error);
-    }
-
-    tasks.push({
-      order: zeroBasedIndex + 1,
-      exerciseId: candidate.exerciseId,
-      seedKey: candidate.seedKey,
-      exerciseName: candidate.exerciseName,
-      category: candidate.category,
-      reason,
-      currentImageAssetCount: candidate.imageAssetCount,
-      failedImageCount: candidate.failedImageCount,
-      rightsBlockedImageCount: candidate.rightsBlockedImageCount,
-      figurePresentation,
-      outputFilename: buildCodexImageOutputFilename(
-        zeroBasedIndex + 1,
-        candidate.seedKey,
-        candidate.exerciseName,
-      ),
-      promptReady: prompt !== null,
-      prompt,
-      promptError,
-      importPolicy: {
-        registerAs: "club_created",
-        initialReviewStatus: "pending",
-        neverOverwriteApprovedPrimaryMedia: true,
-        replaceOnlyWhenCurrentMediaIsUnusable: true,
-        biomechanicsReviewRequired: true,
-        textMatchReviewRequired: true,
-      },
-    });
-  }
-
-  const payload = {
-    format: "ocrcraft-codex-image-tasks-v1",
-    generatedAt: new Date().toISOString(),
-    query: args.query || null,
-    candidateCount: candidates.length,
-    taskCount: tasks.length,
-    skippedActiveImageJobs: candidates.length - exportable.length,
-    promptReadyCount: promptReady,
-    promptBlockedCount: tasks.length - promptReady,
-    generationRules: [
-      "Use the exact OCRCraft prompt stored in each task; the structured catalog content is the source of truth.",
-      "Generate one task/output file at a time. Do not create contact sheets or composite atlases for import.",
-      "Do not merge people, duplicate limbs, distort hands/feet, or add participants not required by the exercise.",
-      "Reject and regenerate anatomically implausible results before import.",
-      "Keep the same main demonstrator across all frames of a sequence and preserve the requested equipment.",
-      "Never overwrite an already approved usable primary medium.",
-      "After import keep the new medium pending until biomechanics and text-match review pass.",
-    ],
-    tasks,
-  };
-
+  const payload = await buildCodexImageTaskExport({ query: args.query, limit: args.limit });
   const outputPath = path.resolve(args.output);
   await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, JSON.stringify(payload, null, 2), "utf8");
+
+  const taskCount = Number(payload.taskCount ?? 0);
+  const promptReadyCount = Number(payload.promptReadyCount ?? 0);
+  const promptBlockedCount = Number(payload.promptBlockedCount ?? 0);
+  const skippedActiveImageJobs = Number(payload.skippedActiveImageJobs ?? 0);
   process.stdout.write(
     `Codex image task export written to ${outputPath}\n` +
-    `${tasks.length} task(s), ${promptReady} prompt-ready, ${tasks.length - promptReady} blocked by incomplete structured image context, ${candidates.length - exportable.length} skipped because an image job is active.\n`,
+    `${taskCount} task(s), ${promptReadyCount} prompt-ready, ${promptBlockedCount} blocked by incomplete structured image context, ${skippedActiveImageJobs} skipped because an image job is active.\n`,
   );
 }
 

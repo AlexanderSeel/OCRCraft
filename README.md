@@ -382,7 +382,7 @@ Aktuelle Codex-Aufgaben für alle Übungen ohne verwendbares Bild exportieren:
 npm run exercise:images:codex-tasks
 ```
 
-Der Export wird standardmäßig nach `artifacts/codex-image-tasks.json` geschrieben. Er enthält den Ersatzgrund, den stabilen Zieldateinamen und – sofern die strukturierten DE/EN-Übungsdaten vollständig sind – exakt den OCRCraft-Bildprompt. Übungen mit bereits laufendem Bildjob werden nicht erneut eingeplant.
+Der Export wird standardmäßig nach `artifacts/codex-image-tasks.json` geschrieben. Er enthält den Ersatzgrund, den stabilen Zieldateinamen und – sofern die strukturierten DE/EN-Übungsdaten vollständig sind – exakt den OCRCraft-Bildprompt. Übungen mit bereits laufendem Bildjob werden nicht erneut eingeplant. Admins können denselben Export im Medienkatalog über **Codex-Aufgaben herunterladen** direkt aus dem aktuellen Datenbankstand erzeugen.
 
 Generierte Bilder liegen standardmäßig unter `public/generated/exercises/`.
 

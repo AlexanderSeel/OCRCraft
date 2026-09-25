@@ -298,9 +298,17 @@ export default async function MediaPage({ searchParams }: PageProps) {
                   Hier kannst du auch Übungen auswählen, die noch gar keinen Medieneintrag besitzen, nur fehlgeschlagene/abgelehnte Bilder haben oder deren externe Bilder wegen fehlender Lizenz-, Quellen- oder Einwilligungsfreigabe nicht verwendbar sind.
                 </p>
               </div>
-              <span className="rounded-full bg-[var(--surface-subtle)] px-3 py-1 text-xs font-black">
-                {missingImageExercises.length} angezeigt
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  className="grid min-h-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black"
+                  href={missingQuery ? `/api/admin/media/codex-image-tasks?q=${encodeURIComponent(missingQuery)}` : "/api/admin/media/codex-image-tasks"}
+                >
+                  Codex-Aufgaben herunterladen
+                </a>
+                <span className="rounded-full bg-[var(--surface-subtle)] px-3 py-1 text-xs font-black">
+                  {missingImageExercises.length} angezeigt
+                </span>
+              </div>
             </div>
             <form className="mt-3 flex flex-wrap gap-2" method="get">
               <label className="min-w-[260px] flex-1">
