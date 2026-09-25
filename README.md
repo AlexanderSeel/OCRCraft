@@ -39,7 +39,7 @@ Der Übungskatalog ist die fachliche Basis der Anwendung. Übungen können gesuc
 - Medien-UX: Übungen mit mehreren Bildern besitzen im Editor eine Schnellverwaltung zum Setzen des Hauptbilds und zum Löschen zusätzlicher Assets; das Hauptbild bleibt geschützt.
 - Bestätigungs-UX: Kritische Freigaben, Löschungen, Archivierungen, Zusammenführungen und Outdoor-Sammelaktionen werden durch ein zugängliches Bestätigungs-Popover abgesichert; Abbrechen, Escape und Klick außerhalb schließen die Bestätigung ohne Submit.
 - Tastaturzugänglichkeit: Bestätigungs-Popover setzen den Fokus beim Öffnen in den Dialog und geben ihn beim Schließen an den Auslöser zurück.
-- E2E-Betrieb: Der kritische Medienfreigabe-Workflow ist per Playwright abgesichert; parallele Windows-DuckDB-Lock-Kollisionen werden beim E2E-/Worker-Start retrybar behandelt.
+- E2E-Betrieb: Der kritische Medienfreigabe-Workflow ist per Playwright abgesichert; parallele Windows-DuckDB-Lock-Kollisionen werden beim E2E-/Worker-Start retrybar behandelt. Persistenz-E2E deckt zusätzlich Quick Create und Training Builder mit echten Änderungen/Speichern sowie einen harten Kids-Mindestalter-Blocker und Theme-Persistenz ab.
 - Medien-Datenintegrität: Der Wechsel des Hauptbilds berücksichtigt DuckDB-Fremdschlüssel auf abgeschlossenen Bildjobs und vermeidet unnötige Updates referenzierter Assets.
 - Hindernis-UX: Im Listenmodus bleibt die direkte Bearbeitung von Hindernis-Guidance sichtbar.
 - Qualitäts- und Sicherheitsgates: statische UI-Prüfung, Playwright-Regressionen, Auth-/RBAC-Schutz, Kids-/Youth-Regeln, serverseitige Domänenvalidierung, AI-Review-Blocker und vollständige Seed-/Übersetzungsberichte sind vorhanden.

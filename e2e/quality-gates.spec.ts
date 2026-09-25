@@ -183,3 +183,59 @@ test("mobile layout stays within the viewport", async ({ page }) => {
     await assertPageShell(page, route);
   }
 });
+
+
+test("quick create generates and persists a validated training", async ({ page }) => {
+  await page.goto("/quick-create", { waitUntil: "domcontentloaded" });
+
+  for (let step = 0; step < 4; step += 1) {
+    await page.getByRole("button", { name: "Weiter" }).click();
+  }
+  await expect(page.getByRole("heading", { name: "Entwurf prüfen" })).toBeVisible();
+
+  const generate = page.getByRole("button", { name: "Trainingsentwurf erstellen" });
+  await generate.click();
+  await expect(page.getByText("Dieser Entwurf ist noch nicht gespeichert.")).toBeVisible({ timeout: 20_000 });
+
+  const title = page.getByRole("textbox", { name: "Trainingstitel" });
+  await title.fill("E2E Quick Create Training");
+  const save = page.getByRole("button", { name: "Training speichern" });
+  await expect(save).toBeEnabled();
+  await save.click();
+
+  await expect(page.getByText("Training gespeichert", { exact: true })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("link", { name: "Gespeicherte Trainings öffnen" })).toBeVisible();
+});
+
+test("training builder keeps real edits through generation and persistence", async ({ page }) => {
+  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+
+  await page.getByRole("combobox", { name: "Zielgruppe" }).last().selectOption("kids");
+  const age = page.getByRole("textbox", { name: "Alter" }).last();
+  await age.fill("10");
+  await page.getByRole("combobox", { name: "Organisation im Hauptteil" }).selectOption("team");
+  await page.getByRole("spinbutton", { name: "Teamgröße" }).fill("3");
+
+  const title = page.getByRole("textbox", { name: "Trainingstitel" });
+  await title.fill("E2E Builder Kids Team");
+  await page.getByRole("button", { name: "Lokal planen" }).click();
+
+  await expect(page.getByText("Dieser Entwurf ist noch nicht gespeichert.")).toBeVisible({ timeout: 20_000 });
+  const save = page.getByRole("button", { name: "Training speichern" });
+  await expect(save).toBeEnabled();
+  await save.click();
+
+  await expect(page.getByRole("link", { name: "Gespeichertes Training öffnen" })).toBeVisible({ timeout: 20_000 });
+});
+
+test("Kids planning does not weaken minimum-age safety boundaries to avoid a zero-result pool", async ({ page }) => {
+  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  await page.getByRole("combobox", { name: "Zielgruppe" }).last().selectOption("kids");
+  await page.getByRole("textbox", { name: "Alter" }).last().fill("5");
+
+  await page.getByRole("button", { name: "Lokal planen" }).click();
+
+  await expect(page.getByText("Planung fehlgeschlagen", { exact: true })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("Alter, Ort, Ausschlussbereiche, Risiko, Equipment, Hindernisbestand und Stationskapazität bleiben harte Grenzen.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Training speichern" })).toBeDisabled();
+});
