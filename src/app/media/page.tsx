@@ -31,6 +31,7 @@ import { cleanupOrphanedMediaAction, deleteExternalMediaAction, finalizeLegacyTr
 import { getLegacyMediaMigrationState, legacyMediaMigrationStateLabel } from "@/server/media/legacy-media-migration-core";
 import { canApproveMediaReview } from "@/server/media/media-review-core";
 import { getMediaMaintenanceSummary } from "@/server/media/media-maintenance-service";
+import { getCodexImageP1BatchProgress } from "@/server/images/codex-image-task-service";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +76,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
   const pageSize = [12, 24, 48].includes(requestedSize) ? requestedSize : 24;
   const page = Math.max(1, Number(params.page ?? "1") || 1);
 
-  const [summary, assetTotal, assets, generationQueue, missingImageExercises, recentJobs, maintenance, legacyCandidates] = await Promise.all([
+  const [summary, assetTotal, assets, generationQueue, missingImageExercises, recentJobs, maintenance, legacyCandidates, codexBatchProgress] = await Promise.all([
     getMediaCatalogSummary(),
     countMediaCatalog({ query, reviewStatus, generationStatus, sourceType, mediaType }),
     listMediaCatalog({
@@ -92,6 +93,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
     listRecentMediaGenerationJobs(12),
     getMediaMaintenanceSummary(),
     listLegacyTriptychMigrationCandidates(40),
+    getCodexImageP1BatchProgress(),
   ]);
 
   return (
@@ -319,6 +321,34 @@ export default async function MediaPage({ searchParams }: PageProps) {
                 </span>
               </div>
             </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              {codexBatchProgress.map((batch) => (
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" key={batch.id}>
+                  <div className="flex items-center justify-between gap-2">
+                    <strong className="text-sm">
+                      {batch.id === "single-subject"
+                        ? "Batch 1 · Einzelperson"
+                        : batch.id === "ocrfra-obstacles"
+                          ? "Batch 2 · OCRFRA"
+                          : "Batch 3 · Spiele/Partner"}
+                    </strong>
+                    <span className="text-xs font-black text-[var(--muted)]">{batch.complete}/{batch.total}</span>
+                  </div>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--surface)]" aria-hidden="true">
+                    <div
+                      className="h-full rounded-full bg-[var(--accent)]"
+                      style={{ width: `${batch.total > 0 ? Math.round((batch.complete / batch.total) * 100) : 100}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    {batch.remaining === 0
+                      ? "Kein Ersatzbild mehr offen."
+                      : `${batch.readyToGenerate} bereit · ${batch.activeJobs} laufend · ${batch.remaining} offen`}
+                  </p>
+                </div>
+              ))}
+            </div>
+
             <form className="mt-3 flex flex-wrap gap-2" method="get">
               <label className="min-w-[260px] flex-1">
                 <span className="sr-only">Übungen ohne Bild suchen</span>

@@ -8,6 +8,10 @@ import {
 } from "@/server/images/codex-image-task-core";
 import { listMediaGenerationCandidates } from "@/server/media/media-catalog-repository";
 import { getMediaGenerationCandidateReason } from "@/server/media/media-rights-core";
+import {
+  CODEX_IMAGE_P1_BATCHES,
+  type CodexImageP1BatchId,
+} from "@/server/images/codex-image-p1-batches";
 
 export interface CodexImageTaskExportOptions {
   readonly query?: string;
@@ -100,4 +104,42 @@ export async function buildCodexImageTaskExport(
     ],
     tasks,
   };
+}
+
+export interface CodexImageBatchProgress {
+  readonly id: CodexImageP1BatchId;
+  readonly total: number;
+  readonly complete: number;
+  readonly remaining: number;
+  readonly activeJobs: number;
+  readonly readyToGenerate: number;
+}
+
+export async function getCodexImageP1BatchProgress(): Promise<readonly CodexImageBatchProgress[]> {
+  const candidates = await listMediaGenerationCandidates("", 1000);
+  const candidatesBySeed = new Map(
+    candidates
+      .filter((candidate): candidate is typeof candidate & { readonly seedKey: string } => Boolean(candidate.seedKey))
+      .map((candidate) => [candidate.seedKey, candidate]),
+  );
+
+  return (Object.entries(CODEX_IMAGE_P1_BATCHES) as readonly [
+    CodexImageP1BatchId,
+    readonly string[],
+  ][]).map(([id, seedKeys]) => {
+    const remainingCandidates = seedKeys
+      .map((seedKey) => candidatesBySeed.get(seedKey))
+      .filter((candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate));
+    const activeJobs = remainingCandidates.filter((candidate) => candidate.activeJobCount > 0).length;
+    const remaining = remainingCandidates.length;
+
+    return {
+      id,
+      total: seedKeys.length,
+      complete: seedKeys.length - remaining,
+      remaining,
+      activeJobs,
+      readyToGenerate: remaining - activeJobs,
+    };
+  });
 }
