@@ -22,6 +22,7 @@
     "test:watch": "vitest",
     "exercise:image": "node --conditions=react-server --import=tsx scripts/generate-exercise-image.ts",
     "exercise:images:seed": "node --conditions=react-server --import=tsx scripts/generate-seed-exercise-images.ts",
+    "exercise:images:codex-tasks": "node --conditions=react-server --import=tsx scripts/export-codex-image-tasks.ts",
     "exercise:images:import-named": "node scripts/import-named-exercise-images.mjs",
     "exercise:import:hasaneyldrm": "node --conditions=react-server --import=tsx scripts/import-hasaneyldrm-exercises.ts",
     "exercise:translate:de": "node --conditions=react-server --import=tsx scripts/translate-hasaneyldrm-german.ts",

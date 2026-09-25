@@ -376,6 +376,14 @@ Seed-Bilder erzeugen:
 npm run exercise:images:seed -- --all-seeds
 ```
 
+Aktuelle Codex-Aufgaben für alle Übungen ohne verwendbares Bild exportieren:
+
+```bash
+npm run exercise:images:codex-tasks
+```
+
+Der Export wird standardmäßig nach `artifacts/codex-image-tasks.json` geschrieben. Er enthält den Ersatzgrund, den stabilen Zieldateinamen und – sofern die strukturierten DE/EN-Übungsdaten vollständig sind – exakt den OCRCraft-Bildprompt. Übungen mit bereits laufendem Bildjob werden nicht erneut eingeplant.
+
 Generierte Bilder liegen standardmäßig unter `public/generated/exercises/`.
 
 ## Importquellen

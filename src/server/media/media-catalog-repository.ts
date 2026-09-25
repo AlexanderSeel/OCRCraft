@@ -331,7 +331,7 @@ export async function listMediaGenerationCandidates(
       LIMIT $limit
     `, {
       query: query.trim(),
-      limit: Math.max(1, Math.min(100, limit)),
+      limit: Math.max(1, Math.min(1000, limit)),
     });
 
     return reader.getRows().map((row) => ({
