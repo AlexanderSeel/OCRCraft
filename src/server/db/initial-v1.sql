@@ -4858,6 +4858,28 @@ WHERE exercise_id IN (
   SELECT exercise_id FROM exercise_environment_reviews WHERE disposition='blocked'
 );
 
+-- Source migration: 090_game_movement_pattern_completion.sql
+INSERT OR IGNORE INTO movement_patterns (id,label_de,label_en)
+VALUES ('mixed','Gemischte Bewegungsaufgabe','Mixed Movement');
+
+INSERT OR IGNORE INTO exercise_movement_patterns (exercise_id,movement_pattern_id)
+SELECT e.id,v.pattern
+FROM exercises e
+JOIN (VALUES
+  ('game-carry-collect','carry'),('game-carry-collect','walk'),
+  ('game-code-run','run'),
+  ('game-color-island-sprint','run'),('game-color-island-sprint','agility'),
+  ('game-grip-token-hunt','hang'),
+  ('game-lava-path-builders','balance'),('game-lava-path-builders','walk'),
+  ('game-ocr-memory-relay','run'),('game-ocr-memory-relay','mixed'),
+  ('game-ocr-task-grid','mixed'),
+  ('game-partner-pace-match','run'),
+  ('game-reaction-gates','run'),('game-reaction-gates','agility'),
+  ('game-route-puzzle','run'),('game-route-puzzle','mixed'),
+  ('game-team-treasure-carry','carry'),('game-team-treasure-carry','walk'),
+  ('game-zone-switch','agility')
+) AS v(seed_key,pattern) ON e.seed_key=v.seed_key;
+
 INSERT INTO schema_migrations (version, name) VALUES
   (1, 'initial'),
   (2, 'exercise_catalog'),
@@ -4946,6 +4968,7 @@ INSERT INTO schema_migrations (version, name) VALUES
   (86, 'portable_catalog_review_completion'),
   (87, 'reviewed_outdoor_conversion_policy'),
   (88, 'seed_catalog_provenance'),
-  (89, 'finalize_blocked_studio_reviews');
+  (89, 'finalize_blocked_studio_reviews'),
+  (90, 'game_movement_pattern_completion');
 
 COMMIT;

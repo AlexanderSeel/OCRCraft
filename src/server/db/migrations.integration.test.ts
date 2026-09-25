@@ -24,7 +24,7 @@ describe("database migrations", () => {
       const exercises = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL");
       const gameCatalog = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key LIKE 'game-%'");
 
-      expect(migrations.getRows()[0]?.map(Number)).toEqual([89, 88]);
+      expect(migrations.getRows()[0]?.map(Number)).toEqual([90, 89]);
       expect(Number(exercises.getRows()[0]?.[0])).toBeGreaterThanOrEqual(140);
       expect(Number(gameCatalog.getRows()[0]?.[0])).toBe(13);
     } finally {
@@ -126,6 +126,17 @@ describe("database migrations", () => {
         WHERE e.seed_key LIKE 'game-%'
       `);
     expect(Number(gameDetails.getRows()[0]?.[0])).toBe(26);
+
+      const seedMovementGaps = await connection.runAndReadAll(`
+        SELECT count(*)
+        FROM exercises e
+        WHERE e.seed_key IS NOT NULL
+          AND e.archived=false
+          AND NOT EXISTS (
+            SELECT 1 FROM exercise_movement_patterns p WHERE p.exercise_id=e.id
+          )
+      `);
+      expect(Number(seedMovementGaps.getRows()[0]?.[0])).toBe(0);
     } finally {
       connection.closeSync();
     }
