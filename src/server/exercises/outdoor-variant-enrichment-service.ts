@@ -561,3 +561,48 @@ export async function enrichImportedGymExercisesForOutdoor(
     };
   });
 }
+
+/** Approves only migration-created conversions with explicit portable equipment. */
+export async function approveDeterministicOutdoorReviews(reviewedBy: string): Promise<number> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      UPDATE exercise_environment_reviews r
+      SET review_status='approved', reviewed_at=current_timestamp, reviewed_by=$reviewedBy::UUID
+      WHERE r.disposition='converted' AND r.review_status='pending'
+        AND trim(coalesce(r.replacement_equipment,''))<>''
+        AND EXISTS (SELECT 1 FROM exercise_outdoor_variant_equipment ove WHERE ove.exercise_id=r.exercise_id)
+        AND NOT EXISTS (
+          SELECT 1 FROM exercise_outdoor_variant_equipment ove
+          JOIN equipment eq ON eq.id=ove.equipment_id
+          WHERE ove.exercise_id=r.exercise_id
+            AND eq.seed_key IN ('machine','external-machine','smith-machine','external-smith-machine',
+              'external-leverage-machine','external-bosu-ball','external-stability-ball',
+              'external-wheel-roller','external-hammer','external-roller','external-weighted')
+        )
+      RETURNING r.exercise_id
+    `, { reviewedBy });
+    return reader.getRows().length;
+  });
+}
+
+export async function countDeterministicOutdoorReviews(): Promise<number> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      SELECT count(*) FROM exercise_environment_reviews r
+      WHERE r.disposition='converted' AND r.review_status='pending'
+        AND trim(coalesce(r.replacement_equipment,''))<>''
+        AND EXISTS (SELECT 1 FROM exercise_outdoor_variant_equipment ove WHERE ove.exercise_id=r.exercise_id)
+        AND NOT EXISTS (
+          SELECT 1 FROM exercise_outdoor_variant_equipment ove
+          JOIN equipment eq ON eq.id=ove.equipment_id
+          WHERE ove.exercise_id=r.exercise_id
+            AND eq.seed_key IN ('machine','external-machine','smith-machine','external-smith-machine',
+              'external-leverage-machine','external-bosu-ball','external-stability-ball',
+              'external-wheel-roller','external-hammer','external-roller','external-weighted')
+        )
+    `);
+    return Number(reader.getRows()[0]?.[0] ?? 0);
+  });
+}

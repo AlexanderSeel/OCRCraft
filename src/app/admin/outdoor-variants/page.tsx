@@ -4,12 +4,14 @@ import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";
 import { CatalogPagination, CatalogResultCount } from "@/components/catalog/catalog-controls";
 import {
+  countDeterministicOutdoorReviews,
   getPortabilityAuditOverview,
   listOutdoorVariantCandidates,
   type OutdoorVariantCandidatePreview,
   type PortabilityAuditEntry,
 } from "@/server/exercises/outdoor-variant-enrichment-service";
 import {
+  approveDeterministicOutdoorReviewsAction,
   approveOutdoorVariantCandidateAction,
   runOutdoorVariantEnrichmentAction,
 } from "../actions";
@@ -30,14 +32,16 @@ interface PageProps {
     status?: string;
     page?: string;
     size?: string;
+    bulkApproved?: string;
   }>;
 }
 
 export default async function OutdoorVariantAdminPage({ searchParams }: PageProps) {
-  const [result, candidates, portabilityAudit] = await Promise.all([
+  const [result, candidates, portabilityAudit, deterministicReviewCount] = await Promise.all([
     searchParams,
     listOutdoorVariantCandidates(),
     getPortabilityAuditOverview(),
+    countDeterministicOutdoorReviews(),
   ]);
   const hasResult = result.scanned != null;
   const searchQuery = result.q?.trim().toLocaleLowerCase("de-DE") ?? "";
@@ -158,9 +162,14 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
           </div>
 
           <form action={runOutdoorVariantEnrichmentAction} className="mt-5 flex justify-end">
-            <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
-              {ready.length > 0 ? `${ready.length} sichere Outdoor-Varianten gesammelt übernehmen` : "Importierte Übungen erneut prüfen"}
-            </button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <button className="min-h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 text-sm font-black" formAction={approveDeterministicOutdoorReviewsAction} type="submit">
+                {deterministicReviewCount > 0 ? `${deterministicReviewCount} eindeutige Reviews freigeben` : "Keine eindeutigen Reviews offen"}
+              </button>
+              <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">
+                {ready.length > 0 ? `${ready.length} sichere Outdoor-Varianten gesammelt übernehmen` : "Importierte Übungen erneut prüfen"}
+              </button>
+            </div>
           </form>
         </section>
 

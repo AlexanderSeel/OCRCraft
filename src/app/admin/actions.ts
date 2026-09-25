@@ -10,6 +10,7 @@ import { activateSearchProfile, deleteSearchProfile, saveSearchProfile } from "@
 import { reseedAllDatabaseData } from "@/server/db/reseed-service";
 import { resolveDuplicateTask } from "@/server/exercises/duplicate-review-service";
 import {
+  approveDeterministicOutdoorReviews,
   enrichImportedGymExerciseForOutdoor,
   enrichImportedGymExercisesForOutdoor,
 } from "@/server/exercises/outdoor-variant-enrichment-service";
@@ -166,6 +167,17 @@ export async function runOutdoorVariantEnrichmentAction(): Promise<void> {
       manualReview: String(report.manualReviewRequired),
     });
     redirect(`/admin/outdoor-variants?${params.toString()}`);
+  } catch {
+    redirect("/admin/outdoor-variants?error=1");
+  }
+}
+
+export async function approveDeterministicOutdoorReviewsAction(): Promise<void> {
+  try {
+    const actor = await requireAdmin();
+    const approved = await approveDeterministicOutdoorReviews(actor.id);
+    revalidateOutdoorVariantPaths();
+    redirect(`/admin/outdoor-variants?bulkApproved=${approved}`);
   } catch {
     redirect("/admin/outdoor-variants?error=1");
   }
