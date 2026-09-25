@@ -24,7 +24,7 @@ describe("database migrations", () => {
       const exercises = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key IS NOT NULL");
       const gameCatalog = await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE seed_key LIKE 'game-%'");
 
-      expect(migrations.getRows()[0]?.map(Number)).toEqual([90, 89]);
+      expect(migrations.getRows()[0]?.map(Number)).toEqual([91, 90]);
       expect(Number(exercises.getRows()[0]?.[0])).toBeGreaterThanOrEqual(140);
       expect(Number(gameCatalog.getRows()[0]?.[0])).toBe(13);
     } finally {
@@ -142,6 +142,26 @@ describe("database migrations", () => {
           )
       `);
       expect(Number(seedMovementGaps.getRows()[0]?.[0])).toBe(0);
+
+      const ocrfraSkillCoverage = await connection.runAndReadAll(`
+        SELECT
+          count(*) FILTER (WHERE e.seed_key LIKE 'club-%' AND e.exercise_type='obstacle'),
+          count(DISTINCT s.exercise_id) FILTER (WHERE e.seed_key LIKE 'club-%' AND e.exercise_type='obstacle')
+        FROM exercises e
+        LEFT JOIN exercise_ocr_skills s ON s.exercise_id=e.id
+      `);
+      const ocrfraCounts = ocrfraSkillCoverage.getRows()[0]?.map(Number) ?? [];
+      expect(ocrfraCounts[1]).toBe(ocrfraCounts[0]);
+
+      const approvedClubDimensions = await connection.runAndReadAll(`
+        SELECT
+          count(*) FILTER (WHERE dimensions_status='approved'),
+          count(*) FILTER (WHERE dimensions_status IN ('unknown','review'))
+        FROM club_obstacle_review_state
+      `);
+      const dimensionCounts = approvedClubDimensions.getRows()[0]?.map(Number) ?? [];
+      expect(dimensionCounts[0]).toBe(0);
+      expect(dimensionCounts[1]).toBeGreaterThan(0);
     } finally {
       connection.closeSync();
     }

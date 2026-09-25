@@ -11,6 +11,8 @@ export interface CatalogCoverageInput {
   readonly hasOcrCapability: boolean;
   readonly isClubObstacle: boolean;
   readonly hasClubGuidance: boolean;
+  readonly hasOcrSkillMapping: boolean;
+  readonly clubDimensionsApproved: boolean;
 }
 
 export interface CatalogCoverageDimension {
@@ -44,7 +46,9 @@ const DIMENSIONS: readonly DimensionDefinition[] = [
   { key: "equipment", label: "Equipment", applies: () => true, covered: (row) => row.hasEquipment },
   { key: "body-region", label: "Körperregion", applies: () => true, covered: (row) => row.hasBodyRegion },
   { key: "ocr-capability", label: "OCR-Fähigkeit", applies: () => true, covered: (row) => row.hasOcrCapability },
+  { key: "ocr-skill-matrix", label: "OCR-Skill-Matrix", applies: (row) => row.hasOcrCapability, covered: (row) => row.hasOcrSkillMapping },
   { key: "club-obstacle", label: "Club-Hindernis", applies: (row) => row.isClubObstacle, covered: (row) => row.hasClubGuidance },
+  { key: "club-dimensions", label: "OCRFRA-Maße freigegeben", applies: (row) => row.isClubObstacle, covered: (row) => row.clubDimensionsApproved },
 ];
 
 export function buildCatalogCoverageReport(rows: readonly CatalogCoverageInput[]): CatalogCoverageReport {

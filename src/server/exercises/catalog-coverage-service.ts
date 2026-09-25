@@ -21,7 +21,13 @@ export async function getCatalogCoverageReport(): Promise<CatalogCoverageReport>
           OR EXISTS (SELECT 1 FROM exercise_tags tag WHERE tag.exercise_id=e.id AND tag.tag_id='ocr')
           OR EXISTS (SELECT 1 FROM exercise_movement_patterns p WHERE p.exercise_id=e.id AND p.movement_pattern_id IN ('climb','hang','pull','carry','drag','balance','swing'))),
         e.seed_key LIKE 'club-%',
-        EXISTS (SELECT 1 FROM exercise_obstacle_guidance g WHERE g.exercise_id=e.id AND TRIM(g.equipment_configuration)<>'' AND g.clear_zone_metres>0)
+        EXISTS (SELECT 1 FROM exercise_obstacle_guidance g WHERE g.exercise_id=e.id AND TRIM(g.equipment_configuration)<>'' AND g.clear_zone_metres>0),
+        EXISTS (SELECT 1 FROM exercise_ocr_skills s WHERE s.exercise_id=e.id),
+        COALESCE((
+          SELECT state.dimensions_status='approved'
+          FROM club_obstacle_review_state state
+          WHERE state.exercise_id=e.id
+        ), false)
       FROM exercises e
       LEFT JOIN exercise_translations t_de ON t_de.exercise_id=e.id AND t_de.locale='de'
       LEFT JOIN exercise_translations t_en ON t_en.exercise_id=e.id AND t_en.locale='en'
@@ -41,6 +47,8 @@ export async function getCatalogCoverageReport(): Promise<CatalogCoverageReport>
       hasOcrCapability: Boolean(row[9]),
       isClubObstacle: Boolean(row[10]),
       hasClubGuidance: Boolean(row[11]),
+      hasOcrSkillMapping: Boolean(row[12]),
+      clubDimensionsApproved: Boolean(row[13]),
     }));
     return buildCatalogCoverageReport(rows);
   });

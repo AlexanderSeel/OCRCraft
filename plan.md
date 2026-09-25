@@ -28,7 +28,7 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 - [x] Deterministischer Outdoor-Sammelreview ergänzt: Admins können ausschließlich Konvertierungen mit strukturiertem Ersatz-Equipment und ohne verbliebene Maschinenabhängigkeit gesammelt freigeben; mehrdeutige Fälle bleiben einzeln reviewpflichtig.
 - [x] Kanonische Feldanreicherung abgeschlossen: Seed-Provenienz ist vollständig und die letzten 12 Bewegungsmuster-Lücken der kuratierten Games sind aus ihren vorhandenen Spielbeschreibungen geschlossen; variable OCR-Aufgabenraster/-sequenzen verwenden bewusst `mixed` statt eine konkrete Bewegung zu erfinden.
 - [ ] Kuratierte Seed-Batches als vollständige Lieferpakete abschließen: Migration, Quellenregister, Reviewstatus, Vollständigkeitsbericht, Domain-Tests, `typecheck`, `lint`, `check:ui`, Unit-, Build- und E2E-Prüfung.
-- [ ] OCR-Fähigkeitsmatrix und lokale OCRFRA-Maße in Coverage- und Freigabeworkflows durchgängig verbinden; unbestätigte Vereinsmaße bleiben sichtbar offen.
+- [x] OCR-Fähigkeitsmatrix und lokale OCRFRA-Maße in Coverage-/Freigabeworkflows verbunden: 16 kontrollierte OCR-Skills und Primär-/Sekundär-Mappings für alle OCRFRA-Hindernisse sind strukturiert gespeichert; lokale Maße besitzen einen expliziten `unknown/review/approved/blocked`-Status und bleiben bis Vereinsfreigabe sichtbar offen. Der Admin-Coverage-Report zeigt Skill-Mapping und Maßfreigabe getrennt.
 
 ## P1 – UX/UI-Konzept und Einheitlichkeit
 
