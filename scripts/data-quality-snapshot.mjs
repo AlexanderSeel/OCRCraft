@@ -75,9 +75,9 @@ try {
       COALESCE(g.equipment_configuration,''),
       COALESCE(g.clear_zone_metres,0),
       COALESCE((
-        SELECT string_agg(sr.provider || ':' || sr.source_identifier, ', ' ORDER BY sr.provider, sr.source_identifier)
-        FROM exercise_source_references sr
-        WHERE sr.exercise_id=e.id
+        SELECT string_agg(provider || ':' || title, ', ' ORDER BY provider, title)
+        FROM exercise_source_references
+        WHERE exercise_id=e.id
       ),'')
     FROM exercises e
     JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
