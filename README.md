@@ -348,6 +348,9 @@ http://localhost:3000
 
 ## Qualitätsprüfungen
 
+`audit:maintainability` erzeugt zusätzlich eine repositoryweite Inventur für doppelte statische UI-Klassen, lokale Raw-Buttons und wahrscheinlich ungenutzte Exporte; die Inventur ist diagnostisch und wird in CI protokolliert.
+
+
 Aktuellen Datenqualitäts-Snapshot (Bewegungsmuster, fehlende Bilder, Outdoor-Reviews, OCRFRA-Hindernisse) ausgeben:
 
 ```bash
@@ -360,6 +363,7 @@ Die vollständige lokale Abschlussroutine lautet:
 ```bash
 npm run check:ui
 npm run check:architecture
+npm run audit:maintainability
 npm run typecheck
 npm test -- --run
 npm run lint

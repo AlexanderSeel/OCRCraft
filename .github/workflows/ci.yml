@@ -39,6 +39,9 @@ jobs:
       - name: Architecture and dependency gate
         run: npm run check:architecture
 
+      - name: Maintainability inventory
+        run: npm run audit:maintainability
+
       - name: Typecheck
         run: npm run typecheck
 

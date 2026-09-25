@@ -69,8 +69,8 @@ Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei e
 
 - [x] Initial-Datenbank-Build entkoppelt: Migrationen werden automatisch aus dem nummerierten Migrationsverzeichnis erkannt; die deterministische Outdoor-Review-Regel wird zwischen Zählung und Freigabe geteilt und der Bulk-Workflow meldet das Ergebnis barrierearm zurück.
 - [x] Duplikatprüfung vereinheitlicht: Einzel- und Sammelentscheidungen laufen über `duplicate_resolve` in der Aufgabenqueue, Payloads werden am Rand validiert und der Worker meldet Sammelfortschritt bzw. unbekannte Tasktypen als Fehler.
-- [ ] Doppelte UI-Markups und lokale Varianten per AST-/Repository-Inventur erfassen, in zentrale Komponenten überführen und nach jedem Schritt visuell/regressiv prüfen.
-- [ ] Unnötigen oder toten Code entfernen: ungenutzte Exporte, verwaiste CSS-Klassen, nicht erreichbare Routen, doppelte Hilfsfunktionen und überholte Übergangskomponenten; Verhalten vorher/nachher testen.
+- [ ] Doppelte UI-Markups und lokale Varianten weiter abbauen: `audit:maintainability` inventarisiert repositoryweit wiederholte statische UI-Klassen und lokale Raw-Button-Dateien in CI; die häufigsten Treffer werden anschließend in zentrale Komponenten/Adapter überführt und regressiv geprüft.
+- [ ] Unnötigen oder toten Code weiter entfernen: `audit:maintainability` meldet wahrscheinlich ungenutzte benannte Exporte repositoryweit; sichere Treffer, verwaiste CSS-Klassen, nicht erreichbare Routen und überholte Übergangskomponenten werden nach Verwendungsprüfung entfernt.
 - [x] Server-/Domain-Grenzen automatisiert abgesichert: `check:architecture` verhindert direkte DuckDB-Zugriffe aus UI/Routes und Infrastrukturimporte im Domain-Layer; Services/Repositories bleiben die Datenzugriffsgrenze und der Gate läuft in CI.
 - [x] Abhängigkeiten und Skripte abgesichert: `check:architecture` inventarisiert Runtime-Dependencies, meldet unreferenzierte Pakete, prüft die vollständige Abschlussroutine und hält README/CI-Befehle synchron; der Gate ist CI-grün.
 
