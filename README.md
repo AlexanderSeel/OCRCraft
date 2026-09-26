@@ -46,6 +46,23 @@ Der Übungskatalog ist die fachliche Basis der Anwendung. Übungen können gesuc
 - Qualitätsanalyse: Die Admin-Übersicht verbindet tatsächliche Übungsnutzung, Körperregion-/Hindernis-Coverage, Laufvolumen, Wiederholungswarnungen, erklärbare Zielgruppen-/Orts-Nulltreffer und Medienersatzgründe mit dem bestehenden Vollständigkeitsreview. Accessibility-Gates prüfen alle Kernrouten, 44px-Touch-Ziele, Light/Dark-Kontrast, reduzierte Bewegung, Formularfehler sowie Dialog-/Popover-Fokusverhalten.
 - Interaktive Orientierung: Release 1.0 enthält eine routebewusste DE/EN-Tour für Dashboard, Kataloge, Administration, Übungserstellung, Hinderniszuordnung, Quick Create und Training Builder.
 
+### Abgeschlossene Release-1.0-Bausteine
+
+Die abgeschlossenen Arbeitspakete aus [`plan.md`](./plan.md) sind als nutzbare Produktfunktionen umgesetzt:
+
+- Deploybarer DuckDB-Initialstand mit automatisch erkanntem Migrationsbestand, reproduzierbarem Snapshot-Build, Bootstrap bei fehlender Datenbank und upgradefähigen Bestandsdaten.
+- Kuratierter OCR-/OCRFRA-Katalog mit Provenienz, Quellenregister, strukturierten Bewegungsmustern, 16 OCR-Skills, lokalen Hindernismaßen sowie getrennten Review- und Freigabestatus.
+- Portable Hallen-/Outdoor-Planung mit expliziter Equipment-Freigabeliste, deterministischer Sammelfreigabe und nachvollziehbar blockierten Maschinenfällen; 801 sichere Konvertierungen sind freigegeben.
+- Lokale Medienverwaltung mit benannten Primärbildern, Codex-Batchimport, Duplikatschutz, 1536×1024-Regeneration bereits eindeutig zugeordneter Assets und FK-sicherem Wechsel des Hauptbilds.
+- Gemeinsame Katalog-UX für Filter, Pagination, Ansichten und kritische Bestätigungen inklusive Escape-Unterstützung, Fokussetzung und Fokus-Rückgabe.
+- Barrierearme Kernoberfläche mit semantischen Statusfarben, 44px-Touch-Zielen, Light/Dark-Kontrastprüfung, Reduced-Motion-Unterstützung und angekündigten Formularfehlern.
+- Routebewusste interaktive Tutorials für Kataloge, Medienreview, Outdoor, AI-Drafts, Gruppen, Quick Create, Training Builder, Hilfezentrum und Administration mit lokalen Fortschrittsständen.
+- Qualitätsanalyse für Nutzung, Katalog-Coverage, Laufvolumen, Wiederholungen, Nulltreffer, Vollständigkeit und Medienersatzgründe sowie echte Quick-Create-/Builder-/Kids-/Theme-Regressionen.
+- Architektur- und Wartbarkeitsgates für Schichtengrenzen, Runtime-Abhängigkeiten, UI-Regressionsschutz, Datenqualität und ungenutzte Exporte.
+- Kuratierte Seed-Batches als geprüfte Lieferpakete mit Migrationen, Quellenregister, Reviewstatus, Vollständigkeitsbericht sowie erfolgreicher TypeScript-, Lint-, UI-, Unit-, Build- und E2E-Prüfung; die aktuelle E2E-Suite umfasst 66 Tests.
+
+Die noch offenen Punkte – darunter die fachliche Freigabe der 42 Pending-Bilder, vollständige Fachseiten-Übersetzungen und die verbleibende UI-Deduplizierung – stehen ausschließlich in [`plan.md`](./plan.md).
+
 Pro Übung können unter anderem gepflegt werden:
 
 - deutscher und englischer Name sowie Aliase
