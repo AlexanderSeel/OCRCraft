@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 
 export interface SelectedExerciseReference {
   readonly id: string;
@@ -98,7 +99,7 @@ export function ExerciseAutocompletePicker({
             aria-controls={listboxId}
             aria-expanded={isOpen}
             autoComplete="off"
-            className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 pr-20 font-normal outline-none focus:border-[var(--focus)]"
+            className={`${formControlClass} rounded-xl pr-20 font-normal`}
             disabled={selected.length >= maxItems}
             onChange={(event) => search(event.target.value)}
             placeholder={selected.length >= maxItems ? `Maximal ${maxItems} ausgewählt` : placeholder}
@@ -123,7 +124,7 @@ export function ExerciseAutocompletePicker({
                 return (
                   <button
                     aria-selected={alreadySelected}
-                    className="flex w-full items-start justify-between gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[var(--surface-subtle)] disabled:cursor-not-allowed disabled:opacity-45"
+                    className={buttonClass("ghost", "min-h-11 w-full items-start justify-between gap-3 rounded-lg px-3 py-2.5 text-left disabled:cursor-not-allowed disabled:opacity-45")}
                     disabled={alreadySelected}
                     key={item.id}
                     onClick={() => addItem(item)}
@@ -155,7 +156,7 @@ export function ExerciseAutocompletePicker({
               {item.label}
               <button
                 aria-label={`${item.label} entfernen`}
-                className="grid size-6 place-items-center rounded-full text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]"
+                className={buttonClass("ghost", "size-11 shrink-0 p-0 text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]")}
                 onClick={() => removeItem(item.id)}
                 type="button"
               >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { buttonClass } from "@/components/ui/form";
 
 interface MistakeRow {
   readonly mistake: string;
@@ -84,7 +85,7 @@ export function ExerciseGuidanceListEditor({
             <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Jeder Fehler bekommt eine konkrete, direkt coachbare Korrektur.</p>
           </div>
           <button
-            className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black disabled:opacity-40"
+            className={buttonClass("secondary", "min-h-10 rounded-lg px-3 py-2 text-xs disabled:opacity-40")}
             disabled={disabled || mistakes.length >= 20}
             onClick={() => setMistakes((current) => [...current, { mistake: "", correction: "" }])}
             type="button"
@@ -129,7 +130,7 @@ export function ExerciseGuidanceListEditor({
 
       <div className="flex justify-end border-t border-[var(--border)] pt-4">
         <button
-          className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+          className={buttonClass("primary", "rounded-xl px-5 text-sm disabled:cursor-not-allowed disabled:opacity-40")}
           disabled={disabled}
           type="submit"
         >
@@ -164,7 +165,7 @@ function EditorList({
       <div className="flex items-center justify-between gap-3">
         <div className="font-black">{label}</div>
         <button
-          className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-black disabled:opacity-40"
+          className={buttonClass("secondary", "min-h-10 rounded-lg px-3 py-2 text-xs disabled:opacity-40")}
           disabled={disabled || items.length >= 20}
           onClick={onAdd}
           type="button"
@@ -218,7 +219,7 @@ function RowActions({
     <div className="flex flex-wrap gap-2">
       <button
         aria-label="Eintrag nach oben verschieben"
-        className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-xs font-black disabled:opacity-30"
+        className={buttonClass("secondary", "min-h-10 rounded-lg px-2.5 py-1.5 text-xs disabled:opacity-30")}
         disabled={disabled || index === 0}
         onClick={() => onMove(-1)}
         type="button"
@@ -227,7 +228,7 @@ function RowActions({
       </button>
       <button
         aria-label="Eintrag nach unten verschieben"
-        className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-xs font-black disabled:opacity-30"
+        className={buttonClass("secondary", "min-h-10 rounded-lg px-2.5 py-1.5 text-xs disabled:opacity-30")}
         disabled={disabled || index === length - 1}
         onClick={() => onMove(1)}
         type="button"
@@ -235,7 +236,7 @@ function RowActions({
         ↓
       </button>
       <button
-        className="rounded-lg border border-[var(--danger)] px-2.5 py-1.5 text-xs font-black text-[var(--danger)] disabled:opacity-30"
+        className={buttonClass("danger", "min-h-10 rounded-lg px-2.5 py-1.5 text-xs disabled:opacity-30")}
         disabled={disabled}
         onClick={onRemove}
         type="button"

@@ -15,6 +15,7 @@ import {
   exerciseTypes,
 } from "@/domain/exercise/classification";
 import type { ExerciseClassificationEditorData } from "@/server/exercises/exercise-classification-repository";
+import { buttonClass } from "@/components/ui/form";
 
 interface ExerciseClassificationEditorProps {
   readonly action: (formData: FormData) => void | Promise<void>;
@@ -105,7 +106,7 @@ export function ExerciseClassificationEditor({ action, data, disabled = false }:
 
       <div className="flex justify-end">
         <button
-          className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+          className={buttonClass("primary", "rounded-xl px-5 text-sm disabled:cursor-not-allowed disabled:opacity-40")}
           disabled={disabled}
           type="submit"
         >

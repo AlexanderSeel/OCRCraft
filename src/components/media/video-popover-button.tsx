@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
+import { buttonClass } from "@/components/ui/form";
 
 function youtubeEmbedUrl(value: string): string | null {
   try {
@@ -37,7 +38,7 @@ export function VideoPopoverButton({
   return (
     <>
       <button
-        className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black"
+        className={buttonClass("secondary", "min-h-10 px-3 py-2 text-xs")}
         onClick={() => setOpen(true)}
         type="button"
       >
@@ -69,7 +70,7 @@ export function VideoPopoverButton({
             )}
           </div>
           <div className="mt-3 flex justify-end">
-            <a className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" href={videoUrl} rel="noreferrer" target="_blank">
+            <a className={buttonClass("secondary", "min-h-10 px-3 py-2 text-xs")} href={videoUrl} rel="noreferrer" target="_blank">
               Video in neuem Tab öffnen
             </a>
           </div>

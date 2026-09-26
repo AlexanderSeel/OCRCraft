@@ -1,4 +1,5 @@
 import { OutdoorEquipmentPicker } from "@/components/exercises/outdoor-equipment-picker";
+import { buttonClass } from "@/components/ui/form";
 import type { ExerciseOutdoorVariantEditorData } from "@/server/exercises/exercise-outdoor-variant-repository";
 
 interface ExerciseOutdoorVariantEditorProps {
@@ -72,7 +73,7 @@ export function ExerciseOutdoorVariantEditor({
           Der automatische Gym→Outdoor-Task kann diese Felder vorbefüllen; Traineränderungen bleiben erhalten, solange der Task nicht ausdrücklich mit Force erneut ausgeführt wird.
         </p>
         <button
-          className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] disabled:opacity-50"
+          className={buttonClass("primary", "rounded-xl px-5 text-sm disabled:opacity-50")}
           disabled={disabled}
           type="submit"
         >

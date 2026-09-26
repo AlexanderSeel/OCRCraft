@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
+import { buttonClass } from "@/components/ui/form";
 import type { ExerciseMediaChoice } from "@/server/media/media-catalog-repository";
 
 interface ExerciseMediaManagerProps {
@@ -20,7 +21,7 @@ export function ExerciseMediaManager({ exerciseName, choices, selectAction, dele
 
   return (
     <>
-      <button className="min-h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-black" onClick={() => setOpen(true)} type="button">
+      <button className={buttonClass("secondary", "min-h-10 rounded-xl px-4 text-sm")} onClick={() => setOpen(true)} type="button">
         Bilder verwalten ({choices.length})
       </button>
       {open ? (
@@ -43,7 +44,7 @@ export function ExerciseMediaManager({ exerciseName, choices, selectAction, dele
                   <div className="flex flex-wrap gap-2">
                     <form action={selectAction}>
                       <input name="assetId" type="hidden" value={choice.id} />
-                      <button className="min-h-9 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" disabled={choice.isPrimary || choice.generationStatus !== "generated"} type="submit">
+                      <button className={buttonClass("secondary", "min-h-9 rounded-lg px-3 py-2 text-xs")} disabled={choice.isPrimary || choice.generationStatus !== "generated"} type="submit">
                         {choice.isPrimary ? "Hauptbild" : "Als Hauptbild setzen"}
                       </button>
                     </form>

@@ -2,6 +2,7 @@ import type { TrainingDraft } from "@/domain/training/draft";
 import type { MainPartProgramming, TrainingItem, TrainingPhase, TrainingPhaseKind } from "@/domain/training/model";
 import { mainPartProgrammingLabel } from "@/server/training/main-part-programming";
 import { analyzeMainPartProgramming } from "@/domain/training/programming-math";
+import { buttonClass } from "@/components/ui/form";
 
 export type DraftPreviewAlternativeMode = "easier" | "harder" | "equipment";
 
@@ -118,7 +119,7 @@ function PhasePreview({
         </div>
         {onRegeneratePhase ? (
           <button
-            className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[11px] font-black hover:bg-[var(--surface-elevated)] disabled:cursor-not-allowed disabled:opacity-50"
+            className={buttonClass("secondary", "min-h-9 rounded-lg px-2.5 py-1.5 text-[11px] disabled:cursor-not-allowed disabled:opacity-50")}
             disabled={regeneratingPhase != null || replacingExerciseId != null}
             onClick={() => onRegeneratePhase(phase.kind)}
             type="button"
@@ -249,7 +250,7 @@ function TrainingItemPreview({
             ["equipment", "Weniger Equipment"],
           ] as const).map(([mode, label]) => (
             <button
-              className="rounded-md border border-[var(--border)] bg-[var(--surface-subtle)] px-2 py-1 text-[10px] font-black hover:bg-[var(--surface-elevated)] disabled:cursor-not-allowed disabled:opacity-50"
+              className={buttonClass("secondary", "min-h-8 rounded-md bg-[var(--surface-subtle)] px-2 py-1 text-[10px] disabled:cursor-not-allowed disabled:opacity-50")}
               disabled={replacingExerciseId != null || regeneratingPhase != null}
               key={mode}
               onClick={() => onReplaceExercise(item.exercise.id, mode)}

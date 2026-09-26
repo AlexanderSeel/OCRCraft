@@ -1,5 +1,6 @@
 import type { ExerciseProgressionRelation, ExerciseRelationOption } from "@/server/exercises/exercise-repository";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
+import { buttonClass, formControlClass } from "@/components/ui/form";
 
 export function ExerciseProgressionEditor({
   relations,
@@ -25,11 +26,11 @@ export function ExerciseProgressionEditor({
         ))}
       </div> : <p className="text-sm text-[var(--muted)]">Noch keine verknüpften Varianten.</p>}
       <form action={addAction} className="grid gap-3 rounded-xl border border-dashed border-[var(--border)] p-3 sm:grid-cols-2">
-        <label className="text-sm font-bold">Beziehung<select className="mt-1 min-h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3" defaultValue="regression" disabled={disabled} name="type"><option value="regression">Regression / leichter</option><option value="progression">Progression / anspruchsvoller</option><option value="alternative">Alternative</option></select></label>
-        <label className="text-sm font-bold">Übung<select className="mt-1 min-h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3" defaultValue="" disabled={disabled} name="relatedExerciseId" required><option value="">Übung auswählen …</option>{options.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}</select></label>
-        <label className="text-sm font-bold sm:col-span-2">Hinweis (DE)<input className="mt-1 min-h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3" disabled={disabled} maxLength={500} name="notesDe" /></label>
-        <label className="text-sm font-bold sm:col-span-2">Hinweis (EN)<input className="mt-1 min-h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3" disabled={disabled} maxLength={500} name="notesEn" /></label>
-        <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-sm font-black text-[var(--control-strong-foreground)] sm:col-span-2 sm:w-fit" disabled={disabled || options.length === 0} type="submit">Beziehung speichern</button>
+        <label className="text-sm font-bold">Beziehung<select className={`${formControlClass} mt-1`} defaultValue="regression" disabled={disabled} name="type"><option value="regression">Regression / leichter</option><option value="progression">Progression / anspruchsvoller</option><option value="alternative">Alternative</option></select></label>
+        <label className="text-sm font-bold">Übung<select className={`${formControlClass} mt-1`} defaultValue="" disabled={disabled} name="relatedExerciseId" required><option value="">Übung auswählen …</option>{options.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}</select></label>
+        <label className="text-sm font-bold sm:col-span-2">Hinweis (DE)<input className={`${formControlClass} mt-1`} disabled={disabled} maxLength={500} name="notesDe" /></label>
+        <label className="text-sm font-bold sm:col-span-2">Hinweis (EN)<input className={`${formControlClass} mt-1`} disabled={disabled} maxLength={500} name="notesEn" /></label>
+        <button className={buttonClass("primary", "sm:col-span-2 sm:w-fit")} disabled={disabled || options.length === 0} type="submit">Beziehung speichern</button>
       </form>
     </div>
   );

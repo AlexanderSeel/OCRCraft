@@ -6,6 +6,7 @@ import { APP_RELEASE_LABEL } from "@/config/app-version";
 import { Dialog } from "@/components/ui/dialog";
 import { useLocale } from "@/components/i18n/locale-provider";
 import { guideForPath, parseTourProgress, serializeTourProgress } from "./guided-tour-core";
+import { buttonClass } from "@/components/ui/form";
 
 export function GuidedTour() {
   const pathname = usePathname();
@@ -104,13 +105,13 @@ export function GuidedTour() {
   }
 
   return <>
-    <button aria-label={dictionary.help} className="grid size-10 place-items-center rounded-md border border-[var(--border)] bg-[var(--surface)] text-base font-black text-[var(--muted)] hover:text-[var(--foreground)]" data-tour-ready="false" data-tour-trigger="guided-help" onClick={start} title={`${dictionary.help}: ${locale === "de" ? guide.de : guide.en}`} type="button">?</button>
+    <button aria-label={dictionary.help} className={buttonClass("secondary", "size-10 p-0 text-base text-[var(--muted)] hover:text-[var(--foreground)]")} data-tour-ready="false" data-tour-trigger="guided-help" onClick={start} title={`${dictionary.help}: ${locale === "de" ? guide.de : guide.en}`} type="button">?</button>
     {open ? <Dialog onClose={close} title={locale === "de" ? guide.de : guide.en} eyebrow={APP_RELEASE_LABEL}>
       <div aria-live="polite" className="grid gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]"><span>{dictionary.tourStep} {stepIndex + 1} / {guide.steps.length}</span><div className="flex flex-wrap items-center gap-3"><button className="font-black underline underline-offset-4 disabled:opacity-40" disabled={!targetAvailable} onClick={focusStep} type="button">{dictionary.tourLocate}</button><button className="font-black underline underline-offset-4" onClick={close} type="button">{dictionary.tourSkip}</button></div></div>
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]"><span>{dictionary.tourStep} {stepIndex + 1} / {guide.steps.length}</span><div className="flex flex-wrap items-center gap-3"><button className={buttonClass("ghost", "min-h-10 px-2 text-xs underline underline-offset-4 disabled:opacity-40")} disabled={!targetAvailable} onClick={focusStep} type="button">{dictionary.tourLocate}</button><button className={buttonClass("ghost", "min-h-10 px-2 text-xs underline underline-offset-4")} onClick={close} type="button">{dictionary.tourSkip}</button></div></div>
         <div className="rounded-lg border border-[var(--brand)] bg-[var(--brand-soft)] p-4"><h3 className="text-lg font-black">{locale === "de" ? step.de.title : step.en.title}</h3><p className="mt-2 text-sm leading-6 text-[var(--muted)]">{locale === "de" ? step.de.text : step.en.text}</p></div>
         {!targetAvailable ? <p className="rounded-lg border border-[var(--warning)] bg-[var(--warning-bg)] p-3 text-sm font-bold text-[var(--warning)]">{locale === "de" ? "Das Ziel dieses Schritts ist in der aktuellen Ansicht nicht sichtbar. Du kannst fortfahren oder die Führung später erneut öffnen." : "The target for this step is not visible in the current view. You can continue or reopen the guide later."}</p> : null}
-        <div className="flex flex-wrap justify-between gap-2"><button className="min-h-10 rounded-md border border-[var(--border)] px-3 text-sm font-black disabled:opacity-40" disabled={stepIndex === 0} onClick={() => goTo(stepIndex - 1)} type="button">{dictionary.tourPrevious}</button><button className="min-h-10 rounded-md bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" onClick={advance} type="button">{stepIndex >= guide.steps.length - 1 ? dictionary.tourFinish : dictionary.tourNext}</button></div>
+        <div className="flex flex-wrap justify-between gap-2"><button className={buttonClass("secondary", "min-h-10 rounded-md px-3 text-sm disabled:opacity-40")} disabled={stepIndex === 0} onClick={() => goTo(stepIndex - 1)} type="button">{dictionary.tourPrevious}</button><button className={buttonClass("primary", "min-h-10 rounded-md px-4 text-sm")} onClick={advance} type="button">{stepIndex >= guide.steps.length - 1 ? dictionary.tourFinish : dictionary.tourNext}</button></div>
       </div>
     </Dialog> : null}
   </>;

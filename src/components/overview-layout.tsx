@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { buttonClass } from "@/components/ui/form";
 
 const views = [
   ["list", "Liste"], ["small", "Klein"],
@@ -30,7 +31,7 @@ export function OverviewLayout({ children, storageKey }: { readonly children: Re
         <span className="mr-2 text-xs font-bold text-[var(--muted)]">Ansicht</span>
         {views.map(([id, label]) => (
           <button key={id} type="button" aria-pressed={id === view}
-            className={`min-h-10 rounded-sm border px-2.5 py-1.5 text-xs font-bold ${id === view ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--foreground)]" : "border-transparent bg-transparent text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)]"}`}
+            className={buttonClass("ghost", `min-h-10 rounded-sm border px-2.5 py-1.5 text-xs ${id === view ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--foreground)]" : "border-transparent bg-transparent text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)]"}`)}
             onClick={() => {
               setView(id);
               try { localStorage.setItem(storageKey, id); } catch { /* Keep the view usable without persistence. */ }

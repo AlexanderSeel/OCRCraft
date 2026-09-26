@@ -1,5 +1,6 @@
 import type { TrainingExerciseGuidance } from "@/server/training/training-exercise-guidance-repository";
 import { Disclosure } from "@/components/ui/disclosure";
+import { buttonClass } from "@/components/ui/form";
 
 interface ExerciseDetailEditorProps {
   readonly locale: "de" | "en";
@@ -76,7 +77,7 @@ export function ExerciseDetailEditor({
 
       <div className="mt-4 flex justify-end border-t border-[var(--border)] pt-4">
         <button
-          className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+          className={buttonClass("primary", "rounded-xl px-5 text-sm disabled:cursor-not-allowed disabled:opacity-40")}
           disabled={disabled}
           type="submit"
         >
@@ -149,7 +150,7 @@ export function ExerciseLogisticsEditor({
       <NumberField optional disabled={disabled} label="Vereinsmaß Reichweite (cm)" max={1000} min={0.1} name="clubObstacleReachCm" value={guidance?.clubObstacleReachCm ?? undefined} />
       <div className="flex items-end justify-end md:col-span-2 xl:col-span-3">
         <button
-          className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+          className={buttonClass("primary", "rounded-xl px-5 text-sm disabled:cursor-not-allowed disabled:opacity-40")}
           disabled={disabled}
           type="submit"
         >

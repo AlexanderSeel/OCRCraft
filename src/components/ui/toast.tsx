@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { buttonClass } from "@/components/ui/form";
 
 export type ToastTone = "loading" | "success" | "error" | "info";
 
@@ -125,7 +126,7 @@ function ToastCard({
         </div>
         <button
           aria-label="Benachrichtigung schließen"
-          className="shrink-0 rounded-md px-2 py-1 text-xs font-black hover:bg-[var(--surface-subtle)]"
+          className={buttonClass("ghost", "min-h-8 shrink-0 px-2 py-1 text-xs")}
           onClick={() => dismiss(toast.id)}
           type="button"
         >

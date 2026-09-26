@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { buttonClass } from "@/components/ui/form";
 
 interface TrainingPresentationControlsProps {
   readonly fullscreenTargetId?: string;
@@ -35,7 +36,7 @@ export function TrainingPresentationControls({
     <div className="flex flex-wrap gap-2 print:hidden">
       {fullscreenTargetId ? (
         <button
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+          className={buttonClass("secondary", "rounded-xl px-4 py-2.5 text-sm")}
           onClick={() => void toggleFullscreen()}
           type="button"
         >
@@ -44,7 +45,7 @@ export function TrainingPresentationControls({
       ) : null}
       {showPrint ? (
         <button
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+          className={buttonClass("secondary", "rounded-xl px-4 py-2.5 text-sm")}
           onClick={() => window.print()}
           type="button"
         >

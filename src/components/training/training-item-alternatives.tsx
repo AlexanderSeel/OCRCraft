@@ -6,6 +6,7 @@ import {
   type TrainingItemAlternative,
 } from "@/server/training/training-item-alternative-repository";
 import { Disclosure } from "@/components/ui/disclosure";
+import { buttonClass } from "@/components/ui/form";
 
 const MODES: readonly {
   readonly id: TrainingAlternativeMode;
@@ -57,11 +58,7 @@ export async function TrainingItemAlternatives({
             return (
               <Link
                 aria-current={selected ? "true" : undefined}
-                className={`rounded-lg border px-3 py-2 text-xs font-black ${
-                  selected
-                    ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"
-                    : "border-[var(--border)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-elevated)]"
-                }`}
+                className={buttonClass(selected ? "primary" : "secondary", "rounded-lg px-3 py-2 text-xs")}
                 href={`/training/${sessionId}?alternativeItem=${itemId}&alternativeMode=${entry.id}#item-${itemId}`}
                 key={entry.id}
                 title={entry.description}
@@ -129,7 +126,7 @@ function AlternativeRow({
         <input name="itemId" type="hidden" value={itemId} />
         <input name="exerciseId" type="hidden" value={alternative.exerciseId} />
         <button
-          className="w-full rounded-lg bg-[var(--control-strong)] px-3 py-2 text-xs font-black text-[var(--control-strong-foreground)] sm:w-auto"
+          className={buttonClass("primary", "w-full rounded-lg px-3 py-2 text-xs sm:w-auto")}
           type="submit"
         >
           Übernehmen

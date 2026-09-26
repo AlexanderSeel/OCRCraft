@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 import { PrimaryNavigation } from "@/components/navigation/primary-navigation";
 import { APP_RELEASE_LABEL } from "@/config/app-version";
+import { buttonClass } from "@/components/ui/form";
 
 const STORAGE_KEY = "ocrcraft-sidebar-collapsed";
 
@@ -28,9 +29,9 @@ export function CollapsibleSidebar() {
       <div className={`flex h-16 items-center border-b border-[var(--sidebar-border)] ${collapsed ? "justify-center px-2" : "gap-2.5 px-3"}`}>
         <div className="brand-mark grid size-9 shrink-0 place-items-center text-base font-black">O</div>
         {!collapsed ? <div className="min-w-0"><div className="truncate font-black tracking-[-0.02em]">OCRCraft</div><div className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--sidebar-muted)]">Build · Train · Progress</div></div> : null}
-        {!collapsed ? <button aria-label="Hauptnavigation verkleinern" className="ml-auto grid size-10 shrink-0 place-items-center rounded-md text-lg font-black text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" onClick={toggle} title="Navigation verkleinern" type="button">‹</button> : null}
+        {!collapsed ? <button aria-label="Hauptnavigation verkleinern" className={buttonClass("ghost", "ml-auto size-10 shrink-0 p-0 text-lg text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]")} onClick={toggle} title="Navigation verkleinern" type="button">‹</button> : null}
       </div>
-      {collapsed ? <div className="flex justify-center border-b border-[var(--sidebar-border)] p-1.5"><button aria-label="Hauptnavigation vergrößern" className="grid size-10 place-items-center rounded-md text-lg font-black text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]" onClick={toggle} title="Navigation vergrößern" type="button">›</button></div> : null}
+      {collapsed ? <div className="flex justify-center border-b border-[var(--sidebar-border)] p-1.5"><button aria-label="Hauptnavigation vergrößern" className={buttonClass("ghost", "size-10 p-0 text-lg text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)]")} onClick={toggle} title="Navigation vergrößern" type="button">›</button></div> : null}
       <PrimaryNavigation collapsed={collapsed} variant="sidebar" />
       <div className={`mt-auto border-t border-[var(--sidebar-border)] ${collapsed ? "p-1.5" : "p-2.5"}`}>
         <Link aria-label="Administration" className={`min-h-11 rounded-md text-sm font-semibold text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-foreground)] ${collapsed ? "mx-auto flex size-11 items-center justify-center" : "flex items-center gap-3 px-3"}`} data-tour="nav-admin" href="/admin?tab=overview" title="Administration">

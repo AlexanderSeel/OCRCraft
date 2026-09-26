@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { replaceTrainingItemExerciseAction } from "@/app/training/[id]/replace-action";
 import { Disclosure } from "@/components/ui/disclosure";
+import { buttonClass } from "@/components/ui/form";
 import {
   ExerciseAutocompletePicker,
   type SelectedExerciseReference,
@@ -36,7 +37,7 @@ export function ReplaceTrainingItemForm({
         />
         <div className="flex justify-end">
           <button
-            className="rounded-lg bg-[var(--control-strong)] px-4 py-2 text-xs font-black text-[var(--control-strong-foreground)] disabled:cursor-not-allowed disabled:opacity-45"
+            className={buttonClass("primary", "rounded-lg px-4 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-45")}
             disabled={selected.length !== 1}
             type="submit"
           >

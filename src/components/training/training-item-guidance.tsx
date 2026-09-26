@@ -1,6 +1,7 @@
 import { setTrainingItemLevelAction } from "@/app/training/[id]/level-action";
 import type { TrainingExerciseGuidance } from "@/server/training/training-exercise-guidance-repository";
 import { Disclosure } from "@/components/ui/disclosure";
+import { buttonClass } from "@/components/ui/form";
 
 interface TrainingItemGuidanceProps {
   readonly guidance?: TrainingExerciseGuidance;
@@ -75,7 +76,7 @@ export function TrainingItemGuidance({
                 </select>
               </label>
               <button
-                className="h-10 rounded-lg bg-[var(--control-strong)] px-4 text-xs font-black text-[var(--control-strong-foreground)] hover:bg-[var(--control-strong-hover)]"
+                className={buttonClass("primary", "min-h-10 rounded-lg px-4 text-xs")}
                 type="submit"
               >
                 Level übernehmen

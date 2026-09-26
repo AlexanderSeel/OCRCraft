@@ -1,6 +1,7 @@
 "use client";
 
 import { MuscleMap } from "@/components/body/muscle-map";
+import { buttonClass } from "@/components/ui/form";
 import {
   BODY_REGION_OPTIONS,
   getBodyRegionAntagonists,
@@ -78,7 +79,7 @@ export function BodyFocusSelector({
           <div className="mt-3 flex flex-wrap gap-2">
             {antagonistSuggestions.map(({ option, sources }) => (
               <button
-                className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-left text-xs font-bold hover:border-[var(--accent-strong)] hover:bg-[var(--accent-soft)]"
+                className={buttonClass("secondary", "rounded-lg px-3 py-2 text-left text-xs hover:border-[var(--accent-strong)] hover:bg-[var(--accent-soft)]")}
                 key={option.id}
                 onClick={() => onToggle(option.id)}
                 title={`Typischer Gegenmuskel zu ${sources.join(", ")}`}

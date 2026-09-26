@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Dialog } from "./dialog";
+import { buttonClass } from "@/components/ui/form";
 
 interface ImageLightboxProps {
   readonly src: string;
@@ -20,7 +21,7 @@ export function ImageLightbox({ src, alt, className = "h-full w-full object-cont
       <img alt={alt} className={className} loading={loading} onError={onError} src={src} />
       <button
         aria-label={`${alt || "Bild"} vergrößern`}
-        className="absolute right-2 top-2 z-10 grid size-10 place-items-center rounded-full border border-white/70 bg-black/65 text-white opacity-100 shadow-lg transition-opacity hover:bg-black/80 focus-visible:opacity-100 sm:opacity-0 sm:group-hover/image-lightbox:opacity-100"
+        className={buttonClass("ghost", "absolute right-2 top-2 z-10 size-10 p-0 rounded-full border border-white/70 bg-black/65 text-white opacity-100 shadow-lg transition-opacity hover:bg-black/80 focus-visible:opacity-100 sm:opacity-0 sm:group-hover/image-lightbox:opacity-100")}
         onClick={() => setOpen(true)}
         type="button"
       >

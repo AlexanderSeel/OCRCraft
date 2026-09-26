@@ -1,5 +1,6 @@
 import type { SearchProfile } from "@/server/search/search-profile-repository";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
+import { buttonClass } from "@/components/ui/form";
 
 type FormAction = (formData: FormData) => Promise<void>;
 
@@ -67,14 +68,14 @@ export function SearchProfileSettingsPanel({
                 ))}
               </div>
               <div className="mt-4 flex flex-wrap justify-end gap-2">
-                <button className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black" type="submit">Änderungen speichern</button>
+                <button className={buttonClass("secondary", "min-h-10 px-3 text-xs")} type="submit">Änderungen speichern</button>
               </div>
             </form>
             {!profile.isActive ? (
               <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-[var(--border)] pt-3">
                 <form action={activateAction}>
                   <input name="id" type="hidden" value={profile.id} />
-                  <button className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" type="submit">Profil aktivieren</button>
+                  <button className={buttonClass("primary", "min-h-10 px-3 text-xs")} type="submit">Profil aktivieren</button>
                 </form>
                 <ConfirmPopoverForm action={deleteAction} description={`Das Suchprofil „${profile.name}“ wird dauerhaft gelöscht.`} title="Suchprofil löschen?" triggerLabel="Löschen"><input name="id" type="hidden" value={profile.id} /></ConfirmPopoverForm>
               </div>
@@ -95,7 +96,7 @@ export function SearchProfileSettingsPanel({
           ))}
         </div>
         <div className="mt-4 flex justify-end">
-          <button className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-black" type="submit">Profil anlegen</button>
+          <button className={buttonClass("secondary", "min-h-10 px-4 text-xs")} type="submit">Profil anlegen</button>
         </div>
       </form>
     </section>

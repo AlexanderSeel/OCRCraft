@@ -1,6 +1,7 @@
 "use client";
 
 import type { TrainingObstacleOption } from "@/server/training/training-draft-repository";
+import { buttonClass } from "@/components/ui/form";
 
 interface ObstacleAvailabilityPickerProps {
   readonly options: readonly TrainingObstacleOption[];
@@ -49,14 +50,14 @@ export function ObstacleAvailabilityPicker({
               <span className="text-xs font-bold text-[var(--muted)]">{selected.size} von {options.length} Stationen verfügbar</span>
               <div className="flex gap-2">
                 <button
-                  className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-black"
+                  className={buttonClass("secondary", "min-h-9 rounded-lg px-3 py-1.5 text-xs")}
                   onClick={() => onSelectionChange(options.map((option) => option.id))}
                   type="button"
                 >
                   Alle
                 </button>
                 <button
-                  className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-black"
+                  className={buttonClass("secondary", "min-h-9 rounded-lg px-3 py-1.5 text-xs")}
                   onClick={() => onSelectionChange([])}
                   type="button"
                 >
