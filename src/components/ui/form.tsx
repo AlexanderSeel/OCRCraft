@@ -33,10 +33,24 @@ export function FormField({ label, hint, error, required = false, children, clas
 }) {
   return (
     <label className={`grid gap-1 text-sm font-bold ${className}`}>
-      <span>{label}{required ? <span aria-hidden="true" className="required-field-marker ml-1 text-[var(--danger)]">*</span> : null}</span>
+      <span className="flex items-center gap-1">
+        <span>{label}{required ? <span aria-hidden="true" className="required-field-marker ml-1 text-[var(--danger)]">*</span> : null}</span>
+        {hint ? <FieldHint>{hint}</FieldHint> : null}
+      </span>
       {children}
-      {error ? <span className="text-xs font-semibold leading-5 text-[var(--danger)]" role="alert">{error}</span> : hint ? <span className="text-xs font-normal leading-5 text-[var(--muted)]">{hint}</span> : null}
+      {error ? <span className="text-xs font-semibold leading-5 text-[var(--danger)]" role="alert">{error}</span> : null}
     </label>
+  );
+}
+
+export function FieldHint({ children }: { readonly children: ReactNode }) {
+  return (
+    <span className="group relative inline-flex shrink-0" tabIndex={0}>
+      <span aria-hidden="true" className="grid size-5 place-items-center rounded-full border border-[var(--border)] text-[11px] font-black text-[var(--muted)]">i</span>
+      <span className="pointer-events-none invisible absolute left-0 top-full z-40 mt-2 w-max max-w-72 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-elevated)] px-3 py-2 text-xs font-normal leading-5 text-[var(--foreground)] opacity-0 shadow-[var(--shadow-card)] transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100" role="tooltip">
+        {children}
+      </span>
+    </span>
   );
 }
 

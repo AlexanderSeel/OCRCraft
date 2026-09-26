@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { MuscleMap, type MuscleMapValue } from "@/components/body/muscle-map";
 import { getBodyRegionAntagonists } from "@/domain/body-regions";
 import { Disclosure } from "@/components/ui/disclosure";
+import { buttonClass } from "@/components/ui/form";
 import type { ExerciseFacetEditorData } from "@/server/exercises/exercise-facet-repository";
 
 interface ExerciseFacetFormProps {
@@ -105,7 +106,7 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
                       </div>
                       {recommended.length ? (
                         <button
-                          className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-xs font-black hover:bg-[var(--accent-soft)] disabled:opacity-40"
+                          className={buttonClass("secondary", "min-h-9 rounded-lg px-2.5 py-1.5 text-xs hover:bg-[var(--accent-soft)] disabled:opacity-40")}
                           disabled={disabled}
                           onClick={() => selectTypicalOppositions(primary.id)}
                           type="button"
@@ -223,7 +224,7 @@ export function ExerciseFacetForm({ action, data, disabled = false }: ExerciseFa
           Änderungen aktualisieren die DE/EN-Suchdokumente und markieren den FTS-Index zur Neuerstellung.
         </p>
         <button
-          className="min-h-11 shrink-0 rounded-xl bg-[var(--accent)] px-5 text-sm font-black text-[var(--accent-foreground)] hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+          className={buttonClass("accent", "min-h-11 shrink-0 rounded-xl px-5 disabled:cursor-not-allowed disabled:opacity-50")}
           disabled={disabled}
           type="submit"
         >

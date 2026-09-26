@@ -142,11 +142,8 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-          <div>
+          <div title="Speichert die aktuelle Übungsauswahl, Hauptteilstruktur, Programmierung und Teamorganisation als wiederverwendbaren Snapshot.">
             <h2 className="font-black">Als Vereinsvorlage speichern</h2>
-            <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-              Speichert die aktuelle Übungsauswahl, Hauptteilstruktur, Programmierung und Teamorganisation als wiederverwendbaren Snapshot.
-            </p>
           </div>
           <form action={createClubTrainingTemplateAction} className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] md:items-end">
             <input name="sessionId" type="hidden" value={session.id} />
@@ -194,7 +191,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
         {editable ? (
           <form
             action={updateTrainingOrganizationAction}
-            className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+            className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end"
           >
             <input name="sessionId" type="hidden" value={session.id} />
             <label className="grid gap-2 text-sm font-bold">
@@ -217,8 +214,8 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                 min={2}
                 name="teamSize"
                 type="number"
+                title="Wird nur bei Teamorganisation verwendet."
               />
-              <span className="text-xs font-normal leading-5 text-[var(--muted)]">Wird nur bei Teamorganisation verwendet.</span>
             </label>
             <button
               className={buttonClass("secondary", "self-end px-4")}
@@ -231,7 +228,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
 
         <form
           action={updateMetadataAction}
-          className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] md:grid-cols-[minmax(0,1fr)_220px_auto]"
+            className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end"
         >
           <label className="grid gap-2 text-sm font-bold">
             Trainingstitel
@@ -377,35 +374,37 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
 
                         {editable ? (
                           <div className="mt-4 border-t border-[var(--border)] pt-3">
-                            <div className="flex flex-wrap items-start gap-2">
-                              <form action={moveTrainingItemAction}>
-                                <input name="sessionId" type="hidden" value={session.id} />
-                                <input name="itemId" type="hidden" value={item.id} />
-                                <input name="direction" type="hidden" value="up" />
-                                <button
-                                  aria-label={`${item.exerciseName} nach oben verschieben`}
-                                  className={buttonClass("secondary", "size-10 px-0 text-lg")}
-                                  disabled={index === 0}
-                                  type="submit"
-                                >
-                                  ↑
-                                </button>
-                              </form>
-                              <form action={moveTrainingItemAction}>
-                                <input name="sessionId" type="hidden" value={session.id} />
-                                <input name="itemId" type="hidden" value={item.id} />
-                                <input name="direction" type="hidden" value="down" />
-                                <button
-                                  aria-label={`${item.exerciseName} nach unten verschieben`}
-                                  className={buttonClass("secondary", "size-10 px-0 text-lg")}
-                                  disabled={index === phase.items.length - 1}
-                                  type="submit"
-                                >
-                                  ↓
-                                </button>
-                              </form>
-                              <div className="min-w-[240px] flex-1 space-y-2">
-                                <Disclosure className="rounded-lg border border-[var(--border)] bg-[var(--surface)]" summaryClassName="px-3 py-2 text-xs font-black" summary="Eintrag bearbeiten">
+                            <div className="grid gap-2 md:grid-cols-[auto_minmax(0,1fr)] md:items-start">
+                              <div className="flex items-start gap-2">
+                                <form action={moveTrainingItemAction}>
+                                  <input name="sessionId" type="hidden" value={session.id} />
+                                  <input name="itemId" type="hidden" value={item.id} />
+                                  <input name="direction" type="hidden" value="up" />
+                                  <button
+                                    aria-label={`${item.exerciseName} nach oben verschieben`}
+                                    className={buttonClass("secondary", "size-10 px-0 text-lg")}
+                                    disabled={index === 0}
+                                    type="submit"
+                                  >
+                                    ↑
+                                  </button>
+                                </form>
+                                <form action={moveTrainingItemAction}>
+                                  <input name="sessionId" type="hidden" value={session.id} />
+                                  <input name="itemId" type="hidden" value={item.id} />
+                                  <input name="direction" type="hidden" value="down" />
+                                  <button
+                                    aria-label={`${item.exerciseName} nach unten verschieben`}
+                                    className={buttonClass("secondary", "size-10 px-0 text-lg")}
+                                    disabled={index === phase.items.length - 1}
+                                    type="submit"
+                                  >
+                                    ↓
+                                  </button>
+                                </form>
+                              </div>
+                              <div className="flex min-w-0 flex-wrap items-start gap-2 md:flex-nowrap">
+                                <Disclosure className="shrink-0" summaryClassName={buttonClass("secondary", "justify-start rounded-lg px-3 py-2 text-xs")} summary="Eintrag bearbeiten">
                                   <form action={updateTrainingItemAction} className="grid gap-3 border-t border-[var(--border)] p-3">
                                     <input name="sessionId" type="hidden" value={session.id} />
                                     <input name="itemId" type="hidden" value={item.id} />
@@ -507,11 +506,13 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
                                   itemId={item.id}
                                   sessionId={session.id}
                                 />
+                                <div className="shrink-0">
+                                  <ConfirmPopoverForm action={deleteTrainingItemAction} description={`„${item.exerciseName}“ wird aus diesem Training entfernt. Die Übung selbst bleibt im Katalog erhalten.`} title="Übung aus Training entfernen?" triggerLabel="Entfernen">
+                                    <input name="sessionId" type="hidden" value={session.id} />
+                                    <input name="itemId" type="hidden" value={item.id} />
+                                  </ConfirmPopoverForm>
+                                </div>
                               </div>
-                              <ConfirmPopoverForm action={deleteTrainingItemAction} description={`„${item.exerciseName}“ wird aus diesem Training entfernt. Die Übung selbst bleibt im Katalog erhalten.`} title="Übung aus Training entfernen?" triggerLabel="Entfernen">
-                                <input name="sessionId" type="hidden" value={session.id} />
-                                <input name="itemId" type="hidden" value={item.id} />
-                              </ConfirmPopoverForm>
                             </div>
                           </div>
                         ) : null}

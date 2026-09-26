@@ -41,9 +41,9 @@ export async function TrainingItemAlternatives({
 
   return (
     <Disclosure
-      className="rounded-lg border border-[var(--border)] bg-[var(--surface)]"
+      className="shrink-0"
       open={active}
-      summaryClassName="px-3 py-2 text-xs font-black"
+      summaryClassName={buttonClass("secondary", "justify-start rounded-lg px-3 py-2 text-xs")}
       summary="Schnell-Alternativen"
     >
       <div className="space-y-3 border-t border-[var(--border)] p-3">

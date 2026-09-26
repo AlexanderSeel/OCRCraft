@@ -1,4 +1,5 @@
 import type { ObstacleGuidanceEditorData } from "@/server/obstacles/obstacle-editor-repository";
+import { buttonClass } from "@/components/ui/form";
 
 interface ExerciseObstacleGuidanceEditorProps {
   readonly data: ObstacleGuidanceEditorData;
@@ -51,7 +52,7 @@ export function ExerciseObstacleGuidanceEditor({
 
       <div className="flex justify-end border-t border-[var(--border)] pt-4">
         <button
-          className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] disabled:cursor-not-allowed disabled:opacity-40"
+          className={buttonClass("primary", "rounded-xl px-5 disabled:cursor-not-allowed disabled:opacity-40")}
           disabled={disabled}
           type="submit"
         >

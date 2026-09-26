@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Dialog } from "../ui/dialog";
 import { ImageLightbox } from "../ui/image-lightbox";
 import { ConfirmPopoverForm } from "../ui/confirm-popover-form";
+import { buttonClass } from "../ui/form";
 
 interface DuplicateReviewTask {
   readonly id: string;
@@ -96,11 +97,11 @@ export function DuplicateReviewPanel({ tasks, comparisonRecords, resolveAction, 
               <input aria-label={`${task.leftName} und ${task.rightName} auswählen`} checked={selected.has(task.id)} className="mt-1" onChange={() => toggle(task.id)} onClick={(event) => event.stopPropagation()} type="checkbox" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <button className="text-left font-black underline-offset-2 hover:underline" onClick={() => setComparison(task)} type="button">{task.leftName} ↔ {task.rightName}</button>
+                  <button className={buttonClass("ghost", "h-auto justify-start px-0 text-left underline-offset-2 hover:underline")} onClick={() => setComparison(task)} type="button">{task.leftName} ↔ {task.rightName}</button>
                   <span className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{classificationLabel(task.classification)}</span><span className="rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-black">{Math.round(task.score * 100)} %</span></span>
                 </div>
                 <p className="mt-1 text-sm text-[var(--muted)]">{task.reasons.join(" · ")}</p>
-                <button className="mt-2 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-bold" onClick={() => setComparison(task)} type="button">Side-by-Side vergleichen</button>
+                <button className={buttonClass("secondary", "mt-2 rounded-lg px-3 py-1.5 text-xs")} onClick={() => setComparison(task)} type="button">Side-by-Side vergleichen</button>
               </div>
             </div>
           </article>

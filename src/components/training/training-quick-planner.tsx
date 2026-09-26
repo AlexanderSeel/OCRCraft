@@ -8,6 +8,7 @@ import type { TrainingObstacleOption } from "@/server/training/training-draft-ca
 import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import { TrainingDraftPreview } from "./training-draft-preview";
 import { Card } from "@/components/ui/card";
+import { buttonClass } from "@/components/ui/form";
 
 const goals = ["Ganzkörper", "OCR-Technik", "Grip", "Kraftausdauer", "Laufen", "Core", "Balance", "Koordination"] as const;
 const formats = [
@@ -250,10 +251,10 @@ export function TrainingQuickPlanner({
       </div>
 
       <div className="mt-5 flex flex-wrap justify-end gap-2" data-tour="training-save">
-        <button className="min-h-11 rounded-xl bg-[var(--control-strong)] px-5 text-sm font-black text-[var(--control-strong-foreground)] disabled:opacity-50" disabled={busy} onClick={generate} type="button">
+        <button className={buttonClass("primary", "rounded-xl px-5 disabled:opacity-50")} disabled={busy} onClick={generate} type="button">
           {busy ? "Plane…" : "Quickplan erstellen"}
         </button>
-        {draft ? <button className="min-h-11 rounded-xl border border-[var(--border)] px-5 text-sm font-black disabled:opacity-50" disabled={saving} onClick={save} type="button">{saving ? "Speichere…" : "Training speichern"}</button> : null}
+        {draft ? <button className={buttonClass("secondary", "rounded-xl px-5 disabled:opacity-50")} disabled={saving} onClick={save} type="button">{saving ? "Speichere…" : "Training speichern"}</button> : null}
       </div>
 
       {error ? <p className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-bg)] p-3 text-sm font-bold text-[var(--danger)]">{error}</p> : null}

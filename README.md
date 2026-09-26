@@ -59,6 +59,10 @@ Die abgeschlossenen Arbeitspakete aus [`plan.md`](./plan.md) sind als nutzbare P
 - Routebewusste interaktive Tutorials für Kataloge, Medienreview, Outdoor, AI-Drafts, Gruppen, Quick Create, Training Builder, Hilfezentrum und Administration mit lokalen Fortschrittsständen.
 - Qualitätsanalyse für Nutzung, Katalog-Coverage, Laufvolumen, Wiederholungen, Nulltreffer, Vollständigkeit und Medienersatzgründe sowie echte Quick-Create-/Builder-/Kids-/Theme-Regressionen.
 - Architektur- und Wartbarkeitsgates für Schichtengrenzen, Runtime-Abhängigkeiten, UI-Regressionsschutz, Datenqualität und ungenutzte Exporte.
+- Zentrale Button-Varianten für wiederkehrende Bestätigungs-, Admin-, Planer- und Facet-Aktionen mit gemeinsamen Mindesthöhen, Fokus- und Disabled-Regeln; die Wartbarkeitsinventur wurde dadurch von 12 auf 6 Dateien mit verbleibenden spezialisierten Button-Controls reduziert.
+- Trainingsdetail-Editor mit ausgerichteten Feldrastern, kontextuellen Feld-Hinweisen sowie sichtbaren, einheitlichen Aktionen für Eintrag bearbeiten, Übung ersetzen, Schnell-Alternativen und Entfernen in einer gemeinsamen responsiven Desktop-Zeile.
+- Gemeinsame FormField-Hinweise als kompakte, tastaturfokussierbare Hover-/Fokus-Tooltips; Fehlermeldungen bleiben direkt am betroffenen Feld sichtbar.
+- Erneut verifizierte Release-Abschlussroutine mit grünen UI-, Architektur-, TypeScript-, Unit-, Lint-, Build- und E2E-Gates; die aktuelle Playwright-Suite besteht aus 66 Tests.
 - Kuratierte Seed-Batches als geprüfte Lieferpakete mit Migrationen, Quellenregister, Reviewstatus, Vollständigkeitsbericht sowie erfolgreicher TypeScript-, Lint-, UI-, Unit-, Build- und E2E-Prüfung; die aktuelle E2E-Suite umfasst 66 Tests.
 
 Die noch offenen Punkte – darunter die fachliche Freigabe der 42 Pending-Bilder, vollständige Fachseiten-Übersetzungen und die verbleibende UI-Deduplizierung – stehen ausschließlich in [`plan.md`](./plan.md).

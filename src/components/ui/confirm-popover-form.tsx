@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { buttonClass } from "./form";
 
 type FormAction = (formData: FormData) => void | Promise<void>;
 
@@ -37,8 +38,8 @@ export function ConfirmPopoverForm({ action, children, confirmLabel = "Bestätig
           <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{description}</p>
           <form action={action} className="mt-3 flex flex-wrap justify-end gap-2">
             {children}
-            <button className="min-h-9 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" onClick={() => setOpen(false)} type="button">Abbrechen</button>
-            <button className="min-h-9 rounded-lg bg-[var(--danger)] px-3 py-2 text-xs font-black text-white" type="submit">{confirmLabel}</button>
+            <button className={buttonClass("secondary", "min-h-9 rounded-lg px-3 py-2 text-xs")} onClick={() => setOpen(false)} type="button">Abbrechen</button>
+            <button className={buttonClass("danger", "min-h-9 rounded-lg px-3 py-2 text-xs")} type="submit">{confirmLabel}</button>
           </form>
         </div>
       ) : null}
@@ -57,8 +58,8 @@ export function ConfirmPopoverButton({ action, confirmLabel = "Bestätigen", des
           <div className="text-sm font-black" id={`${popoverId}-title`}>{title}</div>
           <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{description}</p>
           <div className="mt-3 flex flex-wrap justify-end gap-2">
-            <button className="min-h-9 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black" onClick={() => setOpen(false)} type="button">Abbrechen</button>
-            <button className="min-h-9 rounded-lg bg-[var(--danger)] px-3 py-2 text-xs font-black text-white" formAction={action} name={name} type="submit" value={value}>{confirmLabel}</button>
+            <button className={buttonClass("secondary", "min-h-9 rounded-lg px-3 py-2 text-xs")} onClick={() => setOpen(false)} type="button">Abbrechen</button>
+            <button className={buttonClass("danger", "min-h-9 rounded-lg px-3 py-2 text-xs")} formAction={action} name={name} type="submit" value={value}>{confirmLabel}</button>
           </div>
         </div>
       ) : null}

@@ -12,6 +12,7 @@ import { ActionProgressButton } from "@/components/admin/action-progress-button"
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
 import { IdentityLoginDialog } from "./identity-login-dialog";
 import { ImageLightbox } from "../ui/image-lightbox";
+import { buttonClass } from "../ui/form";
 
 type Action = (formData: FormData) => Promise<void>;
 
@@ -37,7 +38,7 @@ export function IdentityManagementPanel({ users, createAction, updateAction, log
   return <section className="space-y-5">
     <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
       <div><div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Identität und Betrieb</div><h2 className="mt-1 text-xl font-black">Benutzer & Profile</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Profile werden in Trainings als kompakte Trainerkarte angezeigt. Readonly-Trainingslinks bleiben ohne Anmeldung teilbar.</p></div>
-      <div className="flex items-center gap-2"><IdentityLoginDialog action={loginAction} /><form action={logoutAction}><button className="min-h-10 rounded-lg border border-[var(--border)] px-3 text-xs font-black" type="submit">Abmelden</button></form></div>
+      <div className="flex items-center gap-2"><IdentityLoginDialog action={loginAction} /><form action={logoutAction}><button className={buttonClass("secondary", "min-h-10 rounded-lg px-3 text-xs")} type="submit">Abmelden</button></form></div>
     </div>
     <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
       <div className="mb-5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4"><h3 className="text-lg font-black">Vereinscode</h3><p className="mt-1 text-sm text-[var(--muted)]">Der Code kann alternativ zum Passwort verwendet werden. Aktueller Status: {accessCodeConfigured ? "gesetzt" : "nicht gesetzt"}.</p><form action={saveAccessCodeAction} className="mt-3 flex flex-wrap items-end gap-3"><label className="grid min-w-60 flex-1 gap-1 text-sm font-bold" htmlFor="admin-club-access-code">Neuer Vereinscode<input className="min-h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" id="admin-club-access-code" minLength={4} name="clubAccessCode" required type="password" /></label><ActionProgressButton className="min-h-10 rounded-lg bg-[var(--control-strong)] px-3 text-xs font-black text-[var(--control-strong-foreground)]" pendingLabel="Vereinscode wird gespeichert …">Code speichern</ActionProgressButton></form></div>
