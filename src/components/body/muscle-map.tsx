@@ -20,6 +20,7 @@ import {
 } from "./muscle-map-hit-test";
 import { RasterMuscleLayer, type RasterMuscleTone } from "./raster-muscle-layer";
 import { useResponsiveImageMap } from "./use-responsive-image-map";
+import { buttonClass } from "@/components/ui/form";
 
 export type MuscleEmphasis = "primary" | "secondary";
 export const MUSCLE_MAP_DEBUG_STORAGE_KEY = "ocrcraft-muscle-map-debug";
@@ -301,8 +302,8 @@ export function MuscleMap({
 
       {!compact && interactive ? (
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" aria-pressed={!detailed} onClick={() => setDetailed(false)} className="min-h-11 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold">{COARSE_BODY_REGION_IDS.length} Hauptbereiche</button>
-          <button type="button" aria-pressed={detailed} onClick={() => setDetailed(true)} className="min-h-11 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-bold">{DETAIL_BODY_REGION_OPTIONS.length} Detailbereiche</button>
+          <button type="button" aria-pressed={!detailed} onClick={() => setDetailed(false)} className={buttonClass(!detailed ? "primary" : "secondary", "px-3 py-2 text-sm")}>{COARSE_BODY_REGION_IDS.length} Hauptbereiche</button>
+          <button type="button" aria-pressed={detailed} onClick={() => setDetailed(true)} className={buttonClass(detailed ? "primary" : "secondary", "px-3 py-2 text-sm")}>{DETAIL_BODY_REGION_OPTIONS.length} Detailbereiche</button>
           <span className="text-xs text-[var(--muted)]">{detailed ? "Detailauswahl · links/rechts aus Sicht der dargestellten Person" : "Auswahl ganzer Muskelgruppen"}</span>
         </div>
       ) : null}
@@ -584,9 +585,9 @@ export function MuscleMap({
           <div className="mt-1 font-mono text-[var(--muted)]">Letzter Punkt: {debugPoints.at(-1)?.join(" / ") ?? "–"}</div>
           <textarea className="mt-2 min-h-20 w-full rounded-lg border border-[var(--border)] p-2 font-mono" readOnly value={`coordinates: [${debugCoordinates}]`} />
           <div className="mt-2 flex flex-wrap gap-2">
-            <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-bold" onClick={() => setDebugPoints((points) => points.slice(0, -1))} type="button">Undo Point</button>
-            <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-bold" onClick={() => setDebugPoints([])} type="button">Clear</button>
-            <button className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-bold" onClick={() => void navigator.clipboard.writeText(`[${debugCoordinates}]`)} type="button">Koordinaten kopieren</button>
+            <button className={buttonClass("secondary", "px-3 py-2")} onClick={() => setDebugPoints((points) => points.slice(0, -1))} type="button">Undo Point</button>
+            <button className={buttonClass("secondary", "px-3 py-2")} onClick={() => setDebugPoints([])} type="button">Clear</button>
+            <button className={buttonClass("secondary", "px-3 py-2")} onClick={() => void navigator.clipboard.writeText(`[${debugCoordinates}]`)} type="button">Koordinaten kopieren</button>
           </div>
         </details>
       ) : null}

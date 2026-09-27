@@ -107,6 +107,12 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           >
             Readonly teilen
           </Link>
+          <Link
+            className={buttonClass("secondary", "px-4")}
+            href={`/api/training/${session.id}/excel`}
+          >
+            Excel exportieren
+          </Link>
         </div>
       }
     >

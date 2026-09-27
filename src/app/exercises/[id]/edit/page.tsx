@@ -36,6 +36,7 @@ import { generateExerciseImageAction, selectExerciseImageAction } from "../../ac
 import { deleteExerciseMediaAction } from "../../actions";
 import { ExerciseMediaManager } from "@/components/exercises/exercise-media-manager";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";
+import { buttonClass } from "@/components/ui/form";
 
 interface PageProps {
   readonly params: Promise<{ id: string }>;
@@ -130,13 +131,13 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
       actions={(
         <div className="flex flex-wrap gap-2">
           <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold"
+            className={buttonClass("secondary", "rounded-xl px-4 py-2.5 text-sm")}
             href={`/exercises/${exercise.id}`}
           >
             Detailansicht
           </Link>
           <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold"
+            className={buttonClass("secondary", "rounded-xl px-4 py-2.5 text-sm")}
             href="/exercises"
           >
             Zur Bibliothek
@@ -186,8 +187,8 @@ export default async function EditExercisePage({ params, searchParams }: PagePro
         </details>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-          <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-black">Medien</h2><p className="mt-1 text-sm text-[var(--muted)]">Wähle ein vorhandenes Bild als Standard oder plane eine neue KI-Sequenz ein.</p></div><div className="flex flex-wrap gap-2">{mediaChoices.length > 1 ? <ExerciseMediaManager choices={mediaChoices} deleteAction={deleteImageAction} exerciseName={exercise.nameDe} selectAction={selectImageAction} /> : null}<form action={generateImageAction}><button className="min-h-10 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" type="submit">Neues Bild per KI erzeugen</button></form></div></div>
-          {mediaChoices.length ? <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{mediaChoices.map((media) => <form action={selectImageAction} className={`rounded-xl border p-3 ${media.isPrimary ? "border-[var(--accent)]" : "border-[var(--border)]"}`} key={media.id}><input name="assetId" type="hidden" value={media.id} />{media.url ? <ImageLightbox alt="Übungsbild" className="h-32 w-full rounded-lg bg-[var(--surface-elevated)] object-contain" containerClassName="relative h-32" src={media.url} /> : <div className="grid h-32 place-items-center rounded-lg bg-[var(--surface-subtle)] text-xs text-[var(--muted)]">Kein Vorschaubild</div>}<div className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="font-bold">{media.sourceType === "ai_generated" ? "KI" : "Extern"} · {media.reviewStatus}</span>{media.generationStatus === "generated" ? <button className="rounded-lg border border-[var(--border)] px-2 py-1 font-black" type="submit">{media.isPrimary ? "Ausgewählt" : "Auswählen"}</button> : <span className="text-[var(--muted)]">{media.generationStatus}</span>}</div></form>)}</div> : <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Noch kein Bild vorhanden.</p>}
+          <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-black">Medien</h2><p className="mt-1 text-sm text-[var(--muted)]">Wähle ein vorhandenes Bild als Standard oder plane eine neue KI-Sequenz ein.</p></div><div className="flex flex-wrap gap-2">{mediaChoices.length > 1 ? <ExerciseMediaManager choices={mediaChoices} deleteAction={deleteImageAction} exerciseName={exercise.nameDe} selectAction={selectImageAction} /> : null}<form action={generateImageAction}><button className={buttonClass("primary", "rounded-xl px-4 text-sm")} type="submit">Neues Bild per KI erzeugen</button></form></div></div>
+          {mediaChoices.length ? <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{mediaChoices.map((media) => <form action={selectImageAction} className={`rounded-xl border p-3 ${media.isPrimary ? "border-[var(--accent)]" : "border-[var(--border)]"}`} key={media.id}><input name="assetId" type="hidden" value={media.id} />{media.url ? <ImageLightbox alt="Übungsbild" className="h-32 w-full rounded-lg bg-[var(--surface-elevated)] object-contain" containerClassName="relative h-32" src={media.url} /> : <div className="grid h-32 place-items-center rounded-lg bg-[var(--surface-subtle)] text-xs text-[var(--muted)]">Kein Vorschaubild</div>}<div className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="font-bold">{media.sourceType === "ai_generated" ? "KI" : "Extern"} · {media.reviewStatus}</span>{media.generationStatus === "generated" ? <button className={buttonClass("secondary", "min-h-9 rounded-lg px-2 py-1 text-xs")} type="submit">{media.isPrimary ? "Ausgewählt" : "Auswählen"}</button> : <span className="text-[var(--muted)]">{media.generationStatus}</span>}</div></form>)}</div> : <p className="mt-4 rounded-xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">Noch kein Bild vorhanden.</p>}
         </section>
 
         <details open={fullEditorOpen} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">

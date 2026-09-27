@@ -5,9 +5,10 @@ import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalo
 import { CatalogPagination } from "@/components/catalog/catalog-controls";
 import { CatalogSummaryStrip } from "@/components/catalog/catalog-workspace";
 import { Card } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/feedback";
+import { Alert, EmptyState } from "@/components/ui/feedback";
 import { buttonClass, formControlClass } from "@/components/ui/form";
 import { listTrainingSessionsPage, type TrainingSessionStatus } from "@/server/training/training-session-repository";
+import { importTrainingExcelAction } from "./excel-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +20,10 @@ const STATUS_LABELS = {
 } as const;
 
 interface PageProps {
-  readonly searchParams: Promise<{ status?: string; q?: string; page?: string; size?: string }>;
+  readonly searchParams: Promise<{ status?: string; q?: string; page?: string; size?: string; excelError?: string }>;
 }
 export default async function TrainingPage({ searchParams }: PageProps) {
-  const { status, q, page: pageParam, size: sizeParam } = await searchParams;
+  const { status, q, page: pageParam, size: sizeParam, excelError } = await searchParams;
   const archived = status === "archived";
   const query = q?.trim() ?? "";
   const selectedStatus = ["draft", "ready", "completed", "archived"].includes(status ?? "") ? status as TrainingSessionStatus : "";
@@ -69,6 +70,25 @@ export default async function TrainingPage({ searchParams }: PageProps) {
           { label: "Offene Entwürfe", value: draftCount },
           { label: "Geplante Minuten", value: totalMinutes },
         ]} />
+
+        {excelError ? <Alert tone="danger">Excel-Import fehlgeschlagen: {excelError === "missing" ? "Bitte eine .xlsx-Datei auswählen." : excelError === "format" ? "Bitte eine XLSX-Datei verwenden." : excelError}</Alert> : null}
+
+        {!archived ? (
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-black">Training aus Excel importieren</h2>
+                <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">Verwendet die Trainingsplanung-Vorlage. Abschnittsüberschriften für Aufwärmen, Hauptteil und Cooldown werden erkannt; importierte Übungen müssen im OCRCraft-Katalog vorhanden sein.</p>
+              </div>
+              <form action={importTrainingExcelAction} className="flex flex-wrap items-end gap-2" encType="multipart/form-data">
+                <label className="grid gap-1 text-xs font-bold">Titel (optional)<input className={`${formControlClass} min-h-10 w-52 font-normal`} name="title" placeholder="Trainingstitel" /></label>
+                <label className="grid gap-1 text-xs font-bold">XLSX-Datei<input accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="min-h-10 max-w-64 rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-2 text-sm" name="file" required type="file" /></label>
+                <button className={buttonClass("secondary", "min-h-10 px-3 text-sm")} type="submit">Importieren</button>
+                <a className={buttonClass("ghost", "min-h-10 px-3 text-sm")} download href="/templates/Trainingsplanung_Vorlage.xlsx">Leere Vorlage laden</a>
+              </form>
+            </div>
+          </section>
+        ) : null}
 
         <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
         <CatalogFilterPanel hasFilters={Boolean(query || selectedStatus || page !== 1 || pageSize !== 24)} resetHref={archived ? "/training?status=archived" : "/training"} title="Trainingsfilter">

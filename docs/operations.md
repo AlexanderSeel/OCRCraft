@@ -95,7 +95,7 @@ Nach einem Restore die Anwendung einmal neu starten und im Adminbereich den Duck
 
 ## Migrationen und Wartung
 
-Migrationen liegen versioniert unter `src/server/db/migrations/` und werden in aufsteigender Reihenfolge angewendet. Vor Schemaänderungen:
+Die eingefrorene v1-Baseline liegt in `src/server/db/initial-v1.sql`. Migrationen ab Version 92 liegen versioniert unter `src/server/db/migrations/` und werden in aufsteigender Reihenfolge nach der Baseline angewendet. Alte Migrationen bleiben für Upgrades älterer Datenbanken erhalten. Vor Schemaänderungen:
 
 1. Datenbank sichern.
 2. Anwendung stoppen oder Schreibzugriffe pausieren.

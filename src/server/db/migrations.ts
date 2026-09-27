@@ -28,6 +28,9 @@ async function discoverMigrations(): Promise<readonly Migration[]> {
 }
 
 const initialSchemaFileName = "initial-v1.sql";
+// v1 is a frozen fresh-install baseline. Future migrations must be applied
+// after it, including when the database is created from scratch.
+export const INITIAL_BASELINE_VERSION = 91;
 
 export async function readAllMigrationScripts(): Promise<readonly string[]> {
   const migrations = await discoverMigrations();
@@ -90,14 +93,17 @@ export async function runSqlScript(
 
 export async function applyPendingMigrations(): Promise<readonly number[]> {
   const migrations = await discoverMigrations();
-  if (await isFreshDatabase()) {
+  const freshDatabase = await isFreshDatabase();
+  if (freshDatabase) {
     await withDuckDbConnection(async (connection) => {
       await runSqlScript(connection, await readInitialSchemaScript());
     });
-    return migrations.map(({ version }) => version);
   }
 
   const applied = await getAppliedVersions();
+  if (freshDatabase && !applied.has(INITIAL_BASELINE_VERSION)) {
+    throw new Error(`Fresh database baseline is missing version ${INITIAL_BASELINE_VERSION}.`);
+  }
   const scripts = await Promise.all(
     migrations.map(({ fileName }) =>
       readFile(path.join(process.cwd(), "src", "server", "db", "migrations", fileName), "utf8"),
