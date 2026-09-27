@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import { ConfirmPopoverButton } from "@/components/ui/confirm-popover-form";
+import { buttonClass } from "@/components/ui/form";
 import {
   aiCapabilityLabel,
   aiPriorityLabel,
@@ -76,7 +77,7 @@ export function AiProviderSettingsPanel({
           </p>
         </div>
         <button
-          className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]"
+          className={buttonClass("primary", "px-4")}
           onClick={() => setEditor("new")}
           type="button"
         >
@@ -171,7 +172,7 @@ export function AiProviderSettingsPanel({
                 </td>
                 <td className="px-4 py-3 text-right">
                   <button
-                    className="min-h-9 rounded-lg border border-[var(--border)] px-3 text-xs font-black"
+                    className={buttonClass("secondary", "min-h-9 rounded-lg px-3 text-xs")}
                     onClick={() => setEditor(provider)}
                     type="button"
                   >
@@ -339,7 +340,7 @@ function AiProviderEditor({
         <div className="grid content-start gap-2">
           <span className="text-sm font-bold">Verbindung und Modelle</span>
           <button
-            className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black"
+            className={buttonClass("secondary", "px-4")}
             disabled={loadingModels}
             onClick={loadModels}
             type="button"
@@ -431,7 +432,7 @@ function AiProviderEditor({
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
               <span className="text-sm font-black text-[var(--success-foreground)]">Verbunden{provider.oauthExpiresAt ? " · Tokenablauf " + provider.oauthExpiresAt : ""}</span>
               <button
-                className="min-h-10 rounded-lg border border-[var(--border)] px-3 text-xs font-black"
+                className={buttonClass("secondary", "min-h-10 rounded-lg px-3 text-xs")}
                 formAction={disconnectOAuthAction}
                 name="id"
                 type="submit"
@@ -507,7 +508,7 @@ function AiProviderEditor({
           ) : null}
         </div>
         <div className="flex gap-2">
-          <button className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black" onClick={onClose} type="button">Abbrechen</button>
+          <button className={buttonClass("secondary", "px-4")} onClick={onClose} type="button">Abbrechen</button>
           <ActionProgressButton className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)]" pendingLabel="AI-Einstellungen werden gespeichert …">Speichern</ActionProgressButton>
         </div>
       </div>

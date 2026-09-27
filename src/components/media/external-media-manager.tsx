@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { ConfirmPopoverButton } from "@/components/ui/confirm-popover-form";
+import { buttonClass } from "@/components/ui/form";
 
 interface ExerciseOption {
   readonly id: string;
@@ -60,9 +61,7 @@ export function ExternalMediaManager({
   return (
     <>
       <button
-        className={value
-          ? "rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-black"
-          : "rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black"}
+        className={buttonClass("secondary", value ? "min-h-9 rounded-lg px-3 py-2 text-xs" : "px-4 py-2.5")}
         onClick={() => setOpen(true)}
         type="button"
       >
@@ -101,7 +100,7 @@ export function ExternalMediaManager({
                       value={query}
                     />
                     <button
-                      className="rounded-xl border border-[var(--border)] px-4 text-sm font-black"
+                      className={buttonClass("secondary", "px-4")}
                       disabled={searching}
                       onClick={() => void searchExercises()}
                       type="button"
@@ -114,7 +113,7 @@ export function ExternalMediaManager({
                   <div className="grid max-h-48 gap-1 overflow-y-auto rounded-xl border border-[var(--border)] p-2">
                     {results.map((item) => (
                       <button
-                        className="rounded-lg px-3 py-2 text-left text-sm hover:bg-[var(--surface-subtle)]"
+                        className={buttonClass("ghost", "min-h-9 w-full justify-start rounded-lg px-3 py-2 text-left font-normal")}
                         key={item.id}
                         onClick={() => {
                           setExerciseId(item.id);
@@ -200,9 +199,9 @@ export function ExternalMediaManager({
                 ) : null}
               </div>
               <div className="flex gap-2">
-                <button className="min-h-11 rounded-xl border border-[var(--border)] px-4 text-sm font-black" onClick={() => setOpen(false)} type="button">Abbrechen</button>
+                <button className={buttonClass("secondary", "px-4")} onClick={() => setOpen(false)} type="button">Abbrechen</button>
                 <button
-                  className="min-h-11 rounded-xl bg-[var(--control-strong)] px-4 text-sm font-black text-[var(--control-strong-foreground)] disabled:opacity-50"
+                  className={buttonClass("primary", "px-4")}
                   disabled={!exerciseId}
                   type="submit"
                 >

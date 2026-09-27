@@ -473,11 +473,7 @@ export function QuickCreateWizard({
                 {groupOptions.map(([id, label, description]) => (
                   <button
                     aria-pressed={groupType === id}
-                    className={`min-h-28 rounded-xl border p-4 text-left transition ${
-                      groupType === id
-                        ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"
-                        : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-subtle)]"
-                    }`}
+                    className={buttonClass(groupType === id ? "primary" : "secondary", "min-h-28 rounded-xl p-4 text-left transition")}
                     key={id}
                     onClick={() => {
                       setGroupType(id);
@@ -542,11 +538,7 @@ export function QuickCreateWizard({
                 {goalOptions.map((goal) => (
                   <button
                     aria-pressed={goals.includes(goal)}
-                    className={`min-h-11 rounded-xl border px-4 py-2 text-sm font-bold ${
-                      goals.includes(goal)
-                        ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"
-                        : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
-                    }`}
+                    className={buttonClass(goals.includes(goal) ? "primary" : "secondary", "rounded-xl px-4 py-2 text-sm")}
                     key={goal}
                     onClick={() => {
                       setGoals(toggleValue(goals, goal));
@@ -620,11 +612,7 @@ export function QuickCreateWizard({
                   {locationOptions.map(([id, label, description]) => (
                     <button
                       aria-pressed={location === id}
-                      className={`rounded-xl border p-4 text-left ${
-                        location === id
-                          ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"
-                          : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
-                      }`}
+                      className={buttonClass(location === id ? "primary" : "secondary", "rounded-xl p-4 text-left")}
                       key={id}
                       onClick={() => {
                         setLocation(id);
@@ -647,11 +635,7 @@ export function QuickCreateWizard({
                   {formatOptions.map(([id, label, description]) => (
                     <button
                       aria-pressed={formats.includes(id)}
-                      className={`rounded-xl border p-4 text-left ${
-                        formats.includes(id)
-                          ? "border-[var(--accent-strong)] bg-[var(--accent-soft)]"
-                          : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
-                      }`}
+                      className={buttonClass(formats.includes(id) ? "accent" : "secondary", "rounded-xl p-4 text-left")}
                       key={id}
                       onClick={() => {
                         const next = toggleValue(formats, id);
@@ -774,11 +758,7 @@ export function QuickCreateWizard({
                   ["conditioning", "Conditioning", "Mehr Lauf-/Kraftausdauer bei sauberer Technik"],
                 ] as const).map(([id, label, description]) => (
                   <button
-                    className={`rounded-xl border p-4 text-left ${
-                      intensity === id
-                        ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]"
-                        : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)]"
-                    }`}
+                    className={buttonClass(intensity === id ? "primary" : "secondary", "rounded-xl p-4 text-left")}
                     key={id}
                     onClick={() => {
                       setIntensity(id);

@@ -440,7 +440,7 @@ export function TrainingBuilderPanel({
             ] as const).map(([id, label, description]) => (
               <button
                 aria-pressed={builderMode === id}
-                className={`rounded-xl border p-4 text-left ${builderMode === id ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]" : "border-[var(--border)] bg-[var(--surface-subtle)]"}`}
+                className={buttonClass(builderMode === id ? "primary" : "secondary", "rounded-xl p-4 text-left")}
                 key={id}
                 onClick={() => { setBuilderMode(id); invalidate(); }}
                 type="button"
@@ -704,7 +704,7 @@ export function TrainingBuilderPanel({
                 </span>
                 <div className="flex gap-2">
                   <button
-                    className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black disabled:cursor-not-allowed disabled:opacity-50"
+                    className={buttonClass("secondary", "min-h-9 rounded-lg px-3 text-xs")}
                     disabled={undoDrafts.length === 0 || busy}
                     onClick={undoDraft}
                     type="button"
@@ -712,7 +712,7 @@ export function TrainingBuilderPanel({
                     Rückgängig
                   </button>
                   <button
-                    className="min-h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-black disabled:cursor-not-allowed disabled:opacity-50"
+                    className={buttonClass("secondary", "min-h-9 rounded-lg px-3 text-xs")}
                     disabled={redoDrafts.length === 0 || busy}
                     onClick={redoDraft}
                     type="button"
@@ -767,5 +767,5 @@ function NumberField({ label, value, min, max, onChange }: { readonly label: str
 }
 
 function Toggle({ active, onClick, children }: { readonly active: boolean; readonly onClick: () => void; readonly children: React.ReactNode }) {
-  return <button aria-pressed={active} className={`min-h-11 rounded-xl border px-4 py-2 text-sm font-bold ${active ? "border-[var(--control-strong)] bg-[var(--control-strong)] text-[var(--control-strong-foreground)]" : "border-[var(--border)] bg-[var(--surface-subtle)]"}`} onClick={onClick} type="button">{children}</button>;
+  return <button aria-pressed={active} className={buttonClass(active ? "primary" : "secondary", "rounded-xl px-4 py-2 text-sm")} onClick={onClick} type="button">{children}</button>;
 }
