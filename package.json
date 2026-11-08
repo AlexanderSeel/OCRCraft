@@ -31,6 +31,7 @@
     "test:e2e": "playwright test",
     "check:architecture": "node scripts/check-codebase-boundaries.mjs",
     "audit:maintainability": "node scripts/audit-maintainability.mjs",
+    "data:audit-startup": "node --import=tsx scripts/audit-startup-catalog.mjs",
     "data:quality-snapshot": "node scripts/data-quality-snapshot.mjs"
   },
   "dependencies": {
