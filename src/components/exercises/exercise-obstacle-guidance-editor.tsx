@@ -1,5 +1,5 @@
 import type { ObstacleGuidanceEditorData } from "@/server/obstacles/obstacle-editor-repository";
-import { buttonClass } from "@/components/ui/form";
+import { formControlClass, buttonClass } from "@/components/ui/form";
 
 interface ExerciseObstacleGuidanceEditorProps {
   readonly data: ObstacleGuidanceEditorData;
@@ -166,7 +166,7 @@ function NumberField({
     <label className="grid gap-1.5 text-sm font-bold">
       {label}
       <input
-        className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+        className={formControlClass}
         defaultValue={value}
         disabled={disabled}
         max={max}

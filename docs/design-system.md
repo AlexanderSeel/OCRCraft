@@ -1,6 +1,6 @@
 # OCRCraft Design System
 
-Stand: September 2026
+Stand: November 2026
 
 Dieses Dokument beschreibt das kompakte visuelle System für OCRCraft. HyperUI dient als Referenz für robuste Tailwind-Markup-Muster; OCRCraft behält eigene Tokens, Komponenten, Accessibility-Regeln und Fachlogik.
 
@@ -65,7 +65,7 @@ Dichte wird durch weniger Leerraum erreicht, nicht durch zu kleine Bedienelement
 
 `buttonClass()` in `src/components/ui/form.tsx` ist die zentrale Button-Grundform.
 
-- `primary`: Coral; Erstellen, Speichern, zentrale Primäraktion
+- `primary`: Coral mit dunklem `--brand-foreground` (auch im Hover ≥ 4,5:1); Erstellen, Speichern, zentrale Primäraktion
 - `accent`: Lime; Training starten, aktive positive Aktion
 - `secondary`: neutrale Fläche
 - `danger`: destruktiv
@@ -105,3 +105,11 @@ Die Phase bleibt zusätzlich durch Text beschriftet; Farbe ist nie das einzige S
 ## HyperUI-Abgrenzung
 
 HyperUI ist MIT-lizenziert und wird ausschließlich als Referenz/Markup-Inspiration verwendet. OCRCraft lädt keine HyperUI-Runtime und installiert kein HyperUI-Paket. Fachkomponenten, Tokens und Verhalten bleiben projektintern. Die frühere Übergangskompatibilität für direkte `bg-white`-/Hex-Farbklassen ist entfernt; der UI-Gate verhindert deren Rückkehr.
+
+
+### Auswahlkarten und Typografie
+
+- Mehrzeilige Titel-/Beschreibungsoptionen verwenden `choiceButtonClass` für vertikale Ausrichtung; `buttonClass` ist für normale horizontale Aktionen vorgesehen.
+- Die gemeinsame Button-Basis zeichnet einen sichtbaren 2-px-Fokus mit Abstand. Varianten dürfen diesen Fokus nicht unterdrücken.
+- Globale unlayered `font: inherit`-Resets an Controls/Links überschreiben Tailwind-Utilities und sind zu vermeiden; Preflight übernimmt die Normalisierung.
+- Einzeilige Felder verwenden `formControlClass`; lokale Kopien von Border-/Höhen-/Fokusklassen werden schrittweise ersetzt.

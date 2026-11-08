@@ -1,5 +1,12 @@
 "use client";
 
+import { PlanningEligibilityNotice } from "./planning-eligibility-notice";
+
+import { usePlanningRecovery } from "./use-planning-recovery";
+import { PlanningRecoveryNotice } from "./planning-recovery-notice";
+import { quickPlannerRecoverySchema, QUICK_PLANNER_RECOVERY_KEY } from "./builder-recovery";
+
+
 import { useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
 import { BODY_REGION_OPTIONS, COARSE_BODY_REGION_IDS } from "@/domain/body-regions";
@@ -8,7 +15,7 @@ import type { TrainingObstacleOption } from "@/server/training/training-draft-ca
 import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import { TrainingDraftPreview } from "./training-draft-preview";
 import { Card } from "@/components/ui/card";
-import { buttonClass } from "@/components/ui/form";
+import { formControlClass, buttonClass } from "@/components/ui/form";
 
 const goals = ["Ganzkörper", "OCR-Technik", "Grip", "Kraftausdauer", "Laufen", "Core", "Balance", "Koordination"] as const;
 const formats = [
@@ -55,6 +62,27 @@ export function TrainingQuickPlanner({
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+
+  const recovery = usePlanningRecovery(QUICK_PLANNER_RECOVERY_KEY, quickPlannerRecoverySchema, { audience, participants, duration, goal, bodyRegion, format, location, warmupCount, mainPartCounts, cooldownCount, mainPartCount, organizationMode, teamSize, groupSplitCount, obstacleInventoryDeclared, availableObstacleExerciseIds }, (restored) => {
+    setAudience(restored.audience);
+    setParticipants(restored.participants);
+    setDuration(restored.duration);
+    setGoal(restored.goal);
+    setBodyRegion(restored.bodyRegion);
+    setFormat(restored.format);
+    setLocation(restored.location);
+    setWarmupCount(restored.warmupCount);
+    setMainPartCounts(restored.mainPartCounts);
+    setCooldownCount(restored.cooldownCount);
+    setMainPartCountState(restored.mainPartCount);
+    setOrganizationMode(restored.organizationMode);
+    setTeamSize(restored.teamSize);
+    setGroupSplitCount(restored.groupSplitCount);
+    setObstacleInventoryDeclared(restored.obstacleInventoryDeclared);
+    setAvailableObstacleExerciseIds(restored.availableObstacleExerciseIds);
+    invalidateDraft();
+  });
 
   const coarseOptions = useMemo(() => BODY_REGION_OPTIONS.filter((option) =>
     (COARSE_BODY_REGION_IDS as readonly string[]).includes(option.id)
@@ -153,6 +181,7 @@ export function TrainingQuickPlanner({
       }
       const payload = await response.json() as { id: string; draft: TrainingDraft };
       setSavedId(payload.id);
+      recovery.clear();
       setDraft(payload.draft);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Quickplan konnte nicht gespeichert werden.");
@@ -163,6 +192,8 @@ export function TrainingQuickPlanner({
 
   return (
     <Card className="p-5 sm:p-6">
+      <PlanningRecoveryNotice pending={Boolean(recovery.pending)} status={recovery.status} restore={recovery.restore} clear={recovery.clear} testId="quick-planner-recovery" />
+      <PlanningEligibilityNotice />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Quickplaner · lokal</div>
@@ -265,13 +296,13 @@ export function TrainingQuickPlanner({
 }
 
 function Select({ label, value, onChange, options }: { readonly label: string; readonly value: string; readonly onChange: (value: string) => void; readonly options: readonly (readonly [string, string])[] }) {
-  return <label className="grid gap-1.5 text-sm font-black">{label}<select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" onChange={(event) => onChange(event.target.value)} value={value}>{options.map(([id, text]) => <option key={id} value={id}>{text}</option>)}</select></label>;
+  return <label className="grid gap-1.5 text-sm font-black">{label}<select className={formControlClass} onChange={(event) => onChange(event.target.value)} value={value}>{options.map(([id, text]) => <option key={id} value={id}>{text}</option>)}</select></label>;
 }
 
 function NumberField({ label, value, min, max, onChange }: { readonly label: string; readonly value: number; readonly min: number; readonly max: number; readonly onChange: (value: number) => void }) {
-  return <label className="grid gap-1.5 text-sm font-black">{label}<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" max={max} min={min} onChange={(event) => onChange(Math.max(min, Math.min(max, Number(event.target.value) || min)))} type="number" value={value} /></label>;
+  return <label className="grid gap-1.5 text-sm font-black">{label}<input className={formControlClass} max={max} min={min} onChange={(event) => onChange(Math.max(min, Math.min(max, Number(event.target.value) || min)))} type="number" value={value} /></label>;
 }
 
 function OptionalNumberField({ label, value, min, max, placeholder, onChange }: { readonly label: string; readonly value?: number; readonly min: number; readonly max: number; readonly placeholder?: string; readonly onChange: (value: number | undefined) => void }) {
-  return <label className="grid gap-1.5 text-sm font-black">{label}<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" max={max} min={min} onChange={(event) => onChange(event.target.value === "" ? undefined : Math.max(min, Math.min(max, Number(event.target.value) || min)))} placeholder={placeholder} type="number" value={value ?? ""} /></label>;
+  return <label className="grid gap-1.5 text-sm font-black">{label}<input className={formControlClass} max={max} min={min} onChange={(event) => onChange(event.target.value === "" ? undefined : Math.max(min, Math.min(max, Number(event.target.value) || min)))} placeholder={placeholder} type="number" value={value ?? ""} /></label>;
 }

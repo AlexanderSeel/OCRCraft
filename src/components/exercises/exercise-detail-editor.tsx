@@ -1,6 +1,6 @@
 import type { TrainingExerciseGuidance } from "@/server/training/training-exercise-guidance-repository";
 import { Disclosure } from "@/components/ui/disclosure";
-import { buttonClass } from "@/components/ui/form";
+import { formControlClass, buttonClass } from "@/components/ui/form";
 
 interface ExerciseDetailEditorProps {
   readonly locale: "de" | "en";
@@ -104,7 +104,7 @@ export function ExerciseLogisticsEditor({
       <label className="grid gap-2 text-sm font-bold">
         Schwierigkeit
         <select
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={guidance?.difficulty ?? "beginner"}
           disabled={disabled}
           name="difficulty"
@@ -117,7 +117,7 @@ export function ExerciseLogisticsEditor({
       <label className="grid gap-2 text-sm font-bold">
         Aufsicht
         <select
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={guidance?.supervision ?? "normal"}
           disabled={disabled}
           name="supervision"
@@ -130,7 +130,7 @@ export function ExerciseLogisticsEditor({
       <label className="grid gap-2 text-sm font-bold">
         Platzbedarf
         <input
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={guidance?.spaceRequirement ?? "medium"}
           disabled={disabled}
           maxLength={120}
@@ -207,7 +207,7 @@ function NumberField({
     <label className="grid gap-2 text-sm font-bold">
       {label}
       <input
-        className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+        className={formControlClass}
         defaultValue={value ?? ""}
         disabled={disabled}
         max={max}
@@ -221,5 +221,5 @@ function NumberField({
 }
 
 function TextField({ label, name, value, disabled }: { readonly label: string; readonly name: string; readonly value?: string | null; readonly disabled: boolean }) {
-  return <label className="grid gap-2 text-sm font-bold">{label}<input className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={value ?? ""} disabled={disabled} maxLength={1000} name={name} required={name !== "obstacleConfiguration"} /></label>;
+  return <label className="grid gap-2 text-sm font-bold">{label}<input className={formControlClass} defaultValue={value ?? ""} disabled={disabled} maxLength={1000} name={name} required={name !== "obstacleConfiguration"} /></label>;
 }

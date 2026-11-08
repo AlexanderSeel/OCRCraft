@@ -15,7 +15,7 @@ import {
   exerciseTypes,
 } from "@/domain/exercise/classification";
 import type { ExerciseClassificationEditorData } from "@/server/exercises/exercise-classification-repository";
-import { buttonClass } from "@/components/ui/form";
+import { formControlClass, buttonClass } from "@/components/ui/form";
 
 interface ExerciseClassificationEditorProps {
   readonly action: (formData: FormData) => void | Promise<void>;
@@ -134,7 +134,7 @@ function SelectField({
     <label className="grid gap-2 text-sm font-bold">
       {label}
       <select
-        className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+        className={formControlClass}
         defaultValue={value}
         disabled={disabled}
         name={name}

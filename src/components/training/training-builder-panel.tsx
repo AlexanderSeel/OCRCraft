@@ -1,5 +1,12 @@
 "use client";
 
+import { PlanningEligibilityNotice } from "./planning-eligibility-notice";
+
+import { usePlanningRecovery } from "./use-planning-recovery";
+import { PlanningRecoveryNotice } from "./planning-recovery-notice";
+import { builderRecoverySchema, builderRecoveryKey } from "./builder-recovery";
+
+
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
@@ -27,7 +34,8 @@ import {
 } from "./exercise-autocomplete-picker";
 import { MainPartProgrammingEditor } from "./main-part-programming-editor";
 import { Disclosure } from "@/components/ui/disclosure";
-import { buttonClass, formControlClass } from "@/components/ui/form";
+import { buttonClass, choiceButtonClass, formControlClass } from "@/components/ui/form";
+import { useLocale } from "@/components/i18n/locale-provider";
 import { useToast } from "@/components/ui/toast";
 import { ObstacleAvailabilityPicker } from "./obstacle-availability-picker";
 import type { TrainingObstacleOption } from "@/server/training/training-draft-catalog-core";
@@ -144,6 +152,7 @@ export function TrainingBuilderPanel({
   initialState,
   initialBuilderMode = "local",
 }: TrainingBuilderPanelProps) {
+  const { dictionary } = useLocale();
   const { pushToast, updateToast } = useToast();
   const [builderMode, setBuilderMode] = useState<QuickCreateBuilderMode>(initialState?.builderMode ?? initialBuilderMode);
   const [audience, setAudience] = useState(initialState?.audience ?? "mixed");
@@ -190,6 +199,38 @@ export function TrainingBuilderPanel({
   const [pending, setPending] = useState(false);
   const [regeneratingPhase, setRegeneratingPhase] = useState<TrainingPhaseKind | null>(null);
   const [replacingExerciseId, setReplacingExerciseId] = useState<string | null>(null);
+
+
+  const recovery = usePlanningRecovery(builderRecoveryKey(initialState?.sourceTrainingId, initialState?.builderMode ?? initialBuilderMode), builderRecoverySchema, { builderMode, audience, ageRange, participants, duration, goals, bodyRegions, avoidBodyRegions, selectedTypes, sourceTrainingIds, preferredExercises, formats, competitionStyleKey, location, intensity, warmupExerciseCount, mainPartExerciseCounts, mainPartProgramming, cooldownExerciseCount, mainPartCount, organizationMode, teamSize, groupSplitCount, availableEquipment, obstacleInventoryDeclared, availableObstacleExerciseIds, title }, (restored) => {
+    setBuilderMode(restored.builderMode);
+    setAudience(restored.audience);
+    setAgeRange(restored.ageRange);
+    setParticipants(restored.participants);
+    setDuration(restored.duration);
+    setGoals(restored.goals);
+    setBodyRegions(restored.bodyRegions);
+    setAvoidBodyRegions(restored.avoidBodyRegions);
+    setSelectedTypes(restored.selectedTypes);
+    setSourceTrainingIds(restored.sourceTrainingIds);
+    setPreferredExercises(restored.preferredExercises);
+    setFormats(restored.formats);
+    setCompetitionStyleKey(restored.competitionStyleKey);
+    setLocation(restored.location);
+    setIntensity(restored.intensity);
+    setWarmupExerciseCount(restored.warmupExerciseCount);
+    setMainPartExerciseCounts(restored.mainPartExerciseCounts);
+    setMainPartProgramming(restored.mainPartProgramming);
+    setCooldownExerciseCount(restored.cooldownExerciseCount);
+    setMainPartCountState(restored.mainPartCount);
+    setOrganizationMode(restored.organizationMode);
+    setTeamSize(restored.teamSize);
+    setGroupSplitCount(restored.groupSplitCount);
+    setAvailableEquipment(restored.availableEquipment);
+    setObstacleInventoryDeclared(restored.obstacleInventoryDeclared);
+    setAvailableObstacleExerciseIds(restored.availableObstacleExerciseIds);
+    setTitle(restored.title);
+    invalidate();
+  });
 
   const canGenerate = goals.length > 0
     && formats.length > 0
@@ -341,7 +382,7 @@ export function TrainingBuilderPanel({
     try {
       const nextDraft = await requestTrainingDraft(input());
       commitDraft(nextDraft);
-      updateToast(toastId, { tone: "success", title: "Trainingsentwurf bereit", message: "Planung und Sicherheitsprüfung sind abgeschlossen." });
+      updateToast(toastId, { tone: "info", title: dictionary.trainingValidation.created, message: dictionary.trainingValidation.review });
     } catch (cause) {
       setDraft(null);
       const message = cause instanceof Error ? cause.message : "Trainingsentwurf konnte nicht erstellt werden.";
@@ -399,6 +440,7 @@ export function TrainingBuilderPanel({
       const result = await persistTrainingDraft(input(), title, draft);
       setDraft(result.draft);
       setSavedId(result.id);
+      recovery.clear();
       updateToast(toastId, { tone: "success", title: "Training gespeichert" });
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "Training konnte nicht gespeichert werden.";
@@ -414,6 +456,8 @@ export function TrainingBuilderPanel({
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
       <div className="space-y-5">
+        <PlanningRecoveryNotice pending={Boolean(recovery.pending)} status={recovery.status} restore={recovery.restore} clear={recovery.clear} testId="builder-recovery" />
+      <PlanningEligibilityNotice />
         {initialState ? (
           <section className="rounded-2xl border border-[var(--accent-strong)] bg-[var(--accent-soft)] p-5">
             <div className="text-xs font-black uppercase tracking-[0.12em] text-[var(--muted)]">Training anpassen / neu erzeugen</div>
@@ -440,7 +484,7 @@ export function TrainingBuilderPanel({
             ] as const).map(([id, label, description]) => (
               <button
                 aria-pressed={builderMode === id}
-                className={buttonClass(builderMode === id ? "primary" : "secondary", "rounded-xl p-4 text-left")}
+                className={choiceButtonClass(builderMode === id ? "primary" : "secondary")}
                 key={id}
                 onClick={() => { setBuilderMode(id); invalidate(); }}
                 type="button"

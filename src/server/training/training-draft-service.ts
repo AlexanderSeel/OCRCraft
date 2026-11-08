@@ -22,7 +22,9 @@ import { assessStructuredTrainingGoalCoverage } from "./training-goal-coverage";
 import { assessTrainingSportsQuality } from "./training-sports-quality";
 import { persistTrainingDraft } from "./training-session-repository";
 
-async function approvedCandidatesFor(
+import { getDictionary } from "@/i18n/dictionaries";
+
+async function eligibleCandidatesFor(
   request: TrainingDraftRequest,
   rules: Parameters<typeof filterCandidatesForClubRules>[2],
 ) {
@@ -35,7 +37,9 @@ async function approvedCandidatesFor(
     availableObstacleExerciseIds: request.availableObstacleExerciseIds,
   });
   const equipmentFiltered = filterCandidatesForDeclaredEquipment(candidates, request.availableEquipment);
-  return filterCandidatesForClubRules(request, equipmentFiltered, rules);
+  const eligible = filterCandidatesForClubRules(request, equipmentFiltered, rules);
+  if (eligible.length === 0) throw new Error(getDictionary(request.locale).planningEligibility.noCandidates);
+  return eligible;
 }
 
 function applySportsQualityAudit(request: TrainingDraftRequest, draft: TrainingDraft, candidates: readonly TrainingDraftExerciseCandidate[]): TrainingDraft {
@@ -79,7 +83,7 @@ function finalizeDraft(
 
 export async function createTrainingDraft(request: TrainingDraftRequest): Promise<TrainingDraft> {
   const rules = await resolveTrainingClubRules(request);
-  const candidates = await approvedCandidatesFor(request, rules);
+  const candidates = await eligibleCandidatesFor(request, rules);
   if (request.builderMode === "ai") {
     const provider = await getConfiguredAiTrainingProvider();
     if (!provider) throw new Error("AI Training Builder ist nicht konfiguriert. Nutze den lokalen Sportalgorithmus oder setze OCRCRAFT_AI_BASE_URL und OCRCRAFT_AI_MODEL.");
@@ -178,7 +182,7 @@ export async function createAndPersistDeterministicTrainingDraft(input: Training
 
 export async function persistReviewedAiTrainingDraft(input: ReviewedAiTrainingPersistence): Promise<{ readonly id: string; readonly draft: TrainingDraft }> {
   const rules = await resolveTrainingClubRules(input.request);
-  const candidates = await approvedCandidatesFor(input.request, rules);
+  const candidates = await eligibleCandidatesFor(input.request, rules);
   const reviewedDraft = composeReviewedAiTrainingDraft(input, candidates);
   const draft = finalizeDraft(input.request, reviewedDraft, candidates, rules);
   assertAiDraftHasNoBlockingIssues(draft);

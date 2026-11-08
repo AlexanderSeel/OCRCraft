@@ -291,7 +291,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Zielgruppe
         <select
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.audience ?? preset?.audience ?? "mixed"}
           name="audience"
         >
@@ -304,7 +304,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Standardsprache
         <select
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.defaultLocale ?? "de"}
           name="defaultLocale"
         >
@@ -315,7 +315,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Mindestalter
         <input
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.minAge ?? preset?.minAge ?? ""}
           max={99}
           min={3}
@@ -326,7 +326,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Höchstalter
         <input
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.maxAge ?? preset?.maxAge ?? ""}
           max={99}
           min={3}
@@ -337,7 +337,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Teilnehmerzahl
         <input
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.defaultParticipantCount ?? preset?.participantCount ?? 12}
           max={500}
           min={1}
@@ -349,7 +349,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Standarddauer (Min.)
         <input
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.defaultDurationMinutes ?? preset?.durationMinutes ?? 60}
           max={480}
           min={10}
@@ -360,7 +360,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Standard-Trainingsort
         <select
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.defaultLocation ?? preset?.defaultLocation ?? "mixed"}
           name="defaultLocation"
         >
@@ -372,7 +372,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Standard-Organisation
         <select
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.defaultOrganizationMode ?? preset?.defaultOrganizationMode ?? "solo"}
           name="defaultOrganizationMode"
         >
@@ -383,7 +383,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Standard-Teamgröße
         <input
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.defaultTeamSize ?? preset?.defaultTeamSize ?? ""}
           max={20}
           min={2}
@@ -395,7 +395,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Rotationsgruppen
         <input
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.defaultGroupSplitCount ?? preset?.defaultGroupSplitCount ?? ""}
           max={20}
           min={1}
@@ -407,7 +407,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Zielgröße je Station
         <input
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.defaultStationGroupSize ?? preset?.defaultStationGroupSize ?? ""}
           max={100}
           min={1}
@@ -420,7 +420,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Club-Regelprofil
         <select
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.ruleProfile ?? preset?.ruleProfile ?? "standard"}
           name="ruleProfile"
         >
@@ -432,7 +432,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold" data-tour="group-safety-rule">
         Kids/Youth-Schutzprofil
         <select
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.youthSafetyProfileId ?? ""}
           name="youthSafetyProfileId"
         >
@@ -448,7 +448,7 @@ function GroupFields({
       <label className="grid gap-1.5 text-sm font-bold">
         Maximales Risikoniveau
         <select
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           defaultValue={group?.maximumRiskLevel ?? preset?.maximumRiskLevel ?? ""}
           name="maximumRiskLevel"
         >

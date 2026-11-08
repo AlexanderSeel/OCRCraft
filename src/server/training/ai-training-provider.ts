@@ -1,7 +1,7 @@
 import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import { createAiJsonFallbackClient } from "@/server/ai/ai-json-provider";
 import { resolveAiProviderChain } from "@/server/ai/ai-provider-settings-repository";
-import { SPORTS_PLANNING_PRINCIPLES } from "./sports-planning-principles";
+import { SPORTS_PLANNING_PRINCIPLES, SPORTS_PLANNING_REFERENCES } from "./sports-planning-principles";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 
 type CandidateWithHistory = TrainingDraftExerciseCandidate & { readonly recentUseCount?: number };
@@ -142,6 +142,7 @@ function buildPromptPayload(context: AiTrainingGenerationContext) {
       }],
     },
     sportsPlanningPrinciples: SPORTS_PLANNING_PRINCIPLES,
+    sportsPlanningReferences: SPORTS_PLANNING_REFERENCES,
     hardSafetyConstraints: context.hardSafetyConstraints ?? null,
     sourceSessions: context.sourceSessions ?? [],
     request: {

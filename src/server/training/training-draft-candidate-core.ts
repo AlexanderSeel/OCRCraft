@@ -1,3 +1,4 @@
+import { assessPlanningMetadata } from "@/domain/training/planning-eligibility";
 import type { DuckDBConnection } from "@duckdb/node-api";
 import type {
   ExerciseCoordinationComplexity,
@@ -122,7 +123,10 @@ export async function runTrainingDraftCandidateQuery(
       d.level_3,
       COALESCE(d.station_capacity, e.station_capacity, 1),
       d.setup_seconds,
-      d.transition_seconds
+      d.transition_seconds,
+      e.suitable_for_kids,e.suitable_for_youth,e.suitable_for_adults,
+      e.indoor_suitable,e.outdoor_suitable,
+      COALESCE(d.station_capacity,e.station_capacity)
     FROM exercises e
     JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale=$locale
     LEFT JOIN exercise_details d ON d.exercise_id=e.id AND d.locale=$locale
@@ -130,14 +134,14 @@ export async function runTrainingDraftCandidateQuery(
       AND ($minAge IS NULL OR e.min_age IS NULL OR e.min_age <= $minAge)
       AND (
         $audience='mixed'
-        OR ($audience='kids' AND COALESCE(e.suitable_for_kids, true))
-        OR ($audience='youth' AND COALESCE(e.suitable_for_youth, true))
-        OR ($audience='adults' AND COALESCE(e.suitable_for_adults, true))
+        OR ($audience='kids' AND e.suitable_for_kids IS TRUE)
+        OR ($audience='youth' AND e.suitable_for_youth IS TRUE)
+        OR ($audience='adults' AND e.suitable_for_adults IS TRUE)
       )
       AND (
         $location='mixed'
-        OR ($location='indoor' AND COALESCE(e.indoor_suitable, true))
-        OR ($location='outdoor' AND COALESCE(e.outdoor_suitable, true))
+        OR ($location='indoor' AND e.indoor_suitable IS TRUE)
+        OR ($location='outdoor' AND e.outdoor_suitable IS TRUE)
       )
     ORDER BY t.name
     `,
@@ -149,7 +153,18 @@ export async function runTrainingDraftCandidateQuery(
     },
   );
 
-  const rows = reader.getRows();
+  const rows = reader.getRows().filter((row) => assessPlanningMetadata({
+    minAge: row[5] == null ? null : Number(row[5]),
+    riskLevel: row[4] == null ? null : String(row[4]),
+    suitableForKids: row[24] == null ? null : Boolean(row[24]),
+    suitableForYouth: row[25] == null ? null : Boolean(row[25]),
+    suitableForAdults: row[26] == null ? null : Boolean(row[26]),
+    indoorSuitable: row[27] == null ? null : Boolean(row[27]),
+    outdoorSuitable: row[28] == null ? null : Boolean(row[28]),
+    stationCapacity: row[29] == null ? null : Number(row[29]),
+    trainingGoals: String(row[10] ?? "").split(" | "),
+    movementPatterns: String(row[14] ?? "").split(" | "),
+  }, audience, location).length === 0);
   if (rows.length === 0) return [];
 
   const exerciseIds = rows.map((row) => String(row[0])).join(",");

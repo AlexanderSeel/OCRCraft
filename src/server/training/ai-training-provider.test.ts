@@ -127,12 +127,18 @@ describe("OpenAI-compatible training provider", () => {
       messages: { role: string; content: string }[];
     };
     const userPayload = JSON.parse(body.messages.find((message) => message.role === "user")?.content ?? "{}") as {
+      sportsPlanningReferences: { title: string; url: string; scope: string }[];
+      sportsPlanningPrinciples: string[];
       sourceSessions: typeof sourceSessions;
       approvedExercises: { id: string }[];
       request: { bodyRegions: string[]; exerciseTypes: string[] };
       hardSafetyConstraints: { profileName: string; requiredSupervision: string; restrictedExerciseIds: string[] };
     };
 
+    expect(userPayload.sportsPlanningReferences).toHaveLength(3);
+    expect(userPayload.sportsPlanningReferences.every((reference) => reference.url.startsWith("https://") && reference.scope.length > 0)).toBe(true);
+    expect(userPayload.sportsPlanningPrinciples.join(" ")).toContain("repeatable movement mechanics");
+    expect(userPayload.sportsPlanningPrinciples.join(" ")).toContain("Never invent obstacle measurements");
     expect(userPayload.sourceSessions.map((session) => session.id)).toEqual(request.sourceTrainingIds);
     expect(userPayload.approvedExercises.map((item) => item.id)).toEqual([exercise.id]);
     expect(userPayload.request.bodyRegions).toEqual(["forearms-grip"]);

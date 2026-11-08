@@ -3,6 +3,14 @@ export type Locale = (typeof LOCALES)[number];
 
 export interface UiDictionary {
   readonly navigation: { readonly overview: string; readonly training: string; readonly exercises: string; readonly games: string; readonly aiDrafts: string; readonly obstacles: string; readonly outdoor: string; readonly groups: string; readonly media: string };
+  readonly planningEligibility: { readonly noCandidates: string; readonly title: string; readonly description: string };
+  readonly recovery: { readonly saving: string; readonly found: string; readonly restore: string; readonly discard: string; readonly stored: string; readonly restored: string; readonly unavailable: string; readonly review: string };
+  readonly trainingOverview: { readonly title: string; readonly audience: string; readonly age: string; readonly unknown: string; readonly planned: string; readonly target: string; readonly minutes: string; readonly kids: string; readonly youth: string; readonly adults: string; readonly mixed: string; readonly warmup: string; readonly main: string; readonly cooldown: string };
+  readonly trainingValidation: {
+    readonly created: string; readonly review: string;
+    readonly clear: string; readonly errors: string; readonly warnings: string;
+    readonly blocked: string; readonly recommendations: string;
+  };
   readonly language: string;
   readonly languageGerman: string;
   readonly languageEnglish: string;
@@ -17,6 +25,8 @@ export interface UiDictionary {
   readonly navigationLabel: string;
   readonly help: string;
   readonly version: string;
+  readonly dialogClose: string;
+  readonly close: string;
   readonly tourClose: string;
   readonly tourPrevious: string;
   readonly tourNext: string;
@@ -28,12 +38,20 @@ export interface UiDictionary {
 
 export const dictionaries: Readonly<Record<Locale, UiDictionary>> = {
   de: {
+    planningEligibility: { noCandidates: "Für diese Planung sind keine Übungen mit passenden, vollständigen Basisangaben verfügbar. Prüfe Alter, Ausrüstung, Einschränkungen und die Katalogangaben. Es wurde kein Trainingsvorschlag erstellt.", title: "Welche Übungen werden automatisch geplant?", description: "Für automatische Vorschläge müssen Mindestalter, Zielgruppen- und Ortsangaben, Risiko, Stationskapazität, Trainingsziele und Bewegungsmuster hinterlegt sein. Einträge mit fehlenden Basisangaben bleiben im Katalog zur Nachbearbeitung erhalten. Das ersetzt keine fachliche Prüfung und Freigabe." },
+    recovery: { saving: "Lokale Planung wird gesichert …", found: "Lokale Planung gefunden", restore: "Planung wiederherstellen", discard: "Lokale Planung verwerfen", stored: "Planung auf diesem Gerät gesichert", restored: "Planung wiederhergestellt", unavailable: "Lokale Sicherung nicht verfügbar. Deine aktuellen Eingaben bleiben nutzbar.", review: "Gesichert werden die Planungseingaben. Erstelle danach einen neuen Entwurf und prüfe ihn vor dem Speichern. Ein Training wird dadurch nicht automatisch gespeichert oder freigegeben." },
+    trainingOverview: { title: "Trainingsübersicht", audience: "Zielgruppe", age: "Alter", unknown: "Nicht hinterlegt", planned: "Geplant", target: "Ziel", minutes: "Min.", kids: "Kinder", youth: "Jugend", adults: "Erwachsene", mixed: "Gemischt", warmup: "Aufwärmen", main: "Hauptteil", cooldown: "Cooldown & Stretching" },
+    trainingValidation: { created: "Trainingsentwurf erstellt", review: "Prüfe den Entwurf und seine Hinweise, bevor du ihn speicherst.", clear: "Plan-Check ohne Hinweise", errors: "Fehler", warnings: "Hinweise", blocked: "Vor dem Speichern beheben", recommendations: "Planungshinweise und Empfehlungen" },
     navigation: { overview: "Dashboard", training: "Training", exercises: "Übungen", games: "Spiele", aiDrafts: "AI-Entwürfe", obstacles: "Hindernisse", outdoor: "Outdoor", groups: "Gruppen", media: "Medien" },
-    language: "Sprache", languageGerman: "Deutsch", languageEnglish: "English", appearance: "Darstellung", themeSystem: "System", themeLight: "Hell", themeDark: "Dunkel", skipToContent: "Zum Hauptinhalt springen", pageActions: "Seitenaktionen", breadcrumbLabel: "Brotkrümelnavigation", mobileNavigation: "Hauptnavigation mobil", navigationLabel: "Hauptnavigation", help: "Tutorial öffnen", version: "Version", tourClose: "Tutorial schließen", tourPrevious: "Zurück", tourNext: "Weiter", tourFinish: "Fertig", tourSkip: "Überspringen", tourStep: "Schritt", tourLocate: "Zum Element springen",
+    language: "Sprache", languageGerman: "Deutsch", languageEnglish: "English", appearance: "Darstellung", themeSystem: "System", themeLight: "Hell", themeDark: "Dunkel", skipToContent: "Zum Hauptinhalt springen", pageActions: "Seitenaktionen", breadcrumbLabel: "Brotkrümelnavigation", mobileNavigation: "Hauptnavigation mobil", navigationLabel: "Hauptnavigation", help: "Tutorial öffnen", version: "Version", dialogClose: "Dialog schließen", close: "Schließen", tourClose: "Tutorial schließen", tourPrevious: "Zurück", tourNext: "Weiter", tourFinish: "Fertig", tourSkip: "Überspringen", tourStep: "Schritt", tourLocate: "Zum Element springen",
   },
   en: {
+    planningEligibility: { noCandidates: "No exercises with matching, complete basic data are available for this plan. Check age, equipment, restrictions and catalog details. No training proposal was created.", title: "Which exercises can be planned automatically?", description: "Automatic proposals require a minimum age, audience and location suitability, risk, station capacity, training goals and movement patterns. Entries with missing basic data remain in the catalog for editing. This does not replace content review and approval." },
+    recovery: { saving: "Backing up local plan …", found: "Local plan found", restore: "Restore plan", discard: "Discard local plan", stored: "Plan backed up on this device", restored: "Plan restored", unavailable: "Local backup unavailable. You can continue using your current inputs.", review: "The backup contains planning inputs. Generate a new draft and review it before saving. This does not automatically save or approve a training session." },
+    trainingOverview: { title: "Session overview", audience: "Audience", age: "Age", unknown: "Not recorded", planned: "Planned", target: "Target", minutes: "min", kids: "Children", youth: "Youth", adults: "Adults", mixed: "Mixed", warmup: "Warm-up", main: "Main part", cooldown: "Cooldown & stretching" },
+    trainingValidation: { created: "Training draft created", review: "Review the draft and its notes before saving.", clear: "Plan check: no issues", errors: "Errors", warnings: "Notes", blocked: "Resolve before saving", recommendations: "Planning notes and recommendations" },
     navigation: { overview: "Dashboard", training: "Training", exercises: "Exercises", games: "Games", aiDrafts: "AI drafts", obstacles: "Obstacles", outdoor: "Outdoor", groups: "Groups", media: "Media" },
-    language: "Language", languageGerman: "German", languageEnglish: "English", appearance: "Appearance", themeSystem: "System", themeLight: "Light", themeDark: "Dark", skipToContent: "Skip to main content", pageActions: "Page actions", breadcrumbLabel: "Breadcrumb navigation", mobileNavigation: "Mobile main navigation", navigationLabel: "Main navigation", help: "Open tutorial", version: "Version", tourClose: "Close tutorial", tourPrevious: "Back", tourNext: "Next", tourFinish: "Done", tourSkip: "Skip", tourStep: "Step", tourLocate: "Jump to element",
+    language: "Language", languageGerman: "German", languageEnglish: "English", appearance: "Appearance", themeSystem: "System", themeLight: "Light", themeDark: "Dark", skipToContent: "Skip to main content", pageActions: "Page actions", breadcrumbLabel: "Breadcrumb navigation", mobileNavigation: "Mobile main navigation", navigationLabel: "Main navigation", help: "Open tutorial", version: "Version", dialogClose: "Close dialog", close: "Close", tourClose: "Close tutorial", tourPrevious: "Back", tourNext: "Next", tourFinish: "Done", tourSkip: "Skip", tourStep: "Step", tourLocate: "Jump to element",
   },
 };
 

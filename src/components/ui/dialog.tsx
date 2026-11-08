@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useSyncExternalStore } from "react";
+import { useLocale } from "@/components/i18n/locale-provider";
 import { createPortal } from "react-dom";
 import { buttonClass } from "@/components/ui/form";
 
@@ -17,6 +18,7 @@ export function Dialog({
   readonly size?: "compact" | "wide";
   readonly children: React.ReactNode;
 }) {
+  const { dictionary } = useLocale();
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const mounted = useSyncExternalStore(() => () => undefined, () => true, () => false);
@@ -28,6 +30,7 @@ export function Dialog({
   }, [mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
     const previousActive = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     const firstFocusable = panelRef.current?.querySelector<HTMLElement>(
@@ -58,7 +61,7 @@ export function Dialog({
       <div className={`relative z-[2147483001] max-h-[min(90vh,52rem)] w-full overflow-y-auto rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.42)] ${size === "wide" ? "max-w-5xl" : "max-w-2xl"}`} ref={panelRef}>
         <div className="flex items-start justify-between gap-3">
           <div>{eyebrow ? <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">{eyebrow}</div> : null}<h2 className="mt-1 text-xl font-black" id={titleId}>{title}</h2></div>
-          <button aria-label="Dialog schließen" className={buttonClass("secondary", "min-h-10 px-3 py-2 text-sm")} onClick={onClose} type="button">Schließen</button>
+          <button aria-label={dictionary.dialogClose} className={buttonClass("secondary", "min-h-10 px-3 py-2 text-sm")} onClick={onClose} type="button">{dictionary.close}</button>
         </div>
         <div className="dialog-content mt-3 min-w-0">{children}</div>
       </div>

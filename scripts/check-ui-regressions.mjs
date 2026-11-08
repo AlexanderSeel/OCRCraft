@@ -47,7 +47,7 @@ const requiredPatterns = [
   {
     file: join(sourceRoot, "components", "ui", "form.tsx"),
     name: "Interaktive Buttons benötigen Touch-Ziel und sichtbaren Fokus",
-    pattern: /buttonBaseClass\s*=\s*[\s\S]*min-h-11[\s\S]*focus-visible:outline-none/,
+    pattern: /buttonBaseClass\s*=\s*[\s\S]*min-h-11[\s\S]*focus-visible:outline-2[\s\S]*focus-visible:outline-\[var\(--focus\)\]/,
   },
   {
     file: join(sourceRoot, "components", "ui", "form.tsx"),

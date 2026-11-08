@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import { ConfirmPopoverButton } from "@/components/ui/confirm-popover-form";
-import { buttonClass } from "@/components/ui/form";
+import { formControlClass, buttonClass } from "@/components/ui/form";
 import {
   aiCapabilityLabel,
   aiPriorityLabel,
@@ -363,7 +363,7 @@ function AiProviderEditor({
         <label className="grid gap-1 text-sm font-bold">
           Textmodell
           <input
-            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+            className={formControlClass}
             defaultValue={provider?.textModelId ?? ""}
             list={"text-models-" + (provider?.id ?? "new")}
             name="textModelId"
@@ -399,7 +399,7 @@ function AiProviderEditor({
         <label className="grid gap-1 text-sm font-bold">
           Zugang
           <select
-            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+            className={formControlClass}
             name="authMode"
             onChange={(event) => setAuthMode(event.target.value as AiProviderAuthMode)}
             value={authMode}
@@ -563,7 +563,7 @@ function Field({
     <label className="grid gap-1 text-sm font-bold">
       {label}
       <input
-        className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+        className={formControlClass}
         defaultValue={defaultValue}
         inputMode={inputMode}
         name={name}

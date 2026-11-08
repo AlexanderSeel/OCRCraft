@@ -230,7 +230,7 @@ test("training builder keeps real edits through generation and persistence", asy
 test("Kids planning keeps every selected exercise within the configured minimum-age boundary", async ({ page }) => {
   await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
   await page.getByRole("combobox", { name: "Zielgruppe" }).last().selectOption("kids");
-  await page.getByRole("textbox", { name: "Alter" }).last().fill("5");
+  await page.getByRole("textbox", { name: "Alter" }).last().fill("10");
 
   await page.getByRole("button", { name: "Lokal planen" }).click();
   await expect(page.getByText("Dieser Entwurf ist noch nicht gespeichert.")).toBeVisible({ timeout: 20_000 });
@@ -240,5 +240,23 @@ test("Kids planning keeps every selected exercise within the configured minimum-
   const ages = await selectedExercises.evaluateAll((nodes) =>
     nodes.map((node) => node.getAttribute("data-exercise-min-age")),
   );
-  expect(ages.every((value) => value === "" || Number(value) <= 5)).toBe(true);
+  expect(ages.every((value) => value !== "" && value !== null && Number(value) <= 10)).toBe(true);
+});
+
+
+test("Kids age-five planning does not fall back to unknown-age imports", async ({ page }) => {
+  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  await page.getByRole("combobox", { name: "Zielgruppe" }).last().selectOption("kids");
+  await page.getByRole("textbox", { name: "Alter" }).last().fill("5");
+  await page.getByRole("button", { name: "Lokal planen", exact: true }).click();
+  await expect(page.getByText("Für diese Planung sind keine Übungen mit passenden, vollständigen Basisangaben verfügbar. Prüfe Alter, Ausrüstung, Einschränkungen und die Katalogangaben. Es wurde kein Trainingsvorschlag erstellt.", { exact: true }).first()).toBeVisible();
+  await expect(page.locator("[data-exercise-min-age]")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Training speichern", exact: true })).toBeDisabled();
+  const ai = await page.request.post("/api/training/draft", { data: {
+    audience: "kids", minAge: 5, participantCount: 10, durationMinutes: 45,
+    goals: ["Koordination"], bodyRegions: [], formats: ["technique"], intensity: "technique",
+    preferredExerciseIds: [], builderMode: "ai", location: "outdoor",
+  } });
+  expect(ai.status()).toBe(422);
+  expect(await ai.json()).toMatchObject({ message: "Für diese Planung sind keine Übungen mit passenden, vollständigen Basisangaben verfügbar. Prüfe Alter, Ausrüstung, Einschränkungen und die Katalogangaben. Es wurde kein Trainingsvorschlag erstellt." });
 });

@@ -1,3 +1,4 @@
+import { TrainingValidationSummary } from "./training-validation-summary";
 import type { TrainingDraft } from "@/domain/training/draft";
 import type { MainPartProgramming, TrainingItem, TrainingPhase, TrainingPhaseKind } from "@/domain/training/model";
 import { mainPartProgrammingLabel } from "@/server/training/main-part-programming";
@@ -54,10 +55,10 @@ export function TrainingDraftPreview({
               : `Individuell / freie Rotation · ${draft.session.group.participantCount} Teilnehmende`}
           </p>
         </div>
-        <span className="rounded-full border border-[var(--success-border)] bg-[var(--success-bg)] px-3 py-1 text-xs font-black text-[var(--success-foreground)]">
-          {draft.validationIssues.length === 0 ? "Plan-Check sauber" : `${draft.validationIssues.length} Hinweise`}
-        </span>
+
       </div>
+
+      <TrainingValidationSummary issues={draft.validationIssues} warnings={draft.warnings} />
 
       <div className="grid gap-3 lg:grid-cols-3">
         {draft.session.phases.map((phase) => (
@@ -73,15 +74,6 @@ export function TrainingDraftPreview({
         ))}
       </div>
 
-      {draft.warnings.length > 0 || draft.validationIssues.length > 0 ? (
-        <div className="rounded-xl border border-[var(--warning)] bg-[var(--warning-bg)] p-4 text-sm">
-          <div className="font-black">Planungshinweise</div>
-          <ul className="mt-2 space-y-1 text-[var(--foreground)]">
-            {draft.warnings.map((warning) => <li key={warning}>• {warning}</li>)}
-            {draft.validationIssues.map((issue) => <li key={`${issue.code}-${issue.path ?? issue.message}`}>• {issue.message}</li>)}
-          </ul>
-        </div>
-      ) : null}
 
       <p className="text-xs leading-5 text-[var(--muted)]">
         Dieser Entwurf ist noch nicht gespeichert. Er wird ausschließlich aus freigegebenen Bibliotheksdaten zusammengesetzt; AI-Vorschläge durchlaufen zusätzlich dieselben deterministischen OCRCraft-Prüfungen wie lokale Entwürfe.

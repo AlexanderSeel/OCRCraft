@@ -1,5 +1,6 @@
 "use client";
 
+import { formControlClass } from "@/components/ui/form";
 import {
   MAIN_PART_EVERY_UNITS,
   MAIN_PART_PROGRAMMING_MODES,
@@ -64,7 +65,7 @@ export function MainPartProgrammingEditor({ index, value, onChange, partnerWorko
       <label className="mt-2 grid gap-1.5 text-sm font-bold">
         Programmierung
         <select
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+          className={formControlClass}
           onChange={(event) => switchMode(event.target.value as MainPartProgrammingMode)}
           value={value.mode}
         >

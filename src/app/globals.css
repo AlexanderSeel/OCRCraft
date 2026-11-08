@@ -22,7 +22,7 @@ html[data-theme="light"] {
   --brand: #ff6b3d;
   --brand-strong: #e8562f;
   --brand-soft: #fff0ea;
-  --brand-foreground: #ffffff;
+  --brand-foreground: #201109;
   --accent: #b8ee4c;
   --accent-strong: #98ce31;
   --accent-soft: #eff8dc;
@@ -77,7 +77,7 @@ html[data-theme="dark"] {
   --brand: #ff744c;
   --brand-strong: #ff8a67;
   --brand-soft: #332019;
-  --brand-foreground: #ffffff;
+  --brand-foreground: #201109;
   --accent: #c1ef54;
   --accent-strong: #d2fa70;
   --accent-soft: #26321a;
@@ -214,14 +214,6 @@ button {
     background-color 140ms ease,
     border-color 140ms ease,
     color 140ms ease;
-}
-
-button,
-a,
-input,
-select,
-textarea {
-  font: inherit;
 }
 
 input,

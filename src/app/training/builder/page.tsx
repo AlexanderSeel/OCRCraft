@@ -66,7 +66,7 @@ export default async function TrainingBuilderPage({ searchParams }: PageProps) {
 
         <details className="group" open>
           <summary className="mb-4 cursor-pointer text-sm font-black text-[var(--muted)]">Detaillierten Builder anzeigen</summary>
-          <TrainingBuilderPanel equipmentOptions={equipmentOptions} obstacleOptions={obstacleOptions} initialBuilderMode={mode === "ai" ? "ai" : "local"} initialState={initialState} sourceTrainingOptions={sourceTrainingOptions} />
+          <TrainingBuilderPanel key={`${source ?? "new"}:${mode ?? "local"}`} equipmentOptions={equipmentOptions} obstacleOptions={obstacleOptions} initialBuilderMode={mode === "ai" ? "ai" : "local"} initialState={initialState} sourceTrainingOptions={sourceTrainingOptions} />
         </details>
       </div>
     </AppShell>

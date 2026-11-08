@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TrainingSessionOverview } from "@/components/training/training-session-overview";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { Disclosure } from "@/components/ui/disclosure";
@@ -117,6 +118,13 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
       }
     >
       <div className="space-y-6">
+        <TrainingSessionOverview
+          phases={session.phases.map((phase) => ({ id: phase.id, kind: phase.kind, durationMinutes: phase.items.reduce((sum, item) => sum + item.durationMinutes, 0) }))}
+          targetMinutes={session.totalDurationMinutes}
+          audience={generation?.request.audience}
+          minAge={generation?.request.minAge}
+          maxAge={generation?.request.maxAge}
+        />
         {query.saved ? (
           <Alert tone="success">
             {savedMessage(query.saved)}
@@ -139,153 +147,16 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
           </Alert>
         ) : null}
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><h2 className="font-black">Versionen</h2><p className="mt-1 text-sm text-[var(--muted)]">Snapshots sichern Training, Phasen und Übungen für eine spätere Wiederherstellung.</p></div>
-            <form action={createTrainingVersionAction.bind(null, session.id)}><button className={buttonClass("secondary", "px-3 text-sm")} type="submit">Snapshot erstellen</button></form>
-          </div>
-          {versions.length ? <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{versions.map((version) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2" key={version.id}><span><strong className="text-[var(--foreground)]">Version {version.versionNumber}</strong> · {version.createdAt}{version.createdBy ? ` · ${version.createdBy}` : ""}</span><form action={restoreTrainingVersionAction}><input name="sessionId" type="hidden" value={session.id} /><input name="versionId" type="hidden" value={version.id} /><button className={buttonClass("secondary", "px-2 py-1 text-xs")} type="submit">Wiederherstellen</button></form></li>)}</ul> : <p className="mt-3 text-sm text-[var(--muted)]">Noch kein Snapshot vorhanden.</p>}
-        </section>
-
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-          <div title="Speichert die aktuelle Übungsauswahl, Hauptteilstruktur, Programmierung und Teamorganisation als wiederverwendbaren Snapshot.">
-            <h2 className="font-black">Als Vereinsvorlage speichern</h2>
-          </div>
-          <form action={createClubTrainingTemplateAction} className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] md:items-end">
-            <input name="sessionId" type="hidden" value={session.id} />
-            <label className="grid gap-1 text-sm font-bold">
-              Vorlagenname
-              <input
-                className={`${formControlClass} font-normal`}
-                defaultValue={session.title}
-                maxLength={120}
-                minLength={2}
-                name="name"
-                required
-              />
-            </label>
-            <label className="grid gap-1 text-sm font-bold">
-              Beschreibung
-              <input
-                className={`${formControlClass} font-normal`}
-                maxLength={1000}
-                name="description"
-                placeholder="Optional: Einsatz, Gruppe oder besondere Hinweise"
-              />
-            </label>
-            <button className={buttonClass("secondary", "px-4")} type="submit">
-              Vorlage speichern
-            </button>
-          </form>
-          <div className="mt-3 text-xs text-[var(--muted)]">
-            <Link className="font-bold underline underline-offset-2" href="/training/templates">Vereinsvorlagen verwalten</Link>
-          </div>
-        </section>
-
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <InfoCard label="Status" value={statusLabel(session.status)} />
-          <InfoCard label="Quelle" value={sourceLabel(session.source)} />
-          <InfoCard label="Dauer" value={`${session.totalDurationMinutes} Min.`} />
-          <InfoCard
-            label="Organisation"
-            value={session.organizationMode === "team"
-              ? `Team · ${session.teamSize ?? 2} Pers./Team · ${mainPartCount} ${mainPartCount === 1 ? "Hauptteil" : "Hauptteile"}`
-              : `Individuell · ${mainPartCount} ${mainPartCount === 1 ? "Hauptteil" : "Hauptteile"}`}
-          />
-        </section>
-
-        {editable ? (
-          <form
-            action={updateTrainingOrganizationAction}
-            className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end"
-          >
-            <input name="sessionId" type="hidden" value={session.id} />
-            <label className="grid gap-2 text-sm font-bold">
-              Organisation Hauptteil
-              <select
-                className={`${formControlClass} font-normal`}
-                defaultValue={session.organizationMode}
-                name="organizationMode"
-              >
-                <option value="solo">Alleine / individuelle Rotation</option>
-                <option value="team">Teams</option>
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm font-bold">
-              Teamgröße
-              <input
-                className={`${formControlClass} font-normal`}
-                defaultValue={session.teamSize ?? 4}
-                max={20}
-                min={2}
-                name="teamSize"
-                type="number"
-                title="Wird nur bei Teamorganisation verwendet."
-              />
-            </label>
-            <button
-              className={buttonClass("secondary", "self-end px-4")}
-              type="submit"
-            >
-              Organisation speichern
-            </button>
-          </form>
-        ) : null}
-
-        <form
-          action={updateMetadataAction}
-            className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end"
-        >
-          <label className="grid gap-2 text-sm font-bold">
-            Trainingstitel
-            <input
-              className={`${formControlClass} font-normal`}
-              defaultValue={session.title}
-              maxLength={120}
-              name="title"
-              required
-            />
-          </label>
-          <label className="grid gap-2 text-sm font-bold">
-            Status
-            <select
-              className={`${formControlClass} font-normal`}
-              defaultValue={session.status}
-              name="status"
-            >
-              <option value="draft">Entwurf</option>
-              <option value="ready">Bereit</option>
-              <option value="completed">Abgeschlossen</option>
-              <option value="archived">Archiviert</option>
-            </select>
-          </label>
-          <Disclosure className="md:col-span-2 xl:col-span-3" summaryClassName="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2.5 text-sm font-bold" summary="Optionale Route & GPS-Daten">
-            <div className="mt-3 grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 md:grid-cols-2">
-              <label className="grid gap-2 text-sm font-bold">Routenname<input className={`${formControlClass} font-normal`} defaultValue={session.routeName ?? ""} maxLength={160} name="routeName" placeholder="z. B. Vereinsrunde" /></label>
-              <label className="grid gap-2 text-sm font-bold">Strecke (m)<input className={`${formControlClass} font-normal`} defaultValue={session.routeDistanceMetres ?? ""} min="0.1" name="routeDistanceMetres" step="0.1" type="number" /></label>
-              <label className="grid gap-2 text-sm font-bold">Untergrund<input className={`${formControlClass} font-normal`} defaultValue={session.routeSurface ?? ""} maxLength={160} name="routeSurface" placeholder="Asphalt, Waldweg …" /></label>
-              <label className="grid gap-2 text-sm font-bold">GPS-/Kartenreferenz<input className={`${formControlClass} font-normal`} defaultValue={session.routeGpsReference ?? ""} maxLength={500} name="routeGpsReference" placeholder="Link oder interne Referenz" /></label>
-              <label className="grid gap-2 text-sm font-bold md:col-span-2">Routenhinweise<textarea className={`${formControlClass} min-h-20 p-3 font-normal`} defaultValue={session.routeNotes ?? ""} maxLength={2000} name="routeNotes" /></label>
-            </div>
-          </Disclosure>
-          <button
-            className={buttonClass("primary", "self-end px-5")}
-            type="submit"
-          >
-            Metadaten speichern
-          </button>
-        </form>
-
         {!editable ? (
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[var(--muted)]">
             Archivierte Trainings sind schreibgeschützt. Setze den Status auf „Entwurf“, „Bereit“ oder „Abgeschlossen“, um Inhalte wieder zu bearbeiten.
           </div>
         ) : null}
-
         <section className="space-y-4">
           {session.phases.map((phase) => (
             <article
               className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
+              style={{ scrollMarginTop: "calc(var(--training-header-height, 0px) + var(--training-overview-height, 0px) + 16px)" }}
               id={`phase-${phase.id}`}
               key={phase.id}
             >
@@ -543,6 +414,148 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
             {session.notes}
           </section>
         ) : null}
+        <Disclosure className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4" summary="Trainingseinstellungen" summaryClassName="min-h-11 py-3 font-black">
+          <div className="space-y-4">        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <InfoCard label="Status" value={statusLabel(session.status)} />
+          <InfoCard label="Quelle" value={sourceLabel(session.source)} />
+          <InfoCard label="Dauer" value={`${session.totalDurationMinutes} Min.`} />
+          <InfoCard
+            label="Organisation"
+            value={session.organizationMode === "team"
+              ? `Team · ${session.teamSize ?? 2} Pers./Team · ${mainPartCount} ${mainPartCount === 1 ? "Hauptteil" : "Hauptteile"}`
+              : `Individuell · ${mainPartCount} ${mainPartCount === 1 ? "Hauptteil" : "Hauptteile"}`}
+          />
+        </section>
+
+        {editable ? (
+          <form
+            action={updateTrainingOrganizationAction}
+            className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end"
+          >
+            <input name="sessionId" type="hidden" value={session.id} />
+            <label className="grid gap-2 text-sm font-bold">
+              Organisation Hauptteil
+              <select
+                className={`${formControlClass} font-normal`}
+                defaultValue={session.organizationMode}
+                name="organizationMode"
+              >
+                <option value="solo">Alleine / individuelle Rotation</option>
+                <option value="team">Teams</option>
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm font-bold">
+              Teamgröße
+              <input
+                className={`${formControlClass} font-normal`}
+                defaultValue={session.teamSize ?? 4}
+                max={20}
+                min={2}
+                name="teamSize"
+                type="number"
+                title="Wird nur bei Teamorganisation verwendet."
+              />
+            </label>
+            <button
+              className={buttonClass("secondary", "self-end px-4")}
+              type="submit"
+            >
+              Organisation speichern
+            </button>
+          </form>
+        ) : null}
+
+        <form
+          action={updateMetadataAction}
+            className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end"
+        >
+          <label className="grid gap-2 text-sm font-bold">
+            Trainingstitel
+            <input
+              className={`${formControlClass} font-normal`}
+              defaultValue={session.title}
+              maxLength={120}
+              name="title"
+              required
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-bold">
+            Status
+            <select
+              className={`${formControlClass} font-normal`}
+              defaultValue={session.status}
+              name="status"
+            >
+              <option value="draft">Entwurf</option>
+              <option value="ready">Bereit</option>
+              <option value="completed">Abgeschlossen</option>
+              <option value="archived">Archiviert</option>
+            </select>
+          </label>
+          <Disclosure className="md:col-span-2 xl:col-span-3" summaryClassName="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2.5 text-sm font-bold" summary="Optionale Route & GPS-Daten">
+            <div className="mt-3 grid gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 md:grid-cols-2">
+              <label className="grid gap-2 text-sm font-bold">Routenname<input className={`${formControlClass} font-normal`} defaultValue={session.routeName ?? ""} maxLength={160} name="routeName" placeholder="z. B. Vereinsrunde" /></label>
+              <label className="grid gap-2 text-sm font-bold">Strecke (m)<input className={`${formControlClass} font-normal`} defaultValue={session.routeDistanceMetres ?? ""} min="0.1" name="routeDistanceMetres" step="0.1" type="number" /></label>
+              <label className="grid gap-2 text-sm font-bold">Untergrund<input className={`${formControlClass} font-normal`} defaultValue={session.routeSurface ?? ""} maxLength={160} name="routeSurface" placeholder="Asphalt, Waldweg …" /></label>
+              <label className="grid gap-2 text-sm font-bold">GPS-/Kartenreferenz<input className={`${formControlClass} font-normal`} defaultValue={session.routeGpsReference ?? ""} maxLength={500} name="routeGpsReference" placeholder="Link oder interne Referenz" /></label>
+              <label className="grid gap-2 text-sm font-bold md:col-span-2">Routenhinweise<textarea className={`${formControlClass} min-h-20 p-3 font-normal`} defaultValue={session.routeNotes ?? ""} maxLength={2000} name="routeNotes" /></label>
+            </div>
+          </Disclosure>
+          <button
+            className={buttonClass("primary", "self-end px-5")}
+            type="submit"
+          >
+            Metadaten speichern
+          </button>
+        </form>
+
+
+
+</div>
+        </Disclosure>
+        <Disclosure className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4" summary="Versionen" summaryClassName="min-h-11 py-3 font-black">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div><h2 className="font-black">Versionen</h2><p className="mt-1 text-sm text-[var(--muted)]">Snapshots sichern Training, Phasen und Übungen für eine spätere Wiederherstellung.</p></div>
+            <form action={createTrainingVersionAction.bind(null, session.id)}><button className={buttonClass("secondary", "px-3 text-sm")} type="submit">Snapshot erstellen</button></form>
+          </div>
+          {versions.length ? <ul className="mt-3 grid gap-2 text-xs text-[var(--muted)]">{versions.map((version) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2" key={version.id}><span><strong className="text-[var(--foreground)]">Version {version.versionNumber}</strong> · {version.createdAt}{version.createdBy ? ` · ${version.createdBy}` : ""}</span><form action={restoreTrainingVersionAction}><input name="sessionId" type="hidden" value={session.id} /><input name="versionId" type="hidden" value={version.id} /><button className={buttonClass("secondary", "px-2 py-1 text-xs")} type="submit">Wiederherstellen</button></form></li>)}</ul> : <p className="mt-3 text-sm text-[var(--muted)]">Noch kein Snapshot vorhanden.</p>}
+        </Disclosure>
+
+        <Disclosure className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4" summary="Als Vereinsvorlage speichern" summaryClassName="min-h-11 py-3 font-black">
+          <div title="Speichert die aktuelle Übungsauswahl, Hauptteilstruktur, Programmierung und Teamorganisation als wiederverwendbaren Snapshot.">
+            <h2 className="font-black">Als Vereinsvorlage speichern</h2>
+          </div>
+          <form action={createClubTrainingTemplateAction} className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] md:items-end">
+            <input name="sessionId" type="hidden" value={session.id} />
+            <label className="grid gap-1 text-sm font-bold">
+              Vorlagenname
+              <input
+                className={`${formControlClass} font-normal`}
+                defaultValue={session.title}
+                maxLength={120}
+                minLength={2}
+                name="name"
+                required
+              />
+            </label>
+            <label className="grid gap-1 text-sm font-bold">
+              Beschreibung
+              <input
+                className={`${formControlClass} font-normal`}
+                maxLength={1000}
+                name="description"
+                placeholder="Optional: Einsatz, Gruppe oder besondere Hinweise"
+              />
+            </label>
+            <button className={buttonClass("secondary", "px-4")} type="submit">
+              Vorlage speichern
+            </button>
+          </form>
+          <div className="mt-3 text-xs text-[var(--muted)]">
+            <Link className="font-bold underline underline-offset-2" href="/training/templates">Vereinsvorlagen verwalten</Link>
+          </div>
+        </Disclosure>
+
       </div>
     </AppShell>
   );

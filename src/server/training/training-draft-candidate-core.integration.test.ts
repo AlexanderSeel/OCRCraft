@@ -109,7 +109,8 @@ async function createFixture() {
       ('archived','de','Archiviert','Nicht aktiv.'),
       ('archived','en','Archived','Inactive.');
     INSERT INTO exercise_body_regions VALUES ('kids-carry','core'),('kids-carry','forearms-grip');
-    INSERT INTO exercise_movement_patterns VALUES ('kids-carry','carry'),('kids-carry','locomotion');
+    INSERT INTO exercise_movement_patterns VALUES ('kids-carry','carry'),('kids-carry','locomotion'),('adult-wall','climb');
+    INSERT INTO exercise_training_goals VALUES ('kids-carry','strength_endurance'),('adult-wall','ocr_technique');
     INSERT INTO equipment VALUES
       ('bag','sandbag','Sandsack','Sandbag',8,false),
       ('unknown-stock','cones','Hütchen','Cones',NULL,false),
@@ -194,6 +195,26 @@ describe("training draft candidate query", () => {
     } finally {
       connection.closeSync();
     }
+  });
+
+  it("does not plan active rows with unknown metadata even when preferred/mixed selection would otherwise allow them", async () => {
+    const connection = await createFixture();
+    try {
+      await connection.run("UPDATE exercises SET min_age=NULL WHERE id='kids-carry'");
+      await connection.run("UPDATE exercises SET outdoor_suitable=NULL WHERE id='adult-wall'");
+      expect(await runTrainingDraftCandidateQuery(connection, { audience: "mixed", locale: "de", location: "mixed" })).toEqual([]);
+      expect(await runTrainingDraftCandidateQuery(connection, { audience: "kids", minAge: 10, locale: "de", location: "outdoor" })).toEqual([]);
+    } finally { connection.closeSync(); }
+  });
+
+  it("rejects missing movement/goal data without removing the catalog entry", async () => {
+    const connection = await createFixture();
+    try {
+      await connection.run("DELETE FROM exercise_training_goals WHERE exercise_id='kids-carry'");
+      await connection.run("DELETE FROM exercise_movement_patterns WHERE exercise_id='adult-wall'");
+      expect(await runTrainingDraftCandidateQuery(connection, { audience: "mixed", locale: "en" })).toEqual([]);
+      expect(Number((await connection.runAndReadAll("SELECT count(*) FROM exercises WHERE archived=false")).getRows()[0][0])).toBe(2);
+    } finally { connection.closeSync(); }
   });
 
   it("hydrates localized equipment and full structured planning context", async () => {

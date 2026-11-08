@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export const buttonBaseClass = "inline-flex min-h-11 items-center justify-center rounded-md px-3.5 text-sm font-black transition focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60";
+export const buttonBaseClass = "inline-flex min-h-11 items-center justify-center rounded-md px-3.5 text-sm font-black transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)] disabled:cursor-not-allowed disabled:opacity-60";
 
 export const buttonVariantClass = {
   primary: "bg-[var(--brand)] text-[var(--brand-foreground)] hover:bg-[var(--brand-strong)]",
@@ -14,9 +14,14 @@ export function buttonClass(variant: keyof typeof buttonVariantClass = "primary"
   return `${buttonBaseClass} ${buttonVariantClass[variant]} ${className}`.trim();
 }
 
+/** Stacked title/description choices retain the shared button states. */
+export function choiceButtonClass(variant: keyof typeof buttonVariantClass = "secondary", className = "") {
+  return buttonClass(variant, `flex-col items-start gap-1 rounded-md p-4 text-left ${className}`);
+}
+
 export const formControlClass = [
   "min-h-11 w-full rounded-md border border-[var(--border-strong)]",
-  "bg-[var(--surface)] px-3 text-sm text-[var(--foreground)]",
+  "bg-[var(--surface)] px-3 text-sm font-normal text-[var(--foreground)]",
   "outline-none transition",
   "focus:border-[var(--focus)] focus:ring-2 focus:ring-[var(--focus)]/20",
   "aria-invalid:border-[var(--danger)] aria-invalid:ring-2 aria-invalid:ring-[var(--danger)]/15",

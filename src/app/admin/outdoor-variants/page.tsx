@@ -1,3 +1,4 @@
+import { formControlClass } from "@/components/ui/form";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
@@ -193,7 +194,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
               </label>
               <label className="grid gap-1 text-sm font-bold">
                 Status
-                <select className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={statusFilter} name="status">
+                <select className={formControlClass} defaultValue={statusFilter} name="status">
                   <option value="">Alle</option>
                   <option value="ready">Bereit</option>
                   <option value="existing">Bereits vorhanden</option>

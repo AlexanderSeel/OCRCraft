@@ -86,6 +86,11 @@ test("quick create audience selection works with keyboard only", async ({ page }
   const youth = page.getByRole("button", { name: /^Jugend/ });
   await kids.waitFor();
 
+  const choiceLayout = await kids.evaluate((element) => {
+    const [title, description] = element.querySelectorAll("span");
+    return { titleBottom: title.getBoundingClientRect().bottom, descriptionTop: description.getBoundingClientRect().top };
+  });
+  expect(choiceLayout.descriptionTop).toBeGreaterThanOrEqual(choiceLayout.titleBottom);
   await kids.focus();
   await page.keyboard.press("Enter");
   await expect(kids).toHaveAttribute("aria-pressed", "true");
@@ -358,11 +363,21 @@ test("core semantic color pairs meet normal-text contrast in light and dark them
         body: contrast("--foreground", "--background"),
         muted: contrast("--muted", "--surface"),
         strongControl: contrast("--control-strong-foreground", "--control-strong"),
+        primary: contrast("--brand-foreground", "--brand"),
+        primaryHover: contrast("--brand-foreground", "--brand-strong"),
+        accent: contrast("--accent-foreground", "--accent"),
+        danger: contrast("--danger", "--danger-bg"),
+        warning: contrast("--warning", "--warning-bg"),
       };
     });
     expect(ratios.body).toBeGreaterThanOrEqual(4.5);
     expect(ratios.muted).toBeGreaterThanOrEqual(4.5);
     expect(ratios.strongControl).toBeGreaterThanOrEqual(4.5);
+    expect(ratios.primary).toBeGreaterThanOrEqual(4.5);
+    expect(ratios.primaryHover).toBeGreaterThanOrEqual(4.5);
+    expect(ratios.accent).toBeGreaterThanOrEqual(4.5);
+    expect(ratios.danger).toBeGreaterThanOrEqual(4.5);
+    expect(ratios.warning).toBeGreaterThanOrEqual(4.5);
   }
 });
 
@@ -409,3 +424,45 @@ test("groups tutorial reaches the safeguarding rule input", async ({ page }) => 
   for (let index = 0; index < 3; index += 1) await dialog.getByRole("button", { name: "Weiter" }).click();
   await expect(page.locator("[data-tour='group-safety-rule'][data-tour-active='true']").first()).toBeVisible();
 });
+
+
+test("shared primary actions have a visible keyboard focus outline", async ({ page }) => {
+  await page.goto("/training", { waitUntil: "domcontentloaded" });
+  const action = page.getByRole("link", { name: "+ Quick Create", exact: true });
+  await page.keyboard.press("Tab");
+  await action.focus();
+  await expect(action).toHaveCSS("font-weight", "900");
+  await expect(action).toHaveCSS("font-size", "14px");
+  const outline = await action.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { style: style.outlineStyle, width: Number.parseFloat(style.outlineWidth), offset: Number.parseFloat(style.outlineOffset) };
+  });
+  expect(outline.style).toBe("solid");
+  expect(outline.width).toBeGreaterThanOrEqual(2);
+  expect(outline.offset).toBeGreaterThanOrEqual(2);
+});
+
+test("shared dialog close action follows the selected language", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("ocrcraft-locale", "en"));
+  await page.goto("/exercises", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: /^Muskelgruppen/ }).click();
+  const close = page.getByRole("dialog").getByRole("button", { name: "Close dialog", exact: true });
+  await expect(close).toBeFocused();
+  await expect(close).toHaveText("Close");
+  await close.click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+});
+
+for (const width of [390, 768, 1440]) {
+  test(`UI review: all workspaces at ${width}px`, async ({ page }, testInfo) => {
+    test.setTimeout(180_000);
+    await page.setViewportSize({ width, height: 900 });
+    for (const route of AUDIT_ROUTES) {
+      await page.goto(route, { waitUntil: "domcontentloaded" });
+      await expect(page.locator("main")).toBeVisible();
+      const sizes = await page.evaluate(() => ({ viewport: innerWidth, content: document.documentElement.scrollWidth }));
+      expect(sizes.content, `${route} at ${width}px overflows`).toBeLessThanOrEqual(sizes.viewport + 1);
+      await page.screenshot({ path: testInfo.outputPath(`${route.replace(/[^a-z0-9]/gi, "_") || "dashboard"}.png`), fullPage: true });
+    }
+  });
+}

@@ -1,6 +1,10 @@
 "use client";
 
+import { PlanningEligibilityNotice } from "./planning-eligibility-notice";
+
 import Link from "next/link";
+import { PlanningRecoveryNotice } from "./planning-recovery-notice";
+import { useQuickCreateRecovery } from "./use-quick-create-recovery";
 import { useEffect, useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
 import { TEAM_COMPETITION_STYLES, getTeamCompetitionStyle } from "@/domain/training/team-competition-catalog";
@@ -24,7 +28,8 @@ import { TrainingDraftPreview } from "./training-draft-preview";
 import { Alert } from "@/components/ui/feedback";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Disclosure } from "@/components/ui/disclosure";
-import { buttonClass, formControlClass, FormField } from "@/components/ui/form";
+import { buttonClass, choiceButtonClass, formControlClass, FormField } from "@/components/ui/form";
+import { useLocale } from "@/components/i18n/locale-provider";
 import { useToast } from "@/components/ui/toast";
 
 const groupOptions = [
@@ -152,6 +157,7 @@ export function QuickCreateWizard({
   obstacleOptions = [],
   groupPresets = [],
 }: QuickCreateWizardProps) {
+  const { dictionary } = useLocale();
   const { pushToast, updateToast } = useToast();
   const [step, setStep] = useState(1);
   const [selectedGroupId, setSelectedGroupId] = useState("");
@@ -189,6 +195,34 @@ export function QuickCreateWizard({
   useEffect(() => {
     document.querySelector("[data-quick-create-root]")?.setAttribute("data-quick-create-ready", "true");
   }, []);
+
+
+  const recovery = useQuickCreateRecovery({ step, selectedGroupId, selectedTemplateKey, groupType, ageRange, participantCount, duration, groupSplitCount, groupOrganizationMode, groupTeamSize, stationGroupSizeTarget, goals, bodyRegions, avoidBodyRegions, preferredExercises, formats, competitionStyleKey, location, availableEquipment, obstacleInventoryDeclared, availableObstacleExerciseIds, intensity, sessionTitle }, (restored) => {
+    setStep(restored.step);
+    setSelectedGroupId(restored.selectedGroupId);
+    setSelectedTemplateKey(restored.selectedTemplateKey);
+    setGroupType(restored.groupType);
+    setAgeRange(restored.ageRange);
+    setParticipantCount(restored.participantCount);
+    setDuration(restored.duration);
+    setGroupSplitCount(restored.groupSplitCount);
+    setGroupOrganizationMode(restored.groupOrganizationMode);
+    setGroupTeamSize(restored.groupTeamSize);
+    setStationGroupSizeTarget(restored.stationGroupSizeTarget);
+    setGoals(restored.goals);
+    setBodyRegions(restored.bodyRegions);
+    setAvoidBodyRegions(restored.avoidBodyRegions);
+    setPreferredExercises(restored.preferredExercises);
+    setFormats(restored.formats);
+    setCompetitionStyleKey(restored.competitionStyleKey);
+    setLocation(restored.location);
+    setAvailableEquipment(restored.availableEquipment);
+    setObstacleInventoryDeclared(restored.obstacleInventoryDeclared);
+    setAvailableObstacleExerciseIds(restored.availableObstacleExerciseIds);
+    setIntensity(restored.intensity);
+    setSessionTitle(restored.sessionTitle);
+    invalidateDraft();
+  });
 
   const selectedGroup = groupOptions.find(([id]) => id === groupType);
   const selectedPreset = groupPresets.find((preset) => preset.id === selectedGroupId);
@@ -360,9 +394,9 @@ export function QuickCreateWizard({
       const nextDraft = await requestTrainingDraft(currentDraftInput());
       setDraft(nextDraft);
       updateToast(toastId, {
-        tone: "success",
-        title: "Trainingsentwurf bereit",
-        message: "Der Entwurf wurde erstellt und kann jetzt geprüft oder gespeichert werden.",
+        tone: "info",
+        title: dictionary.trainingValidation.created,
+        message: dictionary.trainingValidation.review,
       });
     } catch (error) {
       setDraft(null);
@@ -383,6 +417,7 @@ export function QuickCreateWizard({
       const result = await persistTrainingDraft(currentDraftInput(), sessionTitle);
       setDraft(result.draft);
       setPersistedId(result.id);
+      recovery.clear();
       updateToast(toastId, {
         tone: "success",
         title: "Training gespeichert",
@@ -409,6 +444,9 @@ export function QuickCreateWizard({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]" data-quick-create-ready="false" data-quick-create-root>
+      <div className="min-w-0 space-y-3">
+      <PlanningRecoveryNotice pending={Boolean(recovery.pending)} status={recovery.status} restore={recovery.restore} clear={recovery.clear} testId="quick-create-recovery" />
+      <PlanningEligibilityNotice />
       <Card className="min-w-0 overflow-hidden">
         <header className="border-b border-[var(--border)] p-5 sm:p-6">
           <CardHeader eyebrow="Quick Create" title={`Schritt ${step} von 5`}>
@@ -473,7 +511,7 @@ export function QuickCreateWizard({
                 {groupOptions.map(([id, label, description]) => (
                   <button
                     aria-pressed={groupType === id}
-                    className={buttonClass(groupType === id ? "primary" : "secondary", "min-h-28 rounded-xl p-4 text-left transition")}
+                    className={choiceButtonClass(groupType === id ? "primary" : "secondary", "min-h-28")}
                     key={id}
                     onClick={() => {
                       setGroupType(id);
@@ -482,7 +520,7 @@ export function QuickCreateWizard({
                     type="button"
                   >
                     <span className="block font-black">{label}</span>
-                    <span className={`mt-1 block text-sm leading-5 ${groupType === id ? "opacity-70" : "text-[var(--muted)]"}`}>
+                    <span className={`mt-1 block text-sm leading-5 ${groupType === id ? "text-[var(--brand-foreground)]" : "text-[var(--muted)]"}`}>
                       {description}
                     </span>
                   </button>
@@ -612,7 +650,7 @@ export function QuickCreateWizard({
                   {locationOptions.map(([id, label, description]) => (
                     <button
                       aria-pressed={location === id}
-                      className={buttonClass(location === id ? "primary" : "secondary", "rounded-xl p-4 text-left")}
+                      className={choiceButtonClass(location === id ? "primary" : "secondary")}
                       key={id}
                       onClick={() => {
                         setLocation(id);
@@ -621,7 +659,7 @@ export function QuickCreateWizard({
                       type="button"
                     >
                       <span className="block font-black">{label}</span>
-                      <span className={`mt-1 block text-sm leading-5 ${location === id ? "opacity-70" : "text-[var(--muted)]"}`}>
+                      <span className={`mt-1 block text-sm leading-5 ${location === id ? "text-[var(--brand-foreground)]" : "text-[var(--muted)]"}`}>
                         {description}
                       </span>
                     </button>
@@ -635,7 +673,7 @@ export function QuickCreateWizard({
                   {formatOptions.map(([id, label, description]) => (
                     <button
                       aria-pressed={formats.includes(id)}
-                      className={buttonClass(formats.includes(id) ? "accent" : "secondary", "rounded-xl p-4 text-left")}
+                      className={choiceButtonClass(formats.includes(id) ? "accent" : "secondary")}
                       key={id}
                       onClick={() => {
                         const next = toggleValue(formats, id);
@@ -758,7 +796,7 @@ export function QuickCreateWizard({
                   ["conditioning", "Conditioning", "Mehr Lauf-/Kraftausdauer bei sauberer Technik"],
                 ] as const).map(([id, label, description]) => (
                   <button
-                    className={buttonClass(intensity === id ? "primary" : "secondary", "rounded-xl p-4 text-left")}
+                    className={choiceButtonClass(intensity === id ? "primary" : "secondary")}
                     key={id}
                     onClick={() => {
                       setIntensity(id);
@@ -767,7 +805,7 @@ export function QuickCreateWizard({
                     type="button"
                   >
                     <span className="block font-black">{label}</span>
-                    <span className={`mt-1 block text-sm leading-5 ${intensity === id ? "opacity-70" : "text-[var(--muted)]"}`}>
+                    <span className={`mt-1 block text-sm leading-5 ${intensity === id ? "text-[var(--brand-foreground)]" : "text-[var(--muted)]"}`}>
                       {description}
                     </span>
                   </button>
@@ -896,6 +934,7 @@ export function QuickCreateWizard({
           )}
         </footer>
       </Card>
+      </div>
 
       <aside className="space-y-4">
         <Card className="border-transparent bg-[var(--sidebar)] p-5 text-[var(--sidebar-foreground)]">

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { ConfirmPopoverButton } from "@/components/ui/confirm-popover-form";
-import { buttonClass } from "@/components/ui/form";
+import { formControlClass, buttonClass } from "@/components/ui/form";
 
 interface ExerciseOption {
   readonly id: string;
@@ -137,7 +137,7 @@ export function ExternalMediaManager({
               <label className="grid gap-1 text-sm font-bold">
                 Medientyp
                 <select
-                  className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                  className={formControlClass}
                   name="mediaType"
                   onChange={(event) => setMediaType(event.target.value as "image" | "video")}
                   value={mediaType}
@@ -158,7 +158,7 @@ export function ExternalMediaManager({
               <label className="grid gap-1 text-sm font-bold">
                 Rechteprüfung
                 <select
-                  className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+                  className={formControlClass}
                   defaultValue={value?.rightsStatus ?? "unreviewed"}
                   name="rightsStatus"
                 >
@@ -233,7 +233,7 @@ function Field({
     <label className="grid gap-1 text-sm font-bold">
       {label}
       <input
-        className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal"
+        className={formControlClass}
         defaultValue={defaultValue}
         name={name}
         placeholder={placeholder}

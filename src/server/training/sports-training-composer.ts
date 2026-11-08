@@ -133,6 +133,7 @@ export function composeSportsTrainingDraft(
           id: candidate.id,
           name: candidate.name,
           riskLevel: candidate.riskLevel,
+          minimumAge: candidate.minAge,
           bodyRegions: candidate.bodyRegions.filter(isBodyRegion),
           equipment: candidate.equipment,
           equipmentRequirements: candidate.equipmentRequirements,

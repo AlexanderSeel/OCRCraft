@@ -46,6 +46,10 @@ Der Übungskatalog ist die fachliche Basis der Anwendung. Übungen können gesuc
 - Qualitätsanalyse: Die Admin-Übersicht verbindet tatsächliche Übungsnutzung, Körperregion-/Hindernis-Coverage, Laufvolumen, Wiederholungswarnungen, erklärbare Zielgruppen-/Orts-Nulltreffer und Medienersatzgründe mit dem bestehenden Vollständigkeitsreview. Accessibility-Gates prüfen alle Kernrouten, 44px-Touch-Ziele, Light/Dark-Kontrast, reduzierte Bewegung, Formularfehler sowie Dialog-/Popover-Fokusverhalten.
 - Interaktive Orientierung: Release 1.0 enthält eine routebewusste DE/EN-Tour für Dashboard, Kataloge, Administration, Übungserstellung, Hinderniszuordnung, Quick Create und Training Builder.
 
+### UI/UX-Review November 2026
+
+Das [vollständige UI/UX-Review](./docs/ui-ux-review.md) bewertet alle 26 Page-Dateien und dokumentiert 12 priorisierte Folgearbeiten; UX-03 (Trennung von Blockern und Empfehlungen) und UX-12 (mobile Trainingsübersicht vor Verwaltungsfunktionen) sind umgesetzt. Responsive Prüfungen decken 99 Routen-/Breitenkombinationen ab. Gemeinsame Button-/Feldtypografie, Kontrast, Fokus, Auswahlkarten und Dialog-Schließen wurden konsolidiert; mobile Rollen- und Tablet-Benutzerverwaltung besitzen korrigierte Layouts. [Prüfbilder](./artifacts/ui-ux-review/README.md) und genaue Testergebnisse stehen im Review. Offene Maßnahmen bleiben in [plan.md](./plan.md).
+
 ### Abgeschlossene Release-1.0-Bausteine
 
 Die abgeschlossenen Arbeitspakete aus [`plan.md`](./plan.md) sind als nutzbare Produktfunktionen umgesetzt:
@@ -480,3 +484,29 @@ API-Schlüssel und andere Secrets dürfen nicht committed werden.
 Aktuelle Version: **1.0.0**
 
 Änderungen zwischen Versionen, Datenbankentwicklungen und migrationsbezogene Hinweise gehören nicht in diese Übersicht, sondern in die [Release Notes](./RELEASE_NOTES.md).
+
+### Archivierte Planabschlüsse
+
+Die erledigten Einträge wurden aus `plan.md` hierher verschoben. Zahlen in älteren Abschlussmeldungen beschreiben den jeweiligen damaligen Prüfstand.
+
+- [x] Vollständiges UI/UX-Review über alle 26 Page-Dateien dokumentiert: [`docs/ui-ux-review.md`](./docs/ui-ux-review.md) enthält Routenbewertung, Browser-/Quellcode-Abdeckung, priorisierte Befunde und Abnahmekriterien. Responsive Browserprüfung bei 390/768/1440 px ergänzt.
+- [x] Gemeinsame Accessibility-/Layoutkorrekturen umgesetzt: sichtbarer Button-Fokus, kontrastreiche Coral-Beschriftung in Light/Dark, Utility-Typografie ohne globales Überschreiben, gestapelte Auswahlkarten in Wizard/Builder, DE/EN-Dialog-Schließen und Fokus erst nach Portal-Mount.
+- [x] Benutzeranlage auf ein responsives 2-/4-Spalten-Raster und gemeinsame Controls umgestellt; Tablet-Überlauf entfernt.
+- [x] Mobile Rollen-/Rechtetabelle auf den verfügbaren Platz begrenzt; horizontaler Tabellenbereich per Tastatur erreichbar und Checkboxen nach Bereich/Rechtestufe beschriftet.
+- [x] 31 identische lokale Feldklassen in neun Fachmodulen auf `formControlClass` umgestellt; Fokus-, Invalid- und Disabled-Verhalten folgen damit dem gemeinsamen Control-Standard.
+- [x] Mobile Trainingsdetails beginnen mit einer haftenden DE/EN-Übersicht zu gespeicherter Zielgruppe/Alter, Plan-/Zieldauer und Phasenlinks; Übungen folgen direkt, Einstellungen/Versionen/Vorlagen sind nachrangig eingeklappt (UX-12). Fehlender Planungskontext wird ausdrücklich als nicht hinterlegt angezeigt.
+- [x] Sicherheitsfehler und Empfehlungen in der Trainingsvorschau getrennt dargestellt (UX-03): roter Blockerstatus, getrennte Fehler-/Hinweiszähler inklusive Composer-Hinweisen, DE/EN-Beschriftungen und neutrale Erstellungsrückmeldung vor expliziter Trainerprüfung.
+- [x] Trainingsdetail-Editor nach dem gemeinsamen UI-Muster ausgerichtet: Feldraster verwenden konsistentes Bottom-Alignment, kontextuelle Hinweise sind nur noch im Feld bzw. per Hover verfügbar und Bearbeiten/Ersetzen/Alternativen/Entfernen nutzen sichtbare Button-Varianten in einer gemeinsamen Desktop-Zeile statt gestapelter Vollbreiten-Balken.
+- [x] Gemeinsame `FormField`-Hinweise konsolidiert: Hinweise erscheinen als kompakter, tastaturfokussierbarer Info-Marker mit Hover-/Fokus-Tooltip; Validierungsfehler bleiben direkt am Feld sichtbar.
+- [x] Zentrale Button-Varianten auf wiederkehrende Bestätigungs-, Admin-, Planer- und Facet-Aktionen übertragen; `buttonClass` vereinheitlicht dabei Mindesthöhe, Fokus, Disabled-Zustand und semantische Varianten. Das Maintainability-Audit sank dadurch von 12 auf 6 Dateien mit verbleibenden lokalen Button-Controls.
+- [x] Release-Abschlussroutine nach der Wartbarkeitsrunde erneut vollständig ausgeführt: UI-, Architektur-, TypeScript-, Unit-, Lint-, Build- und E2E-Gates sind grün; die E2E-Suite umfasst 66 bestandene Tests.
+
+- [x] Quick Create sichert Planungseingaben versioniert auf diesem Gerät, bietet explizites Wiederherstellen/Verwerfen und DE/EN-Sicherungszustände, verwirft inkompatible lokale Daten und löscht die Sicherung nach explizitem Trainingsspeichern. Erzeugte Vorschläge und Freigaben werden nicht aus dem Browser-Cache übernommen. Builder-/Quick-Planner- und Vorschlagswiederherstellung bleiben in `plan.md` offen.
+
+- [x] Eingabewiederherstellung auf Builder und Quick Planner übertragen: gemeinsame Snapshot-/Schema-Grenze, Hook und DE/EN-Restore-/Discard-Anzeige mit Quick Create; Builder-Sicherungen pro Ursprungstraining und Einstiegsmodus getrennt. Programmierung und explizite Hindernisgrenzen bleiben erhalten; neue Vorschläge müssen erneut erzeugt und geprüft werden. Erzeugte/bearbeitete Vorschläge bleiben als eigener Planpunkt offen.
+
+### Basiskatalog und Startup-Audit
+
+Der [Katalog-/Gelände-/Methodik-Review](./docs/catalog-startup-review.md) dokumentiert das vollständige Inventar, Metadaten- und Medienlücken sowie den Vereinskontext (Feld, Hindernisse, 40 × 20 m Kunstrasen, 400-m-Laufbahn). `npm run data:audit-startup` erzeugt einen read-only Bestandsaudit. Der Startup-Exporter bereinigt Deployment-Credentials, baut über Staging und erhält bei Fehlern den bisherigen Snapshot. Die technische Bereinigung ersetzt die noch offene fachliche Einzelfreigabe des Katalogs und seiner Bilder nicht.
+
+- [x] Automatische Planung verwendet eine gemeinsame Mindest-Metadatenprüfung für KI und Offline: fehlendes Mindestalter, unbekannte Eignung, Risiko/Kapazität sowie leere Ziele/Bewegungsmuster werden zurückgewiesen. 187 aktive Einträge des aktuellen Startkatalogs bestehen diese Prüfung für gemischte Zielgruppe/Orte (DE-Kapazität); übrige Einträge bleiben zur Bearbeitung im Katalog. Die Prüfung ist keine fachliche Einzelfreigabe.
