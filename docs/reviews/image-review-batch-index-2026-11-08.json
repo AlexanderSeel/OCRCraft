@@ -1,0 +1,519 @@
+{
+  "format": "ocrcraft-image-review-batch-index-v1",
+  "reviewDate": "2026-11-08",
+  "scope": "Three historical P1 exports; current file bytes; not full catalog or live database audit",
+  "uniqueFilesInspected": 42,
+  "exportedAssetReferences": 84,
+  "presentationOnlyPromptDifferences": 24,
+  "counts": {
+    "trainer_review_required": 15,
+    "needs_changes": 27
+  },
+  "databaseMutated": false,
+  "items": [
+    {
+      "seedKey": "partner-mirror-movement",
+      "localPublicPath": "public/generated/exercises/partner-mirror-movement/partner-mirror-movement.png",
+      "imageSha256": "5fece1a34ec7757d0435038da2e3f28a738b902470c646fe606e13dc3439b481",
+      "exportedAssetIds": [
+        "89110f4e-b950-4ce6-bb7a-c6b188ebde45",
+        "d06113b7-00c3-4360-bfa8-cc08c518bdf3"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-zone-switch",
+      "localPublicPath": "public/generated/exercises/game-zone-switch/game-zone-switch.png",
+      "imageSha256": "f2cf4ac1e4d700af1e3e36fa473b3464a1bfbe544793b4e69480c37ace702712",
+      "exportedAssetIds": [
+        "36cbad27-edef-48a8-84de-fcb8e381f352",
+        "fc572f53-769a-4be2-8df2-053890e886fa"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-team-treasure-carry",
+      "localPublicPath": "public/generated/exercises/game-team-treasure-carry/game-team-treasure-carry.png",
+      "imageSha256": "8eb2a9402eaf083c59a7565844a9c4ae6615c59c45a7b2fad7c75b9aaffc1829",
+      "exportedAssetIds": [
+        "f3bb4940-2eba-40db-91fa-f0a52424faa2",
+        "f688c6cd-e62d-4fd4-9bb8-e61f20869bd5"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-route-puzzle",
+      "localPublicPath": "public/generated/exercises/game-route-puzzle/game-route-puzzle.png",
+      "imageSha256": "eaa195a7d02ebe87153d29dae2700c7f3837ce1982fbfc3851a4b39be3d5c916",
+      "exportedAssetIds": [
+        "e3dd5057-90c9-41c6-b618-74ee0adbd885",
+        "5f2a7a4e-6bca-4aaa-bac8-47896e8c3006"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-reaction-gates",
+      "localPublicPath": "public/generated/exercises/game-reaction-gates/game-reaction-gates.png",
+      "imageSha256": "3f726d0d7f201ee121eac6481342e1614ac9132fad20114b3c8793032edddae5",
+      "exportedAssetIds": [
+        "36cff555-95cc-4ac4-9585-9d87999b1337",
+        "742de590-0a99-44d5-b2eb-9e882607a9f1"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-partner-pace-match",
+      "localPublicPath": "public/generated/exercises/game-partner-pace-match/game-partner-pace-match.png",
+      "imageSha256": "cf8673314abf2c6e87189cda375d833bd52c95175a7947abfba39c31f162fbe0",
+      "exportedAssetIds": [
+        "216e3127-443f-4858-b6ce-5417bc524a7d",
+        "28b43f1e-34ab-414c-a744-fd1b9d4898be"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-ocr-task-grid",
+      "localPublicPath": "public/generated/exercises/game-ocr-task-grid/game-ocr-task-grid.png",
+      "imageSha256": "511ec83b0d44a7e2bdea2aa255c269bf1bda3e13e0f56ed74aa7049765e49ffa",
+      "exportedAssetIds": [
+        "45ea97dc-e159-48d6-a952-a7c07d0e0b7a",
+        "adcace35-9c20-4042-a7db-82068736e733"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-ocr-memory-relay",
+      "localPublicPath": "public/generated/exercises/game-ocr-memory-relay/game-ocr-memory-relay.png",
+      "imageSha256": "d05dec3389d62fe40ab2fbdf01a2dbc1da0e07631cb55ebeacb76deaf6ebc25c",
+      "exportedAssetIds": [
+        "8fe88c56-14cc-4a84-9a73-bb6556d8e788",
+        "9d248988-4797-4bbc-ae6f-b8dee1520be5"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-lava-path-builders",
+      "localPublicPath": "public/generated/exercises/game-lava-path-builders/game-lava-path-builders.png",
+      "imageSha256": "fbd44b1f4c4b0961d108a4b9f6c947d52071141b4c0562d6e934a79b304f9e87",
+      "exportedAssetIds": [
+        "0a2e7563-d8ca-48fc-a876-ae1c307e4b95",
+        "45393793-46d6-498e-b1f0-48c4253bb7fb"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-grip-token-hunt",
+      "localPublicPath": "public/generated/exercises/game-grip-token-hunt/game-grip-token-hunt.png",
+      "imageSha256": "4c11ede4095fcef16c816e28307ca18cc2a1f5bdbb7fbd05d9e852e5218317a3",
+      "exportedAssetIds": [
+        "646fb2ae-7be7-4a28-a72b-a63d2ed2a75c",
+        "7ae4ac5f-51aa-4a6d-80ed-85e3af57a60a"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-color-island-sprint",
+      "localPublicPath": "public/generated/exercises/game-color-island-sprint/game-color-island-sprint.png",
+      "imageSha256": "98d69b784dfd59ea10ad326ac96632fcefd316df4edeba6bf761475fb90b68c3",
+      "exportedAssetIds": [
+        "ea6829dc-7bc8-4f72-8bee-daf6b69a8258",
+        "da9aec91-9ac7-419d-b321-61cce430b2c9"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-code-run",
+      "localPublicPath": "public/generated/exercises/game-code-run/game-code-run.png",
+      "imageSha256": "09ada92880fada185165c66f797b57cb9fae29195c4ae0f32e3becce0fc0cb9b",
+      "exportedAssetIds": [
+        "e10e6d1a-6271-473c-a8d0-1b7073097cd1",
+        "87adad0f-5d10-4309-9823-e649212d3d19"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-carry-collect",
+      "localPublicPath": "public/generated/exercises/game-carry-collect/game-carry-collect.png",
+      "imageSha256": "9d2718c3202f8570ca195674958070ad602638d9105c18e33bbba3b0100636fa",
+      "exportedAssetIds": [
+        "56aaf933-017b-417c-a720-186bc04aad49",
+        "b46723d0-4be2-43fa-8097-f4d569b377bc"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "cooperative-cone-collect",
+      "localPublicPath": "public/generated/exercises/cooperative-cone-collect/cooperative-cone-collect.png",
+      "imageSha256": "e2719c928f466f780353b633a3d937d7968b7eba8881bd8383d78108ba35679e",
+      "exportedAssetIds": [
+        "0d908853-26b2-4fb7-bbc3-5f1379e826a1",
+        "22bd7544-0ff0-490d-932e-a7c7d26c2d76"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-weaver",
+      "localPublicPath": "public/generated/exercises/club-weaver/club-weaver.png",
+      "imageSha256": "4c067ea8a3848bab0fa21662eb825d2494b87122d83d646a0075530badfb2e55",
+      "exportedAssetIds": [
+        "debac2ac-9af4-48a5-8bd9-b230b6351a31",
+        "65b04271-f6a0-44e1-9414-e8e83e01dc7a"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-tire-obstacle-transit",
+      "localPublicPath": "public/generated/exercises/club-tire-obstacle-transit/club-tire-obstacle-transit.png",
+      "imageSha256": "2d719a73e48b9799f8338bbbf30e28ebd64b106294add08ecb8bb1bd5c7b294f",
+      "exportedAssetIds": [
+        "542bbd58-fee6-4193-9eea-e3bb63de11f3",
+        "5262406f-8b8a-48c1-9804-ee02a4bb0e11"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-slackline",
+      "localPublicPath": "public/generated/exercises/club-slackline/club-slackline.png",
+      "imageSha256": "d98d3b28780dcee0f3c3d840c627f1df9801565196064e86607b1c100b71d2cf",
+      "exportedAssetIds": [
+        "d580f903-beeb-46a9-909c-b0ce9938832f",
+        "7889be3f-f021-483c-90e7-7ca76498e615"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-rotating-rig-elements",
+      "localPublicPath": "public/generated/exercises/club-rotating-rig-elements/club-rotating-rig-elements.png",
+      "imageSha256": "651329382ecbb5521b9278961b7e7a4596332c3a36ff989488f94ed3735d9347",
+      "exportedAssetIds": [
+        "7808f3b4-5e39-4df6-9fce-f9b1e3f76aad",
+        "812666ba-f1dd-428e-98e1-bfc4e64ebdb1"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-olympus",
+      "localPublicPath": "public/generated/exercises/club-olympus/club-olympus.png",
+      "imageSha256": "06e072346244ddecc7dd06204742d08204ac14dc5051a36a24e87b183c998aca",
+      "exportedAssetIds": [
+        "0c899ae1-8bfe-4127-a91f-ec1da796f466",
+        "4de8147d-8181-42ef-a7bf-fbbcea34cb3f"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-multirig-ring-traverse",
+      "localPublicPath": "public/generated/exercises/club-multirig-ring-traverse/club-multirig-ring-traverse.png",
+      "imageSha256": "ee8854d088bc2333a7f3b3b24a55a6e579260098170c3c8a092edcb77a8bd523",
+      "exportedAssetIds": [
+        "94324498-4eba-4bcc-bff7-4a410c4ada7f",
+        "65025635-e1e8-4cb7-8f87-a30beac4a42c"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-irish-table",
+      "localPublicPath": "public/generated/exercises/club-irish-table/club-irish-table.png",
+      "imageSha256": "ead5e5dd6bd8a93e404de43a3c536e0816a35ebc19127911919f419d304bab5e",
+      "exportedAssetIds": [
+        "d6e8e660-c34c-4f37-a8bd-a3dfcee88cd0",
+        "3c03fb40-0ef8-40e8-b663-c38bf9d390df"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-inverse-wall",
+      "localPublicPath": "public/generated/exercises/club-inverse-wall/club-inverse-wall.png",
+      "imageSha256": "943d3aba5311c050a0f86ceac692d40c8df43a5e064a80fb71b05df631936de5",
+      "exportedAssetIds": [
+        "3b9151d9-9810-4ce4-ae72-9847ee36c5dc",
+        "e0b56281-09c6-4a60-80c5-bc3bad95ebfe"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-escaladierwand",
+      "localPublicPath": "public/generated/exercises/club-escaladierwand/club-escaladierwand.png",
+      "imageSha256": "1338ab3ea12055dc776b60cd2f3820f6500824efa38b7ee5d2cdc98c804f2842",
+      "exportedAssetIds": [
+        "e960dc67-4f61-4005-9122-ac410c3622e1",
+        "3aee304c-b242-4999-b1cb-98530c1fd50a"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-balance-beam",
+      "localPublicPath": "public/generated/exercises/club-balance-beam/club-balance-beam.png",
+      "imageSha256": "56227d9ae1d4945cdbbe0d85fb495f68fd9f1609f96ae52a96cf94722dd5cbb6",
+      "exportedAssetIds": [
+        "ec95fa59-7775-4057-8d1e-b3f48e8b5f28",
+        "4194e110-98e0-4a99-b1b0-b5cd52196d0a"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-anchor-chain-drag",
+      "localPublicPath": "public/generated/exercises/club-anchor-chain-drag/club-anchor-chain-drag.png",
+      "imageSha256": "f6b802ebe2a8b30a0f989b5c130d572b8966551ea3e5a6b1c1adca744072b3a3",
+      "exportedAssetIds": [
+        "80eb1275-cae1-4826-8f88-204d9107e8e9",
+        "3fada744-3101-4ebf-a88f-39325fd599dc"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "wall-pushup",
+      "localPublicPath": "public/generated/exercises/wall-pushup/wall-pushup.png",
+      "imageSha256": "4a2e4c933d1da1c4b2199d4c7740178c3a81ea7cf975cd7820918be0625d41e4",
+      "exportedAssetIds": [
+        "55177ad8-c3d3-4ee5-9809-0a2fabe02fef",
+        "abc25c11-a264-4f1a-a9d1-82c3322ddeb4"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "thoracic-open-book",
+      "localPublicPath": "public/generated/exercises/thoracic-open-book/thoracic-open-book.png",
+      "imageSha256": "b0997ad772b6b9f596c51fc1048f0a7185ed8575a2a6edc594afeecde03f4f68",
+      "exportedAssetIds": [
+        "d69c2b52-b676-4645-a3cf-ad20f10bf0b9",
+        "9c43b5a3-6e48-4f7e-9845-f242b1068686"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "supported-single-leg-hinge",
+      "localPublicPath": "public/generated/exercises/supported-single-leg-hinge/supported-single-leg-hinge.png",
+      "imageSha256": "0ca36e5a7c1d636bacf7dea622cbbea7d21a24230bc27365289d808412dba22e",
+      "exportedAssetIds": [
+        "4e42db4b-d2dc-48ba-b0a7-f563a16e1220",
+        "d45a41a3-06d5-4ab1-a2fe-fd6c182fb2c2"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "supported-side-plank-knee",
+      "localPublicPath": "public/generated/exercises/supported-side-plank-knee/supported-side-plank-knee.png",
+      "imageSha256": "9e4f43e4d3ca475688356a0e8a7db72e405ae16950aa33f3ec8df7abf6543456",
+      "exportedAssetIds": [
+        "32172722-ef85-4f58-a94f-b1174c0da5bf",
+        "ab2c7317-6e40-474c-bd78-5c921872e5a8"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "quiet-landing-practice",
+      "localPublicPath": "public/generated/exercises/quiet-landing-practice/quiet-landing-practice.png",
+      "imageSha256": "bfe4eb1756a75fd357a1dc335e1a3a0ea1fb239007cb619cb519cd75df304b37",
+      "exportedAssetIds": [
+        "12daaeca-bbf0-489c-a5ec-90dda358ddd1",
+        "af168dcf-7738-4553-b3b6-9868478cda4d"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "lateral-shuffle-stick",
+      "localPublicPath": "public/generated/exercises/lateral-shuffle-stick/lateral-shuffle-stick.png",
+      "imageSha256": "c9900e0103ed3ac1d67fb9c4223e46d5fa6aec4658670f8f043b445ce618e59b",
+      "exportedAssetIds": [
+        "d591e5a5-8c22-46e4-b2b8-887b28de5e5c",
+        "a0e00745-c8ae-43aa-912e-bfbcef5a8cdf"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "hip-90-90-switch",
+      "localPublicPath": "public/generated/exercises/hip-90-90-switch/hip-90-90-switch.png",
+      "imageSha256": "1c8c216778ef473c4550bc7c4b5457a350ca887f520f9601472733220d401eca",
+      "exportedAssetIds": [
+        "b1ecd961-6e80-425b-904f-89ab2ad678f3",
+        "1617b4fe-4d0a-4761-820f-2dc6a7053e2d"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "hanging-straight-leg-raise",
+      "localPublicPath": "public/generated/exercises/hanging-straight-leg-raise/hanging-straight-leg-raise.png",
+      "imageSha256": "82c9391d755659f708b394047ba609d743292a0c240d95e0d7f8ae938ef377bf",
+      "exportedAssetIds": [
+        "89e68c7f-b3bc-48d2-acc8-7b6917005dd2",
+        "3168cfbb-4caa-4d9f-9c4b-c2cfd01ee273"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "hanging-pike",
+      "localPublicPath": "public/generated/exercises/hanging-pike/hanging-pike.png",
+      "imageSha256": "8fcf7e00517733a29a5f354b25e5c720ee45ae7ae6baac6b2a1ed4a4d95d1453",
+      "exportedAssetIds": [
+        "fa753fc5-db7a-4a9c-b8ae-42a15524252d",
+        "d301241f-25ba-45a8-a751-d8abc456d9ee"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "hanging-oblique-knee-raise",
+      "localPublicPath": "public/generated/exercises/hanging-oblique-knee-raise/hanging-oblique-knee-raise.png",
+      "imageSha256": "1a33ed0a292235ca055b7af14051177ab2223f761fe3848176407a5247839de8",
+      "exportedAssetIds": [
+        "7f8a2846-8fb2-42ce-a47f-d8d1ad2e8e8c",
+        "73995238-53b7-4d65-b774-a8fb4ddefc88"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "hanging-knee-raise",
+      "localPublicPath": "public/generated/exercises/hanging-knee-raise/hanging-knee-raise.png",
+      "imageSha256": "7456a4fc6c81c386c20358bf6e8680ed2a42ce4c5f4ff57b28bfaef2dea85676",
+      "exportedAssetIds": [
+        "029936d4-1a8e-41cc-b56e-1fa41fe4949a",
+        "70205c25-0b2a-44f1-834a-7eb4a731965f"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "dead-bug-heel-tap",
+      "localPublicPath": "public/generated/exercises/dead-bug-heel-tap/dead-bug-heel-tap.png",
+      "imageSha256": "4dc58cf2e3937795408fe0c01e0f91bcfcffbc640edacab9862f8f46320c72d4",
+      "exportedAssetIds": [
+        "9533bc66-cc98-4d10-9bd1-bf1fa8b9c3d1",
+        "4e0a9008-4fc7-4338-8ff1-60851dabab0b"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "crawl-to-stand-transition",
+      "localPublicPath": "public/generated/exercises/crawl-to-stand-transition/crawl-to-stand-transition.png",
+      "imageSha256": "f4d7664e8a741bdae3188369822507a5ac5955b66e907cb5ec44fd3d11a976f0",
+      "exportedAssetIds": [
+        "f6d4ad3a-19d0-4d9c-9ec8-ba7bb579f4be",
+        "9601205a-40f7-46bf-a520-2e6b0012bf96"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "chair-sit-to-stand",
+      "localPublicPath": "public/generated/exercises/chair-sit-to-stand/chair-sit-to-stand.png",
+      "imageSha256": "1a6948654cc1c21a7fa68a71b361c2a5a8f7baf9a8649294039c0d6fa8dde014",
+      "exportedAssetIds": [
+        "3054754a-5ac8-496e-9742-ed2cf17cc8d2",
+        "adf9ece8-aac8-4918-afd1-a1f66268797b"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "trainer_review_required",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "bear-plank-shoulder-tap",
+      "localPublicPath": "public/generated/exercises/bear-plank-shoulder-tap/bear-plank-shoulder-tap.png",
+      "imageSha256": "708f65965c8d2f0e9a766d7dcc2257b0ee8f5a199875fedfacdc70d286115ccd",
+      "exportedAssetIds": [
+        "031ca143-9669-4555-b5ec-ed6a7e2ca276",
+        "3891bcfc-b7bf-428b-be50-0c5d54e23d86"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "battle-rope-waves",
+      "localPublicPath": "public/generated/exercises/battle-rope-waves/battle-rope-waves.png",
+      "imageSha256": "59ceeebacd14b214dd7b18421d9ba38a6e0865ceb991b04ccc049ab9c3671c3e",
+      "exportedAssetIds": [
+        "5cbe2f0b-65cd-4cbd-bc11-12bab98c504d",
+        "7b7468e2-c498-4b01-afe3-7fec6ac6211f"
+      ],
+      "exportedPromptDifference": "demonstrator_presentation_only",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "ankle-rocker-mobility",
+      "localPublicPath": "public/generated/exercises/ankle-rocker-mobility/ankle-rocker-mobility.png",
+      "imageSha256": "796d30a381d4c07af5054b6b03cf41d48a0b6fdf2ef2e4f73f2f595ddee03cbf",
+      "exportedAssetIds": [
+        "1d72124d-c25a-465d-90fb-f463ced26ad0",
+        "39c88046-c26a-4ef3-aa42-d76fd59f68ae"
+      ],
+      "exportedPromptDifference": "none",
+      "visualFinding": "needs_changes",
+      "approval": "not_granted"
+    }
+  ]
+}

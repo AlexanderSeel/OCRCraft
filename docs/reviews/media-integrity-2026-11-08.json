@@ -1,0 +1,1041 @@
+{
+  "format": "ocrcraft-media-integrity-audit-v1",
+  "databaseMutated": false,
+  "reports": [
+    {
+      "database": "ocrcraft_initial_duckdb",
+      "auditedAt": "2026-11-08T19:06:30.515Z",
+      "accessMode": "READ_ONLY",
+      "mediaCount": 105,
+      "pendingMedia": 85,
+      "missingLocalMediaFiles": 0,
+      "localMediaChecksumMismatches": 0,
+      "sharedLocalMediaFileGroups": 0,
+      "localMediaWithoutRecordedHash": 0,
+      "localMediaInvalidOrUnreadable": 0,
+      "sharedLocalMediaFiles": []
+    },
+    {
+      "database": "ocrcraft_duckdb",
+      "auditedAt": "2026-11-08T19:06:30.515Z",
+      "accessMode": "READ_ONLY",
+      "mediaCount": 346,
+      "pendingMedia": 326,
+      "missingLocalMediaFiles": 0,
+      "localMediaChecksumMismatches": 42,
+      "sharedLocalMediaFileGroups": 42,
+      "localMediaWithoutRecordedHash": 0,
+      "localMediaInvalidOrUnreadable": 0,
+      "sharedLocalMediaFiles": [
+        {
+          "assets": [
+            {
+              "id": "32172722-ef85-4f58-a94f-b1174c0da5bf",
+              "exercise_id": "03f5e6c8-d789-48ef-ba5a-734f12055852",
+              "storage_uri": "/generated/exercises/supported-side-plank-knee/supported-side-plank-knee.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "9e4f43e4d3ca475688356a0e8a7db72e405ae16950aa33f3ec8df7abf6543456",
+              "local_file_sha256": "9e4f43e4d3ca475688356a0e8a7db72e405ae16950aa33f3ec8df7abf6543456",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "ab2c7317-6e40-474c-bd78-5c921872e5a8",
+              "exercise_id": "03f5e6c8-d789-48ef-ba5a-734f12055852",
+              "storage_uri": "/generated/exercises/supported-side-plank-knee/supported-side-plank-knee.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "51481239f9ec256a84950778660b77c3d6981cc1beda0fbf3a0c5285be5bead8",
+              "local_file_sha256": "9e4f43e4d3ca475688356a0e8a7db72e405ae16950aa33f3ec8df7abf6543456",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "5cbe2f0b-65cd-4cbd-bc11-12bab98c504d",
+              "exercise_id": "040801da-e21c-468c-bba1-0fa72373c0c5",
+              "storage_uri": "/generated/exercises/battle-rope-waves/battle-rope-waves.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "59ceeebacd14b214dd7b18421d9ba38a6e0865ceb991b04ccc049ab9c3671c3e",
+              "local_file_sha256": "59ceeebacd14b214dd7b18421d9ba38a6e0865ceb991b04ccc049ab9c3671c3e",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "7b7468e2-c498-4b01-afe3-7fec6ac6211f",
+              "exercise_id": "040801da-e21c-468c-bba1-0fa72373c0c5",
+              "storage_uri": "/generated/exercises/battle-rope-waves/battle-rope-waves.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "0c8f9ba116944436a88cded2f2af5d74f6000f36314dccc0555824ba53f7343f",
+              "local_file_sha256": "59ceeebacd14b214dd7b18421d9ba38a6e0865ceb991b04ccc049ab9c3671c3e",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "0c899ae1-8bfe-4127-a91f-ec1da796f466",
+              "exercise_id": "19c04c5e-1edb-4dc8-ba18-a08d9be9e3ae",
+              "storage_uri": "/generated/exercises/club-olympus/club-olympus.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "06e072346244ddecc7dd06204742d08204ac14dc5051a36a24e87b183c998aca",
+              "local_file_sha256": "06e072346244ddecc7dd06204742d08204ac14dc5051a36a24e87b183c998aca",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "4de8147d-8181-42ef-a7bf-fbbcea34cb3f",
+              "exercise_id": "19c04c5e-1edb-4dc8-ba18-a08d9be9e3ae",
+              "storage_uri": "/generated/exercises/club-olympus/club-olympus.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "cee91f9de2b55b6c3b33dee601d67dafd3f664cbdf8dae2d12eb8685e657d76f",
+              "local_file_sha256": "06e072346244ddecc7dd06204742d08204ac14dc5051a36a24e87b183c998aca",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "5f2a7a4e-6bca-4aaa-bac8-47896e8c3006",
+              "exercise_id": "1ad55aab-5e50-43bf-a1b4-456ecf8214b6",
+              "storage_uri": "/generated/exercises/game-route-puzzle/game-route-puzzle.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "db80535d65a8d96870265cd275a56476efcc6bc0ea08b407bebb46fb38c01b10",
+              "local_file_sha256": "eaa195a7d02ebe87153d29dae2700c7f3837ce1982fbfc3851a4b39be3d5c916",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "e3dd5057-90c9-41c6-b618-74ee0adbd885",
+              "exercise_id": "1ad55aab-5e50-43bf-a1b4-456ecf8214b6",
+              "storage_uri": "/generated/exercises/game-route-puzzle/game-route-puzzle.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "eaa195a7d02ebe87153d29dae2700c7f3837ce1982fbfc3851a4b39be3d5c916",
+              "local_file_sha256": "eaa195a7d02ebe87153d29dae2700c7f3837ce1982fbfc3851a4b39be3d5c916",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "0a2e7563-d8ca-48fc-a876-ae1c307e4b95",
+              "exercise_id": "1bf84dda-3a77-4bdb-9868-0d47b19711d8",
+              "storage_uri": "/generated/exercises/game-lava-path-builders/game-lava-path-builders.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "fbd44b1f4c4b0961d108a4b9f6c947d52071141b4c0562d6e934a79b304f9e87",
+              "local_file_sha256": "fbd44b1f4c4b0961d108a4b9f6c947d52071141b4c0562d6e934a79b304f9e87",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "45393793-46d6-498e-b1f0-48c4253bb7fb",
+              "exercise_id": "1bf84dda-3a77-4bdb-9868-0d47b19711d8",
+              "storage_uri": "/generated/exercises/game-lava-path-builders/game-lava-path-builders.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "c3e3957525a526defbbfefe5a8019860517b293bee2183734de1679cf298a58b",
+              "local_file_sha256": "fbd44b1f4c4b0961d108a4b9f6c947d52071141b4c0562d6e934a79b304f9e87",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "56aaf933-017b-417c-a720-186bc04aad49",
+              "exercise_id": "1c4b6d3f-7584-4653-86d3-56367dc10ab9",
+              "storage_uri": "/generated/exercises/game-carry-collect/game-carry-collect.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "9d2718c3202f8570ca195674958070ad602638d9105c18e33bbba3b0100636fa",
+              "local_file_sha256": "9d2718c3202f8570ca195674958070ad602638d9105c18e33bbba3b0100636fa",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "b46723d0-4be2-43fa-8097-f4d569b377bc",
+              "exercise_id": "1c4b6d3f-7584-4653-86d3-56367dc10ab9",
+              "storage_uri": "/generated/exercises/game-carry-collect/game-carry-collect.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "bf844ef30b5ad55c9404883581690d0a90f72637dc8434ecf659dd81c2d3214f",
+              "local_file_sha256": "9d2718c3202f8570ca195674958070ad602638d9105c18e33bbba3b0100636fa",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "f3bb4940-2eba-40db-91fa-f0a52424faa2",
+              "exercise_id": "231faef7-3dbe-41b9-afb0-9c8e36642077",
+              "storage_uri": "/generated/exercises/game-team-treasure-carry/game-team-treasure-carry.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "8eb2a9402eaf083c59a7565844a9c4ae6615c59c45a7b2fad7c75b9aaffc1829",
+              "local_file_sha256": "8eb2a9402eaf083c59a7565844a9c4ae6615c59c45a7b2fad7c75b9aaffc1829",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "f688c6cd-e62d-4fd4-9bb8-e61f20869bd5",
+              "exercise_id": "231faef7-3dbe-41b9-afb0-9c8e36642077",
+              "storage_uri": "/generated/exercises/game-team-treasure-carry/game-team-treasure-carry.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "d40a8fa2e4d5acdab6115e0f3c4690b89a65ad1445f03c3e9981fed8faec1007",
+              "local_file_sha256": "8eb2a9402eaf083c59a7565844a9c4ae6615c59c45a7b2fad7c75b9aaffc1829",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "7808f3b4-5e39-4df6-9fce-f9b1e3f76aad",
+              "exercise_id": "279cf676-49c7-4b71-974e-28b39eb43148",
+              "storage_uri": "/generated/exercises/club-rotating-rig-elements/club-rotating-rig-elements.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "651329382ecbb5521b9278961b7e7a4596332c3a36ff989488f94ed3735d9347",
+              "local_file_sha256": "651329382ecbb5521b9278961b7e7a4596332c3a36ff989488f94ed3735d9347",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "812666ba-f1dd-428e-98e1-bfc4e64ebdb1",
+              "exercise_id": "279cf676-49c7-4b71-974e-28b39eb43148",
+              "storage_uri": "/generated/exercises/club-rotating-rig-elements/club-rotating-rig-elements.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "e225efbaa8c2585db631744e8ec784d6f57f7003ada21f6f533619b9ce23b648",
+              "local_file_sha256": "651329382ecbb5521b9278961b7e7a4596332c3a36ff989488f94ed3735d9347",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "216e3127-443f-4858-b6ce-5417bc524a7d",
+              "exercise_id": "2b67fce1-e55b-4b24-a3a1-37eb4eb66101",
+              "storage_uri": "/generated/exercises/game-partner-pace-match/game-partner-pace-match.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "cf8673314abf2c6e87189cda375d833bd52c95175a7947abfba39c31f162fbe0",
+              "local_file_sha256": "cf8673314abf2c6e87189cda375d833bd52c95175a7947abfba39c31f162fbe0",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "28b43f1e-34ab-414c-a744-fd1b9d4898be",
+              "exercise_id": "2b67fce1-e55b-4b24-a3a1-37eb4eb66101",
+              "storage_uri": "/generated/exercises/game-partner-pace-match/game-partner-pace-match.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "ba1928b8f6ecdc7de1467c18c4c2f0e672f48fda5ade54c79904546b60a4921d",
+              "local_file_sha256": "cf8673314abf2c6e87189cda375d833bd52c95175a7947abfba39c31f162fbe0",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "1617b4fe-4d0a-4761-820f-2dc6a7053e2d",
+              "exercise_id": "2dcbe7e5-e525-4769-bb73-e58218add94c",
+              "storage_uri": "/generated/exercises/hip-90-90-switch/hip-90-90-switch.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "74a8db321d88c55288a9f003e5633825424adddd21164b5a9202d2caf173f856",
+              "local_file_sha256": "1c8c216778ef473c4550bc7c4b5457a350ca887f520f9601472733220d401eca",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "b1ecd961-6e80-425b-904f-89ab2ad678f3",
+              "exercise_id": "2dcbe7e5-e525-4769-bb73-e58218add94c",
+              "storage_uri": "/generated/exercises/hip-90-90-switch/hip-90-90-switch.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "1c8c216778ef473c4550bc7c4b5457a350ca887f520f9601472733220d401eca",
+              "local_file_sha256": "1c8c216778ef473c4550bc7c4b5457a350ca887f520f9601472733220d401eca",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "73995238-53b7-4d65-b774-a8fb4ddefc88",
+              "exercise_id": "34bfa097-3846-4963-8fa2-5cd1e276c8ff",
+              "storage_uri": "/generated/exercises/hanging-oblique-knee-raise/hanging-oblique-knee-raise.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "6efaa08eef1bb136b4b23fbe5b87ed343a60f870d4a97e4b1115b660c131aa4c",
+              "local_file_sha256": "1a33ed0a292235ca055b7af14051177ab2223f761fe3848176407a5247839de8",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "7f8a2846-8fb2-42ce-a47f-d8d1ad2e8e8c",
+              "exercise_id": "34bfa097-3846-4963-8fa2-5cd1e276c8ff",
+              "storage_uri": "/generated/exercises/hanging-oblique-knee-raise/hanging-oblique-knee-raise.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "1a33ed0a292235ca055b7af14051177ab2223f761fe3848176407a5247839de8",
+              "local_file_sha256": "1a33ed0a292235ca055b7af14051177ab2223f761fe3848176407a5247839de8",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "3168cfbb-4caa-4d9f-9c4b-c2cfd01ee273",
+              "exercise_id": "3e208b2a-7611-4adf-a433-5a7f1c7689fa",
+              "storage_uri": "/generated/exercises/hanging-straight-leg-raise/hanging-straight-leg-raise.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "d56f7c7567d2b4448fa2ad1e6c1ded7650df15139f55480ee08d6ab8ef6ff108",
+              "local_file_sha256": "82c9391d755659f708b394047ba609d743292a0c240d95e0d7f8ae938ef377bf",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "89e68c7f-b3bc-48d2-acc8-7b6917005dd2",
+              "exercise_id": "3e208b2a-7611-4adf-a433-5a7f1c7689fa",
+              "storage_uri": "/generated/exercises/hanging-straight-leg-raise/hanging-straight-leg-raise.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "82c9391d755659f708b394047ba609d743292a0c240d95e0d7f8ae938ef377bf",
+              "local_file_sha256": "82c9391d755659f708b394047ba609d743292a0c240d95e0d7f8ae938ef377bf",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "029936d4-1a8e-41cc-b56e-1fa41fe4949a",
+              "exercise_id": "3e54bd5f-a3db-42ed-8bd4-0f91f089ce3c",
+              "storage_uri": "/generated/exercises/hanging-knee-raise/hanging-knee-raise.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "7456a4fc6c81c386c20358bf6e8680ed2a42ce4c5f4ff57b28bfaef2dea85676",
+              "local_file_sha256": "7456a4fc6c81c386c20358bf6e8680ed2a42ce4c5f4ff57b28bfaef2dea85676",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "70205c25-0b2a-44f1-834a-7eb4a731965f",
+              "exercise_id": "3e54bd5f-a3db-42ed-8bd4-0f91f089ce3c",
+              "storage_uri": "/generated/exercises/hanging-knee-raise/hanging-knee-raise.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "94cc158adde06a0159ebe039525ccf65956a92624f02ddef9d30f13f25d30585",
+              "local_file_sha256": "7456a4fc6c81c386c20358bf6e8680ed2a42ce4c5f4ff57b28bfaef2dea85676",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "9601205a-40f7-46bf-a520-2e6b0012bf96",
+              "exercise_id": "3e9f90b7-f9e2-43c7-8c43-59c5e9c2dead",
+              "storage_uri": "/generated/exercises/crawl-to-stand-transition/crawl-to-stand-transition.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "bfa7626cc6710ea2aed44d325521015f195836abd3529b5c96a24e19098fa5c2",
+              "local_file_sha256": "f4d7664e8a741bdae3188369822507a5ac5955b66e907cb5ec44fd3d11a976f0",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "f6d4ad3a-19d0-4d9c-9ec8-ba7bb579f4be",
+              "exercise_id": "3e9f90b7-f9e2-43c7-8c43-59c5e9c2dead",
+              "storage_uri": "/generated/exercises/crawl-to-stand-transition/crawl-to-stand-transition.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "f4d7664e8a741bdae3188369822507a5ac5955b66e907cb5ec44fd3d11a976f0",
+              "local_file_sha256": "f4d7664e8a741bdae3188369822507a5ac5955b66e907cb5ec44fd3d11a976f0",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "d301241f-25ba-45a8-a751-d8abc456d9ee",
+              "exercise_id": "41f9872d-4045-4528-aaf9-fba6ef3249fb",
+              "storage_uri": "/generated/exercises/hanging-pike/hanging-pike.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "4e7680fb0b6df85a6361e90275cf07b4ba18ef8f886d369d96bfe53e2b577372",
+              "local_file_sha256": "8fcf7e00517733a29a5f354b25e5c720ee45ae7ae6baac6b2a1ed4a4d95d1453",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "fa753fc5-db7a-4a9c-b8ae-42a15524252d",
+              "exercise_id": "41f9872d-4045-4528-aaf9-fba6ef3249fb",
+              "storage_uri": "/generated/exercises/hanging-pike/hanging-pike.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "8fcf7e00517733a29a5f354b25e5c720ee45ae7ae6baac6b2a1ed4a4d95d1453",
+              "local_file_sha256": "8fcf7e00517733a29a5f354b25e5c720ee45ae7ae6baac6b2a1ed4a4d95d1453",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "7889be3f-f021-483c-90e7-7ca76498e615",
+              "exercise_id": "421f1f30-e349-4855-bc0d-fb3f2ec8c01c",
+              "storage_uri": "/generated/exercises/club-slackline/club-slackline.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "3247100019d931a2a71730fff0cdd158c8d8011dbd077339f6dda0153a6426b1",
+              "local_file_sha256": "d98d3b28780dcee0f3c3d840c627f1df9801565196064e86607b1c100b71d2cf",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "d580f903-beeb-46a9-909c-b0ce9938832f",
+              "exercise_id": "421f1f30-e349-4855-bc0d-fb3f2ec8c01c",
+              "storage_uri": "/generated/exercises/club-slackline/club-slackline.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "d98d3b28780dcee0f3c3d840c627f1df9801565196064e86607b1c100b71d2cf",
+              "local_file_sha256": "d98d3b28780dcee0f3c3d840c627f1df9801565196064e86607b1c100b71d2cf",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "89110f4e-b950-4ce6-bb7a-c6b188ebde45",
+              "exercise_id": "4ea4cb6b-0c39-4f0c-a178-e60f1924d174",
+              "storage_uri": "/generated/exercises/partner-mirror-movement/partner-mirror-movement.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "5fece1a34ec7757d0435038da2e3f28a738b902470c646fe606e13dc3439b481",
+              "local_file_sha256": "5fece1a34ec7757d0435038da2e3f28a738b902470c646fe606e13dc3439b481",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "d06113b7-00c3-4360-bfa8-cc08c518bdf3",
+              "exercise_id": "4ea4cb6b-0c39-4f0c-a178-e60f1924d174",
+              "storage_uri": "/generated/exercises/partner-mirror-movement/partner-mirror-movement.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "88dbf6894be43c99403bb856e96128adaaf7eaedb426bd9153cc59d039b367b3",
+              "local_file_sha256": "5fece1a34ec7757d0435038da2e3f28a738b902470c646fe606e13dc3439b481",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "36cff555-95cc-4ac4-9585-9d87999b1337",
+              "exercise_id": "5755c18d-e999-4199-a41f-06f8cc190743",
+              "storage_uri": "/generated/exercises/game-reaction-gates/game-reaction-gates.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "3f726d0d7f201ee121eac6481342e1614ac9132fad20114b3c8793032edddae5",
+              "local_file_sha256": "3f726d0d7f201ee121eac6481342e1614ac9132fad20114b3c8793032edddae5",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "742de590-0a99-44d5-b2eb-9e882607a9f1",
+              "exercise_id": "5755c18d-e999-4199-a41f-06f8cc190743",
+              "storage_uri": "/generated/exercises/game-reaction-gates/game-reaction-gates.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "f24706539ba73a08f466cfe409a6d8f5b2ee8c189941355560fa265283039c5e",
+              "local_file_sha256": "3f726d0d7f201ee121eac6481342e1614ac9132fad20114b3c8793032edddae5",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "45ea97dc-e159-48d6-a952-a7c07d0e0b7a",
+              "exercise_id": "5d0052db-e6a0-4a26-8ba4-56b85180d48d",
+              "storage_uri": "/generated/exercises/game-ocr-task-grid/game-ocr-task-grid.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "511ec83b0d44a7e2bdea2aa255c269bf1bda3e13e0f56ed74aa7049765e49ffa",
+              "local_file_sha256": "511ec83b0d44a7e2bdea2aa255c269bf1bda3e13e0f56ed74aa7049765e49ffa",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "adcace35-9c20-4042-a7db-82068736e733",
+              "exercise_id": "5d0052db-e6a0-4a26-8ba4-56b85180d48d",
+              "storage_uri": "/generated/exercises/game-ocr-task-grid/game-ocr-task-grid.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "ee2c0f2e9ed5beb252b704292fb6f8ddb693afcc8c540f3677bca1a517f5811a",
+              "local_file_sha256": "511ec83b0d44a7e2bdea2aa255c269bf1bda3e13e0f56ed74aa7049765e49ffa",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "646fb2ae-7be7-4a28-a72b-a63d2ed2a75c",
+              "exercise_id": "616e9b14-9a1c-4399-8eb5-d7ee978026b7",
+              "storage_uri": "/generated/exercises/game-grip-token-hunt/game-grip-token-hunt.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "4c11ede4095fcef16c816e28307ca18cc2a1f5bdbb7fbd05d9e852e5218317a3",
+              "local_file_sha256": "4c11ede4095fcef16c816e28307ca18cc2a1f5bdbb7fbd05d9e852e5218317a3",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "7ae4ac5f-51aa-4a6d-80ed-85e3af57a60a",
+              "exercise_id": "616e9b14-9a1c-4399-8eb5-d7ee978026b7",
+              "storage_uri": "/generated/exercises/game-grip-token-hunt/game-grip-token-hunt.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "a176c21ebbe58fe90fa6e4242e5701e28991f886864b9670cd64fb8ce31337c0",
+              "local_file_sha256": "4c11ede4095fcef16c816e28307ca18cc2a1f5bdbb7fbd05d9e852e5218317a3",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "031ca143-9669-4555-b5ec-ed6a7e2ca276",
+              "exercise_id": "619c242d-129d-4a45-9186-74f8e3b46ae9",
+              "storage_uri": "/generated/exercises/bear-plank-shoulder-tap/bear-plank-shoulder-tap.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "708f65965c8d2f0e9a766d7dcc2257b0ee8f5a199875fedfacdc70d286115ccd",
+              "local_file_sha256": "708f65965c8d2f0e9a766d7dcc2257b0ee8f5a199875fedfacdc70d286115ccd",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "3891bcfc-b7bf-428b-be50-0c5d54e23d86",
+              "exercise_id": "619c242d-129d-4a45-9186-74f8e3b46ae9",
+              "storage_uri": "/generated/exercises/bear-plank-shoulder-tap/bear-plank-shoulder-tap.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "e3bbc58d2c313dedc61c4527cd44cde6abc56a8762f1b75b843b898b6d94511b",
+              "local_file_sha256": "708f65965c8d2f0e9a766d7dcc2257b0ee8f5a199875fedfacdc70d286115ccd",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "da9aec91-9ac7-419d-b321-61cce430b2c9",
+              "exercise_id": "65129966-e66e-4961-979f-b4c2351fc4cc",
+              "storage_uri": "/generated/exercises/game-color-island-sprint/game-color-island-sprint.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "1d2052fd351fd694d6a4bba0ecd8b2edc8be6241f63e5a0b191582bceeaaaf34",
+              "local_file_sha256": "98d69b784dfd59ea10ad326ac96632fcefd316df4edeba6bf761475fb90b68c3",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "ea6829dc-7bc8-4f72-8bee-daf6b69a8258",
+              "exercise_id": "65129966-e66e-4961-979f-b4c2351fc4cc",
+              "storage_uri": "/generated/exercises/game-color-island-sprint/game-color-island-sprint.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "98d69b784dfd59ea10ad326ac96632fcefd316df4edeba6bf761475fb90b68c3",
+              "local_file_sha256": "98d69b784dfd59ea10ad326ac96632fcefd316df4edeba6bf761475fb90b68c3",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "0d908853-26b2-4fb7-bbc3-5f1379e826a1",
+              "exercise_id": "6560e4aa-cf42-4b18-ad03-3578ae3261a4",
+              "storage_uri": "/generated/exercises/cooperative-cone-collect/cooperative-cone-collect.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "e2719c928f466f780353b633a3d937d7968b7eba8881bd8383d78108ba35679e",
+              "local_file_sha256": "e2719c928f466f780353b633a3d937d7968b7eba8881bd8383d78108ba35679e",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "22bd7544-0ff0-490d-932e-a7c7d26c2d76",
+              "exercise_id": "6560e4aa-cf42-4b18-ad03-3578ae3261a4",
+              "storage_uri": "/generated/exercises/cooperative-cone-collect/cooperative-cone-collect.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "9acc7a1f83842bba24f0fc4292c5b50c4d39a0171395c57ac804db6e1d3a1f0b",
+              "local_file_sha256": "e2719c928f466f780353b633a3d937d7968b7eba8881bd8383d78108ba35679e",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "3b9151d9-9810-4ce4-ae72-9847ee36c5dc",
+              "exercise_id": "66a30e32-c724-4ee3-828b-9ea5f73206aa",
+              "storage_uri": "/generated/exercises/club-inverse-wall/club-inverse-wall.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "943d3aba5311c050a0f86ceac692d40c8df43a5e064a80fb71b05df631936de5",
+              "local_file_sha256": "943d3aba5311c050a0f86ceac692d40c8df43a5e064a80fb71b05df631936de5",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "e0b56281-09c6-4a60-80c5-bc3bad95ebfe",
+              "exercise_id": "66a30e32-c724-4ee3-828b-9ea5f73206aa",
+              "storage_uri": "/generated/exercises/club-inverse-wall/club-inverse-wall.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "4f860e7117fc89b36d478ecf2a19003ad181722d131aeb3ed6e85ce5a16773ff",
+              "local_file_sha256": "943d3aba5311c050a0f86ceac692d40c8df43a5e064a80fb71b05df631936de5",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "4e0a9008-4fc7-4338-8ff1-60851dabab0b",
+              "exercise_id": "67da2946-9838-4ebf-b407-563141dd49f3",
+              "storage_uri": "/generated/exercises/dead-bug-heel-tap/dead-bug-heel-tap.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "d559fd84e5fe1a777800e07864ef4c44744f18da8d1e51d8ca32d71807e4ea14",
+              "local_file_sha256": "4dc58cf2e3937795408fe0c01e0f91bcfcffbc640edacab9862f8f46320c72d4",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "9533bc66-cc98-4d10-9bd1-bf1fa8b9c3d1",
+              "exercise_id": "67da2946-9838-4ebf-b407-563141dd49f3",
+              "storage_uri": "/generated/exercises/dead-bug-heel-tap/dead-bug-heel-tap.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "4dc58cf2e3937795408fe0c01e0f91bcfcffbc640edacab9862f8f46320c72d4",
+              "local_file_sha256": "4dc58cf2e3937795408fe0c01e0f91bcfcffbc640edacab9862f8f46320c72d4",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "a0e00745-c8ae-43aa-912e-bfbcef5a8cdf",
+              "exercise_id": "772f5e95-75c4-4097-86c6-050f08344767",
+              "storage_uri": "/generated/exercises/lateral-shuffle-stick/lateral-shuffle-stick.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "804869c3c08482c0215631bb9ab506c989469ce52bd303b2489eb79e66c96c75",
+              "local_file_sha256": "c9900e0103ed3ac1d67fb9c4223e46d5fa6aec4658670f8f043b445ce618e59b",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "d591e5a5-8c22-46e4-b2b8-887b28de5e5c",
+              "exercise_id": "772f5e95-75c4-4097-86c6-050f08344767",
+              "storage_uri": "/generated/exercises/lateral-shuffle-stick/lateral-shuffle-stick.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "c9900e0103ed3ac1d67fb9c4223e46d5fa6aec4658670f8f043b445ce618e59b",
+              "local_file_sha256": "c9900e0103ed3ac1d67fb9c4223e46d5fa6aec4658670f8f043b445ce618e59b",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "3fada744-3101-4ebf-a88f-39325fd599dc",
+              "exercise_id": "96206f8b-b5a2-413c-9d25-463e55bffcf0",
+              "storage_uri": "/generated/exercises/club-anchor-chain-drag/club-anchor-chain-drag.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "62851b3bdbcaef78f908b6d8704b1ed3f8b3241633c7081b2db0286cf577138a",
+              "local_file_sha256": "f6b802ebe2a8b30a0f989b5c130d572b8966551ea3e5a6b1c1adca744072b3a3",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "80eb1275-cae1-4826-8f88-204d9107e8e9",
+              "exercise_id": "96206f8b-b5a2-413c-9d25-463e55bffcf0",
+              "storage_uri": "/generated/exercises/club-anchor-chain-drag/club-anchor-chain-drag.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "f6b802ebe2a8b30a0f989b5c130d572b8966551ea3e5a6b1c1adca744072b3a3",
+              "local_file_sha256": "f6b802ebe2a8b30a0f989b5c130d572b8966551ea3e5a6b1c1adca744072b3a3",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "1d72124d-c25a-465d-90fb-f463ced26ad0",
+              "exercise_id": "9a24819f-4405-4f36-9b7e-019a5ffb5a49",
+              "storage_uri": "/generated/exercises/ankle-rocker-mobility/ankle-rocker-mobility.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "796d30a381d4c07af5054b6b03cf41d48a0b6fdf2ef2e4f73f2f595ddee03cbf",
+              "local_file_sha256": "796d30a381d4c07af5054b6b03cf41d48a0b6fdf2ef2e4f73f2f595ddee03cbf",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "39c88046-c26a-4ef3-aa42-d76fd59f68ae",
+              "exercise_id": "9a24819f-4405-4f36-9b7e-019a5ffb5a49",
+              "storage_uri": "/generated/exercises/ankle-rocker-mobility/ankle-rocker-mobility.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "bc18a56de2d7ece47843cabc97b93103de62714b1d3c10543d3882d749c149f7",
+              "local_file_sha256": "796d30a381d4c07af5054b6b03cf41d48a0b6fdf2ef2e4f73f2f595ddee03cbf",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "55177ad8-c3d3-4ee5-9809-0a2fabe02fef",
+              "exercise_id": "a64b1316-9e04-4de6-bb41-065614417734",
+              "storage_uri": "/generated/exercises/wall-pushup/wall-pushup.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "4a2e4c933d1da1c4b2199d4c7740178c3a81ea7cf975cd7820918be0625d41e4",
+              "local_file_sha256": "4a2e4c933d1da1c4b2199d4c7740178c3a81ea7cf975cd7820918be0625d41e4",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "abc25c11-a264-4f1a-a9d1-82c3322ddeb4",
+              "exercise_id": "a64b1316-9e04-4de6-bb41-065614417734",
+              "storage_uri": "/generated/exercises/wall-pushup/wall-pushup.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "eb640b063d3de868c2c988765b3648ca97891ffd91bc6cab665ea11ecc7584d1",
+              "local_file_sha256": "4a2e4c933d1da1c4b2199d4c7740178c3a81ea7cf975cd7820918be0625d41e4",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "9c43b5a3-6e48-4f7e-9845-f242b1068686",
+              "exercise_id": "ae49491e-11eb-437b-a1cd-cbaa2915b715",
+              "storage_uri": "/generated/exercises/thoracic-open-book/thoracic-open-book.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "297e1c18dc300ae55c55162a68a9393dbc375e2d5ce479ec692c5fca99ea2e50",
+              "local_file_sha256": "b0997ad772b6b9f596c51fc1048f0a7185ed8575a2a6edc594afeecde03f4f68",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "d69c2b52-b676-4645-a3cf-ad20f10bf0b9",
+              "exercise_id": "ae49491e-11eb-437b-a1cd-cbaa2915b715",
+              "storage_uri": "/generated/exercises/thoracic-open-book/thoracic-open-book.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "b0997ad772b6b9f596c51fc1048f0a7185ed8575a2a6edc594afeecde03f4f68",
+              "local_file_sha256": "b0997ad772b6b9f596c51fc1048f0a7185ed8575a2a6edc594afeecde03f4f68",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "5262406f-8b8a-48c1-9804-ee02a4bb0e11",
+              "exercise_id": "b8affe2b-3571-45ba-b582-54c9449bc725",
+              "storage_uri": "/generated/exercises/club-tire-obstacle-transit/club-tire-obstacle-transit.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "843fcbdaa6f737b978ae9217f06848f37614ac8d04e776602a69f794f3cdea59",
+              "local_file_sha256": "2d719a73e48b9799f8338bbbf30e28ebd64b106294add08ecb8bb1bd5c7b294f",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "542bbd58-fee6-4193-9eea-e3bb63de11f3",
+              "exercise_id": "b8affe2b-3571-45ba-b582-54c9449bc725",
+              "storage_uri": "/generated/exercises/club-tire-obstacle-transit/club-tire-obstacle-transit.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "2d719a73e48b9799f8338bbbf30e28ebd64b106294add08ecb8bb1bd5c7b294f",
+              "local_file_sha256": "2d719a73e48b9799f8338bbbf30e28ebd64b106294add08ecb8bb1bd5c7b294f",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "4194e110-98e0-4a99-b1b0-b5cd52196d0a",
+              "exercise_id": "b95b3eff-fb50-4a44-a27d-312ccef9daa6",
+              "storage_uri": "/generated/exercises/club-balance-beam/club-balance-beam.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "deca8066bc10d3d12782c62e6b532dc3da2c12e612667fdc4779410ac1edeab6",
+              "local_file_sha256": "56227d9ae1d4945cdbbe0d85fb495f68fd9f1609f96ae52a96cf94722dd5cbb6",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "ec95fa59-7775-4057-8d1e-b3f48e8b5f28",
+              "exercise_id": "b95b3eff-fb50-4a44-a27d-312ccef9daa6",
+              "storage_uri": "/generated/exercises/club-balance-beam/club-balance-beam.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "56227d9ae1d4945cdbbe0d85fb495f68fd9f1609f96ae52a96cf94722dd5cbb6",
+              "local_file_sha256": "56227d9ae1d4945cdbbe0d85fb495f68fd9f1609f96ae52a96cf94722dd5cbb6",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "8fe88c56-14cc-4a84-9a73-bb6556d8e788",
+              "exercise_id": "bd1b88c6-7125-4538-9c40-2a7d264694a5",
+              "storage_uri": "/generated/exercises/game-ocr-memory-relay/game-ocr-memory-relay.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "d05dec3389d62fe40ab2fbdf01a2dbc1da0e07631cb55ebeacb76deaf6ebc25c",
+              "local_file_sha256": "d05dec3389d62fe40ab2fbdf01a2dbc1da0e07631cb55ebeacb76deaf6ebc25c",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "9d248988-4797-4bbc-ae6f-b8dee1520be5",
+              "exercise_id": "bd1b88c6-7125-4538-9c40-2a7d264694a5",
+              "storage_uri": "/generated/exercises/game-ocr-memory-relay/game-ocr-memory-relay.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "379a38787bd110d5793b96990dabf60783242f3076462cdc1b2a7b71f672c74d",
+              "local_file_sha256": "d05dec3389d62fe40ab2fbdf01a2dbc1da0e07631cb55ebeacb76deaf6ebc25c",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "3aee304c-b242-4999-b1cb-98530c1fd50a",
+              "exercise_id": "c9a37c2d-ab3d-4d22-961a-71737ddf59b5",
+              "storage_uri": "/generated/exercises/club-escaladierwand/club-escaladierwand.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "1d97ddd6737bde6044d8bebe0f7ad6ee32456e71a77ffa05848940d744192eca",
+              "local_file_sha256": "1338ab3ea12055dc776b60cd2f3820f6500824efa38b7ee5d2cdc98c804f2842",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "e960dc67-4f61-4005-9122-ac410c3622e1",
+              "exercise_id": "c9a37c2d-ab3d-4d22-961a-71737ddf59b5",
+              "storage_uri": "/generated/exercises/club-escaladierwand/club-escaladierwand.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "1338ab3ea12055dc776b60cd2f3820f6500824efa38b7ee5d2cdc98c804f2842",
+              "local_file_sha256": "1338ab3ea12055dc776b60cd2f3820f6500824efa38b7ee5d2cdc98c804f2842",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "12daaeca-bbf0-489c-a5ec-90dda358ddd1",
+              "exercise_id": "cee6087a-00c2-4cc4-b867-1da2bce5da4f",
+              "storage_uri": "/generated/exercises/quiet-landing-practice/quiet-landing-practice.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "bfe4eb1756a75fd357a1dc335e1a3a0ea1fb239007cb619cb519cd75df304b37",
+              "local_file_sha256": "bfe4eb1756a75fd357a1dc335e1a3a0ea1fb239007cb619cb519cd75df304b37",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "af168dcf-7738-4553-b3b6-9868478cda4d",
+              "exercise_id": "cee6087a-00c2-4cc4-b867-1da2bce5da4f",
+              "storage_uri": "/generated/exercises/quiet-landing-practice/quiet-landing-practice.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "55da27e37761c4237bfd6c2799fd11c91b0c019b87bb81256ef516a2657dfa72",
+              "local_file_sha256": "bfe4eb1756a75fd357a1dc335e1a3a0ea1fb239007cb619cb519cd75df304b37",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "3054754a-5ac8-496e-9742-ed2cf17cc8d2",
+              "exercise_id": "d1d83740-3457-44ec-a355-f4e115d69b11",
+              "storage_uri": "/generated/exercises/chair-sit-to-stand/chair-sit-to-stand.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "1a6948654cc1c21a7fa68a71b361c2a5a8f7baf9a8649294039c0d6fa8dde014",
+              "local_file_sha256": "1a6948654cc1c21a7fa68a71b361c2a5a8f7baf9a8649294039c0d6fa8dde014",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "adf9ece8-aac8-4918-afd1-a1f66268797b",
+              "exercise_id": "d1d83740-3457-44ec-a355-f4e115d69b11",
+              "storage_uri": "/generated/exercises/chair-sit-to-stand/chair-sit-to-stand.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "021dd72425ec4614fd359597fa338ec2c05e27a3293f8dbd3d17ae75d5a32397",
+              "local_file_sha256": "1a6948654cc1c21a7fa68a71b361c2a5a8f7baf9a8649294039c0d6fa8dde014",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "65025635-e1e8-4cb7-8f87-a30beac4a42c",
+              "exercise_id": "d4eaace5-87d9-4778-8338-bd0202cea180",
+              "storage_uri": "/generated/exercises/club-multirig-ring-traverse/club-multirig-ring-traverse.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "c54b1f3835402b9c8ccb191b78f33b69b17a6c35840f6ebbc802f9f73d53c3a5",
+              "local_file_sha256": "ee8854d088bc2333a7f3b3b24a55a6e579260098170c3c8a092edcb77a8bd523",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "94324498-4eba-4bcc-bff7-4a410c4ada7f",
+              "exercise_id": "d4eaace5-87d9-4778-8338-bd0202cea180",
+              "storage_uri": "/generated/exercises/club-multirig-ring-traverse/club-multirig-ring-traverse.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "ee8854d088bc2333a7f3b3b24a55a6e579260098170c3c8a092edcb77a8bd523",
+              "local_file_sha256": "ee8854d088bc2333a7f3b3b24a55a6e579260098170c3c8a092edcb77a8bd523",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "65b04271-f6a0-44e1-9414-e8e83e01dc7a",
+              "exercise_id": "daeb9722-2a45-4aa7-ab83-9460efc89652",
+              "storage_uri": "/generated/exercises/club-weaver/club-weaver.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "78431e42ca50a6d1c679d87964b5a1e59638f73cb3162dcff40e312df4a196e4",
+              "local_file_sha256": "4c067ea8a3848bab0fa21662eb825d2494b87122d83d646a0075530badfb2e55",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "debac2ac-9af4-48a5-8bd9-b230b6351a31",
+              "exercise_id": "daeb9722-2a45-4aa7-ab83-9460efc89652",
+              "storage_uri": "/generated/exercises/club-weaver/club-weaver.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "4c067ea8a3848bab0fa21662eb825d2494b87122d83d646a0075530badfb2e55",
+              "local_file_sha256": "4c067ea8a3848bab0fa21662eb825d2494b87122d83d646a0075530badfb2e55",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "87adad0f-5d10-4309-9823-e649212d3d19",
+              "exercise_id": "db9357c9-ae0f-4dfc-af82-45f7890eb79d",
+              "storage_uri": "/generated/exercises/game-code-run/game-code-run.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "82fa7bde6d25481d5319f97c6f1048770f9a2fcae8d69ef646179b742dfc3771",
+              "local_file_sha256": "09ada92880fada185165c66f797b57cb9fae29195c4ae0f32e3becce0fc0cb9b",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "e10e6d1a-6271-473c-a8d0-1b7073097cd1",
+              "exercise_id": "db9357c9-ae0f-4dfc-af82-45f7890eb79d",
+              "storage_uri": "/generated/exercises/game-code-run/game-code-run.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "09ada92880fada185165c66f797b57cb9fae29195c4ae0f32e3becce0fc0cb9b",
+              "local_file_sha256": "09ada92880fada185165c66f797b57cb9fae29195c4ae0f32e3becce0fc0cb9b",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "4e42db4b-d2dc-48ba-b0a7-f563a16e1220",
+              "exercise_id": "de045a21-3101-4ed5-ba5b-f2ca1871d80c",
+              "storage_uri": "/generated/exercises/supported-single-leg-hinge/supported-single-leg-hinge.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "0ca36e5a7c1d636bacf7dea622cbbea7d21a24230bc27365289d808412dba22e",
+              "local_file_sha256": "0ca36e5a7c1d636bacf7dea622cbbea7d21a24230bc27365289d808412dba22e",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "d45a41a3-06d5-4ab1-a2fe-fd6c182fb2c2",
+              "exercise_id": "de045a21-3101-4ed5-ba5b-f2ca1871d80c",
+              "storage_uri": "/generated/exercises/supported-single-leg-hinge/supported-single-leg-hinge.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "1ad724c485e5d9d4e54dcd913781dd7aed5e6c1d0933a5c9d08e867a27006524",
+              "local_file_sha256": "0ca36e5a7c1d636bacf7dea622cbbea7d21a24230bc27365289d808412dba22e",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "3c03fb40-0ef8-40e8-b663-c38bf9d390df",
+              "exercise_id": "e7e7bcd4-2c8e-4cbe-8624-cc12243c4cc8",
+              "storage_uri": "/generated/exercises/club-irish-table/club-irish-table.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "c0f01c4fc1d1978ff1a70f9e2c7909025de4efb89905493b759ab7be4ff862cd",
+              "local_file_sha256": "ead5e5dd6bd8a93e404de43a3c536e0816a35ebc19127911919f419d304bab5e",
+              "local_file_integrity": "checksum_mismatch"
+            },
+            {
+              "id": "d6e8e660-c34c-4f37-a8bd-a3dfcee88cd0",
+              "exercise_id": "e7e7bcd4-2c8e-4cbe-8624-cc12243c4cc8",
+              "storage_uri": "/generated/exercises/club-irish-table/club-irish-table.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "ead5e5dd6bd8a93e404de43a3c536e0816a35ebc19127911919f419d304bab5e",
+              "local_file_sha256": "ead5e5dd6bd8a93e404de43a3c536e0816a35ebc19127911919f419d304bab5e",
+              "local_file_integrity": "verified"
+            }
+          ]
+        },
+        {
+          "assets": [
+            {
+              "id": "36cbad27-edef-48a8-84de-fcb8e381f352",
+              "exercise_id": "feb4400d-fd05-4d83-8f0f-6ead048eacb8",
+              "storage_uri": "/generated/exercises/game-zone-switch/game-zone-switch.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "f2cf4ac1e4d700af1e3e36fa473b3464a1bfbe544793b4e69480c37ace702712",
+              "local_file_sha256": "f2cf4ac1e4d700af1e3e36fa473b3464a1bfbe544793b4e69480c37ace702712",
+              "local_file_integrity": "verified"
+            },
+            {
+              "id": "fc572f53-769a-4be2-8df2-053890e886fa",
+              "exercise_id": "feb4400d-fd05-4d83-8f0f-6ead048eacb8",
+              "storage_uri": "/generated/exercises/game-zone-switch/game-zone-switch.png",
+              "review_status": "pending",
+              "is_primary": false,
+              "sha256": "da334a9b771d43fa326e665eb132bdd401beb9f82f020947379154d90ae17ef1",
+              "local_file_sha256": "f2cf4ac1e4d700af1e3e36fa473b3464a1bfbe544793b4e69480c37ace702712",
+              "local_file_integrity": "checksum_mismatch"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

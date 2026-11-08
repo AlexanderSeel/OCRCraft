@@ -32,6 +32,7 @@
     "check:architecture": "node scripts/check-codebase-boundaries.mjs",
     "audit:maintainability": "node scripts/audit-maintainability.mjs",
     "data:audit-startup": "node --import=tsx scripts/audit-startup-catalog.mjs",
+    "media:reconcile-stale": "node --conditions=react-server --import=tsx scripts/reconcile-stale-media.ts",
     "data:quality-snapshot": "node scripts/data-quality-snapshot.mjs"
   },
   "dependencies": {

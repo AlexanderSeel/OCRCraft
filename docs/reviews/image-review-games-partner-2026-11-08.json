@@ -1,0 +1,352 @@
+{
+  "format": "ocrcraft-visual-image-review-v1",
+  "reviewDate": "2026-11-08",
+  "reviewer": "Codex visual inspection; no trainer approval",
+  "scope": "14 current local files compared against first exported prompt per file; duplicate prompts not individually approved",
+  "sourceExport": "artifacts/codex-image-review-games-partner.json",
+  "sourceExportGeneratedAt": "2026-09-25T19:17:21.189Z",
+  "sourceExportSha256": "a6f0e5be092723b2004f67e3ebff0d78c2f68233527bf791e89f71d18d19e8db",
+  "databaseMutated": false,
+  "counts": {
+    "trainer_review_required": 3,
+    "needs_changes": 11
+  },
+  "items": [
+    {
+      "seedKey": "partner-mirror-movement",
+      "exerciseName": "Partner-Spiegelbewegung",
+      "exerciseId": "4ea4cb6b-0c39-4f0c-a178-e60f1924d174",
+      "localPublicPath": "public/generated/exercises/partner-mirror-movement/partner-mirror-movement.png",
+      "imageSha256": "5fece1a34ec7757d0435038da2e3f28a738b902470c646fe606e13dc3439b481",
+      "comparedAssetId": "89110f4e-b950-4ce6-bb7a-c6b188ebde45",
+      "comparedPromptSha256": "9eaec494f981142845231f37e5faa2f9cdf3bda5e3bf3f5b4cdfb7f2b65bcaf3",
+      "exportedAssetReferences": [
+        {
+          "assetId": "89110f4e-b950-4ce6-bb7a-c6b188ebde45",
+          "promptSha256": "9eaec494f981142845231f37e5faa2f9cdf3bda5e3bf3f5b4cdfb7f2b65bcaf3"
+        },
+        {
+          "assetId": "d06113b7-00c3-4360-bfa8-cc08c518bdf3",
+          "promptSha256": "10de1637aa2c2f16fe94e3d5cfb0794b4f36ff4602bf1b8da434afd974012191"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Markiere zwei parallele, ebene Bewegungsfelder mit genügend Abstand; erkläre, dass nur eine Person führt und kein Körperkontakt nötig ist.\nStarting position: Stellt euch einander gegenüber, mit weichen Knien und einem freien Schritt Abstand zur Feldgrenze.\nOrdered execution: 1. Stellt euch mit genügend Abstand in die markierten Felder und bestimmt die führende Person.\n2. Spiegelt langsame Schritte und angekündigte Richtungswechsel, ohne euch zu berühren.\n3. Stoppt gemeinsam auf Signal und wechselt anschließend die Führung.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Zwei Personen stehen in getrennten Feldern ohne Kontakt; Spiegelbewegung und gemeinsames Stoppen sind erkennbar. Welche Person führt und wie die Führung wechselt, bleibt unmarkiert.",
+      "nextAction": "Rollenwechsel und ausreichend große Felder bestätigen; bei Bedarf kleine Rollen-/Wechselmarkierung ergänzen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-zone-switch",
+      "exerciseName": "Zonenwechsel",
+      "exerciseId": "feb4400d-fd05-4d83-8f0f-6ead048eacb8",
+      "localPublicPath": "public/generated/exercises/game-zone-switch/game-zone-switch.png",
+      "imageSha256": "f2cf4ac1e4d700af1e3e36fa473b3464a1bfbe544793b4e69480c37ace702712",
+      "comparedAssetId": "36cbad27-edef-48a8-84de-fcb8e381f352",
+      "comparedPromptSha256": "13be64ddb814835dfc66c69e571be28f41aec400eada28642f26ad033709aeaa",
+      "exportedAssetReferences": [
+        {
+          "assetId": "36cbad27-edef-48a8-84de-fcb8e381f352",
+          "promptSha256": "13be64ddb814835dfc66c69e571be28f41aec400eada28642f26ad033709aeaa"
+        },
+        {
+          "assetId": "fc572f53-769a-4be2-8df2-053890e886fa",
+          "promptSha256": "13be64ddb814835dfc66c69e571be28f41aec400eada28642f26ad033709aeaa"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Zonen erhalten unterschiedliche Bewegungsaufträge. Auf Signal wird kontrolliert zur nächsten freien Zone gewechselt; Laufrichtung und Wartebereich verhindern Gegenverkehr.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Umlaufrichtung, getrennte Farbzonen, wartende/aktive Personen und Stoppsignal sind erkennbar. Unterschiedliche Bewegungsaufträge und das Warten auf eine freie Zielzone werden nicht eindeutig erläutert.",
+      "nextAction": "Zonenaufträge und Freigaberegel fachlich bestätigen; Farbcodes zusätzlich über Formen oder Symbole verständlich machen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-team-treasure-carry",
+      "exerciseName": "Team-Schatztransport",
+      "exerciseId": "231faef7-3dbe-41b9-afb0-9c8e36642077",
+      "localPublicPath": "public/generated/exercises/game-team-treasure-carry/game-team-treasure-carry.png",
+      "imageSha256": "8eb2a9402eaf083c59a7565844a9c4ae6615c59c45a7b2fad7c75b9aaffc1829",
+      "comparedAssetId": "f3bb4940-2eba-40db-91fa-f0a52424faa2",
+      "comparedPromptSha256": "85b344ff086196ef080ae572c5dfdfab5e4d53923c4f6b05b5cad3c39ecdfb56",
+      "exportedAssetReferences": [
+        {
+          "assetId": "f3bb4940-2eba-40db-91fa-f0a52424faa2",
+          "promptSha256": "85b344ff086196ef080ae572c5dfdfab5e4d53923c4f6b05b5cad3c39ecdfb56"
+        },
+        {
+          "assetId": "f688c6cd-e62d-4fd4-9bb8-e61f20869bd5",
+          "promptSha256": "c089fb37fe2eb32f8337a72f8bc5b49c3b9f4c8c875cf4b9406e7ee16c690e45"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Jede Person darf pro Weg genau eine leichte Marke transportieren. Marken werden aufgenommen statt geworfen oder entrissen; nach der Ablage wechselt die nächste Person.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "needs_changes",
+      "observation": "Bild 3 zeigt Aufnahme, Transport und Ablage mehrfach im selben Laufkorridor, ohne Zeit-/Personentrennung. Das kann als gleichzeitiges Starten verstanden werden, obwohl erst nach der Ablage die nächste Person wechseln soll.",
+      "nextAction": "Eine aktive Person und wartende Gruppe je Zeitpunkt zeigen oder Teilbilder ausdrücklich als zeitliche Folge trennen; Ablage vor nächstem Start sichtbar machen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-route-puzzle",
+      "exerciseName": "Routen-Puzzle",
+      "exerciseId": "1ad55aab-5e50-43bf-a1b4-456ecf8214b6",
+      "localPublicPath": "public/generated/exercises/game-route-puzzle/game-route-puzzle.png",
+      "imageSha256": "eaa195a7d02ebe87153d29dae2700c7f3837ce1982fbfc3851a4b39be3d5c916",
+      "comparedAssetId": "e3dd5057-90c9-41c6-b618-74ee0adbd885",
+      "comparedPromptSha256": "656fe3a146666f38cdad7e1d73ae77816632858f1eac68e596512b43f8b6bea1",
+      "exportedAssetReferences": [
+        {
+          "assetId": "e3dd5057-90c9-41c6-b618-74ee0adbd885",
+          "promptSha256": "656fe3a146666f38cdad7e1d73ae77816632858f1eac68e596512b43f8b6bea1"
+        },
+        {
+          "assetId": "5f2a7a4e-6bca-4aaa-bac8-47896e8c3006",
+          "promptSha256": "2fc5ae6b1586339b5df168087730a0f0292050d0165537d06d7ad1d9fa7bf5c3"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Teams sammeln nacheinander Hinweiskarten an klaren Punkten. Erst wenn die Reihenfolge feststeht, wird der niedrige freigegebene Parcours ohne Zeitdruck gemeinsam durchlaufen.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "needs_changes",
+      "observation": "In Bild 3 überlagert das Netz den Rumpf der laufenden Person; die Durchquerung wirkt wie Laufen durch geschlossene Maschen statt einer klaren erlaubten Passage.",
+      "nextAction": "Nur die tatsächlich freigegebene niedrige Parcoursvariante darstellen und den Weg über/unter/neben dem Netz geometrisch eindeutig zeigen; Teamablauf nach Kartenordnung ergänzen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-reaction-gates",
+      "exerciseName": "Reaktionstore",
+      "exerciseId": "5755c18d-e999-4199-a41f-06f8cc190743",
+      "localPublicPath": "public/generated/exercises/game-reaction-gates/game-reaction-gates.png",
+      "imageSha256": "3f726d0d7f201ee121eac6481342e1614ac9132fad20114b3c8793032edddae5",
+      "comparedAssetId": "36cff555-95cc-4ac4-9585-9d87999b1337",
+      "comparedPromptSha256": "210f3b418eafffdcd75b7fd1c37795382eb71eba54495bfaca815b42bfa77f29",
+      "exportedAssetReferences": [
+        {
+          "assetId": "36cff555-95cc-4ac4-9585-9d87999b1337",
+          "promptSha256": "210f3b418eafffdcd75b7fd1c37795382eb71eba54495bfaca815b42bfa77f29"
+        },
+        {
+          "assetId": "742de590-0a99-44d5-b2eb-9e882607a9f1",
+          "promptSha256": "a0c83c89499f711c115fcdc64003b64331af85659337cbfc00a3eaa579d6013c"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Mehrere breite Tore mit genügend Abstand markieren. Der Trainer gibt ein Signal; Teilnehmende bremsen kontrolliert ab, wählen das Tor und kehren über eine getrennte Rücklaufspur zurück.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "needs_changes",
+      "observation": "Die Farbtore enthalten quer gespannte Stangen/Linien zwischen den Hütchen, obwohl die Anleitung breite zu durchlaufende Tore beschreibt. In Bild 3 läuft die Person auf der Rücklaufspur gegen deren eingezeichnete Pfeilrichtung.",
+      "nextAction": "Tore als freie Durchgänge ohne erfundene Querhindernisse zeigen; Rücklaufperson und alle Rücklaufpfeile gleich ausrichten.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-partner-pace-match",
+      "exerciseName": "Partner-Pace-Match",
+      "exerciseId": "2b67fce1-e55b-4b24-a3a1-37eb4eb66101",
+      "localPublicPath": "public/generated/exercises/game-partner-pace-match/game-partner-pace-match.png",
+      "imageSha256": "cf8673314abf2c6e87189cda375d833bd52c95175a7947abfba39c31f162fbe0",
+      "comparedAssetId": "216e3127-443f-4858-b6ce-5417bc524a7d",
+      "comparedPromptSha256": "4e42609c7fd65083b68884c9a5ee807fb9e8c4809eef88b9db4c3e329714395f",
+      "exportedAssetReferences": [
+        {
+          "assetId": "216e3127-443f-4858-b6ce-5417bc524a7d",
+          "promptSha256": "4e42609c7fd65083b68884c9a5ee807fb9e8c4809eef88b9db4c3e329714395f"
+        },
+        {
+          "assetId": "28b43f1e-34ab-414c-a744-fd1b9d4898be",
+          "promptSha256": "4e42609c7fd65083b68884c9a5ee807fb9e8c4809eef88b9db4c3e329714395f"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Paare laufen ohne Körperkontakt nebeneinander oder leicht versetzt. Nach festem Zeitfenster wechselt die Führung; Ziel ist ein gleichmäßiges Sprechtempo statt ein Sprintduell.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "needs_changes",
+      "observation": "Die laufenden Personen stehen in Bild 2 und 3 deutlich hintereinander auf derselben Linie. Nebeneinanderlaufen oder leichte Versetzung und der konkrete Führungswechsel sind nicht verständlich dargestellt.",
+      "nextAction": "Zwei benachbarte Laufpositionen mit kleinem Versatz und sichtbaren Rollenwechsel zeigen; Sprechtempo statt Verfolgungsbild vermitteln.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-ocr-task-grid",
+      "exerciseName": "OCR-Aufgabenraster",
+      "exerciseId": "5d0052db-e6a0-4a26-8ba4-56b85180d48d",
+      "localPublicPath": "public/generated/exercises/game-ocr-task-grid/game-ocr-task-grid.png",
+      "imageSha256": "511ec83b0d44a7e2bdea2aa255c269bf1bda3e13e0f56ed74aa7049765e49ffa",
+      "comparedAssetId": "45ea97dc-e159-48d6-a952-a7c07d0e0b7a",
+      "comparedPromptSha256": "8f9ec2d0af08b4d83f16610a7f7f6c2e1efb35d5ee28e8b1625a334eca255c08",
+      "exportedAssetReferences": [
+        {
+          "assetId": "45ea97dc-e159-48d6-a952-a7c07d0e0b7a",
+          "promptSha256": "8f9ec2d0af08b4d83f16610a7f7f6c2e1efb35d5ee28e8b1625a334eca255c08"
+        },
+        {
+          "assetId": "adcace35-9c20-4042-a7db-82068736e733",
+          "promptSha256": "8f9ec2d0af08b4d83f16610a7f7f6c2e1efb35d5ee28e8b1625a334eca255c08"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Der Trainer füllt vorab ein Raster ausschließlich mit passenden Katalogübungen. Teams wählen ein freies Feld, führen die Aufgabe sauber aus und markieren es; Qualität und sichere Stationskapazität zählen vor Geschwindigkeit.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "needs_changes",
+      "observation": "Das Raster bleibt leer; dargestellt wird ein Schritt/Sprung zwischen Feldern. Die definierende Auswahl einer vorher zugeordneten Katalogaufgabe, deren Ausführung und anschließende Markierung fehlen.",
+      "nextAction": "Raster mit eindeutigen Aufgabensymbolen vorbereiten; eine freigegebene Beispielaufgabe außerhalb von Durchgangswegen und die anschließende Markierung zeigen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-ocr-memory-relay",
+      "exerciseName": "OCR-Memory-Staffel",
+      "exerciseId": "bd1b88c6-7125-4538-9c40-2a7d264694a5",
+      "localPublicPath": "public/generated/exercises/game-ocr-memory-relay/game-ocr-memory-relay.png",
+      "imageSha256": "d05dec3389d62fe40ab2fbdf01a2dbc1da0e07631cb55ebeacb76deaf6ebc25c",
+      "comparedAssetId": "8fe88c56-14cc-4a84-9a73-bb6556d8e788",
+      "comparedPromptSha256": "6ffb28f40403ed174363dd12805404cf17f668586c88694eb06fddf30af7816e",
+      "exportedAssetReferences": [
+        {
+          "assetId": "8fe88c56-14cc-4a84-9a73-bb6556d8e788",
+          "promptSha256": "6ffb28f40403ed174363dd12805404cf17f668586c88694eb06fddf30af7816e"
+        },
+        {
+          "assetId": "9d248988-4797-4bbc-ae6f-b8dee1520be5",
+          "promptSha256": "6ffb28f40403ed174363dd12805404cf17f668586c88694eb06fddf30af7816e"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Ein Teammitglied merkt sich am Wendepunkt eine kurze Aufgabenfolge und bringt sie zurück. Das Team führt nur vorher freigegebene, niedrig skalierte Technikaufgaben aus; danach wechselt die Rolle.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "needs_changes",
+      "observation": "In Bild 2 liegen die Technikstationen direkt auf dem Rückweg der merkenden Person. Die Rückgabe der gemerkten Folge an das Team vor gemeinsamer Ausführung wird nicht gezeigt.",
+      "nextAction": "Merkpunkt, Rückkehr und Mitteilung ans Team von nachfolgender gemeinsamer Technikfolge trennen; erst danach Rollenwechsel zeigen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-lava-path-builders",
+      "exerciseName": "Lavaweg-Baumeister",
+      "exerciseId": "1bf84dda-3a77-4bdb-9868-0d47b19711d8",
+      "localPublicPath": "public/generated/exercises/game-lava-path-builders/game-lava-path-builders.png",
+      "imageSha256": "fbd44b1f4c4b0961d108a4b9f6c947d52071141b4c0562d6e934a79b304f9e87",
+      "comparedAssetId": "0a2e7563-d8ca-48fc-a876-ae1c307e4b95",
+      "comparedPromptSha256": "732fc840dfa2d052054541612b012426ae624e16ffe3d555508d0e623513269e",
+      "exportedAssetReferences": [
+        {
+          "assetId": "0a2e7563-d8ca-48fc-a876-ae1c307e4b95",
+          "promptSha256": "732fc840dfa2d052054541612b012426ae624e16ffe3d555508d0e623513269e"
+        },
+        {
+          "assetId": "45393793-46d6-498e-b1f0-48c4253bb7fb",
+          "promptSha256": "6764365222a0d2098046f3cabf90e69e06eeb85736166afabc8eb8dc989db147"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Das Team legt verfügbare Bodenmarker innerhalb sicherer Reichweite aus und bewegt sie weiter. Kein Weitspringen, Werfen von Markern oder Körperkontakt zum Schieben.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Auslegen und Betreten bodennaher Marker ohne Körperkontakt oder Weitsprung sind erkennbar. Die Teamzusammenarbeit und das Weiterreichen/Weiterlegen begrenzter Marker fehlen in der Einzelpersonendarstellung.",
+      "nextAction": "Teamrollen, sichere Reichweite und rutschfeste ausreichend große Trittflächen bestätigen; kooperative Weitergabe verdeutlichen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-grip-token-hunt",
+      "exerciseName": "Grip-Markenjagd",
+      "exerciseId": "616e9b14-9a1c-4399-8eb5-d7ee978026b7",
+      "localPublicPath": "public/generated/exercises/game-grip-token-hunt/game-grip-token-hunt.png",
+      "imageSha256": "4c11ede4095fcef16c816e28307ca18cc2a1f5bdbb7fbd05d9e852e5218317a3",
+      "comparedAssetId": "646fb2ae-7be7-4a28-a72b-a63d2ed2a75c",
+      "comparedPromptSha256": "f782a0822a7c5934101e49346c7a760e2caeffd64335b27e31fca138b071ad45",
+      "exportedAssetReferences": [
+        {
+          "assetId": "646fb2ae-7be7-4a28-a72b-a63d2ed2a75c",
+          "promptSha256": "f782a0822a7c5934101e49346c7a760e2caeffd64335b27e31fca138b071ad45"
+        },
+        {
+          "assetId": "7ae4ac5f-51aa-4a6d-80ed-85e3af57a60a",
+          "promptSha256": "f782a0822a7c5934101e49346c7a760e2caeffd64335b27e31fca138b071ad45"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Nur eine Person nutzt eine Griffstation. Nach einer kurzen, vom Trainer festgelegten Griffaufgabe wird eine Marke genommen und die Station vollständig verlassen, bevor die nächste Person startet.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "needs_changes",
+      "observation": "Die Marke liegt in Bild 2 unmittelbar unter den frei hängenden Füßen. Bild 3 zeigt weitere Personen innerhalb des Rigbereichs während eine Person hängt; vollständiges Verlassen vor dem nächsten Start bleibt unklar.",
+      "nextAction": "Marken außerhalb der Lande-/Pendelzone platzieren; je Zeitpunkt nur eine Person im Stationsbereich, wartende Gruppe außerhalb und Bodenkontakt vor Markenaufnahme zeigen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-color-island-sprint",
+      "exerciseName": "Farbinsel-Sprint",
+      "exerciseId": "65129966-e66e-4961-979f-b4c2351fc4cc",
+      "localPublicPath": "public/generated/exercises/game-color-island-sprint/game-color-island-sprint.png",
+      "imageSha256": "98d69b784dfd59ea10ad326ac96632fcefd316df4edeba6bf761475fb90b68c3",
+      "comparedAssetId": "ea6829dc-7bc8-4f72-8bee-daf6b69a8258",
+      "comparedPromptSha256": "89a035969f7ea98af2d7305ba171331a22acf0c3c3e1cf409a0d38d74768f83f",
+      "exportedAssetReferences": [
+        {
+          "assetId": "ea6829dc-7bc8-4f72-8bee-daf6b69a8258",
+          "promptSha256": "89a035969f7ea98af2d7305ba171331a22acf0c3c3e1cf409a0d38d74768f83f"
+        },
+        {
+          "assetId": "da9aec91-9ac7-419d-b321-61cce430b2c9",
+          "promptSha256": "c1022b76f593f37677b4b5d4c7009a076b49237b26fe832350a2b112b1ad3363"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Mehrere Farbflächen markieren. Der Trainer ruft eine Farbe und optional eine Bewegungsart; alle erreichen ohne Rempeln die passende Fläche. Niemand scheidet aus.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "needs_changes",
+      "observation": "Bild 3 führt drei Personen gleichzeitig zu unterschiedlichen Farben. Laut Schritt 2 erreichen alle nach einem Farbsignal die passende Fläche; das einzelne gemeinsame Zielsignal fehlt.",
+      "nextAction": "Ein eindeutiges Farbsignal mit zusätzlichem Formsymbol und passende gemeinsame Zielbereiche mit ausreichendem Abstand zeigen; keine widersprüchlichen Farbziele im selben Signal.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-code-run",
+      "exerciseName": "Code-Lauf",
+      "exerciseId": "db9357c9-ae0f-4dfc-af82-45f7890eb79d",
+      "localPublicPath": "public/generated/exercises/game-code-run/game-code-run.png",
+      "imageSha256": "09ada92880fada185165c66f797b57cb9fae29195c4ae0f32e3becce0fc0cb9b",
+      "comparedAssetId": "e10e6d1a-6271-473c-a8d0-1b7073097cd1",
+      "comparedPromptSha256": "e04bbd32661a89c0a1b5ff96d4972484a764090d832d0751c537b4801e82a559",
+      "exportedAssetReferences": [
+        {
+          "assetId": "e10e6d1a-6271-473c-a8d0-1b7073097cd1",
+          "promptSha256": "e04bbd32661a89c0a1b5ff96d4972484a764090d832d0751c537b4801e82a559"
+        },
+        {
+          "assetId": "87adad0f-5d10-4309-9823-e649212d3d19",
+          "promptSha256": "e04bbd32661a89c0a1b5ff96d4972484a764090d832d0751c537b4801e82a559"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Eine Person läuft zu einem Codepunkt, merkt sich ein Element und kehrt zurück. Das Team setzt die Information zusammen; Tempo bleibt kontrolliert und Wege sind eindeutig getrennt.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "needs_changes",
+      "observation": "Bild 3 zeigt vier gleichzeitig laufende Personen statt der beschriebenen einzelnen merkenden Person mit wartendem Team. Im zweiten Bild wird ein Farbmarker angefasst/aufgenommen; Merken ohne Transport ist nicht eindeutig.",
+      "nextAction": "Je Team eine aktive Person zeigen, Merken und Rückkehr ohne Markertransport verdeutlichen und getrennte Hin-/Rückwege konsistent halten.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "game-carry-collect",
+      "exerciseName": "Lasten-Sammellauf",
+      "exerciseId": "1c4b6d3f-7584-4653-86d3-56367dc10ab9",
+      "localPublicPath": "public/generated/exercises/game-carry-collect/game-carry-collect.png",
+      "imageSha256": "9d2718c3202f8570ca195674958070ad602638d9105c18e33bbba3b0100636fa",
+      "comparedAssetId": "56aaf933-017b-417c-a720-186bc04aad49",
+      "comparedPromptSha256": "f1b6b93306eeededde50a194f875da064359ef61fdf4d68effe97c780e12075f",
+      "exportedAssetReferences": [
+        {
+          "assetId": "56aaf933-017b-417c-a720-186bc04aad49",
+          "promptSha256": "f1b6b93306eeededde50a194f875da064359ef61fdf4d68effe97c780e12075f"
+        },
+        {
+          "assetId": "b46723d0-4be2-43fa-8097-f4d569b377bc",
+          "promptSha256": "f1b6b93306eeededde50a194f875da064359ef61fdf4d68effe97c780e12075f"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Spielfläche, Start-/Wartezonen und Bewegungsrichtung klar markieren. Regeln und Stoppsignal vor dem Start demonstrieren.\nStarting position: Alle starten hinter der Markierung mit freiem Blick auf den eigenen Bewegungsweg und warten auf das Signal.\nOrdered execution: 1. Ziel, Spielfeld, Rollen und Stoppsignal kurz erklären; eine Proberunde ohne Zeitdruck durchführen.\n2. Pro Weg wird ein freigegebenes Objekt sicher aufgenommen, getragen und vollständig in der Teamzone abgelegt. Kein Werfen, keine instabilen Lasten und kein Überholen im engen Tragekorridor.\n3. Während der Runde Abstände halten, Rollen fair wechseln und nur freigegebene Wege bzw. Stationen benutzen.\n4. Auf Stoppsignal vollständig anhalten, Ergebnis ohne Ausscheiden auswerten und für die nächste Runde sicher zurücksetzen.",
+      "visualFinding": "needs_changes",
+      "observation": "Im ersten Bild liegt das Depot rechts; die folgenden Transportpfeile führen von der leeren linken Zone zurück zum rechten Depot. Depot und Teamziel sind damit gegenüber dem beschriebenen Sammeln vertauscht oder unklar.",
+      "nextAction": "Depot und Teamzone dauerhaft unterscheidbar markieren; Aufnahme im Depot, Transport zur Teamzone und leeren Rückweg konsistent zeigen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "cooperative-cone-collect",
+      "exerciseName": "Kooperatives Hütchensammeln",
+      "exerciseId": "6560e4aa-cf42-4b18-ad03-3578ae3261a4",
+      "localPublicPath": "public/generated/exercises/cooperative-cone-collect/cooperative-cone-collect.png",
+      "imageSha256": "e2719c928f466f780353b633a3d937d7968b7eba8881bd8383d78108ba35679e",
+      "comparedAssetId": "0d908853-26b2-4fb7-bbc3-5f1379e826a1",
+      "comparedPromptSha256": "058574dc4d62bb87b04ed67ed0f6c9bbf67df012479c7e2627ce325752202660",
+      "exportedAssetReferences": [
+        {
+          "assetId": "0d908853-26b2-4fb7-bbc3-5f1379e826a1",
+          "promptSha256": "058574dc4d62bb87b04ed67ed0f6c9bbf67df012479c7e2627ce325752202660"
+        },
+        {
+          "assetId": "22bd7544-0ff0-490d-932e-a7c7d26c2d76",
+          "promptSha256": "058574dc4d62bb87b04ed67ed0f6c9bbf67df012479c7e2627ce325752202660"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Stelle sechs Hütchen in eine Sammelzone und markiere zwei getrennte, hindernisfreie Laufwege mit je einer Ablagezone.\nStarting position: Die Gruppe steht hinter der Startlinie; pro Laufweg startet höchstens eine Person und die nächste wartet auf freie Bahn.\nOrdered execution: 1. Prüft freie, getrennte Laufwege und verteilt die Startreihenfolge.\n2. Geht oder lauft kontrolliert zu einem Hütchen und legt es in der Teamzone ab.\n3. Geht auf dem eigenen Weg zurück und startet erst, wenn die Bahn frei ist.",
+      "visualFinding": "needs_changes",
+      "observation": "Die blaue Ablagezone wechselt in Bild 2 ihre Position in die Mitte des Laufwegs; Bild 3 zeigt das Hütchen wieder nahe der Sammelzone. Ein gleichbleibendes Teamziel und freier Rückweg sind dadurch nicht eindeutig.",
+      "nextAction": "Ablagezonen in allen Frames ortsfest halten; Hütchen dort ablegen und Rückkehr erst bei freier Bahn zeigen, wartende Teammitglieder ergänzen.",
+      "approval": "not_granted"
+    }
+  ]
+}

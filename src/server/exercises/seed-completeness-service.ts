@@ -1,4 +1,5 @@
 import "server-only";
+import { runSeedReviewEvidenceQuery, type SeedReviewEvidence } from "./seed-review-evidence-core";
 
 import { ensureDatabaseReady } from "@/server/db/database-ready";
 import { withDuckDbConnection } from "@/server/db/duckdb";
@@ -12,8 +13,7 @@ export interface SeedCompletenessReport {
   readonly incompleteExercises: readonly SeedCompletenessRow[];
   readonly incompleteCatalogExercises: readonly SeedCompletenessRow[];
   readonly completenessPercent: number;
-  readonly reviewedExercises: number;
-  readonly qualityReviewOpen: number;
+  readonly reviewEvidence: SeedReviewEvidence;
   readonly structuredTranslations: StructuredTranslationReport;
 }
 
@@ -33,13 +33,7 @@ export async function getSeedCompletenessReport(): Promise<SeedCompletenessRepor
     const incompleteExercises = rows.filter((row) => row.missingFields.length > 0);
     const incompleteCatalogExercises = catalogRows.filter((row) => row.missingFields.length > 0);
     const completeExercises = rows.length - incompleteExercises.length;
-    const qualityReader = await connection.runAndReadAll(`
-      SELECT
-        count(*) FILTER (WHERE review_status='passed'),
-        count(*) FILTER (WHERE review_status<>'passed')
-      FROM exercise_seed_quality_reviews
-    `);
-    const qualityRow = qualityReader.getRows()[0] ?? [];
+    const reviewEvidence = await runSeedReviewEvidenceQuery(connection);
     const structuredReader = await connection.runAndReadAll(`
       SELECT
         count(*),
@@ -63,8 +57,7 @@ export async function getSeedCompletenessReport(): Promise<SeedCompletenessRepor
       incompleteExercises,
       incompleteCatalogExercises,
       completenessPercent: rows.length === 0 ? 0 : Math.round((completeExercises / rows.length) * 100),
-      reviewedExercises: Number(qualityRow[0] ?? 0),
-      qualityReviewOpen: Number(qualityRow[1] ?? 0),
+      reviewEvidence,
       structuredTranslations: {
         expectedLocalizedRecords: Number(structuredRow[0] ?? 0),
         completeDetailRecords: Number(structuredRow[1] ?? 0),

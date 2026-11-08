@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { DuckDBInstance } from "@duckdb/node-api";
+import { writeImmutableImageFile } from "../src/server/images/immutable-image-file.mjs";
 
 const IMAGE_PACKAGE_PROVIDER = "OCRCraft named image package";
 const IMAGE_PACKAGE_LICENSE = "OCRCraft generated asset";
@@ -139,8 +140,7 @@ async function main() {
       const bytes = await readFile(path.join(packageRoot, "images", fields.fileName));
       const metadata = imageMetadata(bytes, fields.fileName);
       const destination = path.join(imageRoot, "named", exercise.seedKey ?? exercise.id, fields.fileName);
-      await mkdir(path.dirname(destination), { recursive: true });
-      await writeFile(destination, bytes);
+      await writeImmutableImageFile(destination, bytes);
       const sha256 = createHash("sha256").update(bytes).digest("hex");
 
       await connection.run(`

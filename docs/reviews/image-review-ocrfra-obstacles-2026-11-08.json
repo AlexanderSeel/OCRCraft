@@ -1,0 +1,280 @@
+{
+  "format": "ocrcraft-visual-image-review-v1",
+  "reviewDate": "2026-11-08",
+  "reviewer": "Codex visual inspection; no trainer approval",
+  "scope": "11 current local files compared against first exported prompt per file; duplicate prompts not individually approved",
+  "sourceExport": "artifacts/codex-image-review-ocrfra-obstacles.json",
+  "sourceExportGeneratedAt": "2026-09-25T19:22:20.227Z",
+  "sourceExportSha256": "ac737a223babb002b378779e4a29cfe4b8449ef9be5c9560ba4d7046a59eba28",
+  "databaseMutated": false,
+  "counts": {
+    "needs_changes": 6,
+    "trainer_review_required": 5
+  },
+  "items": [
+    {
+      "seedKey": "club-weaver",
+      "exerciseName": "Weaver – OCRFRA",
+      "exerciseId": "daeb9722-2a45-4aa7-ab83-9460efc89652",
+      "localPublicPath": "public/generated/exercises/club-weaver/club-weaver.png",
+      "imageSha256": "4c067ea8a3848bab0fa21662eb825d2494b87122d83d646a0075530badfb2e55",
+      "comparedAssetId": "debac2ac-9af4-48a5-8bd9-b230b6351a31",
+      "comparedPromptSha256": "a92c2b54a9b3713ae41adbbab8e69a1b6bd0e9b9d2ba2b2de4718356f3d985c6",
+      "exportedAssetReferences": [
+        {
+          "assetId": "debac2ac-9af4-48a5-8bd9-b230b6351a31",
+          "promptSha256": "a92c2b54a9b3713ae41adbbab8e69a1b6bd0e9b9d2ba2b2de4718356f3d985c6"
+        },
+        {
+          "assetId": "65b04271-f6a0-44e1-9414-e8e83e01dc7a",
+          "promptSha256": "19a443f8eb15145ca49745b854979d31b6bc240eaba023070165955106f0236c"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Weaver mit Matten, Endmarker und freiem Abstieg.\nStarting position: Ersten Kontaktpunkt im Stand sichern.\nOrdered execution: 1. Ersten Griff und Tritt aus sicherem Stand sichern.\n2. Kontaktpunkt für Kontaktpunkt durch den Weaver bewegen.\n3. Am Endmarker kontrolliert absteigen.",
+      "visualFinding": "needs_changes",
+      "observation": "Die Trittstücke unter beiden Füßen schweben ohne erkennbare Befestigung. Bild 3 zeigt weiterhin Geräte-/Fußkontakte statt den beschriebenen sicheren Abstieg.",
+      "nextAction": "Tatsächliche Weaver-Geometrie anhand Vereinsreferenz festlegen; alle Tritte konstruktiv verbinden und Bodenkontakt am Ausgang zeigen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-tire-obstacle-transit",
+      "exerciseName": "Reifen-Hindernisübergang – OCRFRA",
+      "exerciseId": "b8affe2b-3571-45ba-b582-54c9449bc725",
+      "localPublicPath": "public/generated/exercises/club-tire-obstacle-transit/club-tire-obstacle-transit.png",
+      "imageSha256": "2d719a73e48b9799f8338bbbf30e28ebd64b106294add08ecb8bb1bd5c7b294f",
+      "comparedAssetId": "542bbd58-fee6-4193-9eea-e3bb63de11f3",
+      "comparedPromptSha256": "b11d58690353084d942e5bc7bff8860c1f816e58acc4ac9456d3a3afa11daa6a",
+      "exportedAssetReferences": [
+        {
+          "assetId": "542bbd58-fee6-4193-9eea-e3bb63de11f3",
+          "promptSha256": "b11d58690353084d942e5bc7bff8860c1f816e58acc4ac9456d3a3afa11daa6a"
+        },
+        {
+          "assetId": "5262406f-8b8a-48c1-9804-ee02a4bb0e11",
+          "promptSha256": "b11d58690353084d942e5bc7bff8860c1f816e58acc4ac9456d3a3afa11daa6a"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Freigegebene Reifen, trockener Untergrund und markierter Ausgang.\nStarting position: Vor dem ersten Reifen stabil stehen.\nOrdered execution: 1. Reifenlage und nächste Trittfläche prüfen.\n2. Einen Reifen nach dem anderen kontrolliert betreten oder übersteigen.\n3. Letzten Reifen verlassen, stabilisieren und aussteigen.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Reifenprüfung, einzelne Tritte und ein begonnener Ausstieg sind erkennbar. Im letzten Bild bleibt ein Fuß im Reifen; die vollständig verlassene Station ist noch nicht gezeigt.",
+      "nextAction": "Sichere Trittflächen, fixierte Reifenlage und vollständigen Ausstieg anhand des realen Aufbaus prüfen; Endpose gegebenenfalls ergänzen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-slackline",
+      "exerciseName": "Slackline – OCRFRA",
+      "exerciseId": "421f1f30-e349-4855-bc0d-fb3f2ec8c01c",
+      "localPublicPath": "public/generated/exercises/club-slackline/club-slackline.png",
+      "imageSha256": "d98d3b28780dcee0f3c3d840c627f1df9801565196064e86607b1c100b71d2cf",
+      "comparedAssetId": "d580f903-beeb-46a9-909c-b0ce9938832f",
+      "comparedPromptSha256": "16a8b037b4fd67b67e7d0d086444b9fe2822c1114e3a0e8e3d829e9ed9ff0aff",
+      "exportedAssetReferences": [
+        {
+          "assetId": "d580f903-beeb-46a9-909c-b0ce9938832f",
+          "promptSha256": "16a8b037b4fd67b67e7d0d086444b9fe2822c1114e3a0e8e3d829e9ed9ff0aff"
+        },
+        {
+          "assetId": "7889be3f-f021-483c-90e7-7ca76498e615",
+          "promptSha256": "6ef26753e0a7bd09122261d344f47dc562531b4c3837b1dcf49b3d747bdc2e2c"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Befestigung, Spannung, Fallschutz und Seitenzone prüfen.\nStarting position: Mit Trainerhilfe aufsteigen.\nOrdered execution: 1. Befestigung und Spannung prüfen lassen.\n2. Mit Hilfe aufsteigen und klein verlagern.\n3. Seitlich absteigen und Bahn freigeben.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Trainer prüft die Ratsche und steht anschließend neben der balancierenden Person; ein seitlicher Abstieg ist dargestellt. Die tatsächliche Hilfe beim Aufsteigen und Fallschutz sind nicht eindeutig gezeigt.",
+      "nextAction": "Hilfeform, Bodenhöhe, Befestigung und Fallschutz anhand der Vereinsstation bestätigen; Illustration bei Bedarf konkretisieren.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-rotating-rig-elements",
+      "exerciseName": "Rotierende Rig-Elemente – OCRFRA",
+      "exerciseId": "279cf676-49c7-4b71-974e-28b39eb43148",
+      "localPublicPath": "public/generated/exercises/club-rotating-rig-elements/club-rotating-rig-elements.png",
+      "imageSha256": "651329382ecbb5521b9278961b7e7a4596332c3a36ff989488f94ed3735d9347",
+      "comparedAssetId": "7808f3b4-5e39-4df6-9fce-f9b1e3f76aad",
+      "comparedPromptSha256": "b11f383af4f256bd5c2598fe3e468a88eea22ee3772cdb1364d88e83683ba09d",
+      "exportedAssetReferences": [
+        {
+          "assetId": "7808f3b4-5e39-4df6-9fce-f9b1e3f76aad",
+          "promptSha256": "b11f383af4f256bd5c2598fe3e468a88eea22ee3772cdb1364d88e83683ba09d"
+        },
+        {
+          "assetId": "812666ba-f1dd-428e-98e1-bfc4e64ebdb1",
+          "promptSha256": "910f5e608a072cbb4bd86d42be79d214a4e18d83d3126e569373e4f7ac980519"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Geprüfte Elemente, Fallschutz und gesperrte Pendelzone.\nStarting position: Seitlich warten und erst auf Freigabe greifen.\nOrdered execution: 1. Rotation und freie Pendelzone prüfen.\n2. Ein Element greifen und die Bewegung kontrolliert mitgehen.\n3. Am markierten Ausgang mit Bodenkontakt lösen.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Ein rotierendes Ringelement, Warte-/Pendelzone und Lösen nach Bodenkontakt sind dargestellt. Die zugelassene reale Elementform lässt sich aus dem allgemeinen Katalogtext nicht bestimmen.",
+      "nextAction": "Mit dem tatsächlich freigegebenen Rotationselement vergleichen; geschlossenen Griff, Fallschutz und gesperrte Pendelzone prüfen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-olympus",
+      "exerciseName": "Olympus – OCRFRA",
+      "exerciseId": "19c04c5e-1edb-4dc8-ba18-a08d9be9e3ae",
+      "localPublicPath": "public/generated/exercises/club-olympus/club-olympus.png",
+      "imageSha256": "06e072346244ddecc7dd06204742d08204ac14dc5051a36a24e87b183c998aca",
+      "comparedAssetId": "0c899ae1-8bfe-4127-a91f-ec1da796f466",
+      "comparedPromptSha256": "6ad3b8affad26c9aba4025c0408ee1a4be34f70931069e889a612cc7e93bbd31",
+      "exportedAssetReferences": [
+        {
+          "assetId": "0c899ae1-8bfe-4127-a91f-ec1da796f466",
+          "promptSha256": "6ad3b8affad26c9aba4025c0408ee1a4be34f70931069e889a612cc7e93bbd31"
+        },
+        {
+          "assetId": "4de8147d-8181-42ef-a7bf-fbbcea34cb3f",
+          "promptSha256": "3d0f93c63e814bec536ecd2898a40d7f50c47c093cd7920d570fe05d176a1200"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Nur geprüfter Aufbau mit Fallschutz und freier Pendelzone.\nStarting position: Seitlich warten und ersten Griff aus sicherem Stand setzen.\nOrdered execution: 1. Wartezone, Richtung und ersten Griff prüfen.\n2. Kontaktpunkt für Kontaktpunkt mit geschlossenem Griff weiterarbeiten.\n3. Stabil aufsetzen und seitlich aussteigen.",
+      "visualFinding": "needs_changes",
+      "observation": "Gezeigt wird ein Überkopf-Hangelrig mit kleinen Griffen. Im letzten Bild hängt die Person weiter mit Füßen über der Matte statt stabil aufzusetzen und seitlich auszusteigen.",
+      "nextAction": "Ausgang mit belastbarem Bodenkontakt zeichnen; dargestellte Hindernisform vor Ersatz anhand einer echten Olympus-Vereinsreferenz klären.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-multirig-ring-traverse",
+      "exerciseName": "Multirig-Ringtraverse – OCRFRA",
+      "exerciseId": "d4eaace5-87d9-4778-8338-bd0202cea180",
+      "localPublicPath": "public/generated/exercises/club-multirig-ring-traverse/club-multirig-ring-traverse.png",
+      "imageSha256": "ee8854d088bc2333a7f3b3b24a55a6e579260098170c3c8a092edcb77a8bd523",
+      "comparedAssetId": "94324498-4eba-4bcc-bff7-4a410c4ada7f",
+      "comparedPromptSha256": "69bc2cba2307f31bfee6092dfbc0e5ce8cbe9450b9a073c6f092e7e3174e82eb",
+      "exportedAssetReferences": [
+        {
+          "assetId": "94324498-4eba-4bcc-bff7-4a410c4ada7f",
+          "promptSha256": "69bc2cba2307f31bfee6092dfbc0e5ce8cbe9450b9a073c6f092e7e3174e82eb"
+        },
+        {
+          "assetId": "65025635-e1e8-4cb7-8f87-a30beac4a42c",
+          "promptSha256": "69bc2cba2307f31bfee6092dfbc0e5ce8cbe9450b9a073c6f092e7e3174e82eb"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Ringe, Fallschutz, Richtung und Ein-/Ausstieg markieren.\nStarting position: Ersten Ring aus sicherem Stand greifen.\nOrdered execution: 1. Ersten Ring aus sicherem Stand greifen.\n2. Ring für Ring mit geschlossenem Griff weiterziehen.\n3. Am Ausgang stabil aufsetzen und seitlich aussteigen.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Ringgriffe, Weiterhangeln und beidbeiniger Bodenkontakt vor dem seitlichen Ausstieg sind erkennbar. Die Zuordnung zu aufeinanderfolgenden Ringen bleibt wegen wechselnder Abstände schwer lesbar.",
+      "nextAction": "Reale Ringabstände und Aufhängungen, geschlossenen Griff sowie klare Vorwärtsfolge und Ein-/Ausstiegsmarkierung bestätigen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-irish-table",
+      "exerciseName": "Irish Table – OCRFRA",
+      "exerciseId": "e7e7bcd4-2c8e-4cbe-8624-cc12243c4cc8",
+      "localPublicPath": "public/generated/exercises/club-irish-table/club-irish-table.png",
+      "imageSha256": "ead5e5dd6bd8a93e404de43a3c536e0816a35ebc19127911919f419d304bab5e",
+      "comparedAssetId": "d6e8e660-c34c-4f37-a8bd-a3dfcee88cd0",
+      "comparedPromptSha256": "7d627f40b9752b993c352c0c56dca7bf2bcdc2f40c8cf1f641fe1ef63086eaed",
+      "exportedAssetReferences": [
+        {
+          "assetId": "d6e8e660-c34c-4f37-a8bd-a3dfcee88cd0",
+          "promptSha256": "7d627f40b9752b993c352c0c56dca7bf2bcdc2f40c8cf1f641fe1ef63086eaed"
+        },
+        {
+          "assetId": "3c03fb40-0ef8-40e8-b663-c38bf9d390df",
+          "promptSha256": "7d627f40b9752b993c352c0c56dca7bf2bcdc2f40c8cf1f641fe1ef63086eaed"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Freigegebener Table mit Matten und markierten Zonen.\nStarting position: Warte hinter der Linie und prüfe den Einstieg.\nOrdered execution: 1. Warteposition, Hindernis und Landefläche prüfen.\n2. Kontaktpunkte setzen und kontrolliert übersteigen.\n3. Stabil landen, seitlich aussteigen und Bahn freigeben.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Table-Aufbau mit Matten, Hand-/Beinkontakt beim Übersteigen und eine Landepose sind erkennbar. Der Transfer über die Oberseite ist nur teilweise dargestellt.",
+      "nextAction": "Mit tatsächlicher Table-Höhe/-Geometrie und erlaubter Technik vergleichen; sicheren Transfer und Landefläche bestätigen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-inverse-wall",
+      "exerciseName": "Inverse Wand – OCRFRA",
+      "exerciseId": "66a30e32-c724-4ee3-828b-9ea5f73206aa",
+      "localPublicPath": "public/generated/exercises/club-inverse-wall/club-inverse-wall.png",
+      "imageSha256": "943d3aba5311c050a0f86ceac692d40c8df43a5e064a80fb71b05df631936de5",
+      "comparedAssetId": "3b9151d9-9810-4ce4-ae72-9847ee36c5dc",
+      "comparedPromptSha256": "f6d20cfdf06745e87e6fbc5d1feae157d6147ec0eba1890aca6b7b88dded3d80",
+      "exportedAssetReferences": [
+        {
+          "assetId": "3b9151d9-9810-4ce4-ae72-9847ee36c5dc",
+          "promptSha256": "f6d20cfdf06745e87e6fbc5d1feae157d6147ec0eba1890aca6b7b88dded3d80"
+        },
+        {
+          "assetId": "e0b56281-09c6-4a60-80c5-bc3bad95ebfe",
+          "promptSha256": "fdb85cf45d1b18221dd719c7a97378be8a3d6dbc19c24edd8854ca6c7cd04900"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Fallschutz, Ein-/Ausstieg und Trainerposition festlegen.\nStarting position: Seitlich warten und Kontaktpunkte prüfen.\nOrdered execution: 1. Einstiegsrichtung und Kontaktpunkte prüfen.\n2. Gewicht langsam über Hände und Füße verlagern.\n3. Stabil landen und seitlich verlassen.",
+      "visualFinding": "needs_changes",
+      "observation": "Die gezeichnete Wand bleibt senkrecht; eine inverse Neigung ist nicht erkennbar. Die Füße in Bild 2 stehen an einer glatten Fläche ohne klare Tritte; Bild 3 führt in den Bereich der rückwärtigen Streben.",
+      "nextAction": "Reale inverse Geometrie, tragfähige Kontakte und einen von Stützstreben freien Ausgang anhand der Vereinsreferenz zeichnen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-escaladierwand",
+      "exerciseName": "Eskaladierwand – OCRFRA",
+      "exerciseId": "c9a37c2d-ab3d-4d22-961a-71737ddf59b5",
+      "localPublicPath": "public/generated/exercises/club-escaladierwand/club-escaladierwand.png",
+      "imageSha256": "1338ab3ea12055dc776b60cd2f3820f6500824efa38b7ee5d2cdc98c804f2842",
+      "comparedAssetId": "e960dc67-4f61-4005-9122-ac410c3622e1",
+      "comparedPromptSha256": "7274d840ab891266a8df566d2a885a94b25230cd8d8f317e65dea34073abf374",
+      "exportedAssetReferences": [
+        {
+          "assetId": "e960dc67-4f61-4005-9122-ac410c3622e1",
+          "promptSha256": "7274d840ab891266a8df566d2a885a94b25230cd8d8f317e65dea34073abf374"
+        },
+        {
+          "assetId": "3aee304c-b242-4999-b1cb-98530c1fd50a",
+          "promptSha256": "3384804b4f4f1c76e76c1451aa9a97c7bbc0139a2724077c725a5a7778a07bf1"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Matten, Wartezone und freie Auf-/Abstiegsseite markieren.\nStarting position: Gehend zur Wand und ersten Tritt prüfen.\nOrdered execution: 1. Oberfläche, Tritte und Landefläche prüfen.\n2. Kontaktpunkt für Kontaktpunkt aufsteigen.\n3. Kontrolliert absteigen und Bahn freigeben.",
+      "visualFinding": "needs_changes",
+      "observation": "Der Abwärtspfeil im letzten Bild ersetzt den abgeschlossenen Abstieg: beide Füße bleiben weit über dem Boden. Die dargestellten Griffe und die seitliche Ausgangszone werden nicht bis zum Bodenkontakt durchlaufen.",
+      "nextAction": "Kontrollierten Abstieg über die vorgesehenen Kontakte bis zum Boden und anschließendes Freigeben der Bahn zeigen; realen Aufbau abgleichen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-balance-beam",
+      "exerciseName": "Balancebalken – OCRFRA",
+      "exerciseId": "b95b3eff-fb50-4a44-a27d-312ccef9daa6",
+      "localPublicPath": "public/generated/exercises/club-balance-beam/club-balance-beam.png",
+      "imageSha256": "56227d9ae1d4945cdbbe0d85fb495f68fd9f1609f96ae52a96cf94722dd5cbb6",
+      "comparedAssetId": "ec95fa59-7775-4057-8d1e-b3f48e8b5f28",
+      "comparedPromptSha256": "7230a1931a04165e43ea792f602f4bc4f5be3eb0fb526dc33b5e4175354cd1aa",
+      "exportedAssetReferences": [
+        {
+          "assetId": "ec95fa59-7775-4057-8d1e-b3f48e8b5f28",
+          "promptSha256": "7230a1931a04165e43ea792f602f4bc4f5be3eb0fb526dc33b5e4175354cd1aa"
+        },
+        {
+          "assetId": "4194e110-98e0-4a99-b1b0-b5cd52196d0a",
+          "promptSha256": "72e13a0ebe5778da0439543400eb3272d00882847bccf750a955f80d73ae451a"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Rutschfester Boden, Seitenzone und Endmarker vorbereiten.\nStarting position: Vor dem Aufsteigen die Bahn prüfen.\nOrdered execution: 1. Bahn und Endmarker prüfen.\n2. Schritt für Schritt mit Blick voraus gehen.\n3. Seitlich absteigen und stabilisieren.",
+      "visualFinding": "needs_changes",
+      "observation": "Die Person in Bild 2 blickt zur vorderen Bildkante, während der Längspfeil in die Gegenrichtung zum hinteren Endmarker zeigt. Der seitliche Abstieg in Bild 3 liegt wieder am vorderen Ende.",
+      "nextAction": "Blick, Gehrichtung, Start und Endmarker in allen Frames konsistent ausrichten; seitliches Absteigen am erreichten Ende zeigen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "club-anchor-chain-drag",
+      "exerciseName": "Ankerketten ziehen – OCRFRA",
+      "exerciseId": "96206f8b-b5a2-413c-9d25-463e55bffcf0",
+      "localPublicPath": "public/generated/exercises/club-anchor-chain-drag/club-anchor-chain-drag.png",
+      "imageSha256": "f6b802ebe2a8b30a0f989b5c130d572b8966551ea3e5a6b1c1adca744072b3a3",
+      "comparedAssetId": "80eb1275-cae1-4826-8f88-204d9107e8e9",
+      "comparedPromptSha256": "ec2a7cf5cab17c6b1cd35f9113cffd6c55ef6bba093832fe7d0cfd8ca3b4797e",
+      "exportedAssetReferences": [
+        {
+          "assetId": "80eb1275-cae1-4826-8f88-204d9107e8e9",
+          "promptSha256": "ec2a7cf5cab17c6b1cd35f9113cffd6c55ef6bba093832fe7d0cfd8ca3b4797e"
+        },
+        {
+          "assetId": "3fada744-3101-4ebf-a88f-39325fd599dc",
+          "promptSha256": "ec2a7cf5cab17c6b1cd35f9113cffd6c55ef6bba093832fe7d0cfd8ca3b4797e"
+        }
+      ],
+      "expectedGermanExecution": "Setup: Verbindung, Zugbahn und Rücklaufzone markieren.\nStarting position: Stabil hinter der Zuglinie stehen.\nOrdered execution: 1. Verbindung und Zugbahn prüfen.\n2. Aus Beinen und Hüfte gleichmäßig ziehen.\n3. Spannung lösen und Kette seitlich ablegen.",
+      "visualFinding": "needs_changes",
+      "observation": "Die Kette ist in Bild 1 am Bodenanker befestigt, in Bild 2 und 3 fehlt diese Verbindung. Dadurch wechselt der Aufbau vom befestigten Zug zur frei beweglichen Kette.",
+      "nextAction": "Tatsächliches bewegliches Last-/Kettensystem festlegen und durchgängig zeigen; keinen Wechsel zwischen festem Anker und Drag erfinden.",
+      "approval": "not_granted"
+    }
+  ]
+}

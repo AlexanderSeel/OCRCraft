@@ -79,6 +79,12 @@ Im Produktionsmodus ist eine HTTPS-`OCRCRAFT_IMAGE_PUBLIC_BASE_URL` erforderlich
 
 Der Storage führt für Diagnose/Wartung einen Bucket-`HeadBucket`-Check aus und inventarisiert Objekte paginiert. Neue Objekte erhalten Cache-Control, OCRCraft-Metadaten und optional serverseitige S3-Verschlüsselung. Bei `aws:kms` muss der App-Principal zusätzlich Zugriff auf den konfigurierten KMS-Key besitzen.
 
+Neue Bildobjekte werden ohne Überschreiben vorhandener Ziele veröffentlicht. Dateisystem-Generierung und benannter Paketimport benötigen Hardlink-Unterstützung im Medienverzeichnis (beispielsweise NTFS); bei einer Kollision oder fehlender Unterstützung bricht die Speicherung ab. Es gibt keinen unsicheren Überschreib-Fallback. Ersatzbilder aus der Generierung erhalten eine neue Asset-ID und einen eigenen Dateinamen. Beim Paketimport einen neuen Dateinamen verwenden, wenn ein vorhandener Pending-Kandidat bewusst ergänzt werden soll.
+
+S3-Schreibzugriffe verwenden `If-None-Match: *` gemäß [AWS-Dokumentation für bedingte Schreibzugriffe](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html). Kompatible Endpunkte müssen diese Bedingung unterstützen und einhalten; HTTP 412 bei einem vorhandenen Objekt wird als Fehler weitergegeben. Der AWS-Request und die Fehlerweitergabe sind automatisiert geprüft; ein Live-Test des individuell konfigurierten S3-Endpunkts bleibt Teil seiner Betriebsabnahme.
+
+`npm run data:audit-startup` liest beide Katalogdatenbanken und prüft lokale Dateien auf Existenz, gespeicherte/tatsächliche SHA-256 sowie gemeinsame Dateireferenzen. Der Bericht unter `artifacts/startup-catalog-audit/` ändert keine Datenbank-/Dateiinhalte und lädt keine Remote-Medien herunter. Hashabweichungen vor Freigabe einzeln klären; nicht einfach den gespeicherten Hash oder die Datei überschreiben, um einen grünen Prüfzähler zu erzeugen.
+
 Die S3-Zugangsdaten können über `AWS_ACCESS_KEY_ID` und `AWS_SECRET_ACCESS_KEY` oder über die normale AWS Credential Chain bereitgestellt werden. Niemals S3-Secrets in DuckDB-Exporte oder Git übernehmen.
 
 ## Backup und Restore
@@ -104,6 +110,21 @@ Die eingefrorene v1-Baseline liegt in `src/server/db/initial-v1.sql`. Migratione
 5. Bei Bedarf im Tab **Datenbank** beide Suchindizes neu aufbauen.
 
 Portable JSON-Exporte sind für ausgewählte strukturierte Bereiche gedacht. Der Import validiert Schema, Tabellen und Spalten vor einer Transaktion und ist auf Super-Admins begrenzt. Binärmedien bleiben bis zur optionalen Medienexport-Funktion über Quellen- und Prüfsummenmetadaten referenziert.
+
+## Technisch veraltete Medienkandidaten
+
+`npm run media:reconcile-stale` erstellt nur einen Preview in `artifacts/media-retirement/preview.json`. `npm run media:reconcile-stale -- --apply` erstellt vor Änderungen einen Checkpoint-Backup-Snapshot neben der Arbeitsdatenbank, prüft die Kandidaten unter derselben prozessübergreifenden Dateisperre erneut und verwirft ausschließlich nicht primäre, ungeprüfte Pending-Kandidaten mit abweichendem lokalen Datei-Hash und einem passenden hashkonformen überlebenden Kandidaten derselben Übung. Aktive Bildjobs blockieren die Aussonderung. Der Backup wird unter Windows bei geschlossenem DuckDB-Dateihandle kopiert; die Anwendungssperre bleibt dabei gehalten.
+
+Die Aussonderung löscht keine Medien-/Trainings-/Jobrecords oder Bilddateien, verändert keine Originalhashes und vergibt keine Freigaben. Sie ergänzt je Kandidat eine technische Notiz und einen System-Auditeintrag. Der Ergebnisbericht nennt den Backup-Pfad. Ein erneuter Preview sollte keine bereits verworfenen Kandidaten erneut anbieten. Verworfene Bilder sind in der normalen Übungsmedienauswahl ausgeschlossen; die Administration bewahrt die Historie.
+
+Um DuckDB-Fremdschlüssel auf Generation-Jobs zu erhalten, wird der nicht eindeutige Reviewindex unter der Dateisperre vorübergehend entfernt und anschließend wiederhergestellt. Die Status-/Notiz-/Auditänderungen bilden eine Transaktion; die Index-DDL muss außerhalb dieser Transaktion erfolgen. Bei einem harten Prozessabbruch kann der Index fehlen, ohne dass Fremdschlüssel gelöscht werden. Nach einer solchen Unterbrechung Backup/Ergebnis prüfen und gegebenenfalls folgenden Index in einer kontrollierten Wartung wiederherstellen:
+
+```sql
+CREATE INDEX IF NOT EXISTS exercise_media_assets_review_idx
+ON exercise_media_assets(review_status, generation_status);
+```
+
+Der read-only Integritätsaudit unterscheidet rohe historische Hashabweichungen von nicht verworfenen Kandidaten. Verworfene Altzuordnungen dürfen deshalb weiterhin als historische Abweichungen erscheinen. Vor einer bewussten Reaktivierung müssen Dateibytes, Hash, Übungszuordnung und Review erneut geprüft werden.
 
 ## Geheimnisse
 

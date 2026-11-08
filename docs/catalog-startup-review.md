@@ -129,3 +129,50 @@ Der zusätzlich geprüfte Legacy-Bestand zeigt 177 `compat-v1`-Reviews. Diese wu
 Die Browserverifikation deckte auf, dass die beiden Offline-Komponisten und der kanonische KI-Komponist das gefilterte `minAge` nicht als `minimumAge` in die Übungsreferenz übernahmen. Diese Information wird nun in allen drei Pfaden erhalten; dadurch kann auch die spätere Domänenvalidierung den Wert prüfen und die Vorschau ihn nachvollziehbar ausgeben.
 
 Für fünfjährige Teilnehmende enthält der aktuelle Startkatalog keinen geeigneten Metadaten-Pool. Beide Generatorwege melden deshalb ausdrücklich, dass kein passender Pool verfügbar ist; es wird kein Vorschlag erzeugt und nicht auf Imports ohne Altersangabe ausgewichen. Das ist eine offene inhaltliche Kataloglücke, kein Grund, vorhandene Mindestalter automatisch herabzusetzen. Der Erfolgsfall der Kids-Regression prüft nun einen tatsächlich abgedeckten Altersbereich und verlangt explizite Alterswerte im Ergebnis.
+
+
+## Nachbereitung: transparente Reviewanzeige in der Administration
+
+Die bisherige Zeile „Fachreview: … bestanden“ zählte `compat-v1` als bestanden und ließ Seeds ohne Reviewdatensatz unberücksichtigt. Die Administration zeigt jetzt getrennt versionierte Passed-Einträge, Kompatibilitätsmarkierungen, Nachbearbeitung/unklare Nachweise und fehlende Revieweinträge. Unversionierte Passed-Einträge werden nicht als versionierte Nachweise gezählt; Importdatensätze ohne Seed-Schlüssel fließen nicht in diese Seed-Metrik ein.
+
+Im aktuellen Startbestand sind das 14 versionierte Einträge, 177 Kompatibilitätsmarkierungen, 0 Needs-work-/unklare Einträge und 5 Seeds ohne Revieweintrag. Auch die 14 Einträge werden ausdrücklich nicht als Nachweis aktueller menschlicher Inhalts-/Bildfreigabe dargestellt. Die Basisfeld-Vollständigkeit bleibt eine separate Metrik. Die neue Darstellung besitzt DE/EN-Texte und eine mobile Tabellenersatzdarstellung mit klaren Beschriftungen.
+
+Verifikation der Metadaten-Eligibility und Reviewanzeige: 305 Unit-/Integrationstests (87 Dateien), vier Planner-Browserchecks inklusive erfolgreicher Kids-Altersprüfung und sicherer Alters-fünf-Ablehnung für KI/Offline sowie eine mobile DE/EN-Adminprüfung bestanden. Produktionsbuild, TypeScript, UI- und Architekturgates sind grün; Lint enthält nur die bekannte bestehende Warnung. [Reviewanzeige mobil](../artifacts/ui-ux-review/seed-review-evidence-mobile.png). Der Audit exportiert nun außerdem die Reviewversion je Eintrag, sodass Kompatibilitätslabels bei Einzelreviews nachvollziehbar bleiben.
+
+
+## Nachbereitung: erste visuelle Medienprüfung
+
+Das [Einzelpersonen-Review vom 8. November 2026](./reviews/image-review-single-subject-2026-11-08.md) dokumentiert 17 direkt angesehene lokale Dateien mit Soll-Schritten und konkreten Befunden. Zehn benötigen Änderungen, sieben weitere Trainerprüfung; keine Freigabe und keine Datenbankmutation. Beispiele sind Hand am Gesicht statt Schulterkontakt, wiederholte statt gegenüberliegender 90/90-Endposition und widersprüchliche Bewegungspfeile. Die JSON-Prüfliste bindet jeden Befund an Datei-/Prompt-Hashes und exportierte Asset-IDs.
+
+Die drei vorhandenen Reviewexporte sind historische Arbeitsstände: 84 Referenzen zeigen auf 42 Pfade, alle doppelt referenziert; an 24 Pfaden unterscheiden sich die Prompts. Deshalb keine unabhängigen Bildvarianten oder heutigen Pending-Zähler daraus ableiten. Aktuelle Zuordnung und Promptkonflikte vor Freigabe auflösen; bestehende Referenzen nicht ungeprüft löschen. Die 25 OCRFRA-/Spiele-/Partnerdateien wurden inzwischen ebenfalls erstmals visuell geprüft; siehe nachfolgenden Stand. Übrige Katalogmedien bleiben offen.
+
+
+## Nachbereitung: alle drei P1-Bildbatches erstmals visuell geprüft
+
+Die [Reviewübersicht mit Einzelberichten](./reviews/README.md) umfasst jetzt alle 42 lokalen Dateien der drei historischen Exporte: 27 mit Änderungsbedarf, 15 mit weiterer Trainerprüfung, keine Freigabe. Im Hindernisbatch sind es 6/5, bei Spielen/Partnern 11/3. Sichtbare Befunde betreffen unter anderem schwebende Weaver-Tritte, wechselnde Kettenverbindungen, fehlende Bodenkontakte, widersprüchliche Rücklaufpfeile und unklare Spielrollen/-zonen. Die realen Club-Geometrien wurden dabei noch nicht anhand aktueller Vor-Ort-Referenzen bestätigt.
+
+Die 24 unterschiedlichen Promptpaare unterscheiden sich ausschließlich im Satz zur erwachsenen Demonstrator-Präsentation; nach dessen Normalisierung sind die Paare identisch. Keine abweichende Übungsanleitung aus diesen Unterschieden ableiten. Jede Datei ist doppelt referenziert, deshalb aktuelle DB-Zuordnung und Primärmedium vor Ersatz erneut prüfen. Alle 42 Datei-Hashes, 84 exportierten Asset-/Prompt-Referenzen und Berichtszähler wurden auf Konsistenz geprüft. Dieser Schritt änderte nur Reviewdokumente; keine Medien, Datenbankdaten oder Freigabestatus.
+
+
+## Nachbereitung: Schutz vorhandener Medienbytes und aktueller Integritätsaudit
+
+Dateisystem-Generierung und benannter Paketimport nutzen eine gemeinsame atomare Veröffentlichung ohne Überschreiben; vollständige temporäre Bytes werden per Hardlink veröffentlicht, bestehende Zielnamen führen zu einem Fehler. Die Generierung behält ihre asset-spezifischen Dateinamen. S3-Neuschreibzugriffe setzen `If-None-Match: *`; ein Kollisionsfehler wird nicht durch einen unbedingten Schreibzugriff umgangen. Der Import überspringt weiterhin bekannte bzw. freigegebene Medien; ein nicht in der Datenbank erfasstes Dateiziel wird ebenfalls geschützt.
+
+`data:audit-startup` vergleicht jetzt aufgezeichneten und tatsächlichen SHA-256 lokaler Medien und inventarisiert gemeinsame reale Dateipfade. Remote-Medien werden nicht heruntergeladen; Pfadgrenzen werden vor dem Lesen inklusive aufgelöster Dateipfade geprüft. Der [aktuelle Integritätsbericht](./reviews/media-integrity-2026-11-08.json) zeigt im Arbeitsbestand 42 gemeinsame Dateigruppen und 42 Hashabweichungen, sämtlich Pending-Records. Alle 42 explizit in den Bildberichten verglichenen Asset-IDs sind hashkonform. Der Initial-Snapshot hat null gemeinsame Dateigruppen, null fehlende lokale Dateien und null Hashabweichungen. Beide Datenbanken wurden nur lesend geöffnet.
+
+Diese Sicherung schützt den Erzeugungs-/Importpfad; manuelle Dateiänderungen, externe Storage-Änderungen und fachliche Änderungsinvalidierung sind damit nicht vollständig gelöst. Die 42 alten Records werden nicht gelöscht oder durch Umschreiben der Hashes scheinbar repariert. Vor einer fachlichen Freigabe müssen aktuelle Zuordnung, primäres Medium, unveränderte Dateibytes und tatsächliche Darstellung zusammen geprüft werden.
+
+Verifikation dieses Schritts: 312 Unit-/Integrationstests in 89 Dateien bestanden, einschließlich paralleler Dateikollision, unverändertem Originalinhalt, echtem Paketimport-Abbruch ohne Überschreiben und S3-412-Weitergabe ohne unbedingten Retry. TypeScript, Produktionsbuild, UI- und Architekturgates bestanden. Lint: keine Fehler, nur die bekannte bestehende `index`-Warnung in `training-excel-service.ts:248`; alle neu geänderten Implementierungs-/Testdateien separat ohne Lintbefund. Keine UI-Verhaltensänderung; keine zusätzlichen Browsertests in diesem Schritt.
+
+
+## Nachbereitung: 42 alte Medienzuordnungen technisch ausgesondert
+
+Die [abgeschlossene Aussonderung](./reviews/media-retirement-2026-11-08.json) wurde zunächst auf einer Datenbankkopie und anschließend mit Checkpoint-Backup auf dem Arbeitsbestand ausgeführt. 42 nicht primäre, ungeprüfte Pending-Sequenzen mit falschem Datei-Hash und einem passenden erhaltenen Kandidaten derselben Übung sind nun `rejected`. Die 36 verknüpften Generation-Jobs behalten ihre Asset-IDs. Kein Bild, Originalhash, Primärflag, Katalog-, Trainings-, Versions- oder Nutzerrecord wurde gelöscht/ersetzt; alle nicht betroffenen Medienrecords sind unverändert. Je Kandidat dokumentiert ein neuer technischer System-Auditeintrag die Entscheidung. Die Datenbank-/Medienprüfung gegen den Backup bestätigt diese Grenzen; der Initial-Snapshot bleibt unverändert.
+
+Der Arbeitsbestand enthält weiterhin 346 Medienrecords: 284 Pending statt zuvor 326. Unter nicht verworfenen Medien bestehen null Hashabweichungen und null gemeinsame Dateigruppen. Roh bleiben die 42 historischen Hashabweichungen nachvollziehbar; der Audit weist sie separat als verworfen aus. Ein erneuter Preview findet null Kandidaten. Verworfene Bilder werden nicht mehr in der normalen Übungsauswahl angeboten; ein direkter Serverrequest zur Primär-Auswahl wird ebenfalls abgewiesen. Die 27 sichtbaren Änderungsbefunde und 15 weiteren Trainerprüfungen sind weiterhin offen; diese technische Bereinigung erteilt keine Bildfreigabe.
+
+Der neue CLI-Einstieg `media:reconcile-stale` erzeugt standardmäßig nur einen Preview; `--apply` sichert vor der Transaktion. Die [Betriebsdokumentation](./operations.md) beschreibt Sperre, Windows-Backup und Wiederherstellung des vorübergehend entfernten nicht eindeutigen Reviewindexes nach einer harten Unterbrechung. Die reguläre Erfolgs- und Rollbackprüfung belegt erhaltene Job-Fremdschlüssel und wiederhergestellten Index; es werden keine Joblinks als Workaround gelöscht.
+
+Verifikation: 329 Unit-/Integrationstests in 92 Dateien, TypeScript, Architektur-/UI-Gates und Lint ohne neue Befunde bestanden. Der neue SQL-Regressionstest deckt auch abgewiesene Primär-Auswahl verworfener Medien ab; die isolierte Kopie-Probe und der Backupvergleich des tatsächlichen Arbeitsbestands bestätigen die referenzsichere Bereinigung.
+
+Der abschließende Produktionsbuild nach der Auswahl-Sperre ist ebenfalls bestanden. Backup-SHA-256, alle 42 unveränderten Bilddatei-Hashes und die lokalen Plan-/Reviewlinks wurden zuletzt erneut geprüft.

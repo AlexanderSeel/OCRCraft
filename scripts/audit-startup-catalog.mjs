@@ -1,6 +1,7 @@
-import { mkdir, writeFile, access } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { assessPlanningMetadata } from "../src/domain/training/planning-eligibility.ts";
+import { auditLocalMediaFiles } from "../src/server/media/local-media-file-audit.ts";
 import { DuckDBInstance } from "@duckdb/node-api";
 import nextEnv from "@next/env";
 const { loadEnvConfig } = nextEnv;
@@ -38,24 +39,20 @@ for (const databasePath of paths) {
       (SELECT count(*) FROM exercise_movement_patterns m WHERE m.exercise_id=e.id) AS movement_count,
       (SELECT count(*) FROM exercise_media_assets m WHERE m.exercise_id=e.id AND m.review_status='approved') AS approved_media_count,
       r.disposition AS outdoor_disposition,r.review_status AS outdoor_review_status,
-      q.review_status AS content_review_status
+      q.review_status AS content_review_status,q.review_version AS content_review_version
       FROM exercises e LEFT JOIN exercise_translations t ON t.exercise_id=e.id AND t.locale='de'
       LEFT JOIN exercise_environment_reviews r ON r.exercise_id=e.id
       LEFT JOIN exercise_details pd ON pd.exercise_id=e.id AND pd.locale='de'
       LEFT JOIN exercise_seed_quality_reviews q ON q.exercise_id=e.id ORDER BY e.seed_key NULLS LAST,e.canonical_name`);
     const media = await rows(`SELECT m.id::VARCHAR AS id,m.exercise_id::VARCHAR AS exercise_id,t.name AS expected_name_de,
       m.review_status,m.biomechanics_review,m.text_match_review,m.is_primary,m.source_type,m.illustration_format,
-      m.storage_provider,m.storage_key,m.storage_uri,m.generation_prompt,m.rights_status,
+      m.storage_provider,m.storage_key,m.storage_uri,m.sha256,m.generation_prompt,m.rights_status,
       d.start_position,d.safety_notes,d.quality_criteria
       FROM exercise_media_assets m LEFT JOIN exercise_translations t ON t.exercise_id=m.exercise_id AND t.locale='de'
       LEFT JOIN exercise_details d ON d.exercise_id=m.exercise_id AND d.locale='de' ORDER BY m.exercise_id,m.id`);
+    const localMediaAudit = await auditLocalMediaFiles(media, path.resolve("public"));
     for (const asset of media) {
-      asset.local_file_exists = null;
-      if (asset.storage_provider === "filesystem" && asset.storage_uri?.startsWith("/generated/exercises/")) {
-        const file = path.resolve("public", asset.storage_uri.slice(1));
-        const root = path.resolve("public/generated/exercises") + path.sep;
-        if (file.startsWith(root)) { try { await access(file); asset.local_file_exists = true; } catch { asset.local_file_exists = false; } }
-      }
+      Object.assign(asset, localMediaAudit.observations[asset.id]);
       // Export local paths, not potentially credential-bearing remote URLs.
       if (!asset.storage_uri?.startsWith("/generated/exercises/")) asset.storage_uri = null;
     }
@@ -74,6 +71,7 @@ for (const databasePath of paths) {
       }, "mixed", "mixed");
     }
     const active = inventory.filter((item) => !item.archived);
+    const nonRejectedMediaIds = new Set(media.filter((item)=>item.review_status!=='rejected').map((item)=>item.id));
     const byType = Object.fromEntries([...new Set(active.map((item) => item.exercise_type))].sort().map((type) => [type,active.filter((item) => item.exercise_type===type).length]));
     const summary = { auditedAt, accessMode: "READ_ONLY", databasePath, counts, byType, activeWithoutMinimumAge: active.filter((item)=>item.min_age==null).length,
       activeWithoutGoals: active.filter((item)=>Number(item.goal_count)===0).length,
@@ -84,9 +82,16 @@ for (const databasePath of paths) {
       mediaCount:media.length, pendingMedia:media.filter((item)=>item.review_status==='pending').length,
       approvedMediaWithoutBothChecks:media.filter((item)=>item.review_status==='approved'&&(item.biomechanics_review!=='pass'||item.text_match_review!=='pass')).length,
       missingLocalMediaFiles:media.filter((item)=>item.local_file_exists===false).length,
+      localMediaChecksumMismatches:media.filter((item)=>item.local_file_integrity==='checksum_mismatch').length,
+      nonRejectedLocalMediaChecksumMismatches:media.filter((item)=>item.local_file_integrity==='checksum_mismatch'&&item.review_status!=='rejected').length,
+      retiredLocalMediaChecksumMismatches:media.filter((item)=>item.local_file_integrity==='checksum_mismatch'&&item.review_status==='rejected').length,
+      localMediaWithoutRecordedHash:media.filter((item)=>item.local_file_integrity==='missing_recorded_hash').length,
+      localMediaInvalidOrUnreadable:media.filter((item)=>['invalid_path','unreadable'].includes(item.local_file_integrity)).length,
+      sharedLocalMediaFileGroups:localMediaAudit.sharedLocalFileGroups.length,
+      nonRejectedSharedLocalMediaFileGroups:localMediaAudit.sharedLocalFileGroups.filter((group)=>group.assetIds.filter((id)=>nonRejectedMediaIds.has(id)).length>1).length,
       duplicateNameGroups:duplicates.length, orphans };
     const name = path.basename(databasePath).replace(/\W/g,"_");
-    await writeFile(path.join(outputDirectory,`${name}.json`),JSON.stringify({ summary, inventory, media, duplicates },null,2)+"\n");
+    await writeFile(path.join(outputDirectory,`${name}.json`),JSON.stringify({ summary, inventory, media, duplicates, sharedLocalMediaFiles: localMediaAudit.sharedLocalFileGroups },null,2)+"\n");
     reports.push(summary);
   } finally { connection.closeSync(); db.closeSync(); }
 }

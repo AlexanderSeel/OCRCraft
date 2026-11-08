@@ -152,4 +152,21 @@ describe("exercise image prompt and generation service", () => {
     expect(repository.markFailed).toHaveBeenCalledWith("6f42f47b-3442-49eb-a6f3-5bc4fb374d18", "API unavailable");
     expect(storage.save).not.toHaveBeenCalled();
   });
+
+  it("does not delete an existing object when storage rejects a key collision", async () => {
+    const repository = makeRepository();
+    const imageGenerator: ExerciseImageGenerator = { generate: vi.fn(async () => makeImage()) };
+    const collision = new Error("Image object already exists");
+    const storage: ExerciseImageStorage = {
+      provider: "filesystem",
+      save: vi.fn(async () => { throw collision; }),
+      delete: vi.fn(async () => undefined),
+    };
+    const service = new ExerciseImageGenerationService(repository, imageGenerator, storage, () => "adult_man");
+
+    await expect(service.generate({ exerciseIdentifier: "easy-jog" })).rejects.toBe(collision);
+    expect(repository.markGenerated).not.toHaveBeenCalled();
+    expect(repository.markFailed).toHaveBeenCalledWith("6f42f47b-3442-49eb-a6f3-5bc4fb374d18", collision.message);
+    expect(storage.delete).not.toHaveBeenCalled();
+  });
 });

@@ -26,7 +26,8 @@ Referenz und aktueller Prüfstand: [`docs/catalog-startup-review.md`](./docs/cat
 - [ ] **Fachliche Planerfreigabe als eigenen Workflow einführen**: Metadaten-Eligibility wird bereits deterministisch für beide Generatoren geprüft; expliziten Review-/Freigabestatus mit Verantwortlichem, Begründung und Invalidierung nach relevanten Änderungen ergänzen. Legacy-`compat-v1`-Reviews sind keine manuelle Fachfreigabe. Import-/Altbestände einzeln prüfen, nicht automatisch aus aktivem Status oder vollständigen Feldern freigeben.
 - [ ] **Startup-Inhalte abschließend prüfen**: Seed-/Medienreview, Datei-/Referenzintegrität, Quellen/Lizenzen, keine privaten Konfigurationsdaten, keine Test-/Queue-/Trainingsreste, aktuelle Migrationen und Suchindex. Die technisch bereinigte Startdatenbank ist noch keine fachliche Freigabe aller Kataloginhalte.
 
-- [ ] Anatomisch geprüfte Bilder für alle Übungen ohne Bild erzeugen; der aktuelle Seed-Backlog ist in drei Codex-Batches gestaffelt (17 Einzelperson, 11 OCRFRA-Hindernisse, 14 Spiele/Partner). Die 42 P1-Assets sind seriell erzeugt und als `pending` registriert, müssen aber noch biomechanisch, auf Text-Match und bei Hindernissen zusätzlich auf Geometrie/Sicherheit geprüft werden, bevor sie in den Initial-DuckDB-Snapshot dürfen. Task-Export und sequenzielle Batch-Generierung arbeiten nur den aktuellen DuckDB-Bedarf ab; ein expliziter P1-Batch darf unfreigegebene Altmedien neu erzeugen, schützt aber freigegebene brauchbare Primärmedien. Der Medienkatalog zeigt erledigt/offen/laufend. `npm run exercise:images:codex-review -- --batch=<...>` bzw. „Pending-Review exportieren“ liefert anschließend Asset-ID, lokalen Bildpfad, erwarteten OCRCraft-Prompt und Anatomie-/Text-Checkliste für jedes noch nicht freigegebene Bild.
+- [ ] **42 P1-Bilder nachbearbeiten und fachlich freigeben**: Der [erste visuelle Durchgang](./docs/reviews/README.md) dokumentiert 27 konkrete Änderungsfälle und 15 weitere Trainerprüfungen. Kontakte, Pfeile, Endpositionen, Hindernisgeometrie sowie Spielrollen/-wege korrigieren; anschließend Anatomie, Text-Match, Rechte und Vor-Ort-Sicherheit erneut prüfen. Keine pauschale Freigabe anhand vollständiger Metadaten oder des visuellen Erstdurchgangs.
+- [ ] **Verbleibende Bildlücken schließen**: Fehlende brauchbare Übungsbilder mit dem bestehenden OCRCraft-Prompt erzeugen und einzeln prüfen. Serien-/Batchexporte über `npm run exercise:images:codex-tasks` bzw. `exercise:images:codex-review` anhand des aktuellen Datenbankbedarfs neu erstellen; alte Exporte sind keine aktuellen Pending-Zähler. Neue Medien bleiben bis dokumentierter Anatomie-/Text-/Rechteprüfung unfreigegeben.
 - [ ] Bildersatz nach Geräteklassifikation abschließen: bei Übungen ohne verwendbares eigenes Medium bzw. mit nicht nutzbarer ExerciseDB-/externer Referenz den bestehenden OCRCraft-AI-Bildprompt verwenden, anatomisch prüfen und als `pending` zuordnen.
 
 ## P1 – Trainingsmethodik für KI und Offline-Algorithmus
@@ -49,7 +50,7 @@ Referenz und aktueller Prüfstand: [`docs/catalog-startup-review.md`](./docs/cat
 
 ## Nächste Schritte
 
-1. Katalog-/Medienprüfung und Gelände-/Equipment-Inventar anhand des Audits beginnen; Startbestand fachlich kuratieren.
+1. Die 27 dokumentierten Bildbefunde korrigieren und 15 offene Trainerprüfungen abschließen. Reale Hindernisgeometrien aufnehmen; übrige Katalogmedien/Videos und Gelände-/Equipment-Inventar weiter prüfen.
 2. Methodik-/Geländevertrag und gleiche deterministische Prüfungen für KI und Offline nachweisen.
 3. Wiederherstellung erzeugter/bearbeiteter Vorschläge abschließen (UX-02).
 4. Mobile Filter/Navigation, Feldhinweise, Admin-Semantik, Lade-/Fehlerzustände, Dictionaries und UI-Konsolidierung.

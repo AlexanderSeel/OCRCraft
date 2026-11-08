@@ -1,5 +1,7 @@
 import "server-only";
 
+import { constants } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { copyFile, mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -73,6 +75,24 @@ export async function withDuckDbConnection<T>(
       connection.closeSync();
       instance.closeSync();
     }
+  });
+}
+
+/** Checkpoint, close for Windows file copying, back up, then reopen under one lock. */
+export async function withDuckDbCheckpointBackup<T>(
+  operation: (connection: DuckDBConnection, backupPath: string) => Promise<T>,
+): Promise<T> {
+  return withDuckDbFileLock(async () => {
+    const checkpointInstance = await createInstance();
+    const checkpointConnection = await checkpointInstance.connect();
+    try { await checkpointConnection.run("CHECKPOINT"); }
+    finally { checkpointConnection.closeSync(); checkpointInstance.closeSync(); }
+    const backupPath = path.join(path.dirname(databasePath), `ocrcraft.checkpoint-backup-${Date.now()}-${randomUUID()}.duckdb`);
+    await copyFile(databasePath, backupPath, constants.COPYFILE_EXCL);
+    const instance = await createInstance();
+    const connection = await instance.connect();
+    try { return await operation(connection, backupPath); }
+    finally { connection.closeSync(); instance.closeSync(); }
   });
 }
 

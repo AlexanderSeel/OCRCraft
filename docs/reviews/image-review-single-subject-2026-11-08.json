@@ -1,0 +1,424 @@
+{
+  "format": "ocrcraft-visual-image-review-v1",
+  "reviewDate": "2026-11-08",
+  "reviewer": "Codex visual inspection; no trainer approval",
+  "scope": "17 current local files compared against first exported prompt per file; duplicate prompts not individually approved",
+  "sourceExport": "artifacts/codex-image-review-single-subject.json",
+  "sourceExportGeneratedAt": "2026-09-25T19:21:41.137Z",
+  "sourceExportSha256": "62a65f77bb5f5ca8ea56c892bffcbfef3a758aed43cd3fca7b41fd9c5eed08a4",
+  "databaseMutated": false,
+  "counts": {
+    "needs_changes": 10,
+    "trainer_review_required": 7
+  },
+  "items": [
+    {
+      "seedKey": "wall-pushup",
+      "exerciseName": "Wandliegestütz",
+      "exerciseId": "a64b1316-9e04-4de6-bb41-065614417734",
+      "localPublicPath": "public/generated/exercises/wall-pushup/wall-pushup.png",
+      "imageSha256": "4a2e4c933d1da1c4b2199d4c7740178c3a81ea7cf975cd7820918be0625d41e4",
+      "comparedAssetId": "55177ad8-c3d3-4ee5-9809-0a2fabe02fef",
+      "comparedPromptSha256": "fff579c1c0a880c717b0eb26de0460af7ae0e4dafac4c45653e0a28685621466",
+      "exportedAssetReferences": [
+        {
+          "assetId": "55177ad8-c3d3-4ee5-9809-0a2fabe02fef",
+          "promptSha256": "fff579c1c0a880c717b0eb26de0460af7ae0e4dafac4c45653e0a28685621466"
+        },
+        {
+          "assetId": "abc25c11-a264-4f1a-a9d1-82c3322ddeb4",
+          "promptSha256": "a37d225d91ebeadd6c74da7a79593172916681ec8814cb078c627226cd43472d"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Stelle dich etwa eine Armlänge von der Wand entfernt hin und setze die Hände auf Brusthöhe auf.\nOrdered execution: 1. Prüfe die Wand und stelle die Füße rutschfest auf.\n2. Beuge die Arme und führe den Körper als Einheit zur Wand.\n3. Drücke die Wand weg und kehre ruhig in den Stand zurück.",
+      "visualFinding": "needs_changes",
+      "observation": "Bild 2 zeigt die Annäherung an die Wand, aber der Pfeil weist von der Wand weg; Bild 3 zeigt den zurückgedrückten Stand, aber der Pfeil weist zur Wand.",
+      "nextAction": "Beide Bewegungspfeile mit Annäherung bzw. Wegdrücken ausrichten.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "thoracic-open-book",
+      "exerciseName": "Open Book Brustwirbelsäule",
+      "exerciseId": "ae49491e-11eb-437b-a1cd-cbaa2915b715",
+      "localPublicPath": "public/generated/exercises/thoracic-open-book/thoracic-open-book.png",
+      "imageSha256": "b0997ad772b6b9f596c51fc1048f0a7185ed8575a2a6edc594afeecde03f4f68",
+      "comparedAssetId": "d69c2b52-b676-4645-a3cf-ad20f10bf0b9",
+      "comparedPromptSha256": "1481a3dd37348dff11782ec2076243e20e84af59dfa652eb50027188b6c3d502",
+      "exportedAssetReferences": [
+        {
+          "assetId": "d69c2b52-b676-4645-a3cf-ad20f10bf0b9",
+          "promptSha256": "1481a3dd37348dff11782ec2076243e20e84af59dfa652eb50027188b6c3d502"
+        },
+        {
+          "assetId": "9c43b5a3-6e48-4f7e-9845-f242b1068686",
+          "promptSha256": "7cb63de38f8dcdae15656f8bcdf3341d4967074f3dd3dd7888c7978c11b41377"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Arme vor dem Brustkorb gestreckt, Handflächen aufeinander; Kopf neutral ablegen.\nOrdered execution: 1. Lege dich seitlich mit gestapelten Knien und Armen nach vorn.\n2. Öffne den oberen Arm und Brustkorb langsam nach hinten.\n3. Führe Arm und Brustkorb kontrolliert zurück und wiederhole.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Seitlage, gestapelte Knie und Öffnen/Zurückführen sind erkennbar; der obere Arm endet etwa senkrecht statt in einer deutlich nach hinten geöffneten Position.",
+      "nextAction": "Trainer muss den vorgesehenen Öffnungsumfang und die lesbare Arm-/Brustkorbbewegung bestätigen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "supported-single-leg-hinge",
+      "exerciseName": "Einbeinige Hüftbeuge mit Halt",
+      "exerciseId": "de045a21-3101-4ed5-ba5b-f2ca1871d80c",
+      "localPublicPath": "public/generated/exercises/supported-single-leg-hinge/supported-single-leg-hinge.png",
+      "imageSha256": "0ca36e5a7c1d636bacf7dea622cbbea7d21a24230bc27365289d808412dba22e",
+      "comparedAssetId": "4e42db4b-d2dc-48ba-b0a7-f563a16e1220",
+      "comparedPromptSha256": "18a34a49ba701369d7eacf529fc77a696ed01f02afc7dc1fd3794d366b41402d",
+      "exportedAssetReferences": [
+        {
+          "assetId": "4e42db4b-d2dc-48ba-b0a7-f563a16e1220",
+          "promptSha256": "18a34a49ba701369d7eacf529fc77a696ed01f02afc7dc1fd3794d366b41402d"
+        },
+        {
+          "assetId": "d45a41a3-06d5-4ab1-a2fe-fd6c182fb2c2",
+          "promptSha256": "9dc3574b9f7f119d5c56420f2339f8a5a505830d0763e2f29231df376c4250a3"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Lege eine Hand leicht an die Stütze, belaste ein Bein und halte das andere Bein locker bereit.\nOrdered execution: 1. Stelle dich neben eine feste Stütze und halte sie locker mit einer Hand.\n2. Schiebe die Hüfte zurück und führe das freie Bein nach hinten.\n3. Richte dich auf und setze den freien Fuß bei Bedarf sicher ab.",
+      "visualFinding": "needs_changes",
+      "observation": "Hüftknick und freie Beinrückführung sind erkennbar. In Bild 2 weisen die Pfeile am Rumpf und freien Bein nach links/oben statt die Hüftrückführung und Beinbewegung nach hinten eindeutig zu erklären.",
+      "nextAction": "Pfeile entfernen oder getrennt für Hüfte nach hinten, Bein nach hinten und Rückkehr nach oben zeichnen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "supported-side-plank-knee",
+      "exerciseName": "Seitstütz auf dem Knie",
+      "exerciseId": "03f5e6c8-d789-48ef-ba5a-734f12055852",
+      "localPublicPath": "public/generated/exercises/supported-side-plank-knee/supported-side-plank-knee.png",
+      "imageSha256": "9e4f43e4d3ca475688356a0e8a7db72e405ae16950aa33f3ec8df7abf6543456",
+      "comparedAssetId": "32172722-ef85-4f58-a94f-b1174c0da5bf",
+      "comparedPromptSha256": "67eb632d406aa0776b3668251cb399038670319373b70b0706c2310ce03a4833",
+      "exportedAssetReferences": [
+        {
+          "assetId": "32172722-ef85-4f58-a94f-b1174c0da5bf",
+          "promptSha256": "67eb632d406aa0776b3668251cb399038670319373b70b0706c2310ce03a4833"
+        },
+        {
+          "assetId": "ab2c7317-6e40-474c-bd78-5c921872e5a8",
+          "promptSha256": "67eb632d406aa0776b3668251cb399038670319373b70b0706c2310ce03a4833"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Seitlage auf Unterarm; unteres Knie gebeugt, Schulter über Ellbogen, oberes Bein lang oder ebenfalls gebeugt.\nOrdered execution: 1. Setze den Unterarm unter die Schulter und beuge das untere Knie.\n2. Hebe das Becken bis Schulter, Hüfte und Knie eine Linie bilden.\n3. Halte kurz und senke das Becken kontrolliert ab.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Unterarmstütz, gebeugtes unteres Knie und Beckenheben/-senken sind erkennbar. Die Schulter-Hüfte-Knie-Linie ist als Hilfslinie dargestellt.",
+      "nextAction": "Trainer muss Auflagepunkte und Schulter-/Ellbogenposition im Original bestätigen; keine Freigabe allein aus der Hilfslinie ableiten.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "quiet-landing-practice",
+      "exerciseName": "Leise Landung üben",
+      "exerciseId": "cee6087a-00c2-4cc4-b867-1da2bce5da4f",
+      "localPublicPath": "public/generated/exercises/quiet-landing-practice/quiet-landing-practice.png",
+      "imageSha256": "bfe4eb1756a75fd357a1dc335e1a3a0ea1fb239007cb619cb519cd75df304b37",
+      "comparedAssetId": "12daaeca-bbf0-489c-a5ec-90dda358ddd1",
+      "comparedPromptSha256": "b48759d82383018f2c9844c1c264f141a9965c82b6eb0e526e7fe0c96502cfdd",
+      "exportedAssetReferences": [
+        {
+          "assetId": "12daaeca-bbf0-489c-a5ec-90dda358ddd1",
+          "promptSha256": "b48759d82383018f2c9844c1c264f141a9965c82b6eb0e526e7fe0c96502cfdd"
+        },
+        {
+          "assetId": "af168dcf-7738-4553-b3b6-9868478cda4d",
+          "promptSha256": "3e0f30ba313aa560cd1848c9c1b779a1e0746712495dcf03fb01f56f91d3012e"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Stehe hüftbreit, Knie locker, Arme entspannt und Blick nach vorn; beginne mit einem kleinen federnden Kniebeugenimpuls.\nOrdered execution: 1. Prüfe die freie Landefläche und beuge Knie und Hüfte leicht.\n2. Springe nur wenige Zentimeter gerade nach oben und lande auf beiden Füßen.\n3. Halte die stabile Landung zwei Sekunden und setze neu an.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Beidbeiniger Absprung und Landung sowie 2-s-Halten sind dargestellt. Die Flugpose hat deutlich sichtbaren Bodenabstand; wenige Zentimeter Sprunghöhe sind aus der Illustration nicht belegbar.",
+      "nextAction": "Sehr niedrigen Sprung anhand gleicher Bodenreferenz verdeutlichen und beidbeinige ruhige Landung fachlich bestätigen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "lateral-shuffle-stick",
+      "exerciseName": "Seitliches Shuffle mit Stopp",
+      "exerciseId": "772f5e95-75c4-4097-86c6-050f08344767",
+      "localPublicPath": "public/generated/exercises/lateral-shuffle-stick/lateral-shuffle-stick.png",
+      "imageSha256": "c9900e0103ed3ac1d67fb9c4223e46d5fa6aec4658670f8f043b445ce618e59b",
+      "comparedAssetId": "d591e5a5-8c22-46e4-b2b8-887b28de5e5c",
+      "comparedPromptSha256": "6e6377492ce2b393905b0e7a5f6992acd7fa8b819975d3e805399a5c90b70803",
+      "exportedAssetReferences": [
+        {
+          "assetId": "d591e5a5-8c22-46e4-b2b8-887b28de5e5c",
+          "promptSha256": "6e6377492ce2b393905b0e7a5f6992acd7fa8b819975d3e805399a5c90b70803"
+        },
+        {
+          "assetId": "a0e00745-c8ae-43aa-912e-bfbcef5a8cdf",
+          "promptSha256": "6e6377492ce2b393905b0e7a5f6992acd7fa8b819975d3e805399a5c90b70803"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Athletischer Stand, Knie weich, Füße parallel und Blick in Bewegungsrichtung.\nOrdered execution: 1. Starte athletisch hinter der Seitenlinie und prüfe die freie Spur.\n2. Shuffle mit kurzen Schritten seitwärts, ohne die Füße zu kreuzen.\n3. Bremse vor der Linie ab und halte zwei Sekunden stabil.",
+      "visualFinding": "needs_changes",
+      "observation": "Seitwärtspfeile sind vorhanden, aber Start und Ende stehen an derselben quer verlaufenden Linie. Ein seitlicher Zielpunkt und das Abbremsen davor werden räumlich nicht klar.",
+      "nextAction": "Seitlichen Start-/Zielmarker im gleichen Koordinatensystem zeigen; nicht kreuzende Schritte und Stopp vor dem Ziel lesbar machen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "hip-90-90-switch",
+      "exerciseName": "90/90 Hüftwechsel",
+      "exerciseId": "2dcbe7e5-e525-4769-bb73-e58218add94c",
+      "localPublicPath": "public/generated/exercises/hip-90-90-switch/hip-90-90-switch.png",
+      "imageSha256": "1c8c216778ef473c4550bc7c4b5457a350ca887f520f9601472733220d401eca",
+      "comparedAssetId": "b1ecd961-6e80-425b-904f-89ab2ad678f3",
+      "comparedPromptSha256": "0f7fd6c4766ae9f7c142ff2e21c8608e73baa10da325ae24400f62c9fd543bf2",
+      "exportedAssetReferences": [
+        {
+          "assetId": "b1ecd961-6e80-425b-904f-89ab2ad678f3",
+          "promptSha256": "0f7fd6c4766ae9f7c142ff2e21c8608e73baa10da325ae24400f62c9fd543bf2"
+        },
+        {
+          "assetId": "1617b4fe-4d0a-4761-820f-2dc6a7053e2d",
+          "promptSha256": "db5cf2dc6b898e5532241bff774a086b541668457a74f6faba834d22e00d3bb3"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Aufrechter Sitz mit beiden Knien gebeugt; Hände dürfen hinter dem Körper leicht stützen.\nOrdered execution: 1. Setze dich aufrecht mit gebeugten Knien und leichter Handstütze.\n2. Führe beide Knie langsam gemeinsam zur anderen Seite.\n3. Stabilisiere die neue 90/90-Position und wechsle zurück.",
+      "visualFinding": "needs_changes",
+      "observation": "Bild 2 zeigt eine Zwischenposition, Bild 3 wiederholt die gleiche asymmetrische Beinposition aus Bild 1. Die neue gegenüberliegende 90/90-Endposition fehlt.",
+      "nextAction": "Entgegengesetzte 90/90-Endposition mit klar unterscheidbaren Knie-/Fußkontakten zeichnen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "hanging-straight-leg-raise",
+      "exerciseName": "Hängendes Beinheben",
+      "exerciseId": "3e208b2a-7611-4adf-a433-5a7f1c7689fa",
+      "localPublicPath": "public/generated/exercises/hanging-straight-leg-raise/hanging-straight-leg-raise.png",
+      "imageSha256": "82c9391d755659f708b394047ba609d743292a0c240d95e0d7f8ae938ef377bf",
+      "comparedAssetId": "89e68c7f-b3bc-48d2-acc8-7b6917005dd2",
+      "comparedPromptSha256": "2d004c3cb30bc12e3d551aeefe874ec5507786b6666255f6b80aff966d879e77",
+      "exportedAssetReferences": [
+        {
+          "assetId": "89e68c7f-b3bc-48d2-acc8-7b6917005dd2",
+          "promptSha256": "2d004c3cb30bc12e3d551aeefe874ec5507786b6666255f6b80aff966d879e77"
+        },
+        {
+          "assetId": "3168cfbb-4caa-4d9f-9c4b-c2cfd01ee273",
+          "promptSha256": "2d004c3cb30bc12e3d551aeefe874ec5507786b6666255f6b80aff966d879e77"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Aktiver Hang mit langen Beinen; Rippen und Becken bleiben kontrolliert.\nOrdered execution: 1. Aktiven Hang mit langen Beinen und ruhigem Becken einnehmen.\n2. Beine kontrolliert nach vorn heben.\n3. Beine langsam senken und den Griff neu ordnen.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Drei Bilder zeigen langen Hang, Anheben beider langer Beine nach vorn und Rückkehr. Keine offensichtliche Übungsvarianten-Verwechslung in dieser Ansicht festgestellt.",
+      "nextAction": "Griffkontakte, Schulterorganisation und Abgrenzung zum Schwunghang fachlich prüfen; statische Bilder belegen kein kontrolliertes Tempo.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "hanging-pike",
+      "exerciseName": "Hanging Pike",
+      "exerciseId": "41f9872d-4045-4528-aaf9-fba6ef3249fb",
+      "localPublicPath": "public/generated/exercises/hanging-pike/hanging-pike.png",
+      "imageSha256": "8fcf7e00517733a29a5f354b25e5c720ee45ae7ae6baac6b2a1ed4a4d95d1453",
+      "comparedAssetId": "fa753fc5-db7a-4a9c-b8ae-42a15524252d",
+      "comparedPromptSha256": "c564e87ed57977b3827a10abb5ce525e6eebe61eb15ff5adadbde3267e7c7e24",
+      "exportedAssetReferences": [
+        {
+          "assetId": "fa753fc5-db7a-4a9c-b8ae-42a15524252d",
+          "promptSha256": "c564e87ed57977b3827a10abb5ce525e6eebe61eb15ff5adadbde3267e7c7e24"
+        },
+        {
+          "assetId": "d301241f-25ba-45a8-a751-d8abc456d9ee",
+          "promptSha256": "ff2bc2b774d2e83916b6f70f0eacb6693017e3ef4ba8a72a6754f1d6c7992e09"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Aktiver Hang, Beine geschlossen und Schultern stabil nach unten organisiert.\nOrdered execution: 1. Aktiven Hang mit geschlossenen Beinen aufbauen.\n2. Beine ohne Anschwingen in Richtung Stange führen.\n3. Langsam zurückkehren und erst am Boden lösen.",
+      "visualFinding": "needs_changes",
+      "observation": "Pike und Rückkehr in den Hang sind dargestellt. Der dritte Schritt verlangt zusätzlich Lösen erst am Boden; der letzte Frame zeigt weiterhin freien Hang ohne Bodenkontakt.",
+      "nextAction": "Bodenkontakt vor dem Loslassen als ergänzendes Detail darstellen; Hände dürfen im freien Hang nicht lösen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "hanging-oblique-knee-raise",
+      "exerciseName": "Seitliches Knieheben im Hang",
+      "exerciseId": "34bfa097-3846-4963-8fa2-5cd1e276c8ff",
+      "localPublicPath": "public/generated/exercises/hanging-oblique-knee-raise/hanging-oblique-knee-raise.png",
+      "imageSha256": "1a33ed0a292235ca055b7af14051177ab2223f761fe3848176407a5247839de8",
+      "comparedAssetId": "7f8a2846-8fb2-42ce-a47f-d8d1ad2e8e8c",
+      "comparedPromptSha256": "c6fff02e69c77783a5aa059bef29e95b0b79239557ef3135722adbc9851c6212",
+      "exportedAssetReferences": [
+        {
+          "assetId": "7f8a2846-8fb2-42ce-a47f-d8d1ad2e8e8c",
+          "promptSha256": "c6fff02e69c77783a5aa059bef29e95b0b79239557ef3135722adbc9851c6212"
+        },
+        {
+          "assetId": "73995238-53b7-4d65-b774-a8fb4ddefc88",
+          "promptSha256": "05de51d712cb531756def96b6d686f702688aba8349dfcf360181c34c785cab0"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Aktiver Hang, Knie zunächst unter dem Becken und Rumpf lang.\nOrdered execution: 1. Aktiven Hang mit Knieposition unter dem Becken einnehmen.\n2. Knie leicht zu einer Seite heben und den Rumpf kontrollieren.\n3. Zur Mitte zurückkehren und die Seite wechseln.",
+      "visualFinding": "needs_changes",
+      "observation": "Das Knieheben zur Seite ist sichtbar. Bild 3 zeigt nur den langen Hang; der geforderte Seitenwechsel wird nicht gezeigt oder als Wiederholung verständlich markiert.",
+      "nextAction": "Rückkehr zur Mitte und anschließenden Wechsel zur anderen Seite klar darstellen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "hanging-knee-raise",
+      "exerciseName": "Hanging Knee Raise",
+      "exerciseId": "3e54bd5f-a3db-42ed-8bd4-0f91f089ce3c",
+      "localPublicPath": "public/generated/exercises/hanging-knee-raise/hanging-knee-raise.png",
+      "imageSha256": "7456a4fc6c81c386c20358bf6e8680ed2a42ce4c5f4ff57b28bfaef2dea85676",
+      "comparedAssetId": "029936d4-1a8e-41cc-b56e-1fa41fe4949a",
+      "comparedPromptSha256": "6e38948881ed5db2b95f525553a1a5b5c9d3786896ba58bd51af9fe2fb7fb03b",
+      "exportedAssetReferences": [
+        {
+          "assetId": "029936d4-1a8e-41cc-b56e-1fa41fe4949a",
+          "promptSha256": "6e38948881ed5db2b95f525553a1a5b5c9d3786896ba58bd51af9fe2fb7fb03b"
+        },
+        {
+          "assetId": "70205c25-0b2a-44f1-834a-7eb4a731965f",
+          "promptSha256": "2e41073149d11ca4007e670f358bfb01cc4e295f5667f46614442bd239fd880e"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Aktiver Hang, Schultern weg von den Ohren, Beine ruhig unter dem Becken.\nOrdered execution: 1. Aktiven Hang an einer geprüften Stange einnehmen.\n2. Knie ohne Schwung zur Körpermitte heben.\n3. Knie langsam absenken und den Hang stabilisieren.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Langer Hang, beidseitiges Knieheben zur Körpermitte und Rückkehr sind erkennbar. Keine offensichtliche Variantenverwechslung festgestellt.",
+      "nextAction": "Geschlossene Griffkontakte und Schulterposition fachlich bestätigen; Schwungfreiheit lässt sich aus Einzelposen nicht zertifizieren.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "dead-bug-heel-tap",
+      "exerciseName": "Dead Bug mit Fersentipp",
+      "exerciseId": "67da2946-9838-4ebf-b407-563141dd49f3",
+      "localPublicPath": "public/generated/exercises/dead-bug-heel-tap/dead-bug-heel-tap.png",
+      "imageSha256": "4dc58cf2e3937795408fe0c01e0f91bcfcffbc640edacab9862f8f46320c72d4",
+      "comparedAssetId": "9533bc66-cc98-4d10-9bd1-bf1fa8b9c3d1",
+      "comparedPromptSha256": "9c74b773fea8bb3d9b81b3ae195cd3191e2da01e8915bc6ce7e0cfafeea765b5",
+      "exportedAssetReferences": [
+        {
+          "assetId": "9533bc66-cc98-4d10-9bd1-bf1fa8b9c3d1",
+          "promptSha256": "9c74b773fea8bb3d9b81b3ae195cd3191e2da01e8915bc6ce7e0cfafeea765b5"
+        },
+        {
+          "assetId": "4e0a9008-4fc7-4338-8ff1-60851dabab0b",
+          "promptSha256": "ba9cb6728cf539424596193b64df2c18d6d3701de1660b0075e0f7d08e535639"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Rückenlage, Hüfte und Knie etwa 90 Grad gebeugt; Rippen ruhig und Lendenbereich neutral am Boden.\nOrdered execution: 1. Richte Rückenlage und 90-Grad-Beinposition ein.\n2. Senke eine Ferse langsam zum Boden, ohne das Becken zu bewegen.\n3. Führe das Bein zurück und wechsle kontrolliert die Seite.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Rückenlage und alternierende Beinabsenkung sind erkennbar. Das abgesenkte Knie öffnet sich deutlich gegenüber der 90-Grad-Startposition; dadurch ist die Abgrenzung Heel Tap zu Leg Extension unklar.",
+      "nextAction": "Vorgesehene Kniebeugung im Katalog präzisieren und dann Bildvariante einschließlich Fersenkontakt bestätigen oder ersetzen.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "crawl-to-stand-transition",
+      "exerciseName": "Crawl-to-Stand Übergang",
+      "exerciseId": "3e9f90b7-f9e2-43c7-8c43-59c5e9c2dead",
+      "localPublicPath": "public/generated/exercises/crawl-to-stand-transition/crawl-to-stand-transition.png",
+      "imageSha256": "f4d7664e8a741bdae3188369822507a5ac5955b66e907cb5ec44fd3d11a976f0",
+      "comparedAssetId": "f6d4ad3a-19d0-4d9c-9ec8-ba7bb579f4be",
+      "comparedPromptSha256": "80d3c31dd699b2ca1998847751c61d908779b7bfbd87b905f72cc17f3ba9a125",
+      "exportedAssetReferences": [
+        {
+          "assetId": "f6d4ad3a-19d0-4d9c-9ec8-ba7bb579f4be",
+          "promptSha256": "80d3c31dd699b2ca1998847751c61d908779b7bfbd87b905f72cc17f3ba9a125"
+        },
+        {
+          "assetId": "9601205a-40f7-46bf-a520-2e6b0012bf96",
+          "promptSha256": "c41b1b8de63a9744f9206582fedf4109e28f5474b0ef6a3f164385d72920231e"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Starte im stabilen Vierfüßler oder Bear Crawl mit Blick auf die freie Bewegungsrichtung.\nOrdered execution: 1. Starte stabil im Vierfüßler oder einer niedrigen Crawl-Position.\n2. Setze einen Fuß nach vorn und verlagere das Gewicht kontrolliert über die Beine.\n3. Richte dich stabil auf und kehre in umgekehrter Reihenfolge zum Boden zurück.",
+      "visualFinding": "needs_changes",
+      "observation": "Crawl, vorgezogener Fuß und aufrechter Stand sind dargestellt. Die im dritten Schritt verlangte umgekehrte Rückkehr zum Boden fehlt; alle Pfeile weisen nur vorwärts.",
+      "nextAction": "Rückweg über Fußsetzen und Handstütz ergänzen, ohne einen unkontrollierten Sprung zum Boden anzudeuten.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "chair-sit-to-stand",
+      "exerciseName": "Aufstehen vom Stuhl",
+      "exerciseId": "d1d83740-3457-44ec-a355-f4e115d69b11",
+      "localPublicPath": "public/generated/exercises/chair-sit-to-stand/chair-sit-to-stand.png",
+      "imageSha256": "1a6948654cc1c21a7fa68a71b361c2a5a8f7baf9a8649294039c0d6fa8dde014",
+      "comparedAssetId": "3054754a-5ac8-496e-9742-ed2cf17cc8d2",
+      "comparedPromptSha256": "e2c43f7f12288cf094fe9f60a25fbe57d4e218c5e0c0ff4167c102e4054a7d0f",
+      "exportedAssetReferences": [
+        {
+          "assetId": "3054754a-5ac8-496e-9742-ed2cf17cc8d2",
+          "promptSha256": "e2c43f7f12288cf094fe9f60a25fbe57d4e218c5e0c0ff4167c102e4054a7d0f"
+        },
+        {
+          "assetId": "adf9ece8-aac8-4918-afd1-a1f66268797b",
+          "promptSha256": "e2c43f7f12288cf094fe9f60a25fbe57d4e218c5e0c0ff4167c102e4054a7d0f"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Setze dich vorn auf die Sitzfläche, Füße hüftbreit unter oder leicht hinter die Knie.\nOrdered execution: 1. Prüfe, dass der Stuhl nicht rutscht, und setze dich stabil hin.\n2. Beuge den Oberkörper leicht vor und drücke dich über beide Füße nach oben.\n3. Schiebe die Hüfte zurück und setze dich langsam wieder hin.",
+      "visualFinding": "trainer_review_required",
+      "observation": "Sitzen, Aufstehen über beide Füße und kontrolliertes Hinsetzen sind als drei Posen erkennbar. Ein stationärer Stuhl ohne Rollen ist dargestellt.",
+      "nextAction": "Trainer muss Fuß-/Sitzposition und Eignung des realen rutschfesten Stuhls bestätigen; Standsicherheit ist aus dem Bild nicht nachweisbar.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "bear-plank-shoulder-tap",
+      "exerciseName": "Bear Plank Shoulder Tap",
+      "exerciseId": "619c242d-129d-4a45-9186-74f8e3b46ae9",
+      "localPublicPath": "public/generated/exercises/bear-plank-shoulder-tap/bear-plank-shoulder-tap.png",
+      "imageSha256": "708f65965c8d2f0e9a766d7dcc2257b0ee8f5a199875fedfacdc70d286115ccd",
+      "comparedAssetId": "031ca143-9669-4555-b5ec-ed6a7e2ca276",
+      "comparedPromptSha256": "bfcf2d02b24e44d0e7d10f620b379cce3dc0a48f4ed07e575e7822d834ef66dd",
+      "exportedAssetReferences": [
+        {
+          "assetId": "031ca143-9669-4555-b5ec-ed6a7e2ca276",
+          "promptSha256": "bfcf2d02b24e44d0e7d10f620b379cce3dc0a48f4ed07e575e7822d834ef66dd"
+        },
+        {
+          "assetId": "3891bcfc-b7bf-428b-be50-0c5d54e23d86",
+          "promptSha256": "bfcf2d02b24e44d0e7d10f620b379cce3dc0a48f4ed07e575e7822d834ef66dd"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Vierfüßlerstand, Hände unter den Schultern, Knie unter der Hüfte; Knie knapp über dem Boden anheben.\nOrdered execution: 1. Richte Hände unter Schultern und Knie unter der Hüfte aus.\n2. Hebe die Knie knapp an und verlagere das Gewicht minimal.\n3. Tippe die gegenüberliegende Schulter an und wechsle ohne Beckenrotation.",
+      "visualFinding": "needs_changes",
+      "observation": "In Bild 3 liegt die freie Hand am Gesicht/Kinn statt eindeutig an der gegenüberliegenden Schulter. Der namensgebende Kontakt ist damit falsch bzw. verdeckt.",
+      "nextAction": "Hand deutlich an die gegenüberliegende Schulter führen; belastete Hand und knapp schwebende Knie sichtbar halten.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "battle-rope-waves",
+      "exerciseName": "Battle-Rope-Wellen",
+      "exerciseId": "040801da-e21c-468c-bba1-0fa72373c0c5",
+      "localPublicPath": "public/generated/exercises/battle-rope-waves/battle-rope-waves.png",
+      "imageSha256": "59ceeebacd14b214dd7b18421d9ba38a6e0865ceb991b04ccc049ab9c3671c3e",
+      "comparedAssetId": "5cbe2f0b-65cd-4cbd-bc11-12bab98c504d",
+      "comparedPromptSha256": "28656f00408e1b1c4c5b631858528294651eddbce681ac45c3fdeece074298ea",
+      "exportedAssetReferences": [
+        {
+          "assetId": "5cbe2f0b-65cd-4cbd-bc11-12bab98c504d",
+          "promptSha256": "28656f00408e1b1c4c5b631858528294651eddbce681ac45c3fdeece074298ea"
+        },
+        {
+          "assetId": "7b7468e2-c498-4b01-afe3-7fec6ac6211f",
+          "promptSha256": "da930b5b6776697f9ab466ef1a3830f0ec0de6c775ce48341c61b669b74552ab"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Stabile Schrittstellung, Knie weich, Rumpf aufrecht und je ein Seilende in der Hand.\nOrdered execution: 1. Stabile Schrittstellung und sicheren Seilabstand prüfen.\n2. Abwechselnde Wellen mit ruhigem Rumpf erzeugen.\n3. Wellen kontrolliert stoppen und Seil erst danach ablegen.",
+      "visualFinding": "needs_changes",
+      "observation": "Alternierende Seilwellen und Stopp sind erkennbar. Die Füße stehen nebeneinander statt in der in Ausgangsposition und Schritt 1 verlangten Schrittstellung.",
+      "nextAction": "Schrittstellung durchgängig zeigen oder die Textvariante vor einer neuen Prüfung ausdrücklich ändern.",
+      "approval": "not_granted"
+    },
+    {
+      "seedKey": "ankle-rocker-mobility",
+      "exerciseName": "Sprunggelenk-Rocker",
+      "exerciseId": "9a24819f-4405-4f36-9b7e-019a5ffb5a49",
+      "localPublicPath": "public/generated/exercises/ankle-rocker-mobility/ankle-rocker-mobility.png",
+      "imageSha256": "796d30a381d4c07af5054b6b03cf41d48a0b6fdf2ef2e4f73f2f595ddee03cbf",
+      "comparedAssetId": "1d72124d-c25a-465d-90fb-f463ced26ad0",
+      "comparedPromptSha256": "3800e8cdad547377fbff19b52cff585bfb46d5d6df46f5c7daa9576378cc96c8",
+      "exportedAssetReferences": [
+        {
+          "assetId": "1d72124d-c25a-465d-90fb-f463ced26ad0",
+          "promptSha256": "3800e8cdad547377fbff19b52cff585bfb46d5d6df46f5c7daa9576378cc96c8"
+        },
+        {
+          "assetId": "39c88046-c26a-4ef3-aa42-d76fd59f68ae",
+          "promptSha256": "3800e8cdad547377fbff19b52cff585bfb46d5d6df46f5c7daa9576378cc96c8"
+        }
+      ],
+      "expectedGermanExecution": "Starting position: Ein Fuß steht flach, Zehen zeigen nach vorn; das Knie ist weich und Ferse bleibt vollständig am Boden.\nOrdered execution: 1. Stelle den Fuß flach und richte Knie und Zehen nach vorn.\n2. Führe das Knie kontrolliert nach vorn, ohne die Ferse anzuheben.\n3. Kehre zurück und wiederhole denselben schmerzfreien Bewegungsweg.",
+      "visualFinding": "needs_changes",
+      "observation": "Zwischen Bild 1 und 2 wandert der vordere Fuß nach vorn in einen Ausfallschritt. Das vermittelt einen Schritt statt Knievorschub über einem feststehenden flachen Fuß.",
+      "nextAction": "Gleiche Fußposition und Bodenreferenz in allen Frames verwenden; Knievorschub über den Zehen bei aufliegender Ferse darstellen.",
+      "approval": "not_granted"
+    }
+  ]
+}

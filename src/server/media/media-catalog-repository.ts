@@ -781,8 +781,30 @@ export async function retireLegacyTriptychsAfterApprovedSequence(
     return reader.getRows().length;
   });
 }
-export interface ExerciseMediaChoice { readonly id:string; readonly url:string|null; readonly mediaType:string; readonly sourceType:string; readonly reviewStatus:string; readonly generationStatus:string; readonly isPrimary:boolean; }
-export async function listExerciseMediaChoices(exerciseId:string):Promise<readonly ExerciseMediaChoice[]>{ await ensureDatabaseReady(); return withDuckDbConnection(async c=>{const r=await c.runAndReadAll("SELECT id::VARCHAR,storage_uri,media_type,source_type,review_status,generation_status,COALESCE(is_primary,false) FROM exercise_media_assets WHERE exercise_id=$exerciseId::UUID ORDER BY is_primary DESC,created_at DESC",{exerciseId}); return r.getRows().map(x=>({id:String(x[0]),url:safeExerciseImageUri(x[1]),mediaType:String(x[2]),sourceType:String(x[3]),reviewStatus:String(x[4]),generationStatus:String(x[5]),isPrimary:Boolean(x[6])}));}); }
+export interface ExerciseMediaChoice {
+  readonly id: string;
+  readonly url: string | null;
+  readonly mediaType: string;
+  readonly sourceType: string;
+  readonly reviewStatus: string;
+  readonly generationStatus: string;
+  readonly isPrimary: boolean;
+}
+
+export async function listExerciseMediaChoices(exerciseId: string): Promise<readonly ExerciseMediaChoice[]> {
+  await ensureDatabaseReady();
+  return withDuckDbConnection(async (connection) => {
+    const reader = await connection.runAndReadAll(`
+      SELECT id::VARCHAR,storage_uri,media_type,source_type,review_status,generation_status,COALESCE(is_primary,false)
+      FROM exercise_media_assets
+      WHERE exercise_id=$exerciseId::UUID AND review_status<>'rejected'
+      ORDER BY is_primary DESC,created_at DESC`, { exerciseId });
+    return reader.getRows().map((row) => ({
+      id: String(row[0]), url: safeExerciseImageUri(row[1]), mediaType: String(row[2]), sourceType: String(row[3]),
+      reviewStatus: String(row[4]), generationStatus: String(row[5]), isPrimary: Boolean(row[6]),
+    }));
+  });
+}
 export async function setPrimaryExerciseMedia(exerciseId: string, assetId: string): Promise<boolean> {
   await ensureDatabaseReady();
   return withDuckDbConnection(async (connection) => {
@@ -792,6 +814,7 @@ export async function setPrimaryExerciseMedia(exerciseId: string, assetId: strin
       WHERE id=$assetId::UUID
         AND exercise_id=$exerciseId::UUID
         AND generation_status='generated'
+        AND review_status<>'rejected'
       LIMIT 1
     `, { assetId, exerciseId });
     if (!valid.getRows().length) return false;

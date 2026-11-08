@@ -1,9 +1,9 @@
 import "server-only";
 
-import { randomUUID } from "node:crypto";
 import { DeleteObjectCommand, HeadBucketCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { mkdir, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
+import { writeImmutableImageFile } from "./immutable-image-file.mjs";
 import type { StoredExerciseImage } from "./exercise-image-types";
 
 export interface SaveExerciseImageInput {
@@ -44,15 +44,7 @@ export class FileSystemExerciseImageStorage implements ExerciseImageStorage {
     const storageKey = safeObjectKey(input.exerciseId, input.assetId, input.fileStem);
     const destination = path.resolve(this.root, storageKey);
     if (!destination.startsWith(`${this.root}${path.sep}`)) throw new Error("Invalid exercise image storage key.");
-    await mkdir(path.dirname(destination), { recursive: true });
-    const temporaryPath = `${destination}.${randomUUID()}.tmp`;
-    try {
-      await writeFile(temporaryPath, input.bytes, { flag: "wx" });
-      await rename(temporaryPath, destination);
-    } catch (error) {
-      await rm(temporaryPath, { force: true });
-      throw error;
-    }
+    await writeImmutableImageFile(destination, input.bytes);
     return {
       storageProvider: this.provider,
       storageKey,
@@ -111,6 +103,7 @@ export class S3CompatibleExerciseImageStorage implements ExerciseImageStorage {
       Bucket: this.options.bucket,
       Key: storageKey,
       Body: input.bytes,
+      IfNoneMatch: "*",
       ContentType: input.contentType,
       CacheControl: this.options.cacheControl,
       ServerSideEncryption: this.options.serverSideEncryption,
