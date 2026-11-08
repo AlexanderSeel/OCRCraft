@@ -13,6 +13,12 @@ const request = {
 };
 
 describe("training draft request equipment, obstacles, groups and location", () => {
+  it("accepts known outdoor venues and rejects unknown or conflicting indoor selections", () => {
+    expect(trainingDraftRequestSchema.safeParse({ ...request, venueId: "synthetic-court", location: "outdoor" }).success).toBe(true);
+    expect(trainingDraftRequestSchema.safeParse({ ...request, venueId: "athletics-field", location: "mixed" }).success).toBe(true);
+    expect(trainingDraftRequestSchema.safeParse({ ...request, venueId: "synthetic-court", location: "indoor" }).success).toBe(false);
+    expect(trainingDraftRequestSchema.safeParse({ ...request, venueId: "invented-field" }).success).toBe(false);
+  });
   it("defaults omitted inventory, rotation groups and location safely", () => {
     const parsed = trainingDraftRequestSchema.parse(request);
     expect(parsed.availableEquipment).toEqual([]);

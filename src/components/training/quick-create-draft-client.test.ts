@@ -26,6 +26,13 @@ describe("parseAgeRange", () => {
 });
 
 describe("normalizeTrainingDraftRequest", () => {
+  it("preserves a selected venue and uses its outdoor location without inventing inventory", () => {
+    const request = normalizeTrainingDraftRequest({ groupType: "adults", ageRange: "18+", participantCount: 8,
+      durationMinutes: 60, goals: ["OCR-Technik"], bodyRegions: [], formats: ["circuit"], location: "mixed",
+      intensity: "balanced", preferredExerciseIds: [], venueId: "synthetic-court" });
+    expect(request).toMatchObject({ venueId: "synthetic-court", location: "outdoor", availableEquipment: [] });
+    expect(request.availableObstacleExerciseIds).toBeUndefined();
+  });
   it("keeps supported granular muscle regions, exercise types and builder mode while filtering unknown values", () => {
     expect(
       normalizeTrainingDraftRequest({

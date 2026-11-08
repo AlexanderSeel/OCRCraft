@@ -141,11 +141,24 @@ describe("main-part programming", () => {
     const runMain = runExercise.session.phases.find((phase) => phase.kind === "main");
     expect(runMain?.items[0]?.programming).toMatchObject({
       mode: "every",
-      everyValue: 500,
-      everyUnit: "metres",
+      everyValue: 1,
+      everyUnit: "checkpoint",
       everyWorkSeconds: 40,
       everyRestSeconds: 20,
     });
+  });
+
+  it.each(["ai", "deterministic"] as const)("applies the same venue defaults and preserves trainer programming for %s drafts", (source) => {
+    const input = { ...request, location: "outdoor" as const, formats: ["run-exercise" as const], venueId: "athletics-field" as const,
+      mainPartProgramming: [{ mode: "standard" as const }, { mode: "standard" as const }] };
+    const track = applyMainPartProgramming(input, { ...draft, source });
+    expect(track.session.phases.find((phase) => phase.kind === "main")?.items[0].programming).toMatchObject({ everyValue: 400, everyUnit: "metres" });
+    expect(track.warnings.join(" ")).toContain("400-m-Laufbahn");
+    const court = applyMainPartProgramming({ ...input, venueId: "synthetic-court" }, { ...draft, source });
+    expect(court.session.phases.find((phase) => phase.kind === "main")?.items[0].programming).toMatchObject({ everyValue: 1, everyUnit: "checkpoint" });
+    const explicit = applyMainPartProgramming({ ...input, venueId: "synthetic-court", mainPartProgramming: [{ mode: "every", everyValue: 500, everyUnit: "metres" }] }, { ...draft, source });
+    expect(explicit.session.phases.find((phase) => phase.kind === "main")?.items[0].programming).toMatchObject({ everyValue: 500, everyUnit: "metres" });
+    expect(explicit.warnings.join(" ")).toContain("noch nicht automatisch nachgewiesen");
   });
 
   it("adds arithmetic warnings for invalid ladder steps and round recovery", () => {

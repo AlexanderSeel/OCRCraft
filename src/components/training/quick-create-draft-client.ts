@@ -1,4 +1,5 @@
 import { exerciseTypes, type ExerciseType } from "../../domain/exercise/classification";
+import { effectiveTrainingLocation, type ClubVenueId } from "../../domain/training/club-venues";
 import {
   AUDIENCES,
   BODY_REGIONS,
@@ -40,6 +41,7 @@ export interface QuickCreateDraftClientInput {
   readonly exerciseTypes?: readonly string[];
   readonly formats: readonly string[];
   readonly location?: string;
+  readonly venueId?: ClubVenueId;
   readonly intensity: string;
   readonly builderMode?: string;
   readonly warmupExerciseCount?: number;
@@ -77,6 +79,7 @@ export interface NormalizedTrainingDraftRequest {
   readonly exerciseTypes: readonly ExerciseType[];
   readonly formats: readonly TrainingFormat[];
   readonly location: TrainingLocation;
+  readonly venueId?: ClubVenueId;
   readonly intensity: DraftIntensity;
   readonly builderMode: QuickCreateBuilderMode;
   readonly warmupExerciseCount: number;
@@ -173,8 +176,8 @@ function normalizeProgramming(value: MainPartProgramming | undefined): MainPartP
   if (mode === "chipper") return { mode, chipperRepsPerExercise: boundedInteger(value?.chipperRepsPerExercise, 20, 1, 500), ...partner };
   if (mode === "every") return {
     mode,
-    everyValue: boundedInteger(value?.everyValue, 500, 1, 10000),
-    everyUnit: isEveryUnit(value?.everyUnit) ? value.everyUnit : "metres",
+    everyValue: boundedInteger(value?.everyValue, 1, 1, 10000),
+    everyUnit: isEveryUnit(value?.everyUnit) ? value.everyUnit : "checkpoint",
     everyWorkSeconds: boundedInteger(value?.everyWorkSeconds, 40, 5, 1800),
     everyRestSeconds: boundedInteger(value?.everyRestSeconds, 20, 0, 1800),
     ...partner,
@@ -251,7 +254,8 @@ export function normalizeTrainingDraftRequest(input: QuickCreateDraftClientInput
     avoidBodyRegions,
     exerciseTypes: selectedExerciseTypes,
     formats,
-    location,
+    location: effectiveTrainingLocation({ location, venueId: input.venueId }),
+    venueId: input.venueId,
     intensity,
     builderMode,
     warmupExerciseCount,

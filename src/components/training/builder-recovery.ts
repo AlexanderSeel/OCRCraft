@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CLUB_VENUE_IDS } from "@/domain/training/club-venues";
 import { quickCreateRecoverySchema } from "./quick-create-recovery";
 import { mainPartProgrammingSchema } from "@/server/training/training-draft-schema";
 
@@ -7,7 +8,7 @@ const phaseCount = z.number().int().min(1).max(4);
 const exerciseCounts = z.array(count).min(1).max(4);
 const shared = quickCreateRecoverySchema.pick({
   ageRange: true, goals: true, bodyRegions: true, avoidBodyRegions: true, preferredExercises: true,
-  formats: true, competitionStyleKey: true, location: true, intensity: true, availableEquipment: true,
+  formats: true, competitionStyleKey: true, location: true, venueId: true, intensity: true, availableEquipment: true,
   obstacleInventoryDeclared: true, availableObstacleExerciseIds: true, groupSplitCount: true,
 });
 export const builderRecoverySchema = shared.extend({
@@ -21,6 +22,7 @@ export const builderRecoverySchema = shared.extend({
 }).refine((value) => value.mainPartExerciseCounts.length === value.mainPartCount && value.mainPartProgramming.length === value.mainPartCount, { message: "Main-part input arrays must match the main-part count." });
 
 export const quickPlannerRecoverySchema = z.object({
+  venueId: z.enum(CLUB_VENUE_IDS).optional(),
   audience: z.enum(["kids", "youth", "adults", "mixed"]), participants: count,
   duration: z.number().int().min(1).max(180), goal: z.string().max(200), bodyRegion: z.string().max(200),
   format: z.string().max(200), location: z.enum(["indoor", "outdoor", "mixed"]), warmupCount: count,

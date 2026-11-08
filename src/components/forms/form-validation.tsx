@@ -15,7 +15,7 @@ export function FormValidation() {
       if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) return;
       field.setAttribute("aria-invalid", "true");
       const label = field.closest("label") ?? field.parentElement;
-      if (!label || label.querySelector(`[${errorAttribute}]`)) return;
+      if (!label || field.dataset.validationErrorId) return;
       const message = document.createElement("span");
       message.setAttribute(errorAttribute, "true");
       message.setAttribute("role", "alert");
@@ -38,23 +38,24 @@ export function FormValidation() {
               ? "Die Eingabe hat eine ungültige Länge."
               : "Bitte Eingabe prüfen.";
       label.append(message);
+      field.dataset.validationErrorId = message.id;
       const describedBy = field.getAttribute("aria-describedby");
-      if (describedBy) field.dataset.validationDescribedby = describedBy;
       field.setAttribute("aria-describedby", describedBy ? `${describedBy} ${message.id}` : message.id);
     };
     const onInput = (event: Event) => {
       const field = event.target;
       if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) return;
-      if (field.validity.valid) {
+      const errorId = field.dataset.validationErrorId;
+      if (field.validity.valid && errorId) {
         field.removeAttribute("aria-invalid");
-        (field.closest("label") ?? field.parentElement)?.querySelector(`[${errorAttribute}]`)?.remove();
-        const originalDescribedBy = field.dataset.validationDescribedby;
-        if (originalDescribedBy) {
-          field.setAttribute("aria-describedby", originalDescribedBy);
-          delete field.dataset.validationDescribedby;
+        document.getElementById(errorId)?.remove();
+        const remainingDescriptions = (field.getAttribute("aria-describedby") ?? "").split(/\s+/).filter((id) => id && id !== errorId);
+        if (remainingDescriptions.length) {
+          field.setAttribute("aria-describedby", remainingDescriptions.join(" "));
         } else {
           field.removeAttribute("aria-describedby");
         }
+        delete field.dataset.validationErrorId;
       }
     };
     document.addEventListener("invalid", onInvalid, true);

@@ -1,5 +1,8 @@
 "use client";
 
+import { ClubVenuePicker } from "./club-venue-picker";
+import type { ClubVenueId } from "@/domain/training/club-venues";
+
 import { PlanningEligibilityNotice } from "./planning-eligibility-notice";
 
 import { usePlanningRecovery } from "./use-planning-recovery";
@@ -45,6 +48,7 @@ export function TrainingQuickPlanner({
   const [goal, setGoal] = useState("Ganzkörper");
   const [bodyRegion, setBodyRegion] = useState("full-body");
   const [format, setFormat] = useState("circuit");
+  const [venueId, setVenueId] = useState<ClubVenueId | undefined>();
   const [location, setLocation] = useState("mixed");
   const [warmupCount, setWarmupCount] = useState(2);
   const [mainPartCounts, setMainPartCounts] = useState<readonly number[]>([4]);
@@ -64,14 +68,15 @@ export function TrainingQuickPlanner({
   const [error, setError] = useState<string | null>(null);
 
 
-  const recovery = usePlanningRecovery(QUICK_PLANNER_RECOVERY_KEY, quickPlannerRecoverySchema, { audience, participants, duration, goal, bodyRegion, format, location, warmupCount, mainPartCounts, cooldownCount, mainPartCount, organizationMode, teamSize, groupSplitCount, obstacleInventoryDeclared, availableObstacleExerciseIds }, (restored) => {
+  const recovery = usePlanningRecovery(QUICK_PLANNER_RECOVERY_KEY, quickPlannerRecoverySchema, { audience, participants, duration, goal, bodyRegion, format, location, venueId, warmupCount, mainPartCounts, cooldownCount, mainPartCount, organizationMode, teamSize, groupSplitCount, obstacleInventoryDeclared, availableObstacleExerciseIds }, (restored) => {
     setAudience(restored.audience);
     setParticipants(restored.participants);
     setDuration(restored.duration);
     setGoal(restored.goal);
     setBodyRegion(restored.bodyRegion);
     setFormat(restored.format);
-    setLocation(restored.location);
+    setLocation(restored.venueId ? "outdoor" : restored.location);
+    setVenueId(restored.venueId);
     setWarmupCount(restored.warmupCount);
     setMainPartCounts(restored.mainPartCounts);
     setCooldownCount(restored.cooldownCount);
@@ -122,6 +127,7 @@ export function TrainingQuickPlanner({
       exerciseTypes: [],
       formats: [format],
       location,
+      venueId,
       intensity: format === "technique" ? "technique" : "balanced",
       builderMode: "local",
       warmupExerciseCount: warmupCount,
@@ -218,9 +224,11 @@ export function TrainingQuickPlanner({
           }
           invalidateDraft();
         }} options={formats} />
-        <Select label="Ort" value={location} onChange={(value) => { setLocation(value); invalidateDraft(); }} options={locations} />
+        <Select label="Ort" value={location} onChange={(value) => { setLocation(value); setVenueId(undefined); invalidateDraft(); }} options={locations} />
         <Select label="Organisation" value={organizationMode} onChange={(value) => { setOrganizationMode(value as "solo" | "team"); invalidateDraft(); }} options={[["solo", "Alleine / individuell"], ["team", "Teams"]]} />
       </div>
+
+      <ClubVenuePicker value={venueId} onChange={(value) => { setVenueId(value); if (value) setLocation("outdoor"); invalidateDraft(); }} />
 
       <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

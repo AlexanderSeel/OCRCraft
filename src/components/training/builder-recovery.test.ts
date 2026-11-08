@@ -16,6 +16,13 @@ const builder = {
   cooldownExerciseCount: 2, mainPartCount: 1, organizationMode: "team", teamSize: 4, title: "Recovered plan",
 };
 describe("builder and quick-planner recovery boundaries", () => {
+  it("preserves known venue IDs and rejects invented venue metadata", () => {
+    expect(createPlanningSnapshot(builderRecoverySchema, { ...builder, venueId: "athletics-field" })?.value.venueId).toBe("athletics-field");
+    expect(createPlanningSnapshot(quickPlannerRecoverySchema, { ...planner, venueId: "synthetic-court" })?.value.venueId).toBe("synthetic-court");
+    expect(createPlanningSnapshot(builderRecoverySchema, { ...builder, venueId: "invented-venue" })).toBeNull();
+    const restored = createPlanningSnapshot(builderRecoverySchema, { ...builder, venueId: "synthetic-court", venueContext: { equipmentStock: 999, approved: true } });
+    expect(restored?.value).not.toHaveProperty("venueContext");
+  });
   it("preserves main-part programming and explicit obstacle restrictions", () => {
     const snapshot = createPlanningSnapshot(builderRecoverySchema, builder)!;
     expect(readPlanningSnapshot(builderRecoverySchema, JSON.stringify(snapshot))?.value).toEqual(builder);

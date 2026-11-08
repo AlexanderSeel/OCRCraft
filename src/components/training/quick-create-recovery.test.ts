@@ -9,6 +9,11 @@ const inputs = {
   availableObstacleExerciseIds: [], intensity: "technique", sessionTitle: "Kindertraining",
 };
 describe("Quick Create recovery boundary", () => {
+  it("round-trips a known venue without accepting invented venue IDs", () => {
+    const snapshot = createQuickCreateSnapshot({ ...inputs, venueId: "synthetic-court" });
+    expect(readQuickCreateSnapshot(JSON.stringify(snapshot))?.value.venueId).toBe("synthetic-court");
+    expect(createQuickCreateSnapshot({ ...inputs, venueId: "invented-venue" })).toBeNull();
+  });
   it("round-trips planning choices including an explicit empty obstacle inventory", () => {
     const snapshot = createQuickCreateSnapshot(inputs)!;
     expect(readQuickCreateSnapshot(JSON.stringify(snapshot))?.value).toEqual(inputs);

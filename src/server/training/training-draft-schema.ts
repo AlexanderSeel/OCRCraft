@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { CLUB_VENUE_IDS } from "../../domain/training/club-venues";
+import { getDictionary } from "../../i18n/dictionaries";
 import { exerciseTypes } from "../../domain/exercise/classification";
 import { TEAM_COMPETITION_STYLE_KEYS, getTeamCompetitionStyle } from "../../domain/training/team-competition-catalog";
 import {
@@ -77,6 +79,7 @@ export const trainingDraftRequestSchema = z.object({
   exerciseTypes: z.array(z.enum(exerciseTypes)).max(exerciseTypes.length).default([]),
   formats: z.array(z.enum(TRAINING_FORMATS)).min(1).max(4),
   location: z.enum(TRAINING_LOCATIONS).default("mixed"),
+  venueId: z.enum(CLUB_VENUE_IDS).optional(),
   intensity: z.enum(["technique", "balanced", "conditioning"]),
   builderMode: z.enum(TRAINING_BUILDER_MODES).default("local"),
   warmupExerciseCount: z.number().int().min(1).max(6).default(2),
@@ -101,6 +104,9 @@ export const trainingDraftRequestSchema = z.object({
   maxAge: z.number().int().min(3).max(99).optional(),
   locale: z.enum(["de", "en"]).default("de"),
 }).superRefine((value, context) => {
+  if (value.venueId && value.location === "indoor") {
+    context.addIssue({ code: "custom", path: ["venueId"], message: getDictionary(value.locale).venues.indoorConflict });
+  }
   if (!value.competitionStyleKey) return;
   const style = getTeamCompetitionStyle(value.competitionStyleKey);
   if (!style) {

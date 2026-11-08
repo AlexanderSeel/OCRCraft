@@ -106,6 +106,7 @@ async function buildInitialState(trainingId: string): Promise<TrainingBuilderIni
     exerciseTypes: request.exerciseTypes,
     formats: request.formats,
     location: request.location,
+    venueId: request.venueId,
     intensity: request.intensity,
     warmupExerciseCount: session.phases.find((phase) => phase.kind === "warmup")?.items.length || request.warmupExerciseCount,
     mainExerciseCount: mainPartExerciseCounts?.[0] ?? request.mainExerciseCount,

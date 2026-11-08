@@ -1,4 +1,5 @@
 import "server-only";
+import { effectiveTrainingLocation, getClubVenue } from "@/domain/training/club-venues";
 
 import type { TrainingDraft, TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import { getTrainingTemplateByKey } from "@/domain/training/training-template-catalog";
@@ -33,7 +34,7 @@ async function eligibleCandidatesFor(
     audience: request.audience,
     minAge: request.minAge,
     locale: request.locale,
-    location: request.location,
+    location: effectiveTrainingLocation(request),
     availableObstacleExerciseIds: request.availableObstacleExerciseIds,
   });
   const equipmentFiltered = filterCandidatesForDeclaredEquipment(candidates, request.availableEquipment);
@@ -175,7 +176,7 @@ export async function createAndPersistDeterministicTrainingDraft(input: Training
     notes: templateDefinition
       ? `OCRCraft Trainingsvorlage · ${templateDefinition.key} · Strukturreferenz: ${templateDefinition.provenance.referenceUrl}`
       : undefined,
-    generation: { builderMode: "local", request: generationRequest, trainerReviewed: true },
+    generation: { builderMode: "local", request: requestWithVenueProvenance(generationRequest), trainerReviewed: true },
   });
   return { id, draft };
 }
@@ -197,9 +198,14 @@ export async function persistReviewedAiTrainingDraft(input: ReviewedAiTrainingPe
       builderMode: "ai",
       providerId: provider?.id ?? null,
       providerModel: provider?.modelId ?? null,
-      request: input.request,
+      request: requestWithVenueProvenance(input.request),
       trainerReviewed: true,
     },
   });
   return { id, draft };
+}
+
+function requestWithVenueProvenance(request: TrainingDraftRequest) {
+  const venue = getClubVenue(request.venueId);
+  return venue ? { ...request, venueContext: venue } : request;
 }

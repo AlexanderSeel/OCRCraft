@@ -59,6 +59,22 @@ afterEach(() => {
 });
 
 describe("OpenAI-compatible training provider", () => {
+  it("sends known venue facts, effective outdoor location and explicit unknowns without inventing capacity", async () => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body));
+      const payload = JSON.parse(body.messages.find((message: { role: string }) => message.role === "user").content);
+      expect(payload.request).toMatchObject({ location: "outdoor", venueId: "synthetic-court" });
+      expect(payload.venueContext).toMatchObject({ id: "synthetic-court", version: 1, overallDimensionsMeters: { length: 40, width: 20 },
+        usableDimensionsMeters: null, equipmentStock: null, safetyClearancesMeters: null, runningLoopMeters: null });
+      expect(body.messages[0].content).toContain("do not infer usable shuttle length");
+      return new Response(JSON.stringify({ choices: [{ message: { content: "{}" } }] }), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    await new OpenAiCompatibleTrainingProvider("https://example.invalid", "test").generateTrainingPlan({
+      request: { ...request, location: "mixed", venueId: "synthetic-court" }, approvedExercises: [exercise],
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
   it("sends multiple previous sessions as bounded recomposition context", async () => {
     const fetchMock = vi.fn(async (
       input: RequestInfo | URL,

@@ -123,3 +123,12 @@ Builder-Sicherungen sind nach Ursprungstraining und Einstiegsmodus getrennt; ein
 Offen bleibt ausschließlich der weitere UX-02-Teilschritt für bereits erzeugte oder bearbeitete Vorschläge. Dieser Abschluss ersetzt den älteren Zwischenstand, nach dem Builder-/Quick-Planner-Eingaben noch nicht wiederherstellbar waren.
 
 Nachprüfung bestanden: 281 Unit-/Integrationstests (83 Dateien), sieben gezielte Browsertests (Builder-/Quick-Planner-Restore, Modusisolation, mobiles Layout, Backup-Löschung, Quick-Create-Regressionen und beide bisherigen Speichern-Workflows), Produktionsbuild inklusive TypeScript sowie UI-/Architekturgates. Lint meldet weiterhin ausschließlich die bekannte Warnung in `training-excel-service.ts:248`.
+
+
+## Nachbereitung: Geländewahl und erhaltene Feldhilfe
+
+Quick Create, Quick Planner und detaillierter Builder verwenden denselben DE/EN-Geländepicker mit explizitem Label und verknüpftem Hilfetext. Bekannte Gesamtmaße und die 400-m-Laufbahn werden von unbekannter nutzbarer Fläche, Geräten und Freizonen getrennt. Auswahl setzt Outdoor und wird als Eingabe wiederhergestellt; eine Geländewahl verleiht keine fachliche Sicherheitsfreigabe.
+
+Die Browserprüfung deckte einen globalen Accessibilityfehler auf: `FormValidation` entfernte bei jeder gültigen Feldänderung `aria-describedby`, auch ohne zuvor selbst eine Fehlermeldung erzeugt zu haben. Dadurch gingen bestehende Hilfetextverknüpfungen verloren. Die Korrektur verwaltet eigene Fehler-IDs pro Feld und entfernt ausschließlich deren Meldung und Beschreibungs-ID; andere Hilfetexte und nicht von dieser Validierung gesetzte Fehlerzustände bleiben erhalten. Die touchfähigen/schließbaren Feldhinweise und übrigen UX-07–09-Punkte bleiben getrennt offen.
+
+Nachprüfung: sechs gezielte Browserfälle nach Wiederholung umgebungsbedingt unterbrochener Fälle bestanden. Alle drei Picker wurden bei 390 px ohne Dokumentüberlauf, mit DE/EN-Texten und erhaltenem Hilfelink nach Auswahl/Restore geprüft; ein zusätzlicher nativer Validierungsfall prüft das Entfernen nur des eigenen Fehlers. Generieren/Speichern/erneutes Laden erhält die Geländewahl. [Visuell geprüfter mobiler Quick-Create-Ausschnitt](../artifacts/ui-ux-review/club-venue-quick-create-mobile.png).

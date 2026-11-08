@@ -1,4 +1,6 @@
 import type { TrainingDraft } from "@/domain/training/draft";
+import { defaultVenueRunningTrigger, getClubVenue } from "@/domain/training/club-venues";
+import { getDictionary } from "@/i18n/dictionaries";
 import type { MainPartProgramming, PartnerWorkMode } from "@/domain/training/model";
 import { analyzeMainPartProgramming } from "@/domain/training/programming-math";
 import type { TrainingDraftRequest } from "./training-draft-schema";
@@ -28,8 +30,7 @@ export function applyMainPartProgramming(
           else if (request.formats.includes("run-exercise")) {
             baseProgramming = {
               mode: "every",
-              everyValue: 500,
-              everyUnit: "metres",
+              ...defaultVenueRunningTrigger(request.venueId),
               everyWorkSeconds: 40,
               everyRestSeconds: 20,
             };
@@ -46,11 +47,16 @@ export function applyMainPartProgramming(
     };
   });
 
-  const programmingWarnings = buildProgrammingWarnings(
+  const programmingWarnings = [...buildProgrammingWarnings(
     phases.find((phase) => phase.kind === "main")?.items ?? [],
     request.participantCount,
     request.formats.includes("partner"),
-  );
+  )];
+  const venue = getClubVenue(request.venueId);
+  if (venue) {
+    const copy = getDictionary(request.locale).venues;
+    programmingWarnings.push(`${copy.names[venue.id]}: ${copy.planningWarning}`);
+  }
   return {
     ...draft,
     session: { ...draft.session, phases },

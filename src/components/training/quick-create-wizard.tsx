@@ -1,5 +1,8 @@
 "use client";
 
+import { ClubVenuePicker } from "./club-venue-picker";
+import type { ClubVenueId } from "@/domain/training/club-venues";
+
 import { PlanningEligibilityNotice } from "./planning-eligibility-notice";
 
 import Link from "next/link";
@@ -176,6 +179,7 @@ export function QuickCreateWizard({
   const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>([]);
   const [formats, setFormats] = useState<readonly string[]>(initialTemplate?.formats ?? DEFAULT_FORMATS);
   const [competitionStyleKey, setCompetitionStyleKey] = useState("");
+  const [venueId, setVenueId] = useState<ClubVenueId | undefined>();
   const [location, setLocation] = useState(initialTemplate?.location ?? "mixed");
   const [availableEquipment, setAvailableEquipment] = useState<Readonly<Record<string, string>>>(() =>
     equipmentStateFromCatalog(equipmentOptions),
@@ -197,7 +201,7 @@ export function QuickCreateWizard({
   }, []);
 
 
-  const recovery = useQuickCreateRecovery({ step, selectedGroupId, selectedTemplateKey, groupType, ageRange, participantCount, duration, groupSplitCount, groupOrganizationMode, groupTeamSize, stationGroupSizeTarget, goals, bodyRegions, avoidBodyRegions, preferredExercises, formats, competitionStyleKey, location, availableEquipment, obstacleInventoryDeclared, availableObstacleExerciseIds, intensity, sessionTitle }, (restored) => {
+  const recovery = useQuickCreateRecovery({ step, selectedGroupId, selectedTemplateKey, groupType, ageRange, participantCount, duration, groupSplitCount, groupOrganizationMode, groupTeamSize, stationGroupSizeTarget, goals, bodyRegions, avoidBodyRegions, preferredExercises, formats, competitionStyleKey, location, venueId, availableEquipment, obstacleInventoryDeclared, availableObstacleExerciseIds, intensity, sessionTitle }, (restored) => {
     setStep(restored.step);
     setSelectedGroupId(restored.selectedGroupId);
     setSelectedTemplateKey(restored.selectedTemplateKey);
@@ -215,7 +219,8 @@ export function QuickCreateWizard({
     setPreferredExercises(restored.preferredExercises);
     setFormats(restored.formats);
     setCompetitionStyleKey(restored.competitionStyleKey);
-    setLocation(restored.location);
+    setLocation(restored.venueId ? "outdoor" : restored.location);
+    setVenueId(restored.venueId);
     setAvailableEquipment(restored.availableEquipment);
     setObstacleInventoryDeclared(restored.obstacleInventoryDeclared);
     setAvailableObstacleExerciseIds(restored.availableObstacleExerciseIds);
@@ -276,6 +281,7 @@ export function QuickCreateWizard({
     setParticipantCount(preset.participantCount);
     if (preset.durationMinutes != null) setDuration(preset.durationMinutes);
     setLocation(preset.defaultLocation);
+    setVenueId(undefined);
     setAvailableEquipment(
       preset.defaultEquipment.length > 0
         ? Object.fromEntries(preset.defaultEquipment.map((item) => [item.equipmentId, String(item.quantityAvailable)]))
@@ -304,6 +310,7 @@ export function QuickCreateWizard({
     setBodyRegions(template.bodyRegions);
     setFormats(template.formats);
     setLocation(template.location);
+    setVenueId(undefined);
     setIntensity(template.intensity);
     setSessionTitle(template.title);
     invalidateDraft();
@@ -357,6 +364,7 @@ export function QuickCreateWizard({
       avoidBodyRegions,
       formats,
       location,
+      venueId,
       organizationMode: competitionActive || formats.includes("partner") ? "team" : groupOrganizationMode,
       teamSize: competitionActive
         ? competitionStyle.teamSize
@@ -654,6 +662,7 @@ export function QuickCreateWizard({
                       key={id}
                       onClick={() => {
                         setLocation(id);
+                        setVenueId(undefined);
                         invalidateDraft();
                       }}
                       type="button"
@@ -666,6 +675,8 @@ export function QuickCreateWizard({
                   ))}
                 </div>
               </div>
+
+              <ClubVenuePicker value={venueId} onChange={(value) => { setVenueId(value); if (value) setLocation("outdoor"); invalidateDraft(); }} />
 
               <div className="mt-7 border-t border-[var(--border)] pt-6">
                 <div className="text-sm font-black">Trainingsformat</div>
@@ -842,6 +853,7 @@ export function QuickCreateWizard({
                   ["Nicht belasten", avoidBodyRegions.length ? avoidBodyRegions.join(", ") : "Keine Ausschlüsse"],
                   ["Wunschübungen", preferredExercises.length ? preferredExercises.map((item) => item.label).join(", ") : "Keine Vorgabe"],
                   ["Ort", selectedLocation?.[1] ?? location],
+                  [dictionary.venues.title, venueId ? dictionary.venues.names[venueId] : dictionary.venues.none],
                   ["Formate", formats.join(", ")],
                   ["Hindernisse", obstacleInventoryDeclared
                     ? selectedObstacleNames.length > 0

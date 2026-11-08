@@ -55,7 +55,7 @@ export function MainPartProgrammingEditor({ index, value, onChange, partnerWorko
     if (mode === "reverse-ladder") return onChange({ mode, ladderStart: 10, ladderEnd: 2, ladderStep: 2, ...partner });
     if (mode === "pyramid") return onChange({ mode, ladderStart: 2, ladderEnd: 10, ladderStep: 2, ...partner });
     if (mode === "chipper") return onChange({ mode, chipperRepsPerExercise: 20, ...partner });
-    if (mode === "every") return onChange({ mode, everyValue: 500, everyUnit: "metres", everyWorkSeconds: 40, everyRestSeconds: 20, ...partner });
+    if (mode === "every") return onChange({ mode, everyValue: 1, everyUnit: "checkpoint", everyWorkSeconds: 40, everyRestSeconds: 20, ...partner });
     onChange({ mode, ...partner });
   }
 
@@ -110,13 +110,13 @@ export function MainPartProgrammingEditor({ index, value, onChange, partnerWorko
 
       {value.mode === "every" ? (
         <div className="mt-3 grid grid-cols-2 gap-3">
-          <NumberField label="Alle / jeder" min={1} max={10000} value={value.everyValue ?? 500} onChange={(everyValue) => onChange({ ...value, everyValue })} />
+          <NumberField label="Alle / jeder" min={1} max={10000} value={value.everyValue ?? 1} onChange={(everyValue) => onChange({ ...value, everyValue })} />
           <label className="grid gap-1.5 text-xs font-bold">
             Einheit
             <select
               className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 font-normal"
               onChange={(event) => onChange({ ...value, everyUnit: event.target.value as MainPartEveryUnit })}
-              value={value.everyUnit ?? "metres"}
+              value={value.everyUnit ?? "checkpoint"}
             >
               {MAIN_PART_EVERY_UNITS.map((unit) => <option key={unit} value={unit}>{everyUnitLabels[unit]}</option>)}
             </select>

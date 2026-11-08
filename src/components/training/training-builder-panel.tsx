@@ -1,5 +1,8 @@
 "use client";
 
+import { ClubVenuePicker } from "./club-venue-picker";
+import type { ClubVenueId } from "@/domain/training/club-venues";
+
 import { PlanningEligibilityNotice } from "./planning-eligibility-notice";
 
 import { usePlanningRecovery } from "./use-planning-recovery";
@@ -87,6 +90,7 @@ export interface TrainingBuilderInitialState {
   readonly exerciseTypes: readonly string[];
   readonly formats: readonly string[];
   readonly location: string;
+  readonly venueId?: ClubVenueId;
   readonly intensity: string;
   readonly warmupExerciseCount?: number;
   readonly mainExerciseCount?: number;
@@ -169,6 +173,7 @@ export function TrainingBuilderPanel({
   const [preferredExercises, setPreferredExercises] = useState<readonly SelectedExerciseReference[]>(initialState?.preferredExercises ?? []);
   const [formats, setFormats] = useState<readonly string[]>(initialState?.formats ?? ["circuit"]);
   const [competitionStyleKey, setCompetitionStyleKey] = useState("");
+  const [venueId, setVenueId] = useState<ClubVenueId | undefined>(initialState?.venueId);
   const [location, setLocation] = useState(initialState?.location ?? "mixed");
   const [intensity, setIntensity] = useState(initialState?.intensity ?? "balanced");
   const [warmupExerciseCount, setWarmupExerciseCount] = useState(initialState?.warmupExerciseCount ?? 2);
@@ -201,7 +206,7 @@ export function TrainingBuilderPanel({
   const [replacingExerciseId, setReplacingExerciseId] = useState<string | null>(null);
 
 
-  const recovery = usePlanningRecovery(builderRecoveryKey(initialState?.sourceTrainingId, initialState?.builderMode ?? initialBuilderMode), builderRecoverySchema, { builderMode, audience, ageRange, participants, duration, goals, bodyRegions, avoidBodyRegions, selectedTypes, sourceTrainingIds, preferredExercises, formats, competitionStyleKey, location, intensity, warmupExerciseCount, mainPartExerciseCounts, mainPartProgramming, cooldownExerciseCount, mainPartCount, organizationMode, teamSize, groupSplitCount, availableEquipment, obstacleInventoryDeclared, availableObstacleExerciseIds, title }, (restored) => {
+  const recovery = usePlanningRecovery(builderRecoveryKey(initialState?.sourceTrainingId, initialState?.builderMode ?? initialBuilderMode), builderRecoverySchema, { builderMode, audience, ageRange, participants, duration, goals, bodyRegions, avoidBodyRegions, selectedTypes, sourceTrainingIds, preferredExercises, formats, competitionStyleKey, location, venueId, intensity, warmupExerciseCount, mainPartExerciseCounts, mainPartProgramming, cooldownExerciseCount, mainPartCount, organizationMode, teamSize, groupSplitCount, availableEquipment, obstacleInventoryDeclared, availableObstacleExerciseIds, title }, (restored) => {
     setBuilderMode(restored.builderMode);
     setAudience(restored.audience);
     setAgeRange(restored.ageRange);
@@ -215,7 +220,8 @@ export function TrainingBuilderPanel({
     setPreferredExercises(restored.preferredExercises);
     setFormats(restored.formats);
     setCompetitionStyleKey(restored.competitionStyleKey);
-    setLocation(restored.location);
+    setLocation(restored.venueId ? "outdoor" : restored.location);
+    setVenueId(restored.venueId);
     setIntensity(restored.intensity);
     setWarmupExerciseCount(restored.warmupExerciseCount);
     setMainPartExerciseCounts(restored.mainPartExerciseCounts);
@@ -354,6 +360,7 @@ export function TrainingBuilderPanel({
       exerciseTypes: selectedTypes,
       formats,
       location,
+      venueId,
       intensity,
       builderMode,
       warmupExerciseCount,
@@ -540,11 +547,12 @@ export function TrainingBuilderPanel({
             <Field label="Teilnehmer"><input className={formControlClass} min={1} max={200} onChange={(event) => { setParticipants(clampInteger(Number(event.target.value), 1, 200)); invalidate(); }} type="number" value={participants} /></Field>
             <Field label="Dauer"><input className={formControlClass} max={180} min={30} onChange={(event) => { setDuration(clampInteger(Number(event.target.value), 30, 180)); invalidate(); }} type="number" value={duration} /></Field>
             <Field label="Ort">
-              <select className={formControlClass} onChange={(event) => { setLocation(event.target.value); invalidate(); }} value={location}>
+              <select className={formControlClass} onChange={(event) => { setLocation(event.target.value); setVenueId(undefined); invalidate(); }} value={location}>
                 <option value="mixed">Flexibel</option><option value="indoor">Indoor</option><option value="outdoor">Outdoor</option>
               </select>
             </Field>
           </div>
+          <ClubVenuePicker value={venueId} onChange={(value) => { setVenueId(value); if (value) setLocation("outdoor"); invalidate(); }} />
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" data-tour="builder-structure">

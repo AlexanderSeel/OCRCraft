@@ -1,4 +1,5 @@
 import "server-only";
+import { effectiveTrainingLocation } from "@/domain/training/club-venues";
 
 import { isBodyRegion } from "../../domain/body-regions";
 import { getTrainingPhaseBudgets, type TrainingDraft, type TrainingDraftExerciseCandidate } from "../../domain/training/draft";
@@ -23,7 +24,7 @@ export async function regenerateTrainingDraftPhase(input: TrainingPhaseRegenerat
     audience: request.audience,
     minAge: request.minAge,
     locale: request.locale,
-    location: request.location,
+    location: effectiveTrainingLocation(request),
     availableObstacleExerciseIds: request.availableObstacleExerciseIds,
   });
   const equipmentFiltered = filterCandidatesForDeclaredEquipment(rawCandidates, request.availableEquipment);

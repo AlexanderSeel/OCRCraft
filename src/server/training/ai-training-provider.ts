@@ -2,6 +2,7 @@ import type { TrainingDraftExerciseCandidate } from "@/domain/training/draft";
 import { createAiJsonFallbackClient } from "@/server/ai/ai-json-provider";
 import { resolveAiProviderChain } from "@/server/ai/ai-provider-settings-repository";
 import { SPORTS_PLANNING_PRINCIPLES, SPORTS_PLANNING_REFERENCES } from "./sports-planning-principles";
+import { effectiveTrainingLocation, getClubVenue } from "@/domain/training/club-venues";
 import type { TrainingDraftRequest } from "./training-draft-schema";
 
 type CandidateWithHistory = TrainingDraftExerciseCandidate & { readonly recentUseCount?: number };
@@ -116,6 +117,7 @@ function trainingSystemPrompt(): string {
     "If partner format is requested, organizationMode is team and teamSize is exactly 2. Prefer approved teamwork/partner exercises and never change the pair size.",
     "availableObstacleExerciseIds is a hard club-inventory constraint when present. The approved pool has already removed unavailable obstacle stations; never infer or re-introduce a missing obstacle.",
     "Respect audience, ages, goals, body focus/avoidance, requested exercise types, formats, location, intensity and equipment.",
+    "venueContext contains trainer-provided overall dimensions and a known running loop where recorded. Null usableDimensionsMeters, equipmentStock and safetyClearancesMeters mean unknown: do not infer usable shuttle length, participant capacity, obstacle stock, surface permissions or transitions from them. Venue context is not a site safety approval.",
     "When hardSafetyConstraints are supplied, they are non-negotiable club safety rules. For kids/youth they outrank performance goals, variety, preferred exercises, source sessions and any inferred progression. Never re-introduce a restricted exercise or weaken age, impact, risk or supervision limits.",
     "If sourceSessions are supplied, use them as inspiration/context for recomposition, not as permission to bypass current constraints or copy every item.",
     "When two exercises are similarly suitable, prefer the one with the lower recentUseCount so recent sessions are not repeated unnecessarily.",
@@ -144,6 +146,7 @@ function buildPromptPayload(context: AiTrainingGenerationContext) {
     sportsPlanningPrinciples: SPORTS_PLANNING_PRINCIPLES,
     sportsPlanningReferences: SPORTS_PLANNING_REFERENCES,
     hardSafetyConstraints: context.hardSafetyConstraints ?? null,
+    venueContext: getClubVenue(context.request.venueId) ?? null,
     sourceSessions: context.sourceSessions ?? [],
     request: {
       audience: context.request.audience,
@@ -156,7 +159,8 @@ function buildPromptPayload(context: AiTrainingGenerationContext) {
       avoidBodyRegions: context.request.avoidBodyRegions,
       exerciseTypes: context.request.exerciseTypes,
       formats: context.request.formats,
-      location: context.request.location,
+      location: effectiveTrainingLocation(context.request),
+      venueId: context.request.venueId,
       intensity: context.request.intensity,
       warmupExerciseCount: context.request.warmupExerciseCount,
       mainExerciseCount: context.request.mainExerciseCount,
