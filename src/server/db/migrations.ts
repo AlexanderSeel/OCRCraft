@@ -104,11 +104,6 @@ export async function applyPendingMigrations(): Promise<readonly number[]> {
   if (freshDatabase && !applied.has(INITIAL_BASELINE_VERSION)) {
     throw new Error(`Fresh database baseline is missing version ${INITIAL_BASELINE_VERSION}.`);
   }
-  const scripts = await Promise.all(
-    migrations.map(({ fileName }) =>
-      readFile(path.join(process.cwd(), "src", "server", "db", "migrations", fileName), "utf8"),
-    ),
-  );
   const newlyApplied: number[] = [];
 
   for (let index = 0; index < migrations.length; index += 1) {
@@ -116,7 +111,8 @@ export async function applyPendingMigrations(): Promise<readonly number[]> {
     if (applied.has(migration.version)) continue;
 
     await withDuckDbConnection(async (connection) => {
-      await runSqlScript(connection, scripts[index]);
+      const script = await readFile(path.join(process.cwd(), "src", "server", "db", "migrations", migration.fileName), "utf8");
+      await runSqlScript(connection, script);
     });
     newlyApplied.push(migration.version);
   }

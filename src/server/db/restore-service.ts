@@ -5,6 +5,7 @@ import path from "node:path";
 import { requireSuperAdmin } from "@/server/auth/identity-service";
 import { closeDuckDbInstance, getDuckDbPath, withDuckDbFileLock } from "./duckdb";
 import { createDatabaseBackup } from "./backup-service";
+import { resetDatabaseReady } from "./database-ready";
 
 const backupNamePattern = /^ocrcraft-[\w-]+\.duckdb$/;
 
@@ -25,6 +26,7 @@ export async function restoreDatabaseBackup(fileName: string): Promise<{ readonl
     await closeDuckDbInstance();
     await unlink(`${databasePath}.wal`).catch(() => undefined);
     await copyFile(sourcePath, databasePath);
+    resetDatabaseReady();
   });
   return { safetyBackup: safety.fileName };
 }

@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import type { DuckDBConnection } from "@duckdb/node-api";
 import { ensureDatabaseReady } from "@/server/db/database-ready";
-import { withDuckDbConnection } from "@/server/db/duckdb";
+import { getDuckDbPath, withDuckDbConnection } from "@/server/db/duckdb";
 import { adaptHasaneyldrmExercises, importedEquipmentCatalogSeedKey, type ExerciseImportDraft, type HasaneyldrmExercise } from "./hasaneyldrm-exercises-adapter";
 import { evaluateExternalContentLicense } from "./external-content-license-policy";
 import { findBestSourceCatalogMatch } from "./source-catalog-merge";
@@ -262,7 +262,7 @@ export async function importHasaneyldrmExercises(input: unknown, limit?: number,
 /** Imports the checked-in metadata catalogue after migrations on a fresh DB. */
 export async function seedBundledHasaneyldrmExercises(): Promise<HasaneyldrmImportResult | null> {
   if (process.env.OCRCRAFT_AUTO_IMPORT_EXTERNAL_EXERCISES === "false") return null;
-  const seedLockPath = path.join(process.cwd(), "data", "hasaneyldrm-seed.lock");
+  const seedLockPath = `${getDuckDbPath()}.hasaneyldrm-seed.lock`;
   let lock: Awaited<ReturnType<typeof open>> | undefined;
   try {
     lock = await open(seedLockPath, "wx");
@@ -285,7 +285,18 @@ export async function seedBundledHasaneyldrmExercises(): Promise<HasaneyldrmImpo
   }
   try {
     const file = await readFile(path.join(process.cwd(), "data", "hasaneyldrm-exercises.json"), "utf8");
-    return importHasaneyldrmExercises(JSON.parse(file) as unknown, undefined, true);
+    const records: unknown = JSON.parse(file);
+    const drafts = adaptHasaneyldrmExercises(records);
+    const knownSources = await withDuckDbConnection(async (connection) => {
+      const result = await connection.runAndReadAll("SELECT DISTINCT source_url FROM exercise_source_references WHERE source_url IS NOT NULL");
+      return new Set(result.getRows().map(([url]) => String(url)));
+    });
+    // Automatic boot only fills missing records. Explicit imports still run
+    // the full enrichment/media reconciliation path for existing sources.
+    const missing = Array.isArray(records) ? records.filter((_, index) => !knownSources.has(drafts[index].sourceReference)) : [];
+    if (!missing.length) return { imported: 0, skipped: drafts.length, sourceIds: drafts.map((draft) => draft.sourceRecordId) };
+    const result = await importHasaneyldrmExercises(missing, undefined, true);
+    return { ...result, skipped: result.skipped + drafts.length - missing.length, sourceIds: drafts.map((draft) => draft.sourceRecordId) };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
     throw error;

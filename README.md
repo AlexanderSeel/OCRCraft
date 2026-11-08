@@ -48,6 +48,8 @@ Der Übungskatalog ist die fachliche Basis der Anwendung. Übungen können gesuc
 
 ### UI/UX-Review November 2026
 
+Die [Analyse der Dev-Seitenladezeit](./docs/page-loading-performance.md) dokumentiert behobene Wiederholungen bei Datenbankinitialisierung, Import und Verbindungsaufbau. Quick Create benötigte lokal im ersten Request 2,7 statt 39,1 Sekunden und wiederholt etwa 0,9 statt 2,3 Sekunden. Nach dem Update den Dev-Server einmal neu starten.
+
 Das [vollständige UI/UX-Review](./docs/ui-ux-review.md) bewertet alle 26 Page-Dateien und dokumentiert 12 priorisierte Folgearbeiten; UX-03 (Trennung von Blockern und Empfehlungen) und UX-12 (mobile Trainingsübersicht vor Verwaltungsfunktionen) sind umgesetzt. Responsive Prüfungen decken 99 Routen-/Breitenkombinationen ab. Gemeinsame Button-/Feldtypografie, Kontrast, Fokus, Auswahlkarten und Dialog-Schließen wurden konsolidiert; mobile Rollen- und Tablet-Benutzerverwaltung besitzen korrigierte Layouts. [Prüfbilder](./artifacts/ui-ux-review/README.md) und genaue Testergebnisse stehen im Review. Offene Maßnahmen bleiben in [plan.md](./plan.md).
 
 ### Abgeschlossene Release-1.0-Bausteine

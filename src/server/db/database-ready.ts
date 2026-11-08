@@ -3,8 +3,13 @@ import "server-only";
 import { applyPendingMigrations } from "./migrations";
 import { validateInitialSeedCatalog } from "./seed-catalog-health";
 import { seedBundledHasaneyldrmExercises } from "@/server/exercises/import/hasaneyldrm-exercises-persistence";
+import { getDuckDbPath } from "./duckdb";
+import { initializeDatabaseOnce, resetDatabaseInitialization } from "./initialization-cache";
+import path from "node:path";
 
-let readyPromise: Promise<void> | undefined;
+function initializationKey() {
+  return `${path.resolve(getDuckDbPath())}:${process.env.NODE_ENV ?? "development"}:${process.env.OCRCRAFT_AUTO_IMPORT_EXTERNAL_EXERCISES ?? "default"}`;
+}
 
 async function initializeDatabase(): Promise<void> {
   await applyPendingMigrations();
@@ -13,9 +18,9 @@ async function initializeDatabase(): Promise<void> {
 }
 
 export function ensureDatabaseReady(): Promise<void> {
-  readyPromise ??= initializeDatabase().catch((error: unknown) => {
-    readyPromise = undefined;
-    throw error;
-  });
-  return readyPromise;
+  return initializeDatabaseOnce(initializationKey(), initializeDatabase);
+}
+
+export function resetDatabaseReady(): void {
+  resetDatabaseInitialization(initializationKey());
 }

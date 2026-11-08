@@ -4,6 +4,8 @@
 
 Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei enthält nur noch offene Arbeit und die nächsten geplanten Schritte.
 
+Die behobene Dev-Ladezeit samt Messungen und Betriebsgrenzen ist in [`docs/page-loading-performance.md`](./docs/page-loading-performance.md) dokumentiert. Die unten offenen Lade-/Fehlerzustände betreffen die verbleibende UX-Arbeit.
+
 ## Leitplanken
 
 - Jede Einheit zeigt Aufwärmen, Hauptteil und Cooldown & Stretching.

@@ -4,6 +4,7 @@ import { constants } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { copyFile, mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
+import { createConnectionBatcher, type ConnectionBatcher } from "./connection-batch";
 import {
   DuckDBInstance,
   type DuckDBConnection,
@@ -17,6 +18,25 @@ const lockRetryMs = 100;
 const lockTimeoutMs = 30_000;
 
 let instancePromise: Promise<DuckDBInstance> | undefined;
+const processState = globalThis as typeof globalThis & {
+  __ocrcraftConnectionBatches?: Map<string, ConnectionBatcher<DuckDBConnection>>;
+};
+const connectionBatches = processState.__ocrcraftConnectionBatches ??= new Map();
+
+function getConnectionBatch(timeoutMs: number): ConnectionBatcher<DuckDBConnection> {
+  const key = `${path.resolve(databasePath)}:${timeoutMs}`;
+  let batch = connectionBatches.get(key);
+  if (!batch) {
+    batch = createConnectionBatcher((work) => withDuckDbFileLock(async () => {
+      const instance = await createInstance();
+      const connection = await instance.connect();
+      try { await work(connection); }
+      finally { connection.closeSync(); instance.closeSync(); }
+    }, timeoutMs));
+    connectionBatches.set(key, batch);
+  }
+  return batch;
+}
 
 async function restoreBundledInitialDatabaseIfMissing(): Promise<void> {
   if (databasePath === ":memory:") return;
@@ -63,19 +83,9 @@ async function createInstance(): Promise<DuckDBInstance> {
 export async function withDuckDbConnection<T>(
   operation: (connection: DuckDBConnection) => Promise<T>,
 ): Promise<T> {
-  return withDuckDbFileLock(async () => {
-    // Do not retain a process-global file handle. DuckDB supports concurrent
-    // readers, but a long-lived instance in several Next workers can replay
-    // the same WAL concurrently. The lock covers open, operation and close.
-    const instance = await createInstance();
-    const connection = await instance.connect();
-    try {
-      return await operation(connection);
-    } finally {
-      connection.closeSync();
-      instance.closeSync();
-    }
-  });
+  // A queued burst shares one handle under the file lock. No handle survives
+  // an idle queue, so other workers/maintenance processes can still open it.
+  return getConnectionBatch(lockTimeoutMs).run(operation);
 }
 
 /** Checkpoint, close for Windows file copying, back up, then reopen under one lock. */
@@ -100,13 +110,7 @@ export async function withDuckDbCheckpointBackup<T>(
 export async function withDuckDbReadConnection<T>(
   operation: (connection: DuckDBConnection) => Promise<T>,
 ): Promise<T> {
-  return withDuckDbFileLock(async () => {
-    await mkdir(path.dirname(databasePath), { recursive: true });
-    const instance = await createInstance();
-    const connection = await instance.connect();
-    try { return await operation(connection); }
-    finally { connection.closeSync(); instance.closeSync(); }
-  }, 10_000);
+  return getConnectionBatch(10_000).run(operation);
 }
 
 interface LockHandle {
