@@ -1,5 +1,5 @@
 import { routeMetadata } from "@/config/route-titles";
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Disclosure } from "@/components/ui/disclosure";

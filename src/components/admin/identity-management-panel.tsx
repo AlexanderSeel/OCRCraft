@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import type { AppUser, UserRole } from "@/server/auth/identity-service";
 import {
   TRAINER_QUALIFICATION_LABELS,

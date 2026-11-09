@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { replaceTrainingItemExerciseAction } from "@/app/training/[id]/replace-action";
 import {
   listTrainingItemAlternatives,

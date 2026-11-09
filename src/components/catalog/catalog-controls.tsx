@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { buttonClass } from "@/components/ui/form";
 
 export function CatalogResultCount({

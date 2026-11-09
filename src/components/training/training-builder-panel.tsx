@@ -10,7 +10,7 @@ import { PlanningRecoveryNotice } from "./planning-recovery-notice";
 import { builderRecoverySchema, builderRecoveryKey } from "./builder-recovery";
 
 
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { useMemo, useState } from "react";
 import type { TrainingDraft } from "@/domain/training/draft";
 import { TEAM_COMPETITION_STYLES, getTeamCompetitionStyle } from "@/domain/training/team-competition-catalog";

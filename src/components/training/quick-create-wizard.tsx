@@ -5,7 +5,7 @@ import type { ClubVenueId } from "@/domain/training/club-venues";
 
 import { PlanningEligibilityNotice } from "./planning-eligibility-notice";
 
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { PlanningRecoveryNotice } from "./planning-recovery-notice";
 import { useQuickCreateRecovery } from "./use-quick-create-recovery";
 import { useEffect, useMemo, useState } from "react";

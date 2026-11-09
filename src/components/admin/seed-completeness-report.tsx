@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { SeedReviewEvidenceView } from "./seed-review-evidence-view";
 import type { SeedCompletenessReport } from "@/server/exercises/seed-completeness-service";
 import { Disclosure } from "@/components/ui/disclosure";

@@ -1,6 +1,6 @@
 import { TrainingNotes } from "@/components/training/training-notes";
 import { routeMetadata } from "@/config/route-titles";
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { TrainingSessionOverview } from "@/components/training/training-session-overview";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";

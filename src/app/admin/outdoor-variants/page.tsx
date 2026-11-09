@@ -1,6 +1,6 @@
 import { routeMetadata } from "@/config/route-titles";
 import { formControlClass } from "@/components/ui/form";
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogFilterPanel, CatalogPageSize } from "@/components/catalog/catalog-filter-panel";

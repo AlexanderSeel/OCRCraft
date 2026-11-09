@@ -2,7 +2,7 @@ import { routeMetadata } from "@/config/route-titles";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogSummaryStrip } from "@/components/catalog/catalog-workspace";
 import { CatalogPagination } from "@/components/catalog/catalog-controls";
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { AppShell } from "@/components/app-shell";
 import { MuscleMap } from "@/components/body/muscle-map";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";

@@ -1,5 +1,5 @@
 import { routeMetadata } from "@/config/route-titles";
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { buttonClass } from "@/components/ui/form";
 import { notFound } from "next/navigation";
 import { TrainingPresentationControls } from "@/components/training/training-presentation-controls";

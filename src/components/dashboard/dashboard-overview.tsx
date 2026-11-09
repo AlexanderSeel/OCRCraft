@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import type { DashboardActivityBucket, DashboardBucket, DashboardExerciseUsage, DashboardRecentTraining, DashboardSnapshot } from "@/server/dashboard/dashboard-repository";
 import { Card } from "@/components/ui/card";
 import { buttonClass } from "@/components/ui/form";

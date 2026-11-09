@@ -63,7 +63,7 @@ test("the global fallback survives a failing root provider and retries after rec
   await expect(page.getByRole("heading", { name: "Dashboard", exact: true })).toBeVisible();
 });
 
-test("a real temporary database failure shows loading, safely retries and keeps the planning backup", async ({ page }) => {
+test("a slow navigation retains the current page, reports its destination, and safely retries a database failure", async ({ page }) => {
   test.skip(process.env.PLAYWRIGHT_REUSE_SERVER === "1", "Failure simulation requires the isolated managed E2E server.");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/quick-create");
@@ -82,8 +82,9 @@ test("a real temporary database failure shows loading, safely retries and keeps 
     }
   }
   try {
-    await page.reload({ waitUntil: "commit" });
-    await expect(page.getByRole("status")).toContainText("Die Daten werden vorbereitet");
+    await page.locator('a[href="/training"]:visible').first().click();
+    await expect(page.getByTestId("navigation-loading")).toContainText("Trainings");
+    await expect(page.getByRole("textbox", { name: "Alter / Bereich", exact: true })).toHaveValue("10–14");
     await expect(page.getByRole("heading", { name: "Seite konnte nicht geladen werden", exact: true })).toBeVisible({ timeout: 45_000 });
     await expect(page.locator("body")).not.toContainText("write.lock");
     expect(await page.evaluate((key) => localStorage.getItem(key), recoveryKey)).toBe(backup);
@@ -93,6 +94,9 @@ test("a real temporary database failure shows loading, safely retries and keeps 
     if (metadata.owner === owner) await unlink(lock);
   }
   await page.getByRole("button", { name: "Erneut versuchen", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Trainings", exact: true })).toBeVisible();
+  await expect(page.getByTestId("navigation-loading")).toHaveCount(0);
+  await page.goto("/quick-create");
   const recovery = page.getByTestId("quick-create-recovery");
   await expect(recovery).toContainText("Lokale Planung gefunden");
   await recovery.getByRole("button", { name: "Planung wiederherstellen", exact: true }).click();

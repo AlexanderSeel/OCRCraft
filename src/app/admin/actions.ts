@@ -313,6 +313,7 @@ export async function saveAiProviderSettingsAction(formData: FormData): Promise<
   const id = idValue ? aiProviderInstanceIdSchema.safeParse(idValue) : null;
   if (id && !id.success) redirect("/admin?tab=settings&aiError=provider#ai-provider-settings");
 
+  let savedId: string;
   try {
     const authModeValue = String(formData.get("authMode") ?? "environment");
     const authMode = authModeValue === "encrypted_key"
@@ -324,7 +325,7 @@ export async function saveAiProviderSettingsAction(formData: FormData): Promise<
       .map((capability) => assignmentFrom(formData, capability))
       .filter((item): item is NonNullable<typeof item> => item != null);
 
-    const savedId = await saveAiProviderInstance({
+    savedId = await saveAiProviderInstance({
       id: id?.success ? id.data : null,
       providerKind: providerKind.data,
       displayName: String(formData.get("displayName") ?? "").trim(),
@@ -358,7 +359,6 @@ export async function saveAiProviderSettingsAction(formData: FormData): Promise<
     revalidatePath("/admin");
     revalidatePath("/exercises/ai-drafts");
     revalidatePath("/training/builder");
-    redirect("/admin?tab=settings&aiSaved=" + encodeURIComponent(savedId) + "#ai-provider-settings");
   } catch (error) {
     const code = error instanceof Error && error.message.includes("OCRCRAFT_AI_SECRET_KEY")
       ? "secret"
@@ -371,6 +371,8 @@ export async function saveAiProviderSettingsAction(formData: FormData): Promise<
         : "save";
     redirect("/admin?tab=settings&aiError=" + code + "#ai-provider-settings");
   }
+  // Next.js redirect throws; it must not enter the persistence error handler.
+  redirect("/admin?tab=settings&aiSaved=" + encodeURIComponent(savedId) + "#ai-provider-settings");
 }
 
 export async function deleteAiProviderSettingsAction(formData: FormData): Promise<void> {

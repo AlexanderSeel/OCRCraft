@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { FilterSidePanel } from "@/components/layout/filter-side-panel";
 import { buttonClass } from "@/components/ui/form";
 

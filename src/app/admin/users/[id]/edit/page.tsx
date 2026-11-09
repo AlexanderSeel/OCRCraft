@@ -1,5 +1,5 @@
 import { routeMetadata } from "@/config/route-titles";
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { AppShell } from "@/components/app-shell";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
 import { ConfirmPopoverForm } from "@/components/ui/confirm-popover-form";

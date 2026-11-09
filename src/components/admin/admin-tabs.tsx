@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 
 export const ADMIN_TABS = [
   ["overview", "Übersicht"],

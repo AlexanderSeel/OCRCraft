@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { useState, useSyncExternalStore } from "react";
 import { PrimaryNavigation } from "@/components/navigation/primary-navigation";
 import { APP_RELEASE_LABEL } from "@/config/app-version";

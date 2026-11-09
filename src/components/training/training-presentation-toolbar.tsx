@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/navigation/app-link";
 import { useLocale } from "@/components/i18n/locale-provider";
 import { buttonClass } from "@/components/ui/form";
 import { TrainingPresentationControls } from "./training-presentation-controls";
