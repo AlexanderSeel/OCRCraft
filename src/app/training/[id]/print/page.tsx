@@ -1,5 +1,6 @@
 import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
+import { buttonClass } from "@/components/ui/form";
 import { notFound } from "next/navigation";
 import { TrainingPresentationControls } from "@/components/training/training-presentation-controls";
 import { TrainingReadonlySession } from "@/components/training/training-readonly-session";
@@ -10,10 +11,12 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   readonly params: Promise<{ id: string }>;
+  readonly searchParams: Promise<{ details?: string | string[] }>;
 }
 
-export default async function TrainingPrintPage({ params }: PageProps) {
+export default async function TrainingPrintPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const fullDetails = (await searchParams).details === "full";
   const session = await getTrainingSessionById(id);
   if (!session) notFound();
 
@@ -26,31 +29,31 @@ export default async function TrainingPrintPage({ params }: PageProps) {
     <main className="min-h-screen bg-[var(--surface)] p-4 text-[var(--foreground)] sm:p-8 print:min-h-0 print:p-0" id="training-print-view">
       <style>{`
         #training-print-view {
-          --foreground: #0f172a;
-          --muted: #475569;
-          --border: #cbd5e1;
+          --foreground: #111111;
+          --muted: #333333;
+          --border: #bbbbbb;
           --surface: #ffffff;
-          --surface-subtle: #f8fafc;
-          --surface-elevated: #f1f5f9;
-          --warning-border: #facc15;
-          --warning-bg: #fefce8;
+          --surface-subtle: #ffffff;
+          --surface-elevated: #ffffff;
+          --warning-border: #d71939;
+          --warning-bg: #ffffff;
         }
         @media print {
-          @page { margin: 12mm; }
-          html, body { background: #fff !important; }
-          details { break-inside: avoid; }
-          details > summary { display: none; }
-          details > div { display: grid !important; border-top: 0 !important; padding-top: 0.5rem !important; }
+          @page { size: A4; margin: 12mm; }
+          html, body { background: #fff !important; color-scheme: light; }
         }
       `}</style>
 
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-[210mm]">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <Link
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
+            className={buttonClass("secondary")}
             href={`/training/${session.id}`}
           >
-            ← Training
+            ← {session.locale === "en" ? "Training session" : "Training"}
+          </Link>
+          <Link className={buttonClass("secondary")} href={`/training/${session.id}/print${fullDetails ? "" : "?details=full"}`}>
+            {session.locale === "en" ? (fullDetails ? "Compact session plan" : "Include all exercise details") : (fullDetails ? "Kompakter Trainingsplan" : "Mit allen Übungsdetails")}
           </Link>
           <TrainingPresentationControls showPrint />
         </div>
@@ -58,6 +61,7 @@ export default async function TrainingPrintPage({ params }: PageProps) {
         <TrainingReadonlySession
           guidanceByExerciseId={guidanceByExerciseId}
           presentation="print"
+          printDetail={fullDetails ? "full" : "compact"}
           session={session}
         />
       </div>

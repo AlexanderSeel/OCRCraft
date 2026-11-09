@@ -37,7 +37,9 @@ test("media copy keeps selection actions, rights checks and exports available", 
   await expect(page.getByRole("textbox", { name: "Suchen", exact: true })).toHaveAttribute("placeholder", "Search exercises");
   await page.setViewportSize({ width: 320, height: 740 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await batch.scrollIntoViewIfNeeded();
+  await page.setViewportSize({ width: 390, height: 1000 });
+  await batch.evaluate((element) => element.scrollIntoView({ block: "start" }));
+  await page.evaluate(() => window.scrollBy(0, -(document.querySelector(".app-header")!.getBoundingClientRect().height + 12)));
   await page.screenshot({ path: "artifacts/ui-ux-review/media-copy-mobile.png" });
 });
 

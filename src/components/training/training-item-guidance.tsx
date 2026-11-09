@@ -10,6 +10,7 @@ interface TrainingItemGuidanceProps {
   readonly itemId?: string;
   readonly selectedLevel?: string | null;
   readonly editable?: boolean;
+  readonly expanded?: boolean;
 }
 
 export function TrainingItemGuidance({
@@ -19,6 +20,7 @@ export function TrainingItemGuidance({
   itemId,
   selectedLevel,
   editable = false,
+  expanded = false,
 }: TrainingItemGuidanceProps) {
   const hasLevels = Boolean(guidance?.level1 || guidance?.level2 || guidance?.level3);
   const hasDetails = Boolean(
@@ -59,7 +61,7 @@ export function TrainingItemGuidance({
       ) : null}
 
       {hasLevels ? (
-        <Disclosure className="rounded-lg border border-[var(--border)] bg-[var(--surface)]" summaryClassName="px-3 py-2 text-xs font-black text-[var(--foreground)]" summary="Level 1–3 & Skalierung">
+        <Disclosure open={expanded} className="rounded-lg border border-[var(--border)] bg-[var(--surface)]" summaryClassName="px-3 py-2 text-xs font-black text-[var(--foreground)]" summary="Level 1–3 & Skalierung">
           {levelAction ? (
             <form action={levelAction} className="flex flex-wrap items-end gap-2 border-t border-[var(--border)] bg-[var(--surface-subtle)] p-3">
               <label className="grid min-w-48 flex-1 gap-1 text-xs font-black">
@@ -104,7 +106,7 @@ export function TrainingItemGuidance({
       ) : null}
 
       {hasDetails ? (
-        <Disclosure className="rounded-lg border border-[var(--border)] bg-[var(--surface)]" summaryClassName="px-3 py-2 text-xs font-black text-[var(--foreground)]" summary="Ausführung, Coaching & Sicherheit">
+        <Disclosure open={expanded} className="rounded-lg border border-[var(--border)] bg-[var(--surface)]" summaryClassName="px-3 py-2 text-xs font-black text-[var(--foreground)]" summary="Ausführung, Coaching & Sicherheit">
           <div className="grid gap-4 border-t border-[var(--border)] p-3 text-sm leading-6 lg:grid-cols-2">
             <div className="space-y-4">
               {guidance?.purpose ? <GuidanceSection title="Zweck">{guidance.purpose}</GuidanceSection> : null}

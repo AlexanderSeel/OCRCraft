@@ -85,6 +85,36 @@ describe("training validation", () => {
     expect(validateTrainingSession(createSession())).toEqual([]);
   });
 
+  it("counts changes between phases but never adds a transition after the final exercise", () => {
+    const session = createSession();
+    const withTransitions: TrainingSession = {
+      ...session,
+      phases: session.phases.map((phase) => ({
+        ...phase,
+        items: phase.items.map((item) => ({
+          ...item,
+          exercise: { ...item.exercise, transitionSeconds: phase.kind === "cooldown" ? 900 : 75 },
+        })),
+      })),
+    };
+    expect(validateTrainingSession(withTransitions)).toContainEqual(expect.objectContaining({
+      code: "setup-transition-time", severity: "warning", estimatedLogisticsMinutes: 3, estimatedTotalMinutes: 63,
+    }));
+  });
+
+  it("does not invent transitions for empty phases or count the last actual item as an exit", () => {
+    const session = createSession();
+    const main = session.phases[1]!;
+    const withEmptyPhases: TrainingSession = {
+      ...session,
+      phases: session.phases.map((phase) => phase.kind === "main" ? {
+        ...main,
+        items: main.items.map((item) => ({ ...item, durationMinutes: 60, exercise: { ...item.exercise, transitionSeconds: 900 } })),
+      } : { ...phase, items: [] }),
+    };
+    expect(validateTrainingSession(withEmptyPhases).some((issue) => issue.code === "setup-transition-time")).toBe(false);
+  });
+
   it("warns when setup and transitions add time beyond the planned exercise duration", () => {
     const session = createSession();
     const withLogistics: TrainingSession = {

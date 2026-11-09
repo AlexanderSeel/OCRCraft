@@ -1,0 +1,8 @@
+# Training print assets
+
+- `ocrfra-logo.png`: original logo supplied by the user, downloaded unchanged from [OCR Frankfurt](https://ocrfra.de/wp-content/uploads/2019/06/Webseite_Logo.png) on 9 November 2026. White artwork is displayed on a black panel. This file does not establish a separate redistribution licence.
+- `ocr-training-header.png`: generated with the built-in image-generation tool on 9 November 2026 for this print layout. Decorative identity artwork, not exercise instruction or evidence of the club's actual obstacle geometry. The supplied shirt photograph informed the red/black/white layout; the original logo is rendered separately and was not regenerated.
+
+Generation prompt:
+
+> Create a premium obstacle course racing editorial header illustration for an A4 printed club training plan. Wide panoramic composition 3:1, strict red (#d71939), black and white palette only. Bold screenprinted sportswear style, high contrast black silhouettes of three athletes: left running across rough ground, center traversing monkey-bar rig with anatomically plausible two arms and legs, right vaulting a low obstacle. Dynamic angular red diagonal slash accents, subtle thin white topographic contour lines and dust/scratched halftone texture. Clean crisp silhouettes, intentional negative space, no text, no letters, no logos, no typography. This is decorative athletic identity artwork, not an exercise instruction diagram. Dark black background. Subjects mostly in center/right for shallow banner crop. Output a polished illustration suitable for professional printed sports training stationery.

@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { assessPlanningMetadata } from "../src/domain/training/planning-eligibility.ts";
 import { auditLocalMediaFiles } from "../src/server/media/local-media-file-audit.ts";
@@ -12,11 +12,33 @@ await mkdir(outputDirectory, { recursive: true });
 const paths = [...new Set([path.resolve("data/ocrcraft.initial.duckdb"), path.resolve(process.env.OCRCRAFT_DB_PATH ?? "data/ocrcraft.duckdb")])];
 const reports = [];
 const auditedAt = new Date().toISOString();
+// Match the application's numbered SQL migration convention without executing migrations.
+const expectedVersions = (await readdir(path.resolve("src/server/db/migrations")))
+  .filter((name) => /^\d{3}_.*\.sql$/.test(name)).map((name) => Number(name.slice(0, 3))).sort((a, b) => a - b);
+if (new Set(expectedVersions).size !== expectedVersions.length) throw new Error("Duplicate migration versions in source inventory.");
 for (const databasePath of paths) {
   const db = await DuckDBInstance.create(databasePath, { access_mode: "READ_ONLY" });
   const connection = await db.connect();
   const rows = async (sql) => (await connection.runAndReadAll(sql)).getRowObjectsJson();
   try {
+    const appliedVersions = (await rows("SELECT version FROM schema_migrations ORDER BY version")).map((row) => Number(row.version));
+    const migrationInventory = {
+      expectedCount: expectedVersions.length,
+      appliedCount: appliedVersions.length,
+      missingVersions: expectedVersions.filter((version) => !appliedVersions.includes(version)),
+      unexpectedVersions: appliedVersions.filter((version) => !expectedVersions.includes(version)),
+    };
+    const searchDocuments = [];
+    for (const locale of ["de", "en"]) {
+      const coverage = (await rows(`SELECT
+        (SELECT count(*) FROM search_documents_${locale}) AS documents,
+        (SELECT count(*) FROM exercises e WHERE NOT e.archived AND NOT EXISTS (
+          SELECT 1 FROM search_documents_${locale} d WHERE d.entity_type='exercise' AND d.entity_id=e.id::VARCHAR
+        )) AS active_exercises_without_document`))[0];
+      const state = (await rows(`SELECT status,indexed_document_count FROM search_index_state WHERE locale='${locale}'`))[0] ?? null;
+      // Do not export last_error, which may contain private runtime details.
+      searchDocuments.push({ locale, ...coverage, state });
+    }
     const counts = (await rows(`SELECT
       (SELECT count(*) FROM exercises) AS exercises,
       (SELECT count(*) FROM exercises WHERE NOT archived) AS active_exercises,
@@ -89,7 +111,7 @@ for (const databasePath of paths) {
       localMediaInvalidOrUnreadable:media.filter((item)=>['invalid_path','unreadable'].includes(item.local_file_integrity)).length,
       sharedLocalMediaFileGroups:localMediaAudit.sharedLocalFileGroups.length,
       nonRejectedSharedLocalMediaFileGroups:localMediaAudit.sharedLocalFileGroups.filter((group)=>group.assetIds.filter((id)=>nonRejectedMediaIds.has(id)).length>1).length,
-      duplicateNameGroups:duplicates.length, orphans };
+      duplicateNameGroups:duplicates.length, orphans, migrationInventory, searchDocuments };
     const name = path.basename(databasePath).replace(/\W/g,"_");
     await writeFile(path.join(outputDirectory,`${name}.json`),JSON.stringify({ summary, inventory, media, duplicates, sharedLocalMediaFiles: localMediaAudit.sharedLocalFileGroups },null,2)+"\n");
     reports.push(summary);

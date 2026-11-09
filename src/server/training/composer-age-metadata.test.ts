@@ -27,3 +27,17 @@ describe("age metadata preservation through composition", () => {
     expect(items.every((item)=>item.exercise.minimumAge===8)).toBe(true);
   });
 });
+
+describe("shared logistics validation through composition", () => {
+  it.each(["offline", "structured offline", "AI"] as const)("includes cross-phase transitions in %s estimates", (mode) => {
+    const withLogistics = candidates.map((candidate) => ({ ...candidate, setupSeconds: 60, transitionSeconds: 90 }));
+    const draft = mode === "AI" ? composeAiTrainingDraft({
+      request, approvedExercises: withLogistics, providerId: "test",
+      proposal: { phases: withLogistics.map((candidate) => ({ kind: candidate.defaultPhase, items: [{ exerciseId: candidate.id }] })) },
+    }) : mode === "offline" ? composeSportsTrainingDraft(request, withLogistics) : composeStructuredSportsTrainingDraft(request, withLogistics);
+    expect(draft.validationIssues).toContainEqual(expect.objectContaining({
+      code: "setup-transition-time", severity: "warning", estimatedLogisticsMinutes: 6, estimatedTotalMinutes: 51,
+    }));
+    expect(draft.session.totalDurationMinutes).toBe(request.durationMinutes);
+  });
+});

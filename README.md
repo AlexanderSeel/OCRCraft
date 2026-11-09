@@ -48,6 +48,8 @@ Der Übungskatalog ist die fachliche Basis der Anwendung. Übungen können gesuc
 
 ### UI/UX-Review November 2026
 
+Trainertexte (Abschluss UX-04): Medienaktionen und Spielanlage erklären die nächste Aufgabe in Alltagssprache; Bildserien/Exporte stehen in einem zusätzlichen Disclosure. Vorschauen und bekannte automatisch erzeugte Trainingsnotizen zeigen verständliche DE/EN-Texte. Die exakten Originalnotizen bleiben gespeichert und über „Erstellungsdetails“ erreichbar; freie Trainernotizen sowie Sicherheitsmeldungen werden unverändert erhalten. Technische Erstellungsdetails erscheinen nicht im Druck. 359 Tests und neun gezielte Browserfälle wurden erfolgreich geprüft.
+
 Builder-Einstieg (UX-04, Teilschritt): klare DE/EN-Auswahl zwischen kompakter und detaillierter Planung; die kompakte Planung ist der Standard. Wechsel und Browser-Zurück erhalten innerhalb derselben Seite beide Eingaben und erzeugten Vorschläge. Bestehende AI-/Quelltrainingslinks öffnen weiterhin die detaillierte Planung. Vorlagenauswahl und technische Planungserläuterungen sind eingeklappt erreichbar. Vorschlagswiederherstellung nach Reload bleibt separat in `plan.md` offen.
 
 Traineransicht (UX-11): ein direkter DE/EN-Rückweg führt zur Trainingseinheit; Druckansicht und Vollbild bleiben erreichbar. Fehlende/abgelehnte Vollbildfunktionen zeigen verständliche Hinweise direkt in der Ansicht, auch innerhalb von Vollbild. Ein-/Austritt, externe Vollbildwechsel, Fehler-Retry und mobile Darstellung sind per Browser geprüft.
@@ -521,6 +523,10 @@ Die erledigten Einträge wurden aus `plan.md` hierher verschoben. Zahlen in ält
 
 ### Basiskatalog und Startup-Audit
 
+- [x] Alle offenen P1-Themen am 9. November erneut [gegen Code und Datenbank geprüft](./docs/p1-review-2026-11-09.md); doppelte Bildersatzaufgabe zusammengeführt. Read-only Audit prüft jetzt auch das vollständige Migrationsinventar und DE/EN-Suchabdeckung/-status. Startup-Suchindex auf gesicherter Kopie repariert: je 1.423 Dokumente, null aktive Lücken, beide `healthy`, reale FTS-Abfrage bestanden; alle 59 Nicht-Suchtabellen unverändert. Arbeitsdatenbank unverändert.
+
+- [x] Gemeinsame Dauerprüfung zählt Aufbau-/Wechselzeit auch zwischen Warm-up, Hauptteil und Cooldown. Nur das letzte tatsächliche Element der Einheit hat keinen Folgetransfer. Grenzfälle und gleicher Warnungsnachweis für beide Offline-Composer und KI-Composer geprüft; keine erfundenen Wegezeiten oder automatische Änderung der angefragten Trainingsdauer. Vollständiger Methodik-/Geländevertrag bleibt offen.
+
 Der [Katalog-/Gelände-/Methodik-Review](./docs/catalog-startup-review.md) dokumentiert das vollständige Inventar, Metadaten- und Medienlücken sowie den Vereinskontext (Feld, Hindernisse, 40 × 20 m Kunstrasen, 400-m-Laufbahn). `npm run data:audit-startup` erzeugt einen read-only Bestandsaudit. Der Startup-Exporter bereinigt Deployment-Credentials, baut über Staging und erhält bei Fehlern den bisherigen Snapshot. Die technische Bereinigung ersetzt die noch offene fachliche Einzelfreigabe des Katalogs und seiner Bilder nicht.
 
 - [x] Automatische Planung verwendet eine gemeinsame Mindest-Metadatenprüfung für KI und Offline: fehlendes Mindestalter, unbekannte Eignung, Risiko/Kapazität sowie leere Ziele/Bewegungsmuster werden zurückgewiesen. 187 aktive Einträge des aktuellen Startkatalogs bestehen diese Prüfung für gemischte Zielgruppe/Orte (DE-Kapazität); übrige Einträge bleiben zur Bearbeitung im Katalog. Die Prüfung ist keine fachliche Einzelfreigabe.
@@ -538,3 +544,7 @@ Der [Katalog-/Gelände-/Methodik-Review](./docs/catalog-startup-review.md) dokum
 - [x] Vier versionierte Vereinsgeländeprofile in Quick Create, Builder und Quickplaner integriert: großes Feld, Hindernisbereich, 40 × 20 m Kunstrasen und Feld mit 400-m-Laufbahn. Auswahl ist DE/EN, wiederherstellbar und Teil der Generierungs-/Speicherparameter; KI erhält Fakten und ausdrücklich unbekannte Nutzfläche/Abstände/Bestände. Beide Wege sowie Ersetzen/Regeneration filtern bei Geländewahl Outdoor. Automatisches Run + Exercise verwendet auf der bekannten Laufbahn 400 m, sonst einen unbemaßten Checkpoint statt erfundener 500 m; explizite Trainerprogrammierung bleibt erhalten. Vor-Ort-Maße/-Bestände, Oberflächenfreigaben und vollständige Laufvolumen-/Zeitvalidierung bleiben offen.
 
 - [x] Globale Formularvalidierung erhält vorhandene `aria-describedby`-Hilfetexte bei normalen Feldänderungen. Native Fehlermeldungen werden feldbezogen zugeordnet; Korrektur entfernt nur den eigenen Fehler und dessen Beschreibungs-ID, nicht bestehende Feldhilfe.
+
+### OCR-Frankfurt-Drucklayout
+
+- [x] Trainingsdruck im Rot-/Schwarz-/Weiß-Stil des Vereinsshirts mit Original-Logo, eigenem OCR-Kopfmotiv, nummerierten Phasen, klaren Dauern und weißem Lesebereich gestaltet. Standard ist ein kompakter Plan mit ungekürzten Trainer-/Sicherheitshinweisen und Levelvarianten; alle Übungsdetails sind als eigener Druckumfang verfügbar. A4, Dark-Mode-unabhängige Druckfarben, lokale Assets und responsive Vorschau. [Gestaltung und Prüfanleitung](./docs/training-print-layout.md).

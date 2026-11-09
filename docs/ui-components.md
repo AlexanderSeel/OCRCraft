@@ -22,6 +22,8 @@ OCRCraft verwendet eine lokale, Tailwind-kompatible UI-Schicht. Sie ist bewusst 
 | Route-Zustände | `RouteLoading`, `RouteError`, `RouteErrorContent` | DE/EN-Ladezustand, sicherer Retry ohne Datenbankabfrage im Fallback und unabhängiger globaler Fehlerzustand |
 | Traineraktionen | `TrainingPresentationToolbar`, `TrainingPresentationControls` | Direkter Rückweg, Druckansicht, DE/EN-Druck-/Vollbildaktionen, Inline-Fehler und Zustand aus `fullscreenchange` |
 | Builder-Einstieg | `BuilderWorkspace`, `BuilderSourcePicker` | Explizite Planungsweg-Auswahl, URL-/Zurück-Synchronisierung und erhaltene Planner-Instanzen; gespeicherte Basis als Disclosure |
+| Trainingsnotizen | `TrainingNotes`, `presentTrainingNote`, `presentPlanningMessage` | Verständliche Anzeige exakt bekannter Systemtexte mit unverändertem Original in Erstellungsdetails; keine Änderungen an gespeicherten Daten oder Sicherheitsmeldungen |
+| Fachliche Einstiegstexte | `GameCreationForm`, `MediaWorkflowCopy`, `MediaSearchInput` | DE/EN-Anleitung und Beschriftung ohne Änderungen an Spieltyp, Suchparametern oder Medienfreigabe |
 | Cards | `Card`, `CardHeader`, `StatCard` | HyperUI-kompatible Karten-Grundform mit OCRCraft-Theme-Tokens; `Card` unterstützt semantisch `section`, `article` und `div` |
 
 ## Regeln für neue Screens
@@ -39,6 +41,7 @@ OCRCraft verwendet eine lokale, Tailwind-kompatible UI-Schicht. Sie ist bewusst 
 - Routentitel stammen aus `config/route-titles.ts`: vollständige deutsche Servermetadaten, nach Hydration DE/EN aus der Browser-Spracheinstellung. Die Titel benötigen keine zusätzliche Datenbankabfrage und enthalten keine Datensatznamen. Bei neuen Page-Routen Titel ergänzen und `routeMetadata` exportieren.
 - Vollbildaktionen prüfen Ziel/API und behandeln abgelehnte Promises. Fehler bleiben direkt am Control im Vollbildziel sichtbar; globale Toasts außerhalb des Vollbildelements sind dafür ungeeignet. Der Browserzustand bestimmt `aria-pressed`; laufende Aktionen sind gegen Doppelklick geschützt. Rückweg und Drucken dürfen bei fehlendem Vollbild weiter funktionieren.
 - Builder-Ansichten verwenden native Buttons mit `aria-pressed`/`aria-controls`, kein unvollständiges Tabs-Pattern. `planner=quick|detailed` ist ausdrücklich; ohne diese Auswahl öffnen bestehende `mode=ai|local`-/`source`-Links den detaillierten Weg, sonst startet der kompakte Weg. Native History hält beide Komponenten gemountet und stellt Browser-Zurück ohne erneute Generierung bereit. Diese Speicherhaltung innerhalb der Seite ersetzt keine persistente Vorschlagssicherung nach Reload.
+- Trainingsnotizen verwenden ausschließlich eine exakte Liste bekannter automatisch erzeugter Texte zur Anzeigeanpassung. Eigene oder ergänzte Notizen bleiben wörtlich erhalten; keine Keyword-Heuristik und kein Zurückschreiben in die Datenbank. Die Erstellungsdetails sind im Druck ausgeblendet. Die Anpassung einer bekannten Informationsmeldung verändert weder Warnungsanzahl noch Schweregrade oder Validierung.
 
 Die Accessibility- und Playwright-Gates in `e2e/` prüfen die wichtigsten Shell-, Fokus-, Dialog-, Tastatur- und responsiven Eigenschaften.
 
@@ -54,3 +57,7 @@ Die UI verwendet seit dem kompakten HyperUI-inspirierten Refresh ein bewusst dic
 - **Komposition:** AppShell nutzt maximal 1680 px, kompakte zweizeilige Header-Komposition und eine weiße Light-Sidebar bzw. neutrale Dark-Sidebar.
 
 Die vollständigen Token- und Anwendungsregeln stehen in [`docs/design-system.md`](./design-system.md).
+
+## Trainingsdruck
+
+Die Trainings-Druckansicht nutzt einen eigenen lokal gekapselten Print-Stil in `training-print.module.css`, den Logo-/OCR-Masthead und die kompakte `TrainingPrintGuidance`. Traineransicht und ausführliche Druckansicht behalten `TrainingItemGuidance`; `expanded` öffnet dessen fachliche Disclosures für die vollständige Druckvorschau. Brandingfarben überschreiben keine globalen App-Tokens. [Druckumfang, Assetherkunft und Prüfablauf](./training-print-layout.md).

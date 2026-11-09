@@ -2,6 +2,8 @@
 
 Stand: 8. November 2026. Dies ist ein technischer Bestandsaudit mit Review-Auftrag; keine pauschale fachliche Freigabe aller Übungen oder Bilder.
 
+Nachprüfung vom 9. November: [vollständige P1-Statusmatrix und Validierung](./p1-review-2026-11-09.md). Der neue read-only Audit bestätigt die unten beschriebenen Metadaten-/Medienlücken und prüft zusätzlich alle Migrationsversionen und DE/EN-Suchabdeckung. Der Startup-Suchindex wurde auf einer gesicherten Kopie repariert: je 1.423 Dokumente, null aktive Suchlücken, beide `healthy`; alle 59 Nicht-Suchtabellen unverändert. Fachliche Freigaben bleiben offen. Die folgenden datierten Befunde sind als historischer Prüfstand erhalten.
+
 ## Vom Verein beschriebene Trainingsbereiche
 
 | Bereich | Gesichert bekannt | Noch aufzunehmen | Planungsziel nach örtlicher Prüfung |

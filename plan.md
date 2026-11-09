@@ -4,7 +4,9 @@
 
 Die abgeschlossenen Vorhaben stehen in [`README.md`](./README.md). Diese Datei enthält nur noch offene Arbeit und die nächsten geplanten Schritte.
 
-Die behobene Dev-Ladezeit samt Messungen und Betriebsgrenzen ist in [`docs/page-loading-performance.md`](./docs/page-loading-performance.md) dokumentiert. Die unten offenen Lade-/Fehlerzustände betreffen die verbleibende UX-Arbeit.
+Die behobene Dev-Ladezeit samt Messungen und Betriebsgrenzen ist in [`docs/page-loading-performance.md`](./docs/page-loading-performance.md) dokumentiert. Globale Lade-/Fehlerzustände und UX-04 sind abgeschlossen; Vorschlags-Recovery und die unten genannten Konsistenz-/Übersetzungslücken bleiben offen.
+
+Alle P1-Punkte wurden am 9. November erneut gegen Code und read-only Datenbank-Audit geprüft: [`docs/p1-review-2026-11-09.md`](./docs/p1-review-2026-11-09.md). Teilnachweise schließen die übergeordneten Fachfreigaben nicht ab.
 
 ## Leitplanken
 
@@ -26,22 +28,20 @@ Referenz und aktueller Prüfstand: [`docs/catalog-startup-review.md`](./docs/cat
 - [ ] **Outdoor-Adaptionen fachlich prüfen**: Kraft-/Calisthenics-/CrossFit-Varianten müssen mit tatsächlich vorhandenem portablem Equipment und geeignetem Untergrund funktionieren; kein bloßes Umbenennen von Studiomaschinen. Technikziel, Last, Level, Ausweichvariante und Aufbau-/Wechselzeit dokumentieren. Kunstrasen nicht automatisch für schwere Drops, scharfe Gegenstände oder jede Reibungs-/Zugübung freigeben.
 - [ ] **Datenbestand kuratieren und Startkatalog freigeben**: 1.236 aktive Datensätze ohne Mindestalter/Ziele und 1.233 ohne Bewegungsmuster nacharbeiten; drei aktive Namensduplikatgruppen vergleichen und referenzsicher zusammenführen/abgrenzen; geprüften Startkatalog von unkuratiertem Import-/Reviewbestand trennen. Trainings-/Versions-/Medienreferenzen und stabile IDs erhalten; keine pauschale Löschung vorhandener Nutzerdaten.
 - [ ] **Fachliche Planerfreigabe als eigenen Workflow einführen**: Metadaten-Eligibility wird bereits deterministisch für beide Generatoren geprüft; expliziten Review-/Freigabestatus mit Verantwortlichem, Begründung und Invalidierung nach relevanten Änderungen ergänzen. Legacy-`compat-v1`-Reviews sind keine manuelle Fachfreigabe. Import-/Altbestände einzeln prüfen, nicht automatisch aus aktivem Status oder vollständigen Feldern freigeben.
-- [ ] **Startup-Inhalte abschließend prüfen**: Seed-/Medienreview, Datei-/Referenzintegrität, Quellen/Lizenzen, keine privaten Konfigurationsdaten, keine Test-/Queue-/Trainingsreste, aktuelle Migrationen und Suchindex. Die technisch bereinigte Startdatenbank ist noch keine fachliche Freigabe aller Kataloginhalte.
+- [ ] **Startup-Inhalte abschließend prüfen**: Seed-/Medienreview und Quellen/Lizenzen fachlich freigeben; technische Prüfung bei jedem neuen Export wiederholen, Suchdokumente und FTS nach Katalogänderungen neu aufbauen. Stand 9. November: alle 90 Migrationen vorhanden, keine privaten Konfigurations-/Nutzer-/Trainings-/Queuereste im Snapshot, Datei-/Referenzintegrität bestanden. Startup-Suchindex repariert: DE/EN je 1.423 Dokumente, keine aktive Suchlücke, beide `healthy`; 59 übrige Tabellen unverändert. Dies ist keine fachliche Freigabe aller Kataloginhalte.
 
 - [ ] **42 P1-Bilder nachbearbeiten und fachlich freigeben**: Der [erste visuelle Durchgang](./docs/reviews/README.md) dokumentiert 27 konkrete Änderungsfälle und 15 weitere Trainerprüfungen. Kontakte, Pfeile, Endpositionen, Hindernisgeometrie sowie Spielrollen/-wege korrigieren; anschließend Anatomie, Text-Match, Rechte und Vor-Ort-Sicherheit erneut prüfen. Keine pauschale Freigabe anhand vollständiger Metadaten oder des visuellen Erstdurchgangs.
-- [ ] **Verbleibende Bildlücken schließen**: Fehlende brauchbare Übungsbilder mit dem bestehenden OCRCraft-Prompt erzeugen und einzeln prüfen. Serien-/Batchexporte über `npm run exercise:images:codex-tasks` bzw. `exercise:images:codex-review` anhand des aktuellen Datenbankbedarfs neu erstellen; alte Exporte sind keine aktuellen Pending-Zähler. Neue Medien bleiben bis dokumentierter Anatomie-/Text-/Rechteprüfung unfreigegeben.
-- [ ] Bildersatz nach Geräteklassifikation abschließen: bei Übungen ohne verwendbares eigenes Medium bzw. mit nicht nutzbarer ExerciseDB-/externer Referenz den bestehenden OCRCraft-AI-Bildprompt verwenden, anatomisch prüfen und als `pending` zuordnen.
+- [ ] **Verbleibende Bildlücken nach Geräteklassifikation schließen**: Bei Übungen ohne verwendbares eigenes Medium bzw. mit nicht nutzbarer ExerciseDB-/externer Referenz den bestehenden OCRCraft-Prompt verwenden und neue Bilder als `pending` zuordnen. Serien-/Batchexporte über `npm run exercise:images:codex-tasks` bzw. `exercise:images:codex-review` anhand des aktuellen Datenbankbedarfs neu erstellen; alte Exporte sind keine aktuellen Pending-Zähler. Neue Medien bleiben bis dokumentierter Anatomie-/Text-/Rechteprüfung unfreigegeben.
 
 ## P1 – Trainingsmethodik für KI und Offline-Algorithmus
 
 - [ ] Gemeinsamen, versionierten Methodikvertrag für beide Generatoren vollständig nachweisen: Ziel-/Alters-/Erfahrungsbezug; progressive Vorbereitung; Technik vor relevanter Ermüdung; skalierbare Intensität/Last/Volumen und ausreichende Erholung; sinnvolle Bewegungsbalance; drei Kernphasen; realistische Dauer inklusive Übergängen. Quellenbasierte Regeln, Vereinsentscheidungen und Heuristiken unterscheiden.
 - [ ] Gelände-/Equipment-/Kapazitäts-/Aufsichts- und Altersregeln als deterministische Grenzen auf beide Wege anwenden; 400-m-Runden, Teilstrecken und Feld-/Court-Shuttles mit tatsächlichen Wegen und Zeitbudgets berechnen. Wettkampfregeln nicht als allgemeine Vereinsregel ausgeben.
-- [ ] Vergleichbare Regressionen für KI und Offline aufbauen: Kinder/Jugend, gemischte Gruppen, Calisthenics-Einstieg, OCR-Technik vor Fatigue, Outdoor-Zirkel, Rig & Run/400-m-Runden, Kunstrasen-Spiele, knappe Stationen und ungeeignete Flächen. Kein Erfolg allein durch einen plausiblen KI-Text oder einen heuristischen Qualitätsscore.
+- [ ] Vergleichbare Regressionen für KI und Offline vervollständigen: Kinder/Jugend, gemischte Gruppen, Calisthenics-Einstieg, OCR-Technik vor Fatigue, Outdoor-Zirkel, Rig & Run/400-m-Runden, Kunstrasen-Spiele, knappe Stationen und ungeeignete Flächen. Aufbau-/Wechselzeit wird seit 9. November auch über Phasengrenzen geprüft; gleicher Nachweis für beide Offline-Composer und KI-Composer vorhanden. Diese Teilabdeckung ersetzt nicht die gesamte Szenariomatrix oder reale Wege-/Laufzeitvalidierung.
 
 ## P1 – UX/UI-Konzept und Einheitlichkeit
 
 - [ ] Erzeugte und bearbeitete Vorschläge einschließlich Übungsauswahl/Programmierung wiederherstellbar machen; wiederhergestellte Inhalte bleiben bis Schema- und aktueller Domänenprüfung untrusted und benötigen explizite Trainerprüfung (UX-02).
-- [ ] Verbleibende Trainertexte vereinfachen (Rest UX-04): technische Erklärungen in Medien-/Spielanlage und generierten Beschreibungstexten prüfen und in Hilfe/Details verschieben, ohne Sicherheits-/Freigabehinweise zu verstecken. Der abgeschlossene Builder-Einstieg steht in README und UI/UX-Review.
 - [ ] UI-Konsistenz über alle Routen prüfen und abschließen: Formfelder, Buttons, Abstände, Radien, Typografie, Statusfarben, Tabellen, Cards, Dialoge, Pagination und mobile Navigation ausschließlich aus den lokalen UI-Bausteinen beziehen.
 - [ ] Fachseiten vollständig auf Dictionaries umstellen: keine user-facing Hardcodings in Dashboard, Katalogen, Editoren, Admin, Trainingsdetail und Statusmeldungen.
 
@@ -51,10 +51,10 @@ Referenz und aktueller Prüfstand: [`docs/catalog-startup-review.md`](./docs/cat
 
 ## Nächste Schritte
 
-1. Die 27 dokumentierten Bildbefunde korrigieren und 15 offene Trainerprüfungen abschließen. Reale Hindernisgeometrien aufnehmen; übrige Katalogmedien/Videos und Gelände-/Equipment-Inventar weiter prüfen.
-2. Methodik-/Geländevertrag und gleiche deterministische Prüfungen für KI und Offline nachweisen.
+1. Fachliche Planerfreigabe mit Änderungsinvalidierung einführen; Metadatenlücken, drei Duplikatgruppen und die Alters-fünf-Lücke referenzsicher kuratieren.
+2. Die 27 dokumentierten Bildbefunde korrigieren und 15 Trainerprüfungen abschließen; übrige Katalogmedien/Videos und das reale Gelände-/Equipment-Inventar prüfen. Methodik-/Geländevertrag und gleiche deterministische Grenzen für KI und Offline vervollständigen.
 3. Wiederherstellung erzeugter/bearbeiteter Vorschläge abschließen (UX-02).
-4. Dictionaries, verbleibende Trainertexte und UI-Konsolidierung.
+4. Fachseiten-Dictionaries und UI-Konsolidierung vervollständigen.
 
 ## Abschlussroutine
 

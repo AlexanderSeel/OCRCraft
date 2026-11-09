@@ -121,13 +121,13 @@ export function validateTrainingSession(
   }
 
   let logisticsSeconds = 0;
-  for (const phase of session.phases) {
-    for (const [index, item] of phase.items.entries()) {
-      const setup = item.exercise.setupSeconds;
-      const transition = index < phase.items.length - 1 ? item.exercise.transitionSeconds : undefined;
-      if (setup != null && Number.isInteger(setup) && setup > 0) logisticsSeconds += setup;
-      if (transition != null && Number.isInteger(transition) && transition > 0) logisticsSeconds += transition;
-    }
+  const orderedItems = session.phases.flatMap((phase) => phase.items);
+  for (const [index, item] of orderedItems.entries()) {
+    const setup = item.exercise.setupSeconds;
+    // A phase boundary still has an exercise change; only the final session item has no successor.
+    const transition = index < orderedItems.length - 1 ? item.exercise.transitionSeconds : undefined;
+    if (setup != null && Number.isInteger(setup) && setup > 0) logisticsSeconds += setup;
+    if (transition != null && Number.isInteger(transition) && transition > 0) logisticsSeconds += transition;
   }
   if (logisticsSeconds > 0) {
     const estimatedLogisticsMinutes = Math.ceil(logisticsSeconds / 60);
