@@ -6,15 +6,17 @@ export function CatalogFilterPanel({
   title,
   resetHref,
   hasFilters,
+  activeFilterCount,
   children,
 }: {
   readonly title: string;
   readonly resetHref: string;
   readonly hasFilters: boolean;
+  readonly activeFilterCount: number;
   readonly children: React.ReactNode;
 }) {
   return (
-    <FilterSidePanel title={title}>
+    <FilterSidePanel activeFilterCount={activeFilterCount} title={title}>
       <form className="grid min-w-0 gap-3" method="get">
         {children}
         <div className="flex flex-wrap items-center gap-2 pt-1">

@@ -1,3 +1,5 @@
+import { TrainingNotes } from "@/components/training/training-notes";
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { TrainingSessionOverview } from "@/components/training/training-session-overview";
 import { notFound } from "next/navigation";
@@ -411,7 +413,7 @@ export default async function TrainingDetailPage({ params, searchParams }: PageP
         {session.notes ? (
           <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-sm leading-6 text-[var(--muted)] shadow-[var(--shadow-card)]">
             <div className="mb-1 font-black text-[var(--foreground)]">Notiz</div>
-            {session.notes}
+            <TrainingNotes notes={session.notes} />
           </section>
         ) : null}
         <Disclosure className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4" summary="Trainingseinstellungen" summaryClassName="min-h-11 py-3 font-black">
@@ -622,3 +624,5 @@ function InfoCard({ label, value }: { readonly label: string; readonly value: st
     </div>
   );
 }
+
+export const metadata = routeMetadata("trainingDetail");

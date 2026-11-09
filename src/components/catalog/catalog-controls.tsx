@@ -28,12 +28,14 @@ export function CatalogPagination({
 }) {
   if (totalPages <= 1) return null;
   return (
-    <nav aria-label={`Seitennavigation ${label}`} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 text-sm">
+    <div className="pb-28 lg:pb-0">
+    <nav aria-label={`Seitennavigation ${label}`} data-catalog-pagination className="fixed inset-x-3 bottom-3 z-20 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 text-sm shadow-[var(--shadow-card)] lg:static lg:shadow-none">
       <span className="text-[var(--muted)]">Seite {page} von {totalPages}</span>
       <div className="flex flex-wrap gap-2">
         {page > 1 ? <Link className={buttonClass("secondary")} href={href(page - 1)}>Zurück</Link> : null}
         {page < totalPages ? <Link className={buttonClass("primary")} href={href(page + 1)}>Weiter</Link> : null}
       </div>
     </nav>
+    </div>
   );
 }

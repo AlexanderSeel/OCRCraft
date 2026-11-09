@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TrainingPresentationControls } from "@/components/training/training-presentation-controls";
@@ -63,3 +64,5 @@ export default async function TrainingPrintPage({ params }: PageProps) {
     </main>
   );
 }
+
+export const metadata = routeMetadata("trainingPrint");

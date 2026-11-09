@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import { formControlClass } from "@/components/ui/form";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
@@ -187,7 +188,7 @@ export default async function OutdoorVariantAdminPage({ searchParams }: PageProp
           </div>
 
           <div className="grid min-w-0 gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
-          <CatalogFilterPanel hasFilters={Boolean(searchQuery || statusFilter || page !== 1 || pageSize !== 12)} resetHref="/admin/outdoor-variants" title="Outdoor-Filter">
+          <CatalogFilterPanel activeFilterCount={[searchQuery, statusFilter].filter(Boolean).length} hasFilters={Boolean(searchQuery || statusFilter || page !== 1 || pageSize !== 12)} resetHref="/admin/outdoor-variants" title="Outdoor-Filter">
               <label className="grid gap-1 text-sm font-bold">
                 Suchen
                 <input className="h-11 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 font-normal" defaultValue={result.q ?? ""} name="q" placeholder="z. B. Cable, Bench ..." />
@@ -385,3 +386,5 @@ function MetaTag({ label, value }: { readonly label: string; readonly value: str
 function Info({ title, text }: { readonly title: string; readonly text: string }) {
   return <article className="rounded-xl border border-[var(--border)] p-4"><h3 className="font-black">{title}</h3><p className="mt-2 text-sm leading-6 text-[var(--muted)]">{text}</p></article>;
 }
+
+export const metadata = routeMetadata("outdoor");

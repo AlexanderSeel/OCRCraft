@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
@@ -395,3 +396,5 @@ function secondsLabel(value?: number | null): string {
   const seconds = value % 60;
   return seconds ? `${minutes} Min. ${seconds} Sek.` : `${minutes} Min.`;
 }
+
+export const metadata = routeMetadata("exerciseDetail");

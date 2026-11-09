@@ -18,7 +18,7 @@ import {
 } from "@/domain/exercise/model";
 import type { ExerciseEditorRecord } from "@/server/exercises/exercise-repository";
 
-interface ExerciseFormProps {
+export interface ExerciseFormProps {
   readonly action: (
     state: ExerciseFormState,
     formData: FormData,

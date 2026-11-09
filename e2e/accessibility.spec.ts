@@ -189,7 +189,7 @@ test("obstacle tutorial reaches navigation, workspace and assignment target", as
 
 test("critical action popover receives focus and returns it after Escape", async ({ page }) => {
   await page.goto("/media", { waitUntil: "domcontentloaded" });
-  await page.locator("summary").filter({ hasText: "Batch-Operationen" }).click();
+  await page.locator("summary").filter({ hasText: "Mehrere Bilder bearbeiten" }).click();
 
   const trigger = page.getByRole("button", { name: "Alle passenden Medien freigeben" });
   await trigger.click();
@@ -215,7 +215,7 @@ test("training tutorials work in Quick Create and Builder", async ({ page }) => 
   await expect(trigger).toHaveAttribute("data-tour-ready", "true");
   await trigger.click();
   const builder = page.getByRole("dialog", { name: "Training Builder" });
-  await expect(builder.getByText("Rahmen festlegen")).toBeVisible();
+  await expect(builder.getByText("Planungsweg wählen")).toBeVisible();
 });
 
 test("tutorial supports English, reduced motion and mobile viewport", async ({ page }) => {

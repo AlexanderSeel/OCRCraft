@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ActionProgressButton } from "@/components/admin/action-progress-button";
@@ -82,3 +83,5 @@ function getFieldErrors(code?: string, field?: string): FieldErrors {
 
 function isUserEditField(field?: string): field is UserEditField { return field !== undefined && ["email", "role", "username", "firstName", "lastName", "education", "trainerQualificationLevel", "bio", "specialties", "profileImage", "profileImageUri"].includes(field); }
 function errorMessage(code: string, field?: UserEditField): string { if (code === "permission") return "Änderung nicht möglich: Bitte als aktiver Super-Admin anmelden. Benutzer, Rollen und Passwörter dürfen nur Super-Admins ändern."; if (code === "delete") return "Benutzer konnte nicht gelöscht werden. Prüfe Verknüpfungen und Berechtigung."; if (code === "invalid" && field) return "Bitte korrigiere das markierte Feld."; if (code === "invalid") return "Eingabe ungültig. Bitte prüfe die markierten Felder."; return "Die Änderung konnte nicht gespeichert werden."; }
+
+export const metadata = routeMetadata("userEdit");

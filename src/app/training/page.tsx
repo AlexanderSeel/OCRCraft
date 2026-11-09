@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
@@ -91,7 +92,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
         ) : null}
 
         <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
-        <CatalogFilterPanel hasFilters={Boolean(query || selectedStatus || page !== 1 || pageSize !== 24)} resetHref={archived ? "/training?status=archived" : "/training"} title="Trainingsfilter">
+        <CatalogFilterPanel activeFilterCount={[query, !archived && selectedStatus].filter(Boolean).length} hasFilters={Boolean(query || selectedStatus || page !== 1 || pageSize !== 24)} resetHref={archived ? "/training?status=archived" : "/training"} title="Trainingsfilter">
           <label className="grid gap-1 text-sm font-bold">Suchen<input className={formControlClass} defaultValue={query} name="q" placeholder="Trainingstitel …" /></label>
           {!archived ? <label className="grid gap-1 text-sm font-bold">Status<select className={formControlClass} defaultValue={selectedStatus} name="status"><option value="">Alle aktiven</option><option value="draft">Entwurf</option><option value="ready">Bereit</option><option value="completed">Abgeschlossen</option></select></label> : null}
           <CatalogPageSize options={[12, 24, 48]} value={pageSize} />
@@ -180,7 +181,7 @@ export default async function TrainingPage({ searchParams }: PageProps) {
           <EmptyState title={archived ? "Archiv ist leer" : "Noch kein Training gespeichert"}>
               {archived
                 ? "Archivierte Einheiten erscheinen hier und können über ihre Detailseite wieder aktiviert werden."
-                : "Nutze den Training Builder für gezielte lokale/AI-Planung oder Quick Create für einen schnellen deterministischen Entwurf."}
+                : "Plane eine Einheit im Training Builder oder starte mit wenigen Angaben in Quick Create."}
             {!archived ? (
               <div className="mt-5 flex flex-wrap justify-center gap-2">
                 <Link
@@ -235,3 +236,5 @@ function formatCreatedAt(value: string): string {
     timeZone: "Europe/Berlin",
   }).format(date);
 }
+
+export const metadata = routeMetadata("training");

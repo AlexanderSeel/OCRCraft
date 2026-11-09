@@ -20,7 +20,7 @@ export function normalizeAdminTab(value?: string): AdminTab {
 
 export function AdminTabs({ active }: { readonly active: AdminTab }) {
   return (
-    <nav aria-label="Administrationsbereiche" className="-mb-px flex gap-1 overflow-x-auto border-b border-[var(--border)]" role="tablist">
+    <nav aria-label="Administrationsbereiche" className="-mb-px flex gap-1 overflow-x-auto border-b border-[var(--border)]">
       {ADMIN_TABS.map(([id, label]) => (
         <Link
           aria-current={active === id ? "page" : undefined}
@@ -31,7 +31,6 @@ export function AdminTabs({ active }: { readonly active: AdminTab }) {
           }`}
           href={id === "outdoor" ? "/admin/outdoor-variants" : `/admin?tab=${id}`}
           key={id}
-          role="tab"
         >
           {label}
         </Link>

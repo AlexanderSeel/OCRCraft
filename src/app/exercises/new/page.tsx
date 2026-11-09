@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ExerciseForm } from "@/components/exercises/exercise-form";
@@ -21,3 +22,5 @@ export default function NewExercisePage() {
     </AppShell>
   );
 }
+
+export const metadata = routeMetadata("exerciseNew");

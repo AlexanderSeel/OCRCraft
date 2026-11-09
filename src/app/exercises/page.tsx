@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import { OverviewLayout } from "@/components/overview-layout";
 import { CatalogSummaryStrip } from "@/components/catalog/catalog-workspace";
 import { CatalogPagination } from "@/components/catalog/catalog-controls";
@@ -62,8 +63,8 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     : collection === "recent"
       ? new Set(personalization.recentExercises.map((item) => item.exerciseId))
       : null;
-  const requestedSize = Number.parseInt(params.size ?? "80", 10) || 80;
-  const pageSize = [20, 40, 80, 120].includes(requestedSize) ? requestedSize : 80;
+  const requestedSize = Number.parseInt(params.size ?? "20", 10) || 20;
+  const pageSize = [20, 40, 80, 120].includes(requestedSize) ? requestedSize : 20;
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
 
   const [searchResult, categoryCounts, baseFilteredTotal, bodyRegionOptions, tagOptions] = await Promise.all([
@@ -122,7 +123,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     >
       <OverviewLayout storageKey="ocrcraft-exercise-view"><div className="space-y-6">
         <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
-        <FilterSidePanel title="Übungsfilter">
+        <FilterSidePanel activeFilterCount={[query, category, archived, collection].filter(Boolean).length + selectedMuscles.length + selectedFacets.length} title="Übungsfilter">
         <form
           className="grid min-w-0 gap-3"
           method="get"
@@ -183,6 +184,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             Filtern
           </button>
 
+          {query || category || archived || collection || selectedMuscles.length || selectedFacets.length || page !== 1 || pageSize !== 20 ? <Link className={buttonClass("secondary")} href="/exercises">Zurücksetzen</Link> : null}
           <div className="relative">
             <ExerciseFilterPopover count={selectedMuscles.length} title="Muskelgruppen">
               <MuscleMap
@@ -407,3 +409,5 @@ function removeMuscleHref(params: ExerciseSearchParams, muscle: string): string 
 function categoryLabel(category: string): string {
   return exerciseCategoryLabels[category as ExerciseCategory] ?? category;
 }
+
+export const metadata = routeMetadata("exercises");

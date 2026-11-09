@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
@@ -339,3 +340,5 @@ function ErrorNotice({ children }: { readonly children: React.ReactNode }) {
     </div>
   );
 }
+
+export const metadata = routeMetadata("exerciseEdit");

@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
@@ -94,7 +95,7 @@ export default async function ObstaclesPage({ searchParams }: PageProps) {
         ]} />
 
         <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
-        <CatalogFilterPanel hasFilters={Boolean(query || riskLevel || archived || page !== 1 || pageSize !== 24)} resetHref="/obstacles" title="Hindernisfilter">
+        <CatalogFilterPanel activeFilterCount={[query, riskLevel, archived].filter(Boolean).length} hasFilters={Boolean(query || riskLevel || archived || page !== 1 || pageSize !== 24)} resetHref="/obstacles" title="Hindernisfilter">
           <label className="grid gap-1 text-sm font-bold">
             Suchen
             <input
@@ -324,3 +325,5 @@ function dimensionLabel(obstacle: ObstacleCatalogItem): string {
 function formatCm(value: number): string {
   return Number.isInteger(value) ? `${value} cm` : `${value.toFixed(1)} cm`;
 }
+
+export const metadata = routeMetadata("obstacles");

@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
@@ -95,3 +96,5 @@ export default function HelpPage() {
     </AppShell>
   );
 }
+
+export const metadata = routeMetadata("help");

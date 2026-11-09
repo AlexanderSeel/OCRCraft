@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/i18n/locale-provider";
+import { Dialog } from "@/components/ui/dialog";
+import { buttonClass } from "@/components/ui/form";
 
 const navigation = [
   ["overview", "/"], ["training", "/training"], ["exercises", "/exercises"], ["games", "/games"], ["aiDrafts", "/exercises/ai-drafts"], ["obstacles", "/obstacles"], ["outdoor", "/admin/outdoor-variants"], ["groups", "/groups"], ["media", "/media"],
@@ -15,6 +18,8 @@ interface PrimaryNavigationProps {
 
 function isActivePath(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
+  if (href === "/admin" && pathname.startsWith("/admin/outdoor-variants")) return false;
+  if (href === "/training" && pathname === "/quick-create") return true;
   if (href === "/exercises" && pathname.startsWith("/exercises/ai-drafts")) return false;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -24,28 +29,7 @@ export function PrimaryNavigation({ variant, collapsed = false }: PrimaryNavigat
   const { dictionary } = useLocale();
 
   if (variant === "mobile") {
-    return (
-      <nav aria-label={dictionary.mobileNavigation} className="min-w-0 max-w-full overflow-x-auto border-t border-[var(--border)] lg:hidden">
-        <div className="mx-auto flex w-max min-w-full max-w-[1680px] gap-0.5 px-3 py-1.5 sm:px-4">
-          {navigation.map(([key, href]) => {
-            const label = dictionary.navigation[key];
-            const active = isActivePath(pathname, href);
-            return (
-              <Link
-                aria-current={active ? "page" : undefined}
-                className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md border-l-2 px-2.5 text-xs font-bold transition ${active ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)]"}`}
-                href={href}
-                key={href}
-                data-tour={`nav-${key}`}
-              >
-                <NavIcon label={key} />
-                {label}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-    );
+    return <MobileNavigation key={pathname} pathname={pathname} />;
   }
 
   return (
@@ -71,8 +55,69 @@ export function PrimaryNavigation({ variant, collapsed = false }: PrimaryNavigat
   );
 }
 
+function MobileNavigation({ pathname }: { readonly pathname: string }) {
+  const { dictionary } = useLocale();
+  const [open, setOpen] = useState(false);
+  const strip = useRef<HTMLDivElement>(null);
+  const close = useCallback(() => setOpen(false), []);
+  const destinations = [
+    ...navigation.map(([key, href]) => ({ key, href, label: dictionary.navigation[key] })),
+    { key: "admin", href: "/admin", label: dictionary.administration },
+    { key: "help", href: "/help", label: dictionary.helpCenter },
+  ];
+
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => { if (desktop.matches) close(); };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, [close]);
+
+  useEffect(() => {
+    const container = strip.current;
+    if (!container) return;
+    const revealActive = () => {
+      const active = container.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!active) return;
+      const bounds = container.getBoundingClientRect();
+      const item = active.getBoundingClientRect();
+      if (item.left < bounds.left) container.scrollLeft += item.left - bounds.left;
+      else if (item.right > bounds.right) container.scrollLeft += item.right - bounds.right;
+    };
+    revealActive();
+    const observer = new ResizeObserver(revealActive);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [pathname, dictionary]);
+
+  return (
+    <nav aria-label={dictionary.mobileNavigation} className="flex min-w-0 max-w-full items-center border-t border-[var(--border)] lg:hidden">
+      <button aria-expanded={open} aria-haspopup="dialog" className={buttonClass("secondary", "m-1.5 shrink-0 text-xs")} onClick={() => setOpen(true)} type="button">{dictionary.allDestinations}</button>
+      <div className="min-w-0 flex-1 overflow-x-auto" ref={strip}>
+        <div className="flex w-max min-w-full gap-0.5 px-1 py-1.5">
+          {destinations.map(({ key, href, label }) => (
+            <Link aria-current={isActivePath(pathname, href) ? "page" : undefined} className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md border-l-2 px-2.5 text-xs font-bold transition ${isActivePath(pathname, href) ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--foreground)]" : "border-transparent text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)]"}`} data-tour={`nav-${key}`} href={href} key={href}>
+              <NavIcon label={key} />{label}
+            </Link>
+          ))}
+        </div>
+      </div>
+      {open ? <Dialog onClose={close} title={dictionary.allDestinations}>
+        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+          {destinations.map(({ key, href, label }) => {
+            const active = isActivePath(pathname, href);
+            return <Link aria-current={active ? "page" : undefined} className={buttonClass(active ? "primary" : "secondary", "justify-start")} href={href} key={href} onNavigate={close}><NavIcon label={key} />{label}</Link>;
+          })}
+        </div>
+      </Dialog> : null}
+    </nav>
+  );
+}
+
 function NavIcon({ label }: { readonly label: string }) {
   const paths: Record<string, string> = {
+    admin: "M4 7h16M4 17h16M8 4v6m8 4v6",
+    help: "M9 9a3 3 0 1 1 4 2.8c-1 .4-1 1.2-1 2.2m0 3h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
     overview: "M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-5v-6h-5v6h-5A1.5 1.5 0 0 1 3 19.5v-9Z",
     training: "m8 5 11 7-11 7V5Zm-5 0v14",
     exercises: "M5 4h14a1 1 0 0 1 1 1v14H4V5a1 1 0 0 1 1-1Zm3 0v15M8 8h8M8 12h8M8 16h5",

@@ -4,7 +4,7 @@ const builderKey = "ocrcraft-builder-recovery-v1:new:local";
 const plannerKey = "ocrcraft-quick-planner-recovery-v1";
 
 test("Builder restores its inputs explicitly and isolates AI mode", async ({ page }) => {
-  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  await page.goto("/training/builder?planner=detailed", { waitUntil: "domcontentloaded" });
   await page.getByRole("textbox", { name: "Trainingstitel" }).fill("Recovered Builder");
   await page.getByRole("textbox", { name: "Alter", exact: true }).last().fill("18+");
   await page.getByRole("spinbutton", { name: "Hauptteile", exact: true }).last().fill("2");
@@ -12,7 +12,7 @@ test("Builder restores its inputs explicitly and isolates AI mode", async ({ pag
   await page.goto("/training/builder?mode=ai", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("builder-recovery")).toBeHidden();
   await expect(page.getByRole("textbox", { name: "Trainingstitel" })).toHaveValue("");
-  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  await page.goto("/training/builder?planner=detailed", { waitUntil: "domcontentloaded" });
   const notice = page.getByTestId("builder-recovery");
   await expect(notice).toContainText("Lokale Planung gefunden");
   await expect(page.getByRole("textbox", { name: "Trainingstitel" })).toHaveValue("");

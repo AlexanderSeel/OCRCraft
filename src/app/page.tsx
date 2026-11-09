@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
@@ -24,3 +25,5 @@ export default async function HomePage() {
     </AppShell>
   );
 }
+
+export const metadata = routeMetadata("overview");

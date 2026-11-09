@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
@@ -131,7 +132,7 @@ export default async function TrainingTemplatesPage({ searchParams }: PageProps)
         </Card>
 
         <div className="grid gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
-          <CatalogFilterPanel hasFilters={Boolean(audience || focus || page !== 1 || pageSize !== 12)} resetHref="/training/templates" title="Vorlagenfilter">
+          <CatalogFilterPanel activeFilterCount={[audience, focus].filter(Boolean).length} hasFilters={Boolean(audience || focus || page !== 1 || pageSize !== 12)} resetHref="/training/templates" title="Vorlagenfilter">
             <label className="grid gap-2 text-sm font-bold">
               Zielgruppe
               <select className={`${formControlClass} font-normal`} defaultValue={audience} name="audience">
@@ -226,3 +227,5 @@ function Phase({ label, value }: { readonly label: string; readonly value: strin
     </div>
   );
 }
+
+export const metadata = routeMetadata("trainingTemplates");

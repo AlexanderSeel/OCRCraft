@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 for (const planner of ["quick-planner", "builder", "quick-create"] as const) {
   test(`venue selection is accessible, recoverable and translated on mobile: ${planner}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(planner === "quick-create" ? "/quick-create" : "/training/builder", { waitUntil: "domcontentloaded" });
+    await page.goto(planner === "quick-create" ? "/quick-create" : planner === "builder" ? "/training/builder?planner=detailed" : "/training/builder", { waitUntil: "domcontentloaded" });
     if (planner === "quick-create") {
       await page.getByRole("button", { name: "Weiter", exact: true }).click();
       await page.getByRole("button", { name: "Weiter", exact: true }).click();
@@ -14,7 +14,7 @@ for (const planner of ["quick-planner", "builder", "quick-create"] as const) {
     await select.selectOption("synthetic-court");
     await expect(picker).toContainText("keine Shuttlelänge");
     await expect(select).toHaveAttribute("aria-describedby", /help$/);
-    if (planner !== "quick-create") await expect(page.getByRole("combobox", { name: "Ort", exact: true }).nth(planner === "quick-planner" ? 0 : 1)).toHaveValue("outdoor");
+    if (planner !== "quick-create") await expect(page.getByRole("combobox", { name: "Ort", exact: true }).first()).toHaveValue("outdoor");
     await expect.poll(() => page.evaluate(() => Object.entries(localStorage).some(([key, value]) => key.includes("recovery") && value.includes('"venueId":"synthetic-court"')))).toBe(true);
     await page.reload({ waitUntil: "domcontentloaded" });
     const recoveryId = planner === "quick-planner" ? "quick-planner-recovery" : planner === "builder" ? "builder-recovery" : "quick-create-recovery";
@@ -30,7 +30,7 @@ for (const planner of ["quick-planner", "builder", "quick-create"] as const) {
 }
 
 test("the local builder sends the venue to generation and keeps its warning visible", async ({ page }) => {
-  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  await page.goto("/training/builder?planner=detailed", { waitUntil: "domcontentloaded" });
   await page.getByRole("combobox", { name: "Vereinsgelände", exact: true }).last().selectOption("athletics-field");
   const response = page.waitForResponse((result) => result.url().endsWith("/api/training/draft") && result.request().method() === "POST");
   await page.getByRole("button", { name: "Lokal planen", exact: true }).click();
@@ -51,7 +51,7 @@ test("the local builder sends the venue to generation and keeps its warning visi
 });
 
 test("native validation removes its own error without removing field help", async ({ page }) => {
-  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  await page.goto("/training/builder?planner=detailed", { waitUntil: "domcontentloaded" });
   const picker = page.getByTestId("club-venue-picker").last();
   const select = picker.getByRole("combobox", { name: "Vereinsgelände", exact: true });
   await select.selectOption("synthetic-court");

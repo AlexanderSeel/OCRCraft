@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
@@ -215,3 +216,5 @@ function Metric({ label, value }: { readonly label: string; readonly value: stri
 function riskLabel(value: string) { return value === "low" ? "Niedrig" : value === "medium" ? "Mittel" : "Hoch"; }
 function impactLabel(value: string) { return value === "low" ? "Niedrig" : value === "moderate" ? "Moderat" : "Hoch"; }
 function supervisionLabel(value: string) { return value === "direct" ? "Direkt" : value === "increased" ? "Erhöht" : "Normal"; }
+
+export const metadata = routeMetadata("safetyProfiles");

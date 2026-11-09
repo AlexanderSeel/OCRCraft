@@ -118,22 +118,22 @@ export const TOUR_GUIDES: readonly TourGuide[] = [
     en: "Training Builder",
     steps: [
       {
-        selector: "[data-tour='builder-setup']",
-        de: { title: "Rahmen festlegen", text: "Definiere Zielgruppe, Alter, Teilnehmerzahl, Dauer und Ort als harte Planungsparameter." },
-        en: { title: "Set the frame", text: "Define audience, age, participant count, duration, and location as hard planning parameters." },
+        selector: "[data-tour='builder-choice']",
+        de: { title: "Planungsweg wählen", text: "Plane kompakt mit wenigen Angaben oder öffne die detaillierte Planung. Beide Vorschläge prüfst du vor dem Speichern." },
+        en: { title: "Choose a planning path", text: "Plan with a few inputs or open detailed planning. Review proposals from either path before saving." },
       },
       {
-        selector: "[data-tour='builder-structure']",
+        selector: "[data-tour='builder-structure'], [data-tour='builder']",
         de: { title: "Trainingsstruktur", text: "Lege Warm-up, Hauptteile, Cooldown, Rotationsgruppen und Programmierung je Hauptteil fest." },
         en: { title: "Training structure", text: "Set warm-up, main parts, cooldown, rotation groups, and programming for each main part." },
       },
       {
-        selector: "[data-tour='builder-goals']",
-        de: { title: "Ziele und Auswahlregeln", text: "Wähle Ziele, Übungstypen, Körperregionen und Wunschübungen. Ausschlüsse bleiben harte Grenzen." },
-        en: { title: "Goals and selection rules", text: "Choose goals, exercise types, body regions, and preferred exercises. Exclusions remain hard constraints." },
+        selector: "[data-tour='builder-goals'], [data-tour='builder']",
+        de: { title: "Ziele und Auswahlregeln", text: "Wähle Ziel und Körperfokus. In der detaillierten Planung kannst du zusätzlich Übungstypen und Wunschübungen festlegen. Ausschlüsse bleiben verbindlich." },
+        en: { title: "Goals and selection rules", text: "Choose goal and body focus. Detailed planning also lets you choose exercise types and preferred exercises. Exclusions remain binding." },
       },
       {
-        selector: "[data-tour='builder-format']",
+        selector: "[data-tour='builder-format'], [data-tour='builder']",
         de: { title: "Format, Equipment und Hindernisse", text: "Format, Intensität, Equipmentbestand und OCR-Hindernisse steuern die tatsächliche Umsetzbarkeit." },
         en: { title: "Format, equipment, and obstacles", text: "Format, intensity, equipment inventory, and OCR obstacles control real-world feasibility." },
       },

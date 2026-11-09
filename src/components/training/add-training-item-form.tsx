@@ -38,11 +38,8 @@ export function AddTrainingItemForm({ sessionId, phaseId }: AddTrainingItemFormP
         />
 
         <div className="grid gap-4 md:grid-cols-3">
-          <FormField label="Dauer" required>
-            <div className="flex items-center gap-2">
-              <input className={formControlClass} defaultValue={5} min={1} name="durationMinutes" required type="number" />
-              <span className="text-sm font-normal text-[var(--muted)]">Min.</span>
-            </div>
+          <FormField label="Dauer (Minuten)" required>
+            <input className={formControlClass} defaultValue={5} min={1} name="durationMinutes" required type="number" />
           </FormField>
           <FormField label="Format">
             <select className={formControlClass} defaultValue="" name="format">

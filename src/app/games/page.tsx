@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
@@ -49,7 +50,7 @@ export default async function GamesPage({ searchParams }: PageProps) {
     >
       <OverviewLayout storageKey="ocrcraft-games-view"><div className="space-y-6">
         <div className="grid min-w-0 gap-4 lg:grid-cols-[max-content_minmax(0,1fr)] lg:items-start">
-        <CatalogFilterPanel hasFilters={Boolean(query || archived || page !== 1 || pageSize !== 40)} resetHref="/games" title="Spielfilter">
+        <CatalogFilterPanel activeFilterCount={[query, archived].filter(Boolean).length} hasFilters={Boolean(query || archived || page !== 1 || pageSize !== 40)} resetHref="/games" title="Spielfilter">
             <label className="grid gap-1 text-sm font-bold">
               Suchen
               <input className={formControlClass} defaultValue={query} name="q" placeholder="z. B. Team, Reaktion, OCR …" />
@@ -129,3 +130,5 @@ function pageHref(page: number, query: string, archived: boolean, size: number):
   if (query) params.set("q", query);
   return "/games?" + params.toString();
 }
+
+export const metadata = routeMetadata("games");

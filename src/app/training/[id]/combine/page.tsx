@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
@@ -121,3 +122,5 @@ function InfoCard({ label, value }: { readonly label: string; readonly value: st
     </div>
   );
 }
+
+export const metadata = routeMetadata("trainingCombine");

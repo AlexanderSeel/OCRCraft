@@ -1,3 +1,4 @@
+import { TrainingNotes } from "./training-notes";
 import { TrainingItemGuidance } from "@/components/training/training-item-guidance";
 import { TRAINING_PHASE_LABELS } from "@/domain/training/model";
 import { mainPartProgrammingLabel } from "@/server/training/main-part-programming";
@@ -46,9 +47,9 @@ export function TrainingReadonlySession({
           </div>
         </div>
         {session.notes ? (
-          <p className={printMode ? "mt-3 text-sm leading-6 text-slate-700" : "mt-3 text-sm leading-6 text-[var(--muted)]"}>
-            {session.notes}
-          </p>
+          <div className={printMode ? "mt-3 text-sm leading-6 text-slate-700" : "mt-3 text-sm leading-6 text-[var(--muted)]"}>
+            <TrainingNotes notes={session.notes} />
+          </div>
         ) : null}
         {session.trainerProfile ? (
           <div className={printMode ? "mt-4 flex items-center gap-3 text-sm text-slate-600" : "mt-4 flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-sm text-[var(--muted)]"}>

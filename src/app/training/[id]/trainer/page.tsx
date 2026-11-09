@@ -1,6 +1,6 @@
-import Link from "next/link";
+import { routeMetadata } from "@/config/route-titles";
 import { notFound } from "next/navigation";
-import { TrainingPresentationControls } from "@/components/training/training-presentation-controls";
+import { TrainingPresentationToolbar } from "@/components/training/training-presentation-toolbar";
 import { TrainingReadonlySession } from "@/components/training/training-readonly-session";
 import { getTrainingExerciseGuidanceMap } from "@/server/training/training-exercise-guidance-repository";
 import { getTrainingSessionById } from "@/server/training/training-session-repository";
@@ -27,18 +27,7 @@ export default async function TrainingTrainerPage({ params }: PageProps) {
       id="training-trainer-view"
     >
       <div className="mx-auto max-w-6xl">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 print:hidden">
-          <span className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black text-[var(--muted)]">Readonly-Ansicht</span>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-black hover:bg-[var(--surface-subtle)]"
-              href={`/training/${session.id}/print`}
-            >
-              Druckansicht
-            </Link>
-            <TrainingPresentationControls fullscreenTargetId="training-trainer-view" showPrint={false} />
-          </div>
-        </div>
+        <TrainingPresentationToolbar sessionId={session.id} />
 
         <TrainingReadonlySession
           guidanceByExerciseId={guidanceByExerciseId}
@@ -49,3 +38,5 @@ export default async function TrainingTrainerPage({ params }: PageProps) {
     </main>
   );
 }
+
+export const metadata = routeMetadata("trainingPresent");

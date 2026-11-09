@@ -1,6 +1,9 @@
+import { BuilderWorkspace } from "@/components/training/builder-workspace";
+import { BuilderSourcePicker } from "@/components/training/builder-source-picker";
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
-import { buttonClass, formControlClass } from "@/components/ui/form";
+import { buttonClass } from "@/components/ui/form";
 import {
   TrainingBuilderPanel,
   type TrainingBuilderInitialState,
@@ -15,7 +18,7 @@ import { getTrainingSessionById, listTrainingSessions } from "@/server/training/
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  readonly searchParams: Promise<{ source?: string; mode?: string }>;
+  readonly searchParams: Promise<{ source?: string; mode?: string; planner?: string }>;
 }
 
 export default async function TrainingBuilderPage({ searchParams }: PageProps) {
@@ -37,7 +40,6 @@ export default async function TrainingBuilderPage({ searchParams }: PageProps) {
   return (
     <AppShell
       title="Training Builder"
-      subtitle="Schneller lokaler Plan oder detaillierter AI-/Sport-Builder – beide aus dem freigegebenen OCRCraft-Übungspool und mit derselben Sicherheitsprüfung."
       actions={(
         <div className="flex flex-wrap gap-2">
           <Link className={buttonClass("secondary", "px-4")} href="/quick-create">Quick Create Wizard</Link>
@@ -45,30 +47,13 @@ export default async function TrainingBuilderPage({ searchParams }: PageProps) {
         </div>
       )}
     >
-      <div className="space-y-6">
-        <div data-tour="builder"><TrainingQuickPlanner equipmentOptions={equipmentOptions} obstacleOptions={obstacleOptions} /></div>
-
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]">
-          <form className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end" method="get">
-            <label className="grid gap-1.5 text-sm font-black">
-              Bestehendes generiertes Training als Basis
-              <select className={`${formControlClass} font-normal`} defaultValue={initialState?.sourceTrainingId ?? ""} name="source">
-                <option value="">Neues Training</option>
-                {sourceTrainingOptions.map((option) => <option key={option.id} value={option.id}>{option.title} · {option.totalDurationMinutes} Min. · {option.itemCount} Übungen</option>)}
-              </select>
-            </label>
-            <button className={buttonClass("primary", "px-4")} type="submit">Parameter laden</button>
-            {initialState ? <Link className={buttonClass("secondary", "px-4")} href="/training/builder">Zurücksetzen</Link> : null}
-          </form>
-          <p className="mt-2 text-xs leading-5 text-[var(--muted)]">Die ursprünglichen Builder-Parameter werden mit der aktuell gespeicherten Hauptteil-/Team-/Rotationsstruktur und Programmierung kombiniert. Das bestehende Training wird nicht überschrieben; Speichern erzeugt immer einen neuen Entwurf.</p>
-          {source && !initialState ? <p className="mt-2 text-xs font-bold text-[var(--danger)]">Für dieses Training ist keine gültige Builder-Generation-History verfügbar. Es bleibt unverändert.</p> : null}
-        </section>
-
-        <details className="group" open>
-          <summary className="mb-4 cursor-pointer text-sm font-black text-[var(--muted)]">Detaillierten Builder anzeigen</summary>
+      <BuilderWorkspace
+        quick={<div data-tour="builder"><TrainingQuickPlanner equipmentOptions={equipmentOptions} obstacleOptions={obstacleOptions} /></div>}
+        detailed={<div className="space-y-4">
+          <BuilderSourcePicker options={sourceTrainingOptions} source={source} unavailable={Boolean(source && !initialState)} mode={initialState?.builderMode ?? (mode === "ai" ? "ai" : "local")} />
           <TrainingBuilderPanel key={`${source ?? "new"}:${mode ?? "local"}`} equipmentOptions={equipmentOptions} obstacleOptions={obstacleOptions} initialBuilderMode={mode === "ai" ? "ai" : "local"} initialState={initialState} sourceTrainingOptions={sourceTrainingOptions} />
-        </details>
-      </div>
+        </div>}
+      />
     </AppShell>
   );
 }
@@ -123,3 +108,5 @@ async function buildInitialState(trainingId: string): Promise<TrainingBuilderIni
     availableObstacleExerciseIds: request.availableObstacleExerciseIds,
   };
 }
+
+export const metadata = routeMetadata("trainingBuilder");

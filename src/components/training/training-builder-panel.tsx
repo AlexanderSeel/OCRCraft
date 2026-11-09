@@ -461,7 +461,7 @@ export function TrainingBuilderPanel({
   const busy = pending || regeneratingPhase != null || replacingExerciseId != null;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+    <div className="space-y-5">
       <div className="space-y-5">
         <PlanningRecoveryNotice pending={Boolean(recovery.pending)} status={recovery.status} restore={recovery.restore} clear={recovery.clear} testId="builder-recovery" />
       <PlanningEligibilityNotice />
@@ -483,11 +483,11 @@ export function TrainingBuilderPanel({
         ) : null}
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]" data-tour="builder-setup">
-          <h2 className="text-lg font-black">Planungsengine</h2>
+          <h2 className="text-lg font-black">{dictionary.builderEntry.method}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {([
-              ["local", "Lokaler Sportalgorithmus", "Deterministisch und reproduzierbar. Gewichtet Trainingslehre, Ziele, Muskeln, Gegenmuskeln, Typen, Belastung, letzte Trainings und Vielfalt."],
-              ["ai", "AI-Vorschlag", "Nutzt nur freigegebene OCRCraft-Übungen. Der Vorschlag wird anschließend mit denselben deterministischen Regeln validiert."],
+              ["local", dictionary.builderEntry.local, dictionary.builderEntry.localHelp],
+              ["ai", dictionary.builderEntry.ai, dictionary.builderEntry.aiHelp],
             ] as const).map(([id, label, description]) => (
               <button
                 aria-pressed={builderMode === id}
@@ -504,7 +504,7 @@ export function TrainingBuilderPanel({
           {builderMode === "ai" ? (
             <div className="mt-3 space-y-3">
               <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--muted)]">
-                AI muss serverseitig konfiguriert sein. Sie darf keine neuen Übungs-IDs erfinden und kann Alters-, Orts-, Ausschluss-, Equipment-, Hindernis- oder Sicherheitsfilter nicht umgehen.
+                {dictionary.builderEntry.aiNotice}
               </p>
               {sourceTrainingOptions.length > 0 ? (
                 <Disclosure className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4" summaryClassName="text-sm font-black" summary={`Frühere Trainings als Rekompositions-Kontext (${sourceTrainingIds.length}/6)`}>
@@ -785,8 +785,8 @@ export function TrainingBuilderPanel({
         </section>
       </div>
 
-      <aside className="h-fit rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] xl:sticky xl:top-4">
-        <h2 className="font-black">Sportlogik</h2>
+      <aside className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+        <Disclosure summary={dictionary.builderEntry.logic}>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-[var(--muted)]">
           <li>Warm-up, ein bis vier Hauptteile und Cooldown mit exakter Zeit- und Übungsanzahl.</li>
           <li>Jeder Hauptteil kann unabhängig als Intervall, Rundenblock, Ladder/Pyramide, Chipper oder Every-X programmiert werden.</li>
@@ -805,6 +805,7 @@ export function TrainingBuilderPanel({
           <li>AI kann bis zu sechs ausgewählte frühere Trainings als Rekompositions-Kontext erhalten, aber nur aktuell freigegebene Übungen auswählen.</li>
           <li>AI darf auswählen und begründen, aber niemals die deterministische Sicherheitsprüfung umgehen.</li>
         </ul>
+        </Disclosure>
       </aside>
     </div>
   );

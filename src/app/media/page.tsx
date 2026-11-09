@@ -1,3 +1,5 @@
+import { MediaWorkflowCopy, MediaSearchInput, MediaBatchError } from "@/components/media/media-workflow-copy";
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
@@ -136,7 +138,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
         ) : null}
         {params.batchError ? (
           <Alert tone="danger">
-            {batchErrorLabel(params.batchError)}
+            <MediaBatchError code={params.batchError} />
           </Alert>
         ) : null}
         {params.batchApproved ? (
@@ -210,15 +212,10 @@ export default async function MediaPage({ searchParams }: PageProps) {
         ]} />
 
         <div className="catalog-workspace grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start" data-tour="media-filters">
-        <CatalogFilterPanel hasFilters={Boolean(query || reviewStatus || generationStatus || sourceType || mediaType || page !== 1 || pageSize !== 24)} resetHref="/media" title="Medienfilter">
+        <CatalogFilterPanel activeFilterCount={[query, reviewStatus, generationStatus, sourceType, mediaType].filter(Boolean).length} hasFilters={Boolean(query || reviewStatus || generationStatus || sourceType || mediaType || page !== 1 || pageSize !== 24)} resetHref="/media" title="Medienfilter">
           <label className="grid gap-1 text-sm font-bold">
             Suchen
-            <input
-              className={formControlClass}
-              defaultValue={query}
-              name="q"
-              placeholder="Übung oder Seed-Key"
-            />
+            <MediaSearchInput value={query} />
           </label>
           <FilterSelect label="Review" name="review" value={reviewStatus} options={[
             ["", "Alle"],
@@ -249,16 +246,16 @@ export default async function MediaPage({ searchParams }: PageProps) {
         <div className="min-w-0 space-y-6">
 
         <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)]" data-tour="media-batch">
-          <summary className="cursor-pointer text-base font-black">Batch-Operationen <span className="ml-2 text-xs font-normal text-[var(--muted)]">Auswahl starten und KI-Jobstatus</span></summary>
+          <summary className="cursor-pointer text-base font-black"><MediaWorkflowCopy name="title" /> <span className="ml-2 text-xs font-normal text-[var(--muted)]"><MediaWorkflowCopy name="subtitle" /></span></summary>
           <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
           <div>
-            <h2 className="text-base font-black">Batch-Operationen</h2>
+            <h2 className="text-base font-black"><MediaWorkflowCopy name="title" /></h2>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-              Markiere eine oder mehrere Übungen – entweder über vorhandene Medienkarten oder über die Liste ohne verwendbares Bild. „Neues Bild per KI erzeugen“ ergänzt ein neues Bild und lässt bestehende Medien unverändert. Die Generierung läuft nach dem Absenden asynchron weiter.
+              <MediaWorkflowCopy name="help" />
             </p>
             <form action={queueMediaBatchAction} className="mt-3 flex flex-wrap items-end gap-2" id="media-batch-form">
               <label className="grid gap-1 text-sm font-bold">
-                Batch-Aktion
+                <MediaWorkflowCopy name="action" />
               <select className={formControlClass} name="batchAction">
                   <option value="generate_ai_image">Neues Bild per KI erzeugen</option>
                 </select>
@@ -278,7 +275,7 @@ export default async function MediaPage({ searchParams }: PageProps) {
             </div>
           </div>
           <div className="rounded-xl bg-[var(--surface-subtle)] p-3">
-            <div className="text-xs font-black uppercase tracking-[0.08em] text-[var(--muted)]">KI-Bildjobs</div>
+            <div className="text-xs font-black uppercase tracking-[0.08em] text-[var(--muted)]"><MediaWorkflowCopy name="jobs" /></div>
             <dl className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 xl:grid-cols-2">
               <Data label="Wartend" value={String(generationQueue.queued)} />
               <Data label="Läuft" value={String(generationQueue.running)} />
@@ -301,6 +298,9 @@ export default async function MediaPage({ searchParams }: PageProps) {
                   Hier kannst du auch Übungen auswählen, die noch gar keinen Medieneintrag besitzen, nur fehlgeschlagene/abgelehnte Bilder haben oder deren externe Bilder wegen fehlender Lizenz-, Quellen- oder Einwilligungsfreigabe nicht verwendbar sind.
                 </p>
               </div>
+            </div>
+            <details className="mt-3 rounded-md border border-[var(--border)] p-3">
+              <summary className="min-h-11 cursor-pointer py-3 text-sm font-bold"><MediaWorkflowCopy name="exports" /></summary>
               <div className="flex flex-wrap items-center gap-2">
                 <a
                   className={buttonClass("secondary", "px-3 text-xs")}
@@ -324,7 +324,6 @@ export default async function MediaPage({ searchParams }: PageProps) {
                   {missingImageExercises.length} angezeigt
                 </span>
               </div>
-            </div>
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               {codexBatchProgress.map((batch) => (
                 <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3" key={batch.id}>
@@ -352,16 +351,12 @@ export default async function MediaPage({ searchParams }: PageProps) {
                 </div>
               ))}
             </div>
+            </details>
 
             <form className="mt-3 flex flex-wrap gap-2" method="get">
               <label className="min-w-[260px] flex-1">
                 <span className="sr-only">Übungen ohne Bild suchen</span>
-                <input
-                  className={`${formControlClass} w-full`}
-                  defaultValue={missingQuery}
-                  name="missingQ"
-                  placeholder="Übung, Kategorie oder Seed-Key suchen"
-                />
+                <MediaSearchInput missing value={missingQuery} />
               </label>
               <button className={buttonClass("secondary", "px-4")} type="submit">
                 Liste filtern
@@ -901,10 +896,7 @@ function formatJobTime(value: string): string {
   }).format(date);
 }
 
-function batchErrorLabel(value: string): string {
-  if (value === "selection") return "Wähle mindestens eine Übung oder Medienkarte für die Batch-Operation aus.";
-  if (value === "config") return "KI-Bildgenerierung ist nicht konfiguriert. Weise in Administration → Einstellungen mindestens einen aktiven Bild-AI-Provider zu.";
-  if (value === "action") return "Die gewählte Batch-Aktion ist ungültig.";
-  return "Die Batch-Operation konnte nicht in die Warteschlange gestellt werden.";
-}
 
+
+
+export const metadata = routeMetadata("media");

@@ -45,14 +45,19 @@ const requiredPatterns = [
     pattern: /as\?: "article" \| "div" \| "section"/,
   },
   {
-    file: join(sourceRoot, "components", "ui", "form.tsx"),
+    file: join(sourceRoot, "components", "ui", "form-styles.ts"),
     name: "Interaktive Buttons benötigen Touch-Ziel und sichtbaren Fokus",
     pattern: /buttonBaseClass\s*=\s*[\s\S]*min-h-11[\s\S]*focus-visible:outline-2[\s\S]*focus-visible:outline-\[var\(--focus\)\]/,
   },
   {
-    file: join(sourceRoot, "components", "ui", "form.tsx"),
+    file: join(sourceRoot, "components", "ui", "form-styles.ts"),
+    name: "Formularfelder benötigen sichtbare Invalid-Stile",
+    pattern: /aria-invalid:border-\[var\(--danger\)\]/,
+  },
+  {
+    file: join(sourceRoot, "components", "ui", "form-field.tsx"),
     name: "Formularfelder müssen Fehler semantisch ankündigen",
-    pattern: /(?=[\s\S]*role=\"alert\")(?=[\s\S]*aria-invalid:)/,
+    pattern: /(?=[\s\S]*role="alert")(?=[\s\S]*"aria-invalid":)/,
   },
   {
     file: join(sourceRoot, "components", "ui", "dialog.tsx"),

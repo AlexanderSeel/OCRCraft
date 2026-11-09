@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { QuickCreateWizard } from "@/components/training/quick-create-wizard";
@@ -95,3 +96,5 @@ export default async function QuickCreatePage({ searchParams }: PageProps) {
     </AppShell>
   );
 }
+
+export const metadata = routeMetadata("quickCreate");

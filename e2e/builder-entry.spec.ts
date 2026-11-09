@@ -1,0 +1,53 @@
+import { expect, test } from "@playwright/test";
+
+test("planning paths keep independent inputs and generated proposals through switching and Back", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/training/builder");
+  const quick = page.getByRole("button", { name: "Kompakt planen", exact: true });
+  const detailed = page.getByRole("button", { name: "Detailliert planen", exact: true });
+  await expect(quick).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("textbox", { name: "Trainingstitel", exact: true })).toBeHidden();
+  const quickPane = page.locator(`[id="${await quick.getAttribute("aria-controls")}"]`);
+  await quickPane.getByRole("spinbutton", { name: "Teilnehmer", exact: true }).fill("10");
+  await quickPane.getByRole("button", { name: "Quickplan erstellen", exact: true }).click();
+  await expect(quickPane.getByRole("button", { name: "Training speichern", exact: true })).toBeEnabled();
+  await detailed.click();
+  await expect(page).toHaveURL(/planner=detailed/);
+  await expect(quickPane).toBeHidden();
+  const detailedPane = page.locator(`[id="${await detailed.getAttribute("aria-controls")}"]`);
+  const title = detailedPane.getByRole("textbox", { name: "Trainingstitel", exact: true });
+  await title.fill("Preserved detailed proposal");
+  await detailedPane.getByRole("button", { name: "Lokal planen", exact: true }).click();
+  await expect(detailedPane.getByRole("button", { name: "Training speichern", exact: true })).toBeEnabled();
+  await quick.click();
+  await expect(quickPane.getByRole("spinbutton", { name: "Teilnehmer", exact: true })).toHaveValue("10");
+  await expect(quickPane.getByRole("button", { name: "Training speichern", exact: true })).toBeEnabled();
+  await page.goBack();
+  await expect(detailed).toHaveAttribute("aria-pressed", "true");
+  await expect(title).toHaveValue("Preserved detailed proposal");
+  await expect(detailedPane.getByRole("button", { name: "Training speichern", exact: true })).toBeEnabled();
+  await expect(detailedPane.getByRole("button", { name: "Angaben übernehmen", exact: true })).toBeHidden();
+  await expect(detailedPane.getByText("Wie die Planung arbeitet", { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const notification = page.getByRole("button", { name: "Benachrichtigung schließen", exact: true });
+  if (await notification.first().isVisible()) await notification.first().click();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: "artifacts/ui-ux-review/builder-entry-mobile.png" });
+});
+
+test("legacy AI/source links select detailed planning and the new choice supports English and keyboard", async ({ page }) => {
+  await page.goto("/training/builder?mode=ai");
+  await expect(page.getByRole("button", { name: "Detailliert planen", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: /^KI-Vorschlag/ })).toHaveAttribute("aria-pressed", "true");
+  await page.goto("/training/builder?source=00000000-0000-0000-0000-000000000000");
+  await expect(page.getByRole("button", { name: "Detailliert planen", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText(/Zu diesem Training lassen sich keine gültigen Planungsangaben laden/)).toBeVisible();
+  await page.getByRole("combobox", { name: "Sprache", exact: true }).selectOption("en");
+  const quick = page.getByRole("button", { name: "Compact planning", exact: true });
+  await quick.focus();
+  await page.keyboard.press("Enter");
+  await expect(quick).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Angaben übernehmen", exact: true })).toBeHidden();
+  await page.setViewportSize({ width: 320, height: 740 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

@@ -1,3 +1,6 @@
+"use client";
+
+import { useLocale } from "@/components/i18n/locale-provider";
 import { TrainingValidationSummary } from "./training-validation-summary";
 import type { TrainingDraft } from "@/domain/training/draft";
 import type { MainPartProgramming, TrainingItem, TrainingPhase, TrainingPhaseKind } from "@/domain/training/model";
@@ -29,6 +32,7 @@ export function TrainingDraftPreview({
   onReplaceExercise,
   replacingExerciseId = null,
 }: TrainingDraftPreviewProps) {
+  const { dictionary } = useLocale();
   const mainPartCount = Math.max(
     1,
     ...draft.session.phases
@@ -44,7 +48,7 @@ export function TrainingDraftPreview({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-            {draft.source === "ai" ? "AI-Vorschlag · deterministisch geprüft" : "Lokaler Sportalgorithmus"}
+            {draft.source === "ai" ? dictionary.trainingCopy.aiLabel : dictionary.trainingCopy.localLabel}
           </div>
           <h4 className="mt-1 text-lg font-black">
             {draft.session.totalDurationMinutes} Minuten · Warm-up + {mainPartCount} {mainPartCount === 1 ? "Hauptteil" : "Hauptteile"} + Cooldown
@@ -76,7 +80,7 @@ export function TrainingDraftPreview({
 
 
       <p className="text-xs leading-5 text-[var(--muted)]">
-        Dieser Entwurf ist noch nicht gespeichert. Er wird ausschließlich aus freigegebenen Bibliotheksdaten zusammengesetzt; AI-Vorschläge durchlaufen zusätzlich dieselben deterministischen OCRCraft-Prüfungen wie lokale Entwürfe.
+        {dictionary.trainingCopy.review}
       </p>
     </div>
   );

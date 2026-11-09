@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import { AppShell } from "@/components/app-shell";
 import { SeedCompletenessReportView } from "@/components/admin/seed-completeness-report";
 import { CatalogCoverageReportView } from "@/components/admin/catalog-coverage-report";
@@ -396,3 +397,5 @@ function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+export const metadata = routeMetadata("admin");

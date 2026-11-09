@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { presentPlanningMessage } from "./training-note-presentation";
 import type { TrainingValidationIssue } from "@/domain/training/validation";
 import { useLocale } from "@/components/i18n/locale-provider";
 import { Alert } from "@/components/ui/feedback";
@@ -9,10 +10,10 @@ export function TrainingValidationSummary({ issues, warnings }: {
   readonly issues: readonly TrainingValidationIssue[];
   readonly warnings: readonly string[];
 }) {
-  const { dictionary } = useLocale();
+  const { dictionary, locale } = useLocale();
   const copy = dictionary.trainingValidation;
   const errors = issues.filter((issue) => issue.severity === "error");
-  const recommendations = [...issues.filter((issue) => issue.severity === "warning").map((issue) => issue.message), ...warnings];
+  const recommendations = [...issues.filter((issue) => issue.severity === "warning").map((issue) => issue.message), ...warnings].map((message) => presentPlanningMessage(message, locale));
   const tone = errors.length > 0 ? "danger" : recommendations.length > 0 ? "warning" : "success";
 
   return <div className="space-y-3" data-testid="training-validation-summary">

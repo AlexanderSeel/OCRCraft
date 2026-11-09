@@ -78,12 +78,13 @@ test("quick create carries Kids age and safety choices into the review", async (
 });
 
 test("training builder exposes age-aware safety boundaries and team capacity", async ({ page }) => {
-  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  await page.goto("/training/builder?planner=detailed", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "Training Builder" })).toBeVisible();
 
   const audience = page.getByRole("combobox", { name: "Zielgruppe" }).last();
   await audience.selectOption("kids");
   await expect(page.getByRole("textbox", { name: "Alter" }).last()).toBeVisible();
+  await page.getByText("Wie die Planung arbeitet", { exact: true }).click();
   await expect(page.getByText("Alter, Ort, Ausschlussbereiche, Risiko, Equipment, Hindernisbestand und Stationskapazität bleiben harte Grenzen.")).toBeVisible();
 
   await page.getByRole("combobox", { name: "Organisation im Hauptteil" }).selectOption("team");
@@ -207,7 +208,7 @@ test("quick create generates and persists a validated training", async ({ page }
 });
 
 test("training builder keeps real edits through generation and persistence", async ({ page }) => {
-  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  await page.goto("/training/builder?planner=detailed", { waitUntil: "domcontentloaded" });
 
   await page.getByRole("combobox", { name: "Zielgruppe" }).last().selectOption("kids");
   const age = page.getByRole("textbox", { name: "Alter" }).last();
@@ -228,7 +229,7 @@ test("training builder keeps real edits through generation and persistence", asy
 });
 
 test("Kids planning keeps every selected exercise within the configured minimum-age boundary", async ({ page }) => {
-  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  await page.goto("/training/builder?planner=detailed", { waitUntil: "domcontentloaded" });
   await page.getByRole("combobox", { name: "Zielgruppe" }).last().selectOption("kids");
   await page.getByRole("textbox", { name: "Alter" }).last().fill("10");
 
@@ -245,7 +246,7 @@ test("Kids planning keeps every selected exercise within the configured minimum-
 
 
 test("Kids age-five planning does not fall back to unknown-age imports", async ({ page }) => {
-  await page.goto("/training/builder", { waitUntil: "domcontentloaded" });
+  await page.goto("/training/builder?planner=detailed", { waitUntil: "domcontentloaded" });
   await page.getByRole("combobox", { name: "Zielgruppe" }).last().selectOption("kids");
   await page.getByRole("textbox", { name: "Alter" }).last().fill("5");
   await page.getByRole("button", { name: "Lokal planen", exact: true }).click();

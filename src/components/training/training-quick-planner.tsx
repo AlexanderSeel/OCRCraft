@@ -11,6 +11,7 @@ import { quickPlannerRecoverySchema, QUICK_PLANNER_RECOVERY_KEY } from "./builde
 
 
 import { useMemo, useState } from "react";
+import { useLocale } from "@/components/i18n/locale-provider";
 import type { TrainingDraft } from "@/domain/training/draft";
 import { BODY_REGION_OPTIONS, COARSE_BODY_REGION_IDS } from "@/domain/body-regions";
 import type { EquipmentAvailabilityOption } from "./equipment-availability-picker";
@@ -42,6 +43,7 @@ export function TrainingQuickPlanner({
   equipmentOptions = [],
   obstacleOptions = [],
 }: TrainingQuickPlannerProps) {
+  const { dictionary } = useLocale();
   const [audience, setAudience] = useState("adults");
   const [participants, setParticipants] = useState(12);
   const [duration, setDuration] = useState(60);
@@ -204,9 +206,9 @@ export function TrainingQuickPlanner({
         <div>
           <div className="text-xs font-black uppercase tracking-[0.14em] text-[var(--muted)]">Quickplaner · lokal</div>
           <h2 className="mt-1 text-xl font-black">Mit wenigen Angaben direkt zum Training</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Kein AI-Aufruf. OCRCraft nutzt den freigegebenen Übungspool und die Sportlogik für Belastung, Bewegungsmuster, Muskelbalance, Alter, Equipment, Hindernisbestand, Rotationsgruppen und Wiederholungen.</p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">{dictionary.builderEntry.quickIntro}</p>
         </div>
-        <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5 text-xs font-black">Deterministisch</span>
+        <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5 text-xs font-black">{dictionary.builderEntry.quickBadge}</span>
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">

@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
@@ -154,7 +155,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         <CatalogSummaryStrip items={[{ label: archivedView ? "Archivierte Gruppen" : "Gruppen", value: groupPage.total }]} />
 
         <div className="catalog-workspace grid min-w-0 gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start" data-tour="group-filters">
-        <CatalogFilterPanel hasFilters={Boolean(searchQuery || audienceFilter || query.size)} resetHref={archivedView ? "/groups?archived=1" : "/groups"} title="Gruppenfilter">
+        <CatalogFilterPanel activeFilterCount={[searchQuery, audienceFilter].filter(Boolean).length} hasFilters={Boolean(searchQuery || audienceFilter || query.size)} resetHref={archivedView ? "/groups?archived=1" : "/groups"} title="Gruppenfilter">
             <input name="archived" type="hidden" value={archivedView ? "1" : "0"} />
             <label className="grid gap-1 text-sm font-bold">
               Suchen
@@ -572,3 +573,5 @@ function savedMessage(saved: string): string {
   if (saved === "restored") return "Gruppe wurde wiederhergestellt.";
   return "Gruppe wurde gespeichert.";
 }
+
+export const metadata = routeMetadata("groups");

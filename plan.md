@@ -41,8 +41,7 @@ Referenz und aktueller Prüfstand: [`docs/catalog-startup-review.md`](./docs/cat
 ## P1 – UX/UI-Konzept und Einheitlichkeit
 
 - [ ] Erzeugte und bearbeitete Vorschläge einschließlich Übungsauswahl/Programmierung wiederherstellbar machen; wiederhergestellte Inhalte bleiben bis Schema- und aktueller Domänenprüfung untrusted und benötigen explizite Trainerprüfung (UX-02).
-- [ ] Mobile Filter, Standardseitengrößen und Sichtbarkeit des aktiven Navigationsziels verbessern (UX-05/06).
-- [ ] Feldhinweise touchfähig/verknüpft/schließbar machen, Admin-Linknavigation semantisch korrigieren und Route-Lade-/Fehlergrenzen ergänzen (UX-07–09).
+- [ ] Verbleibende Trainertexte vereinfachen (Rest UX-04): technische Erklärungen in Medien-/Spielanlage und generierten Beschreibungstexten prüfen und in Hilfe/Details verschieben, ohne Sicherheits-/Freigabehinweise zu verstecken. Der abgeschlossene Builder-Einstieg steht in README und UI/UX-Review.
 - [ ] UI-Konsistenz über alle Routen prüfen und abschließen: Formfelder, Buttons, Abstände, Radien, Typografie, Statusfarben, Tabellen, Cards, Dialoge, Pagination und mobile Navigation ausschließlich aus den lokalen UI-Bausteinen beziehen.
 - [ ] Fachseiten vollständig auf Dictionaries umstellen: keine user-facing Hardcodings in Dashboard, Katalogen, Editoren, Admin, Trainingsdetail und Statusmeldungen.
 
@@ -55,7 +54,7 @@ Referenz und aktueller Prüfstand: [`docs/catalog-startup-review.md`](./docs/cat
 1. Die 27 dokumentierten Bildbefunde korrigieren und 15 offene Trainerprüfungen abschließen. Reale Hindernisgeometrien aufnehmen; übrige Katalogmedien/Videos und Gelände-/Equipment-Inventar weiter prüfen.
 2. Methodik-/Geländevertrag und gleiche deterministische Prüfungen für KI und Offline nachweisen.
 3. Wiederherstellung erzeugter/bearbeiteter Vorschläge abschließen (UX-02).
-4. Mobile Filter/Navigation, Feldhinweise, Admin-Semantik, Lade-/Fehlerzustände, Dictionaries und UI-Konsolidierung.
+4. Dictionaries, verbleibende Trainertexte und UI-Konsolidierung.
 
 ## Abschlussroutine
 

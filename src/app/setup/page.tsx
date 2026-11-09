@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import { redirect } from "next/navigation";
 import { hasAppUsers } from "@/server/auth/identity-service";
 import { buttonClass, formControlClass } from "@/components/ui/form";
@@ -110,3 +111,5 @@ export default async function SetupPage({
     </main>
   );
 }
+
+export const metadata = routeMetadata("setup");

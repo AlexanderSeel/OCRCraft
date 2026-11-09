@@ -396,3 +396,9 @@ textarea[aria-invalid="true"] {
   .overview-layout[data-view="list"] .exercise-card-actions { grid-column: 2; grid-row: 1 / 3; align-self: center; padding: 0; }
   .overview-layout[data-view="list"] .exercise-card-summary { grid-column: 1; }
 }
+
+
+/* Keep keyboard-focused catalog controls above the mobile page navigation. */
+@media (width < 1024px) {
+  html:has([data-catalog-pagination]) { scroll-padding-bottom: 8rem; }
+}

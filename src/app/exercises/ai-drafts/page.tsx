@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/config/route-titles";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { OverviewLayout } from "@/components/overview-layout";
@@ -128,7 +129,7 @@ export default async function AiExerciseDraftsPage({ searchParams }: PageProps) 
           </div>
 
           <div className="catalog-workspace grid min-w-0 gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start" data-tour="ai-draft-filters">
-          <CatalogFilterPanel hasFilters={Boolean(searchQuery || showHistory || page !== 1 || pageSize !== 12)} resetHref={showHistory ? "/exercises/ai-drafts?history=1" : "/exercises/ai-drafts"} title="Entwurfsfilter">
+          <CatalogFilterPanel activeFilterCount={[searchQuery].filter(Boolean).length} hasFilters={Boolean(searchQuery || showHistory || page !== 1 || pageSize !== 12)} resetHref={showHistory ? "/exercises/ai-drafts?history=1" : "/exercises/ai-drafts"} title="Entwurfsfilter">
               {showHistory ? <input name="history" type="hidden" value="1" /> : null}
               <label className="grid gap-1 text-sm font-bold">
                 Suchen
@@ -276,3 +277,5 @@ function riskLabel(risk: string): string {
   if (risk === "high") return "Hoch";
   return risk;
 }
+
+export const metadata = routeMetadata("aiDrafts");

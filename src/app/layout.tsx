@@ -3,10 +3,11 @@ import type { ReactNode } from "react";
 import { ToastProvider } from "@/components/ui/toast";
 import { LocaleProvider } from "@/components/i18n/locale-provider";
 import { APP_VERSION } from "@/config/app-version";
+import { RouteDocumentTitle } from "@/components/navigation/route-document-title";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: `OCRCraft ${APP_VERSION}`,
+  title: { default: `OCRCraft ${APP_VERSION}`, template: `%s · OCRCraft ${APP_VERSION}` },
   description: "Trainingsplanung für OCR, Functional Training und Breitensport",
 };
 
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
       </head>
-      <body><LocaleProvider><ToastProvider>{children}</ToastProvider></LocaleProvider></body>
+      <body><LocaleProvider><ToastProvider><RouteDocumentTitle />{children}</ToastProvider></LocaleProvider></body>
     </html>
   );
 }
